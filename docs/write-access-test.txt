@@ -1,0 +1,3 @@
+This file confirms Claude's scoped write_file tool is working.
+Written via SFTP, scoped to /var/www/bcc-v3/ only.
+Safe to delete.

@@ -1,0 +1,11 @@
+-- ============================================================================
+-- 0000_create_schema_migrations.sql
+-- Tracks which migration files have been applied. Re-running run_migrations.sh
+-- is safe — already-applied files are skipped by filename.
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  filename      VARCHAR(255) NOT NULL UNIQUE,
+  applied_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

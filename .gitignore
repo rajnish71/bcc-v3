@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+frontend/dist/
+backend/dist/
+
+# Environment files — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Uploads (local dev only)
+uploads/*
+!uploads/.gitkeep
+
+# Archives
+archives/*
+!archives/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/

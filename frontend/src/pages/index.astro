@@ -1,0 +1,30 @@
+---
+import '../styles/tokens.css';
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BCC Unified Platform V3</title>
+    <style>
+      body {
+        font-family: var(--font-sans);
+        background: var(--color-bg);
+        color: var(--color-text);
+        margin: 0;
+        padding: var(--space-6);
+      }
+      h1 { color: var(--color-primary); }
+      p { color: var(--color-text-muted); }
+      #fade-target { opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <h1>BCC Unified Platform V3</h1>
+    <p id="fade-target">Frontend scaffold live — Astro + Design Tokens + GSAP.</p>
+    <script>
+      import { gsap } from "gsap";
+      gsap.to("#fade-target", { opacity: 1, duration: 1, ease: "power1.out" });
+    </script>
+  </body>
+</html>

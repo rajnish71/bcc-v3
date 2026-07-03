@@ -22,6 +22,7 @@ import {
   GoneException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Selectable } from 'kysely';
@@ -46,6 +47,7 @@ import { ConsumeMagicLinkDto } from './dto/consume-magic-link.dto';
 import { AdminCreateAccountDto } from './dto/admin-create-account.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+import { EmailService } from '../../shared/communication/email.service';
 
 const EMAIL_VERIFICATION_TTL_HOURS = 24;
 const OTP_TTL_MINUTES = 5;
@@ -77,7 +79,10 @@ export interface PublicUser {
 
 @Injectable()
 export class RegistrationService {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly emailService: EmailService,
+  ) {}
 
   // ======================================================================
   // 1. Email + password
@@ -149,7 +154,14 @@ export class RegistrationService {
       .values({ user_id: userId, token_hash: tokenHash, expires_at: toMysqlDatetime(expiresAt) })
       .execute();
 
-    console.log(`[email-verification] would send to user ${userId} <${email}>: token=${rawToken}`);
+    const verifyUrl = `${this.frontendBaseUrl()}/verify-email?token=${rawToken}`;
+    await this.emailService.send(
+      email,
+      'Verify your BCC email address',
+      `<p>Welcome to Bhopal Camera Club. Click the link below to verify your email:</p>` +
+        `<p><a href="${verifyUrl}">${verifyUrl}</a></p>` +
+        `<p>This link expires in ${EMAIL_VERIFICATION_TTL_HOURS} hours.</p>`,
+    );
   }
 
   // ======================================================================
@@ -157,6 +169,8 @@ export class RegistrationService {
   // ======================================================================
 
   async requestPhoneOtp(dto: RequestPhoneOtpDto): Promise<{ message: string }> {
+    this.assertPhoneOtpEnabled();
+
     const existing = await db
       .selectFrom('users')
       .select('id')
@@ -189,6 +203,8 @@ export class RegistrationService {
     dto: VerifyPhoneOtpDto,
     device: DeviceContext,
   ): Promise<{ user: PublicUser; tokens: TokenPair }> {
+    this.assertPhoneOtpEnabled();
+
     const row = await db
       .selectFrom('otp_codes')
       .selectAll()
@@ -343,7 +359,14 @@ export class RegistrationService {
       .values({ email: dto.email, token_hash: tokenHash, expires_at: toMysqlDatetime(expiresAt) })
       .execute();
 
-    console.log(`[magic-link] would send to ${dto.email}: token=${rawToken}`);
+    const magicUrl = `${this.frontendBaseUrl()}/magic-link?token=${rawToken}`;
+    await this.emailService.send(
+      dto.email,
+      'Your BCC sign-in link',
+      `<p>Click the link below to sign in to Bhopal Camera Club:</p>` +
+        `<p><a href="${magicUrl}">${magicUrl}</a></p>` +
+        `<p>This link expires in ${MAGIC_LINK_TTL_MINUTES} minutes and can only be used once.</p>`,
+    );
     return { message: 'Magic link sent' };
   }
 
@@ -482,7 +505,14 @@ export class RegistrationService {
       .values({ email: dto.email, token_hash: tokenHash, invited_by: actorId, expires_at: toMysqlDatetime(expiresAt) })
       .execute();
 
-    console.log(`[invitation] would send to ${dto.email}: token=${rawToken}`);
+    const inviteUrl = `${this.frontendBaseUrl()}/join?invitation=${rawToken}`;
+    await this.emailService.send(
+      dto.email,
+      'You are invited to join Bhopal Camera Club',
+      `<p>You have been invited to join the BCC platform. Click the link below to set up your account:</p>` +
+        `<p><a href="${inviteUrl}">${inviteUrl}</a></p>` +
+        `<p>This invitation expires in ${INVITATION_TTL_DAYS} days.</p>`,
+    );
     return { invitationToken: rawToken, expiresAt };
   }
 
@@ -542,6 +572,23 @@ export class RegistrationService {
   // ======================================================================
   // Shared helpers
   // ======================================================================
+
+  private frontendBaseUrl(): string {
+    return process.env.FRONTEND_BASE_URL || 'https://v3bcc.bhopal.info';
+  }
+
+  // Off by default -- MSG91/Interakt both charge per message with no
+  // meaningful free tier for ongoing use, and there's no revenue model yet
+  // to justify a standing WhatsApp/SMS cost. Flip PHONE_OTP_ENABLED=true
+  // once a provider is actually chosen and paid for; the otp_codes schema
+  // and this whole code path are otherwise ready to go.
+  private assertPhoneOtpEnabled(): void {
+    if (process.env.PHONE_OTP_ENABLED !== 'true') {
+      throw new ServiceUnavailableException(
+        'Phone/WhatsApp OTP registration is not available yet -- no SMS provider is configured. Use email, magic link, or social login instead.',
+      );
+    }
+  }
 
   private async createBaselineUser(params: {
     email: string | null;

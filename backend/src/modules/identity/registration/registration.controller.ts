@@ -1,5 +1,16 @@
 // backend/src/modules/identity/registration/registration.controller.ts
-import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import { RegistrationService } from './registration.service';
 import type { DeviceContext } from '../auth/auth.service';
@@ -12,12 +23,13 @@ import { RegisterEmailPasswordDto } from './dto/register-email-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { RequestPhoneOtpDto } from './dto/request-phone-otp.dto';
 import { VerifyPhoneOtpDto } from './dto/verify-phone-otp.dto';
-import { SocialLoginDto } from './dto/social-login.dto';
+import { SocialProvider } from './dto/social-login.dto';
 import { RequestMagicLinkDto } from './dto/request-magic-link.dto';
 import { ConsumeMagicLinkDto } from './dto/consume-magic-link.dto';
 import { AdminCreateAccountDto } from './dto/admin-create-account.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+import { OAuthService } from './oauth.service';
 
 function deviceContextFrom(req: FastifyRequest): DeviceContext {
   return {
@@ -28,7 +40,18 @@ function deviceContextFrom(req: FastifyRequest): DeviceContext {
 
 @Controller('registration')
 export class RegistrationController {
-  constructor(private readonly registrationService: RegistrationService) {}
+  constructor(
+    private readonly registrationService: RegistrationService,
+    private readonly oauthService: OAuthService,
+  ) {}
+
+  private parseProvider(raw: string): SocialProvider {
+    const upper = raw.toUpperCase();
+    if (upper in SocialProvider) {
+      return SocialProvider[upper as keyof typeof SocialProvider];
+    }
+    throw new BadRequestException(`Unknown provider: ${raw}`);
+  }
 
   // -- 1. Email + password ----------------------------------------------
 
@@ -59,11 +82,34 @@ export class RegistrationController {
   }
 
   // -- 3. Social login -------------------------------------------------
+  // No longer a POST endpoint that trusts caller-supplied provider data --
+  // that was a real "log in as anyone" hole once OAuthService existed to
+  // compare against. The callback below does the code exchange itself and
+  // only ever calls registerOrLoginWithSocial with a provider-verified
+  // profile.
 
-  @Post('social')
+  @Get('social/:provider/authorize-url')
   @HttpCode(200)
-  async social(@Body() dto: SocialLoginDto, @Req() req: FastifyRequest) {
-    return this.registrationService.registerOrLoginWithSocial(dto, deviceContextFrom(req));
+  authorizeUrl(@Param('provider') providerParam: string) {
+    const provider = this.parseProvider(providerParam);
+    return { authorizeUrl: this.oauthService.getAuthorizeUrl(provider) };
+  }
+
+  @Get('social/:provider/callback')
+  @HttpCode(200)
+  async socialCallback(
+    @Param('provider') providerParam: string,
+    @Query('code') code: string,
+    @Req() req: FastifyRequest,
+  ) {
+    const provider = this.parseProvider(providerParam);
+    if (!code) throw new BadRequestException('Missing authorization code');
+
+    const profile = await this.oauthService.exchangeCodeForProfile(provider, code);
+    return this.registrationService.registerOrLoginWithSocial(
+      { provider, providerUserId: profile.providerUserId, email: profile.email, fullName: profile.fullName },
+      deviceContextFrom(req),
+    );
   }
 
   // -- 4. Magic link -----------------------------------------------------

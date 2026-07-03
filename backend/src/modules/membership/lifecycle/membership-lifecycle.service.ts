@@ -32,6 +32,7 @@ import type { Selectable } from 'kysely';
 import { db, MembershipsTable } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { EmailService } from '../../shared/communication/email.service';
+import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 
@@ -50,7 +51,39 @@ export class MembershipLifecycleService {
   constructor(
     private readonly numberingService: MembershipNumberingService,
     private readonly emailService: EmailService,
+    private readonly entitlementService: EntitlementService,
   ) {}
+
+  // Renewal policy (confirmed this session): renewable classes carry
+  // renewal_term_months / grace_period_days in class_entitlements (layer 1
+  // only -- see EntitlementService.getClassConfigValue). Lifetime classes
+  // get expires_at = null. A renewable class MISSING its config is treated
+  // as a loud error, not silently perpetual.
+  private async computeExpiry(membershipClassId: number, from: Date): Promise<string | null> {
+    const cls = await db
+      .selectFrom('membership_classes')
+      .select(['is_renewable', 'is_lifetime', 'name'])
+      .where('id', '=', membershipClassId)
+      .executeTakeFirstOrThrow();
+
+    if (cls.is_lifetime || !cls.is_renewable) return null;
+
+    const termRaw = await this.entitlementService.getClassConfigValue(membershipClassId, 'renewal_term_months');
+    if (!termRaw) {
+      throw new ConflictException(
+        `Class "${cls.name}" is renewable but has no renewal_term_months configured -- refusing to activate with an undefined term. Run seed_0004 or set it via the entitlements endpoint.`,
+      );
+    }
+    const months = parseInt(termRaw, 10);
+    const expiry = new Date(from);
+    expiry.setMonth(expiry.getMonth() + months);
+    return toMysqlDatetime(expiry);
+  }
+
+  private async gracePeriodDays(membershipClassId: number): Promise<number> {
+    const raw = await this.entitlementService.getClassConfigValue(membershipClassId, 'grace_period_days');
+    return raw ? parseInt(raw, 10) : 0;
+  }
 
   // ======================================================================
   // -> PENDING
@@ -189,12 +222,15 @@ export class MembershipLifecycleService {
     const joinYear = opts?.joinYear ?? now.getFullYear();
     const joinMonth = opts?.joinMonth ?? now.getMonth() + 1;
 
+    const expiresAt = await this.computeExpiry(membership.membership_class_id, now);
+
     const result = await db.transaction().execute(async (trx) => {
       await trx
         .updateTable('memberships')
         .set({
           lifecycle_state: 'ACTIVE',
           activated_at: toMysqlDatetime(now),
+          expires_at: expiresAt,
           last_payment_status: opts?.paymentId ? 'SUCCEEDED' : 'NONE',
           pending_payment_id: null,
         })
@@ -309,9 +345,16 @@ export class MembershipLifecycleService {
   async markExpired(membershipId: number, actor: { type: 'SYSTEM' | 'ADMIN'; userId?: number | null }): Promise<void> {
     const membership = await this.requireState(membershipId, ['ACTIVE']);
 
+    // Preserve the original expires_at -- it anchors the grace-period
+    // calculation in renewFromExpired. Only backfill with NOW when the
+    // record never had a deadline (pre-renewal-engine activations).
     await db
       .updateTable('memberships')
-      .set({ lifecycle_state: 'EXPIRED', expires_at: toMysqlDatetime(new Date()) })
+      .set(
+        membership.expires_at
+          ? { lifecycle_state: 'EXPIRED' }
+          : { lifecycle_state: 'EXPIRED', expires_at: toMysqlDatetime(new Date()) },
+      )
       .where('id', '=', membershipId)
       .execute();
 
@@ -342,9 +385,27 @@ export class MembershipLifecycleService {
   ): Promise<void> {
     const membership = await this.requireState(membershipId, ['EXPIRED']);
 
+    // Grace-period enforcement. INTERPRETATION FLAG: spec 02.8 defines a
+    // grace period but does not spell out what happens after it lapses; the
+    // reading implemented here is renew-within-grace, re-apply-after-grace.
+    // Beyond-grace renewal is therefore blocked with a clear message rather
+    // than silently allowed forever.
+    if (membership.expires_at) {
+      const graceDays = await this.gracePeriodDays(membership.membership_class_id);
+      const graceEnd = new Date(membership.expires_at);
+      graceEnd.setDate(graceEnd.getDate() + graceDays);
+      if (new Date() > graceEnd) {
+        throw new ConflictException(
+          `The ${graceDays}-day renewal grace period ended on ${graceEnd.toISOString().slice(0, 10)}. A new membership application is required.`,
+        );
+      }
+    }
+
+    const newExpiry = await this.computeExpiry(membership.membership_class_id, new Date());
+
     await db
       .updateTable('memberships')
-      .set({ lifecycle_state: 'ACTIVE', last_payment_status: 'SUCCEEDED' })
+      .set({ lifecycle_state: 'ACTIVE', expires_at: newExpiry, last_payment_status: 'SUCCEEDED' })
       .where('id', '=', membershipId)
       .execute();
 
@@ -411,6 +472,19 @@ export class MembershipLifecycleService {
 
   async listForUser(userId: number): Promise<MembershipRow[]> {
     return db.selectFrom('memberships').selectAll().where('user_id', '=', userId).execute();
+  }
+
+  // ACTIVE memberships whose expires_at has passed -- the worklist a
+  // coordinator (or a future scheduled job) feeds into markExpired. Exists
+  // because no cron runs on this box (RAM-conscious, deliberate).
+  async listDueForExpiry(): Promise<MembershipRow[]> {
+    return db
+      .selectFrom('memberships')
+      .selectAll()
+      .where('lifecycle_state', '=', 'ACTIVE')
+      .where('expires_at', 'is not', null)
+      .where('expires_at', '<', toMysqlDatetime(new Date()))
+      .execute();
   }
 
   // ======================================================================

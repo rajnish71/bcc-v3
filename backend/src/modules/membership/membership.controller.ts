@@ -169,6 +169,16 @@ export class MembershipController {
     return this.lifecycle.listForUser(actor.sub);
   }
 
+  // Coordinator worklist: ACTIVE memberships past their renewal deadline.
+  // No cron on this box -- expiry is human-triggered from this list.
+  @Get('due-for-expiry/list')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.lifecycle.expire')
+  async dueForExpiry() {
+    return this.lifecycle.listDueForExpiry();
+  }
+
   @Get(':id')
   @HttpCode(200)
   @UseGuards(AccessTokenGuard, RbacGuard)

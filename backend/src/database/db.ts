@@ -311,10 +311,27 @@ export interface IndividualOverridesTable {
   id: Generated<number>;
   membership_id: number;
   entitlement_key: string;
+  override_type: Generated<'GRANT' | 'REVOKE'>;
   override_value: string;
   reason: string;
+  expires_at: ColumnType<Date | null, string | null, string | null>;
   created_by_user_id: number | null;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface RecognitionCriteriaTable {
+  id: Generated<number>;
+  recognition_code:
+    | 'SENIOR_MEMBER'
+    | 'HONORARY_SENIOR_MEMBER'
+    | 'HONORARY_MEMBER'
+    | 'HONORARY_MENTOR'
+    | 'HONORARY_GRANDMASTER';
+  criteria_key: string;
+  criteria_value: string;
+  updated_by_user_id: number | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
 }
 
 export interface MembershipAuditLogTable {
@@ -407,6 +424,7 @@ export interface DB {
   class_entitlements: ClassEntitlementsTable;
   recognition_modifiers: RecognitionModifiersTable;
   individual_overrides: IndividualOverridesTable;
+  recognition_criteria: RecognitionCriteriaTable;
   membership_audit_log: MembershipAuditLogTable;
   membership_number_pool: MembershipNumberPoolTable;
   membership_number_log: MembershipNumberLogTable;

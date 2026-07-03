@@ -202,6 +202,181 @@ export interface IdentityAuditLogTable {
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
 
+// ============================================================================
+// MEM-006 / MEM-007 tables (Phase 0, migrations 0001-0009) -- typed here for
+// the first time as part of Module 02's build. The schema already existed;
+// only the Kysely typing was missing.
+// ============================================================================
+
+export interface MembershipClassesTable {
+  id: Generated<number>;
+  code: string;
+  name: string;
+  type: 'CONSTITUTIONAL' | 'OPERATIONAL';
+  voting_eligible: boolean;
+  governance_eligible: boolean;
+  is_renewable: boolean;
+  is_lifetime: boolean;
+  is_closed: boolean;
+  sort_order: Generated<number>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface GroupEntitiesTable {
+  id: Generated<number>;
+  uuid: string;
+  type: 'FAMILY' | 'CORPORATE' | 'INSTITUTIONAL';
+  name: string;
+  primary_contact_user_id: number | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface GroupDelegatesTable {
+  id: Generated<number>;
+  group_entity_id: number;
+  user_id: number;
+  role: Generated<string>;
+  added_at: Generated<ColumnType<Date, string | undefined, never>>;
+  removed_at: ColumnType<Date | null, string | null, string | null>;
+}
+
+export interface MembershipsTable {
+  id: Generated<number>;
+  uuid: string;
+  owner_type: 'INDIVIDUAL' | 'GROUP';
+  user_id: number | null;
+  group_entity_id: number | null;
+  membership_class_id: number;
+  lifecycle_state: 'PENDING' | 'APPROVED' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'TERMINATED' | 'REJECTED';
+  join_year: number | null;
+  join_month: number | null;
+  number_serial: number | null;
+  membership_number: string | null;
+  number_assigned_at: ColumnType<Date | null, string | null, string | null>;
+  last_payment_status: Generated<'NONE' | 'PENDING' | 'FAILED' | 'SUCCEEDED'>;
+  pending_payment_id: number | null;
+  applied_at: ColumnType<Date | null, string | null, string | null>;
+  approved_at: ColumnType<Date | null, string | null, string | null>;
+  activated_at: ColumnType<Date | null, string | null, string | null>;
+  expires_at: ColumnType<Date | null, string | null, string | null>;
+  terminated_at: ColumnType<Date | null, string | null, string | null>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface MemberRecognitionsTable {
+  id: Generated<number>;
+  membership_id: number;
+  recognition_code:
+    | 'SENIOR_MEMBER'
+    | 'HONORARY_SENIOR_MEMBER'
+    | 'HONORARY_MEMBER'
+    | 'HONORARY_MENTOR'
+    | 'HONORARY_GRANDMASTER';
+  track: 'AUTO' | 'MANUAL';
+  status: Generated<'ACTIVE' | 'HISTORICAL'>;
+  reason: string | null;
+  assigned_by_user_id: number | null;
+  start_date: ColumnType<Date, string, string>;
+  end_date: ColumnType<Date | null, string | null, string | null>;
+  // Generated STORED column (IF(status='ACTIVE', membership_id, NULL)) --
+  // never write to this column directly.
+  active_lock: Generated<number | null>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface ClassEntitlementsTable {
+  id: Generated<number>;
+  membership_class_id: number;
+  entitlement_key: string;
+  entitlement_value: string;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface RecognitionModifiersTable {
+  id: Generated<number>;
+  recognition_code:
+    | 'SENIOR_MEMBER'
+    | 'HONORARY_SENIOR_MEMBER'
+    | 'HONORARY_MEMBER'
+    | 'HONORARY_MENTOR'
+    | 'HONORARY_GRANDMASTER';
+  entitlement_key: string;
+  modifier_value: string;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface IndividualOverridesTable {
+  id: Generated<number>;
+  membership_id: number;
+  entitlement_key: string;
+  override_value: string;
+  reason: string;
+  created_by_user_id: number | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface MembershipAuditLogTable {
+  id: Generated<number>;
+  membership_id: number | null;
+  event_type: string;
+  actor_type: 'SYSTEM' | 'ADMIN' | 'MEMBER';
+  actor_user_id: number | null;
+  old_value: string | null;
+  new_value: string | null;
+  notes: string | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface MembershipNumberPoolTable {
+  id: Generated<number>;
+  next_operational_serial: number;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface MembershipNumberLogTable {
+  id: Generated<number>;
+  membership_id: number;
+  number_serial: number;
+  membership_number: string;
+  assignment_type: 'FOUNDING_RESERVED' | 'HISTORICAL_RESERVED' | 'OPERATIONAL_SEQUENTIAL' | 'HISTORICAL_MIGRATION_IMPORT';
+  assigned_by_user_id: number | null;
+  notes: string | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface MembershipTempIdentifiersTable {
+  id: Generated<number>;
+  membership_id: number;
+  temp_identifier: string;
+  status: Generated<'ACTIVE' | 'RETIRED'>;
+  issued_at: Generated<ColumnType<Date, string | undefined, never>>;
+  retired_at: ColumnType<Date | null, string | null, string | null>;
+}
+
+// ============================================================================
+// payments (migration 0023, this session) -- minimal, Module 11 expected to
+// ALTER this table rather than replace it.
+// ============================================================================
+
+export interface PaymentsTable {
+  id: Generated<number>;
+  uuid: string;
+  membership_id: number;
+  purpose: Generated<'MEMBERSHIP_FEE' | 'RENEWAL_FEE'>;
+  amount_paise: number;
+  currency: Generated<string>;
+  provider: 'RAZORPAY' | 'MANUAL';
+  provider_order_id: string | null;
+  provider_payment_id: string | null;
+  idempotency_key: string | null;
+  status: Generated<'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED'>;
+  recorded_by_user_id: number | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
 export interface DB {
   users: UsersTable;
   user_avatars: UserAvatarsTable;
@@ -223,6 +398,20 @@ export interface DB {
   role_permissions: RolePermissionsTable;
   user_roles: UserRolesTable;
   identity_audit_log: IdentityAuditLogTable;
+
+  membership_classes: MembershipClassesTable;
+  group_entities: GroupEntitiesTable;
+  group_delegates: GroupDelegatesTable;
+  memberships: MembershipsTable;
+  member_recognitions: MemberRecognitionsTable;
+  class_entitlements: ClassEntitlementsTable;
+  recognition_modifiers: RecognitionModifiersTable;
+  individual_overrides: IndividualOverridesTable;
+  membership_audit_log: MembershipAuditLogTable;
+  membership_number_pool: MembershipNumberPoolTable;
+  membership_number_log: MembershipNumberLogTable;
+  membership_temp_identifiers: MembershipTempIdentifiersTable;
+  payments: PaymentsTable;
 }
 
 const dialect = new MysqlDialect({

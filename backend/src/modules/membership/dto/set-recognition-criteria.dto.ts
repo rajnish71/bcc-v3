@@ -1,5 +1,6 @@
 import { IsIn, IsString, Matches, MaxLength, MinLength } from 'class-validator';
-import { RECOGNITION_CODES, RecognitionCode } from './set-recognition-modifier.dto';
+import { RECOGNITION_CODES } from './set-recognition-modifier.dto';
+import type { RecognitionCode } from './set-recognition-modifier.dto';
 
 export class SetRecognitionCriteriaDto {
   @IsIn(RECOGNITION_CODES)

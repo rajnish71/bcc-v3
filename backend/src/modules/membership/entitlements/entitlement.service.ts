@@ -20,7 +20,6 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../../../database/db';
-import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 
 export interface ResolvedEntitlements {
@@ -83,7 +82,7 @@ export class EntitlementService {
     }
 
     // Layer 3 -- individual overrides (non-expired)
-    const now = toMysqlDatetime(new Date());
+    const now = new Date();
     const overrideRows = await db
       .selectFrom('individual_overrides')
       .select(['entitlement_key', 'override_type', 'override_value', 'reason', 'expires_at'])

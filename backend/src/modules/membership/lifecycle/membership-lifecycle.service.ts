@@ -483,7 +483,7 @@ export class MembershipLifecycleService {
       .selectAll()
       .where('lifecycle_state', '=', 'ACTIVE')
       .where('expires_at', 'is not', null)
-      .where('expires_at', '<', toMysqlDatetime(new Date()))
+      .where('expires_at', '<', new Date())
       .execute();
   }
 

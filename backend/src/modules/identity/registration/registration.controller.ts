@@ -1,0 +1,108 @@
+// backend/src/modules/identity/registration/registration.controller.ts
+import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { RegistrationService } from './registration.service';
+import type { DeviceContext } from '../auth/auth.service';
+import { AccessTokenGuard } from '../auth/access-token.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AccessTokenPayload } from '../auth/token.util';
+import { RbacGuard } from '../rbac/rbac.guard';
+import { RequirePermissions } from '../rbac/permissions.decorator';
+import { RegisterEmailPasswordDto } from './dto/register-email-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { RequestPhoneOtpDto } from './dto/request-phone-otp.dto';
+import { VerifyPhoneOtpDto } from './dto/verify-phone-otp.dto';
+import { SocialLoginDto } from './dto/social-login.dto';
+import { RequestMagicLinkDto } from './dto/request-magic-link.dto';
+import { ConsumeMagicLinkDto } from './dto/consume-magic-link.dto';
+import { AdminCreateAccountDto } from './dto/admin-create-account.dto';
+import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+
+function deviceContextFrom(req: FastifyRequest): DeviceContext {
+  return {
+    ipAddress: req.ip ?? null,
+    userAgent: (req.headers['user-agent'] as string) ?? null,
+  };
+}
+
+@Controller('registration')
+export class RegistrationController {
+  constructor(private readonly registrationService: RegistrationService) {}
+
+  // -- 1. Email + password ----------------------------------------------
+
+  @Post('email-password')
+  @HttpCode(201)
+  async registerEmailPassword(@Body() dto: RegisterEmailPasswordDto, @Req() req: FastifyRequest) {
+    return this.registrationService.registerWithEmailPassword(dto, deviceContextFrom(req));
+  }
+
+  @Post('email-password/verify')
+  @HttpCode(204)
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    await this.registrationService.verifyEmail(dto);
+  }
+
+  // -- 2. Phone + OTP ------------------------------------------------------
+
+  @Post('phone-otp/request')
+  @HttpCode(200)
+  async requestPhoneOtp(@Body() dto: RequestPhoneOtpDto) {
+    return this.registrationService.requestPhoneOtp(dto);
+  }
+
+  @Post('phone-otp/verify')
+  @HttpCode(201)
+  async verifyPhoneOtp(@Body() dto: VerifyPhoneOtpDto, @Req() req: FastifyRequest) {
+    return this.registrationService.verifyPhoneOtpAndRegister(dto, deviceContextFrom(req));
+  }
+
+  // -- 3. Social login -------------------------------------------------
+
+  @Post('social')
+  @HttpCode(200)
+  async social(@Body() dto: SocialLoginDto, @Req() req: FastifyRequest) {
+    return this.registrationService.registerOrLoginWithSocial(dto, deviceContextFrom(req));
+  }
+
+  // -- 4. Magic link -----------------------------------------------------
+
+  @Post('magic-link/request')
+  @HttpCode(200)
+  async requestMagicLink(@Body() dto: RequestMagicLinkDto) {
+    return this.registrationService.requestMagicLink(dto);
+  }
+
+  @Post('magic-link/consume')
+  @HttpCode(200)
+  async consumeMagicLink(@Body() dto: ConsumeMagicLinkDto, @Req() req: FastifyRequest) {
+    return this.registrationService.consumeMagicLink(dto, deviceContextFrom(req));
+  }
+
+  // -- 5. Admin-created (coordinator+) -----------------------------------
+
+  @Post('admin-created')
+  @HttpCode(201)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('identity.user.create')
+  async adminCreate(@CurrentUser() actor: AccessTokenPayload, @Body() dto: AdminCreateAccountDto) {
+    return this.registrationService.adminCreateAccount(actor.sub, dto);
+  }
+
+  // -- 6. Invitation-based ------------------------------------------------
+
+  @Post('invitations')
+  @HttpCode(201)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('identity.invitation.create')
+  async createInvitation(@CurrentUser() actor: AccessTokenPayload, @Body() dto: CreateInvitationDto) {
+    return this.registrationService.createInvitation(actor.sub, dto);
+  }
+
+  @Post('invitations/accept')
+  @HttpCode(201)
+  async acceptInvitation(@Body() dto: AcceptInvitationDto, @Req() req: FastifyRequest) {
+    return this.registrationService.acceptInvitation(dto, deviceContextFrom(req));
+  }
+}

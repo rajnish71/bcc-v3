@@ -4,7 +4,7 @@ import { createPool } from 'mysql2';
 export interface UsersTable {
   id: Generated<number>;
   uuid: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   password_hash: string | null;
   full_name: string;
@@ -24,6 +24,9 @@ export interface UsersTable {
   activity_visibility: Generated<'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE'>;
   deletion_requested_at: ColumnType<Date | null, string | null, string | null>;
   deleted_at: ColumnType<Date | null, string | null, string | null>;
+  registration_method: Generated<'EMAIL_PASSWORD' | 'PHONE_OTP' | 'SOCIAL_LOGIN' | 'MAGIC_LINK' | 'ADMIN_CREATED' | 'INVITATION'>;
+  force_password_reset: Generated<boolean>;
+  created_by: number | null;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
   updated_at: Generated<ColumnType<Date, string | undefined, string>>;
 }
@@ -70,6 +73,25 @@ export interface PasswordResetTokensTable {
   id: Generated<number>;
   user_id: number;
   token_hash: string;
+  expires_at: ColumnType<Date, string, string>;
+  consumed_at: ColumnType<Date | null, string | null, string | null>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface EmailVerificationTokensTable {
+  id: Generated<number>;
+  user_id: number;
+  token_hash: string;
+  expires_at: ColumnType<Date, string, string>;
+  consumed_at: ColumnType<Date | null, string | null, string | null>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface InvitationsTable {
+  id: Generated<number>;
+  email: string;
+  token_hash: string;
+  invited_by: number;
   expires_at: ColumnType<Date, string, string>;
   consumed_at: ColumnType<Date | null, string | null, string | null>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
@@ -187,6 +209,8 @@ export interface DB {
   otp_codes: OtpCodesTable;
   magic_links: MagicLinksTable;
   password_reset_tokens: PasswordResetTokensTable;
+  email_verification_tokens: EmailVerificationTokensTable;
+  invitations: InvitationsTable;
   refresh_tokens: RefreshTokensTable;
   login_history: LoginHistoryTable;
   account_lockouts: AccountLockoutsTable;

@@ -24,6 +24,7 @@ import {
   hashRefreshToken,
   AccessTokenPayload,
 } from './token.util';
+import { toMysqlDatetime } from '../shared/token-hash.util';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
 const REFRESH_TOKEN_TTL_DAYS = 30;
@@ -104,6 +105,24 @@ export class AuthService {
 
   // -- Token issuance --------------------------------------------------
 
+  /**
+   * Public entry point for other identity-domain services (RegistrationService)
+   * to issue a fresh session immediately after creating a user -- e.g. email
+   * verification isn't required to start browsing. Deliberately thin: no
+   * password/lockout checks here, because the caller has already established
+   * who this user is through its own method (OTP verified, magic link
+   * consumed, etc).
+   */
+  async issueSessionForUser(
+    userId: number,
+    uuid: string,
+    status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED',
+    device: DeviceContext,
+  ): Promise<TokenPair> {
+    return this.issueTokenPair(userId, uuid, status, device);
+  }
+
+
   private async issueTokenPair(
     userId: number,
     uuid: string,
@@ -131,7 +150,7 @@ export class AuthService {
         device_label: device.deviceLabel ?? null,
         ip_address: device.ipAddress,
         user_agent: device.userAgent,
-        expires_at: expiresAt.toISOString().slice(0, 19).replace('T', ' '),
+        expires_at: toMysqlDatetime(expiresAt),
       })
       .executeTakeFirstOrThrow();
 
@@ -172,7 +191,7 @@ export class AuthService {
     if (existing.revoked_at) {
       await db
         .updateTable('refresh_tokens')
-        .set({ revoked_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+        .set({ revoked_at: toMysqlDatetime(new Date()) })
         .where('user_id', '=', existing.user_id)
         .where('revoked_at', 'is', null)
         .execute();
@@ -197,7 +216,7 @@ export class AuthService {
 
     await db
       .updateTable('refresh_tokens')
-      .set({ last_used_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      .set({ last_used_at: toMysqlDatetime(new Date()) })
       .where('id', '=', existing.id)
       .execute();
 
@@ -216,7 +235,7 @@ export class AuthService {
     const tokenHash = hashRefreshToken(rawRefreshToken);
     await db
       .updateTable('refresh_tokens')
-      .set({ revoked_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      .set({ revoked_at: toMysqlDatetime(new Date()) })
       .where('token_hash', '=', tokenHash)
       .where('revoked_at', 'is', null)
       .execute();
@@ -244,7 +263,7 @@ export class AuthService {
   async revokeSession(userId: number, sessionId: number): Promise<void> {
     const result = await db
       .updateTable('refresh_tokens')
-      .set({ revoked_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      .set({ revoked_at: toMysqlDatetime(new Date()) })
       .where('id', '=', sessionId)
       .where('user_id', '=', userId) // ownership check -- can't revoke someone else's session
       .where('revoked_at', 'is', null)
@@ -280,7 +299,7 @@ export class AuthService {
       .set({
         failed_attempts: newCount,
         ...(shouldLock
-          ? { locked_at: new Date().toISOString().slice(0, 19).replace('T', ' '), unlocked_at: null }
+          ? { locked_at: toMysqlDatetime(new Date()), unlocked_at: null }
           : {}),
       })
       .where('user_id', '=', userId)

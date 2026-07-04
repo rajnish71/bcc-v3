@@ -14,6 +14,11 @@ import { GroupService } from './groups/group.service';
 import { GroupController } from './groups/group.controller';
 import { ApplicationWorkflowService } from './application/application-workflow.service';
 import { ApplicationWorkflowController } from './application/application-workflow.controller';
+import { VotingRegisterService } from './voting-register/voting-register.service';
+import { VotingRegisterController } from './voting-register/voting-register.controller';
+import { MembershipCardService } from './card/membership-card.service';
+import { MembershipCardController } from './card/membership-card.controller';
+import { MembershipVerifyController } from './card/membership-verify.controller';
 import { MembershipController } from './membership.controller';
 
 @Module({
@@ -23,6 +28,9 @@ import { MembershipController } from './membership.controller';
     RecognitionController,
     GroupController,
     ApplicationWorkflowController,
+    VotingRegisterController,
+    MembershipCardController,
+    MembershipVerifyController,
     MembershipController,
   ],
   providers: [
@@ -32,6 +40,8 @@ import { MembershipController } from './membership.controller';
     RecognitionService,
     GroupService,
     ApplicationWorkflowService,
+    VotingRegisterService,
+    MembershipCardService,
   ],
   exports: [
     MembershipLifecycleService,
@@ -40,6 +50,8 @@ import { MembershipController } from './membership.controller';
     RecognitionService,
     GroupService,
     ApplicationWorkflowService,
+    VotingRegisterService,
+    MembershipCardService,
   ],
 })
 export class MembershipModule {}

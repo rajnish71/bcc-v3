@@ -203,7 +203,9 @@ export interface IdentityAuditLogTable {
 }
 
 // ============================================================================
-// MEM-006 / MEM-007 tables
+// MEM-006 / MEM-007 tables (Phase 0, migrations 0001-0009) -- typed here for
+// the first time as part of Module 02's build. The schema already existed;
+// only the Kysely typing was missing.
 // ============================================================================
 
 export interface MembershipClassesTable {
@@ -235,9 +237,7 @@ export interface GroupDelegatesTable {
   group_entity_id: number;
   user_id: number;
   role: Generated<string>;
-  // added_at is writable on UPDATE: re-activating a removed delegate resets
-  // this column (group.service.ts addDelegate). Cannot be Generated<...,never>.
-  added_at: ColumnType<Date, string | undefined, string>;
+  added_at: Generated<ColumnType<Date, string | undefined, never>>;
   removed_at: ColumnType<Date | null, string | null, string | null>;
 }
 
@@ -247,20 +247,12 @@ export interface MembershipsTable {
   owner_type: 'INDIVIDUAL' | 'GROUP';
   user_id: number | null;
   group_entity_id: number | null;
-  // Option B separation (migration 0026): exactly one of the next two columns
-  // is non-null, enforced by chk_membership_owner_axis CHECK constraint.
-  // MEM-006: "Group Memberships are not Membership Classes."
-  membership_class_id: number | null;
-  group_membership_type_id: number | null;
+  membership_class_id: number;
   lifecycle_state: 'PENDING' | 'APPROVED' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'TERMINATED' | 'REJECTED';
   join_year: number | null;
   join_month: number | null;
   number_serial: number | null;
   membership_number: string | null;
-  // Opaque unguessable QR/verify slug -- distinct from membership_number,
-  // which is sequential and must never appear in a public verify URL.
-  // Lazily generated; NULL until the member's first card is issued.
-  card_verify_token: string | null;
   number_assigned_at: ColumnType<Date | null, string | null, string | null>;
   last_payment_status: Generated<'NONE' | 'PENDING' | 'FAILED' | 'SUCCEEDED'>;
   pending_payment_id: number | null;
@@ -288,7 +280,8 @@ export interface MemberRecognitionsTable {
   assigned_by_user_id: number | null;
   start_date: ColumnType<Date, string, string>;
   end_date: ColumnType<Date | null, string | null, string | null>;
-  // Generated STORED column -- never write to this directly.
+  // Generated STORED column (IF(status='ACTIVE', membership_id, NULL)) --
+  // never write to this column directly.
   active_lock: Generated<number | null>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
@@ -318,27 +311,10 @@ export interface IndividualOverridesTable {
   id: Generated<number>;
   membership_id: number;
   entitlement_key: string;
-  override_type: Generated<'GRANT' | 'REVOKE'>;
   override_value: string;
   reason: string;
-  expires_at: ColumnType<Date | null, string | null, string | null>;
   created_by_user_id: number | null;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
-}
-
-export interface RecognitionCriteriaTable {
-  id: Generated<number>;
-  recognition_code:
-    | 'SENIOR_MEMBER'
-    | 'HONORARY_SENIOR_MEMBER'
-    | 'HONORARY_MEMBER'
-    | 'HONORARY_MENTOR'
-    | 'HONORARY_GRANDMASTER';
-  criteria_key: string;
-  criteria_value: string;
-  updated_by_user_id: number | null;
-  created_at: Generated<ColumnType<Date, string | undefined, never>>;
-  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
 }
 
 export interface MembershipAuditLogTable {
@@ -379,6 +355,11 @@ export interface MembershipTempIdentifiersTable {
   retired_at: ColumnType<Date | null, string | null, string | null>;
 }
 
+// ============================================================================
+// payments (migration 0023, this session) -- minimal, Module 11 expected to
+// ALTER this table rather than replace it.
+// ============================================================================
+
 export interface PaymentsTable {
   id: Generated<number>;
   uuid: string;
@@ -394,90 +375,6 @@ export interface PaymentsTable {
   recorded_by_user_id: number | null;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
   updated_at: Generated<ColumnType<Date, string | undefined, string>>;
-}
-
-// ============================================================================
-// Batch 3 -- Group Membership Type separation (migration 0026) +
-// Application Workflow (migration 0027)
-// ============================================================================
-
-export interface GroupMembershipTypesTable {
-  id: Generated<number>;
-  code: string;
-  name: string;
-  entity_type: 'FAMILY' | 'CORPORATE' | 'INSTITUTIONAL';
-  is_renewable: boolean;
-  sort_order: Generated<number>;
-  created_at: Generated<ColumnType<Date, string | undefined, never>>;
-}
-
-export interface GroupTypeEntitlementsTable {
-  id: Generated<number>;
-  group_membership_type_id: number;
-  entitlement_key: string;
-  entitlement_value: string;
-  created_at: Generated<ColumnType<Date, string | undefined, never>>;
-}
-
-export interface MembershipApplicationDocumentsTable {
-  id: Generated<number>;
-  uuid: string;
-  membership_id: number;
-  document_type: string;
-  r2_object_key: string;
-  original_filename: string;
-  mime_type: string;
-  size_bytes: number | null;
-  upload_status: Generated<'AWAITING_UPLOAD' | 'UPLOADED'>;
-  uploaded_at: ColumnType<Date | null, string | null, string | null>;
-  uploaded_by_user_id: number | null;
-  review_status: Generated<'PENDING_REVIEW' | 'ACCEPTED' | 'REJECTED'>;
-  review_note: string | null;
-  reviewed_by_user_id: number | null;
-  reviewed_at: ColumnType<Date | null, string | null, string | null>;
-  created_at: Generated<ColumnType<Date, string | undefined, never>>;
-}
-
-export interface MembershipApplicationMessagesTable {
-  id: Generated<number>;
-  membership_id: number;
-  message_type: 'INTERNAL_NOTE' | 'CLARIFICATION_REQUEST' | 'APPLICANT_RESPONSE';
-  body: string;
-  author_user_id: number | null;
-  parent_message_id: number | null;
-  resolved_at: ColumnType<Date | null, string | null, string | null>;
-  created_at: Generated<ColumnType<Date, string | undefined, never>>;
-}
-
-export interface MembershipApprovalStagesTable {
-  id: Generated<number>;
-  membership_id: number;
-  stage: 'COORDINATOR' | 'COMMITTEE' | 'FINAL';
-  decision: 'APPROVED' | 'REJECTED';
-  actor_user_id: number | null;
-  note: string | null;
-  created_at: Generated<ColumnType<Date, string | undefined, never>>;
-}
-
-// ============================================================================
-// Batch 4 -- Voting Register (migration 0028, MEM-006 §02.11)
-// ============================================================================
-
-// Immutable point-in-time snapshots of voting-eligible members for AGM use.
-// Voting-eligible = ACTIVE state + Constitutional class (Full/Life/Patron/
-// Founding). This is a constitutional rule -- not entitlement configuration.
-// Rows are never updated after insert; the snapshot_json captures state as-at
-// generated_at. Quorum formula: ceil(eligible_count / 3) stored at generation.
-export interface VotingRegisterSnapshotsTable {
-  id: Generated<number>;
-  uuid: string;
-  label: string;
-  generated_by_user_id: number | null;
-  eligible_count: number;
-  quorum_threshold: number;
-  // JSON: VotingRegisterEntry[] -- see voting-register.service.ts
-  snapshot_json: string;
-  generated_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
 
 export interface DB {
@@ -508,20 +405,13 @@ export interface DB {
   memberships: MembershipsTable;
   member_recognitions: MemberRecognitionsTable;
   class_entitlements: ClassEntitlementsTable;
-  group_membership_types: GroupMembershipTypesTable;
-  group_type_entitlements: GroupTypeEntitlementsTable;
   recognition_modifiers: RecognitionModifiersTable;
   individual_overrides: IndividualOverridesTable;
-  recognition_criteria: RecognitionCriteriaTable;
   membership_audit_log: MembershipAuditLogTable;
   membership_number_pool: MembershipNumberPoolTable;
   membership_number_log: MembershipNumberLogTable;
   membership_temp_identifiers: MembershipTempIdentifiersTable;
   payments: PaymentsTable;
-  membership_application_documents: MembershipApplicationDocumentsTable;
-  membership_application_messages: MembershipApplicationMessagesTable;
-  membership_approval_stages: MembershipApprovalStagesTable;
-  voting_register_snapshots: VotingRegisterSnapshotsTable;
 }
 
 const dialect = new MysqlDialect({

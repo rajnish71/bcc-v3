@@ -3,15 +3,15 @@
 // HTTP surface: application intake (self + on-behalf) + seven-state lifecycle
 // + migration-only reserved-number assignment.
 //
-// Batch 3 change: POST /:id/approve and /:id/reject now route through
+// Batch 3: POST /:id/approve and /:id/reject route through
 // ApplicationWorkflowService.recordStageDecision() -- a coordinator approval
 // IS the COORDINATOR stage of the staged approval flow (spec 02.4). For
 // operational and group applications this is the sole required stage and
 // completes the transition; for constitutional-class applications it records
-// the stage and the next required stage is returned.
+// the stage and returns the next required stage.
 
 import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
-placeholder
+import { db } from '../../database/db';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { CurrentUser } from '../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../identity/auth/token.util';
@@ -67,9 +67,6 @@ export class MembershipController {
   @UseGuards(AccessTokenGuard, RbacGuard)
   @RequirePermissions('membership.application.approve')
   async approve(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
-    // A coordinator approval IS the COORDINATOR stage (spec 02.4).
-    // Operational/group: single stage, fires PENDING -> APPROVED.
-    // Constitutional: records stage, reports nextStage = COMMITTEE.
     return this.workflow.recordStageDecision({
       membershipId: id,
       stage: 'COORDINATOR',
@@ -97,8 +94,6 @@ export class MembershipController {
   }
 
   // -- Activation / payment -------------------------------------------
-  // Manual/coordinator activation path. Razorpay webhook (Module 11) will
-  // call lifecycle.activate() directly -- not through this guarded route.
 
   @Post(':id/activate')
   @HttpCode(200)
@@ -176,9 +171,8 @@ export class MembershipController {
     return { ok: true };
   }
 
-  // -- Worklist: pending applications / expiry candidates ----------------
-  // NOTE: this static route MUST be declared before GET /:id to prevent
-  // NestJS routing the string 'admin' as an :id param.
+  // -- Reads ---------------------------------------------------------
+  // Static routes declared before parameterised :id to prevent shadowing.
 
   @Get('admin/pending')
   @HttpCode(200)
@@ -218,7 +212,7 @@ export class MembershipController {
 
   // -- Migration-only numbering (Super Admin only) -----------------------
   // MEM-007 §7: one-time allocation for Founding (00001-00007) and
-  // Historical Block (00008-00020). Must run inside a transaction.
+  // Historical Block (00008-00020). Runs inside a transaction.
 
   @Post('migration/:id/assign-reserved-number')
   @HttpCode(200)

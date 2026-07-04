@@ -480,6 +480,67 @@ export interface VotingRegisterSnapshotsTable {
   generated_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
 
+// ============================================================================
+// Module 17 -- Communication Engine (migrations 0030-0032)
+// ============================================================================
+
+export interface NotificationTypesTable {
+  id: Generated<number>;
+  type_key: string;
+  category: 'TRANSACTIONAL' | 'LIFECYCLE' | 'ALERT' | 'BROADCAST' | 'DIGEST';
+  module: string;
+  trigger_event: string;
+  fires_email: boolean;
+  fires_in_app: boolean;
+  fires_whatsapp: boolean;
+  fires_sms: boolean;
+  is_opt_outable: boolean;
+  is_active: boolean;
+}
+
+export interface NotificationTemplatesTable {
+  id: Generated<number>;
+  type_key: string;
+  channel: 'EMAIL' | 'IN_APP' | 'WHATSAPP' | 'SMS';
+  subject_en: string | null;
+  body_en: string;
+  subject_hi: string | null;
+  body_hi: string | null;
+  variables: unknown | null;
+  version: Generated<number>;
+  is_active: Generated<boolean>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface NotificationLogTable {
+  id: Generated<number>;
+  type_key: string;
+  user_id: number;
+  channel: 'IN_APP' | 'EMAIL' | 'WHATSAPP' | 'SMS';
+  status: Generated<'QUEUED' | 'SENT' | 'FAILED' | 'BOUNCED' | 'SKIPPED'>;
+  provider_message_id: string | null;
+  variables_snapshot: unknown | null;
+  skip_reason: string | null;
+  sent_at: ColumnType<Date | null, string | null, string | null>;
+  failed_at: ColumnType<Date | null, string | null, string | null>;
+  retry_count: Generated<number>;
+  error_detail: string | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface InAppNotificationsTable {
+  id: Generated<number>;
+  log_id: number;
+  user_id: number;
+  title: string;
+  body: string;
+  action_url: string | null;
+  is_read: Generated<boolean>;
+  read_at: ColumnType<Date | null, string | null, string | null>;
+  expires_at: ColumnType<Date, string, string>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
 export interface DB {
   users: UsersTable;
   user_avatars: UserAvatarsTable;
@@ -522,6 +583,10 @@ export interface DB {
   membership_application_messages: MembershipApplicationMessagesTable;
   membership_approval_stages: MembershipApprovalStagesTable;
   voting_register_snapshots: VotingRegisterSnapshotsTable;
+  notification_types: NotificationTypesTable;
+  notification_templates: NotificationTemplatesTable;
+  notification_log: NotificationLogTable;
+  in_app_notifications: InAppNotificationsTable;
 }
 
 const dialect = new MysqlDialect({

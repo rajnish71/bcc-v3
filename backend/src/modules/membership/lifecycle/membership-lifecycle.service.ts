@@ -40,8 +40,12 @@ type LifecycleState = 'PENDING' | 'APPROVED' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED
 type MembershipRow = Selectable<MembershipsTable>;
 
 export interface ApplyMembershipParams {
-  membershipClassId: number;
   ownerType: 'INDIVIDUAL' | 'GROUP';
+  // INDIVIDUAL -> membershipClassId required; GROUP -> groupMembershipTypeId
+  // required (Option B separation, migration 0026). Cross-validated in
+  // apply(), hard-enforced by chk_membership_owner_axis at the DB layer.
+  membershipClassId?: number | null;
+  groupMembershipTypeId?: number | null;
   userId?: number | null;
   groupEntityId?: number | null;
 }
@@ -59,19 +63,54 @@ export class MembershipLifecycleService {
   // only -- see EntitlementService.getClassConfigValue). Lifetime classes
   // get expires_at = null. A renewable class MISSING its config is treated
   // as a loud error, not silently perpetual.
-  private async computeExpiry(membershipClassId: number, from: Date): Promise<string | null> {
-    const cls = await db
-      .selectFrom('membership_classes')
-      .select(['is_renewable', 'is_lifetime', 'name'])
-      .where('id', '=', membershipClassId)
-      .executeTakeFirstOrThrow();
+  private async computeExpiry(
+    membership: Pick<MembershipRow, 'owner_type' | 'membership_class_id' | 'group_membership_type_id'>,
+    from: Date,
+  ): Promise<string | null> {
+    let isRenewable: boolean;
+    let isLifetime: boolean;
+    let holderName: string;
+    let termRaw: string | null;
+    let fixHint: string;
 
-    if (cls.is_lifetime || !cls.is_renewable) return null;
+    if (membership.owner_type === 'GROUP') {
+      if (membership.group_membership_type_id == null) {
+        throw new ConflictException('GROUP membership row has no group_membership_type_id -- data violates the 0026 owner-axis rule.');
+      }
+      const gt = await db
+        .selectFrom('group_membership_types')
+        .select(['is_renewable', 'name'])
+        .where('id', '=', membership.group_membership_type_id)
+        .executeTakeFirstOrThrow();
+      isRenewable = !!gt.is_renewable;
+      isLifetime = false; // no lifetime group types exist; a column can be added if governance ever creates one
+      holderName = gt.name;
+      termRaw = await this.entitlementService.getGroupTypeConfigValue(
+        membership.group_membership_type_id,
+        'renewal_term_months',
+      );
+      fixHint = 'Run seed_0005 or set it via the group entitlements endpoint.';
+    } else {
+      if (membership.membership_class_id == null) {
+        throw new ConflictException('INDIVIDUAL membership row has no membership_class_id -- data violates the 0026 owner-axis rule.');
+      }
+      const cls = await db
+        .selectFrom('membership_classes')
+        .select(['is_renewable', 'is_lifetime', 'name'])
+        .where('id', '=', membership.membership_class_id)
+        .executeTakeFirstOrThrow();
+      isRenewable = !!cls.is_renewable;
+      isLifetime = !!cls.is_lifetime;
+      holderName = cls.name;
+      termRaw = await this.entitlementService.getClassConfigValue(membership.membership_class_id, 'renewal_term_months');
+      fixHint = 'Run seed_0004 or set it via the entitlements endpoint.';
+    }
 
-    const termRaw = await this.entitlementService.getClassConfigValue(membershipClassId, 'renewal_term_months');
+    if (isLifetime || !isRenewable) return null;
+
     if (!termRaw) {
       throw new ConflictException(
-        `Class "${cls.name}" is renewable but has no renewal_term_months configured -- refusing to activate with an undefined term. Run seed_0004 or set it via the entitlements endpoint.`,
+        `"${holderName}" is renewable but has no renewal_term_months configured -- refusing to activate with an undefined term. ${fixHint}`,
       );
     }
     const months = parseInt(termRaw, 10);
@@ -80,8 +119,15 @@ export class MembershipLifecycleService {
     return toMysqlDatetime(expiry);
   }
 
-  private async gracePeriodDays(membershipClassId: number): Promise<number> {
-    const raw = await this.entitlementService.getClassConfigValue(membershipClassId, 'grace_period_days');
+  private async gracePeriodDays(
+    membership: Pick<MembershipRow, 'owner_type' | 'membership_class_id' | 'group_membership_type_id'>,
+  ): Promise<number> {
+    const raw =
+      membership.owner_type === 'GROUP' && membership.group_membership_type_id != null
+        ? await this.entitlementService.getGroupTypeConfigValue(membership.group_membership_type_id, 'grace_period_days')
+        : membership.membership_class_id != null
+          ? await this.entitlementService.getClassConfigValue(membership.membership_class_id, 'grace_period_days')
+          : null;
     return raw ? parseInt(raw, 10) : 0;
   }
 
@@ -89,32 +135,44 @@ export class MembershipLifecycleService {
   // -> PENDING
   // ======================================================================
   async apply(params: ApplyMembershipParams): Promise<{ id: number; uuid: string }> {
-    if (params.ownerType === 'INDIVIDUAL' && !params.userId) {
-      throw new BadRequestException('userId is required for an INDIVIDUAL membership application.');
+    if (params.ownerType === 'INDIVIDUAL') {
+      if (!params.userId) throw new BadRequestException('userId is required for an INDIVIDUAL membership application.');
+      if (!params.membershipClassId) {
+        throw new BadRequestException('membershipClassId is required for an INDIVIDUAL membership application.');
+      }
+      if (params.groupMembershipTypeId) {
+        throw new BadRequestException('groupMembershipTypeId is not valid for an INDIVIDUAL application -- group types are not membership classes (MEM-006).');
+      }
     }
-    if (params.ownerType === 'GROUP' && !params.groupEntityId) {
-      throw new BadRequestException('groupEntityId is required for a GROUP membership application.');
-    }
-
-    const membershipClass = await db
-      .selectFrom('membership_classes')
-      .selectAll()
-      .where('id', '=', params.membershipClassId)
-      .executeTakeFirst();
-    if (!membershipClass) throw new NotFoundException('Membership class not found.');
-
-    // MEM-006: "No new Founding Members may be created... System rejects
-    // any creation attempt." is_closed is currently TRUE only for
-    // FOUNDING_MEMBER, but this check is written against the flag, not the
-    // code, so it stays correct if a future constitutional amendment closes
-    // another class.
-    if (membershipClass.is_closed) {
-      throw new ForbiddenException(
-        `${membershipClass.name} is a closed constitutional class. No new applications are accepted.`,
-      );
+    if (params.ownerType === 'GROUP') {
+      if (!params.groupEntityId) throw new BadRequestException('groupEntityId is required for a GROUP membership application.');
+      if (!params.groupMembershipTypeId) {
+        throw new BadRequestException('groupMembershipTypeId is required for a GROUP membership application.');
+      }
+      if (params.membershipClassId) {
+        throw new BadRequestException('membershipClassId is not valid for a GROUP application -- group memberships are not membership classes (MEM-006).');
+      }
     }
 
     if (params.ownerType === 'INDIVIDUAL') {
+      const membershipClass = await db
+        .selectFrom('membership_classes')
+        .selectAll()
+        .where('id', '=', params.membershipClassId!)
+        .executeTakeFirst();
+      if (!membershipClass) throw new NotFoundException('Membership class not found.');
+
+      // MEM-006: "No new Founding Members may be created... System rejects
+      // any creation attempt." is_closed is currently TRUE only for
+      // FOUNDING_MEMBER, but this check is written against the flag, not the
+      // code, so it stays correct if a future constitutional amendment closes
+      // another class.
+      if (membershipClass.is_closed) {
+        throw new ForbiddenException(
+          `${membershipClass.name} is a closed constitutional class. No new applications are accepted.`,
+        );
+      }
+
       const existingOpen = await db
         .selectFrom('memberships')
         .select('id')
@@ -123,6 +181,38 @@ export class MembershipLifecycleService {
         .executeTakeFirst();
       if (existingOpen) {
         throw new ConflictException('This user already has an open or active membership record.');
+      }
+    } else {
+      const groupType = await db
+        .selectFrom('group_membership_types')
+        .selectAll()
+        .where('id', '=', params.groupMembershipTypeId!)
+        .executeTakeFirst();
+      if (!groupType) throw new NotFoundException('Group membership type not found.');
+
+      const groupEntity = await db
+        .selectFrom('group_entities')
+        .select(['id', 'type'])
+        .where('id', '=', params.groupEntityId!)
+        .executeTakeFirst();
+      if (!groupEntity) throw new NotFoundException('Group entity not found.');
+
+      // A FAMILY entity cannot apply for Corporate Membership etc. --
+      // group_membership_types.entity_type binds each type to its entity kind.
+      if (groupEntity.type !== groupType.entity_type) {
+        throw new BadRequestException(
+          `A ${groupEntity.type} entity cannot apply for ${groupType.name} (requires a ${groupType.entity_type} entity).`,
+        );
+      }
+
+      const existingOpen = await db
+        .selectFrom('memberships')
+        .select('id')
+        .where('group_entity_id', '=', params.groupEntityId!)
+        .where('lifecycle_state', 'in', ['PENDING', 'APPROVED', 'ACTIVE', 'SUSPENDED'])
+        .executeTakeFirst();
+      if (existingOpen) {
+        throw new ConflictException('This group entity already has an open or active membership record.');
       }
     }
 
@@ -136,7 +226,8 @@ export class MembershipLifecycleService {
         owner_type: params.ownerType,
         user_id: params.ownerType === 'INDIVIDUAL' ? params.userId! : null,
         group_entity_id: params.ownerType === 'GROUP' ? params.groupEntityId! : null,
-        membership_class_id: params.membershipClassId,
+        membership_class_id: params.ownerType === 'INDIVIDUAL' ? params.membershipClassId! : null,
+        group_membership_type_id: params.ownerType === 'GROUP' ? params.groupMembershipTypeId! : null,
         lifecycle_state: 'PENDING',
         applied_at: now,
       })
@@ -222,7 +313,7 @@ export class MembershipLifecycleService {
     const joinYear = opts?.joinYear ?? now.getFullYear();
     const joinMonth = opts?.joinMonth ?? now.getMonth() + 1;
 
-    const expiresAt = await this.computeExpiry(membership.membership_class_id, now);
+    const expiresAt = await this.computeExpiry(membership, now);
 
     const result = await db.transaction().execute(async (trx) => {
       await trx
@@ -391,7 +482,7 @@ export class MembershipLifecycleService {
     // Beyond-grace renewal is therefore blocked with a clear message rather
     // than silently allowed forever.
     if (membership.expires_at) {
-      const graceDays = await this.gracePeriodDays(membership.membership_class_id);
+      const graceDays = await this.gracePeriodDays(membership);
       const graceEnd = new Date(membership.expires_at);
       graceEnd.setDate(graceEnd.getDate() + graceDays);
       if (new Date() > graceEnd) {
@@ -401,7 +492,7 @@ export class MembershipLifecycleService {
       }
     }
 
-    const newExpiry = await this.computeExpiry(membership.membership_class_id, new Date());
+    const newExpiry = await this.computeExpiry(membership, new Date());
 
     await db
       .updateTable('memberships')

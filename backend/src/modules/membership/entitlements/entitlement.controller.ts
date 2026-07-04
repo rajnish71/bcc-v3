@@ -7,6 +7,7 @@ import { RbacGuard } from '../../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../../identity/rbac/permissions.decorator';
 import { EntitlementService } from './entitlement.service';
 import { SetClassEntitlementDto } from '../dto/set-class-entitlement.dto';
+import { SetGroupTypeEntitlementDto } from '../dto/set-group-type-entitlement.dto';
 import { SetRecognitionModifierDto } from '../dto/set-recognition-modifier.dto';
 import { CreateOverrideDto } from '../dto/create-override.dto';
 
@@ -39,6 +40,26 @@ export class EntitlementController {
     @Param('key') key: string,
   ) {
     await this.entitlements.removeClassEntitlement(membershipClassId, key, actor.sub);
+    return { ok: true };
+  }
+
+  @Post('group-type')
+  @HttpCode(200)
+  @RequirePermissions('group.entitlement.manage')
+  async setGroupTypeEntitlement(@CurrentUser() actor: AccessTokenPayload, @Body() dto: SetGroupTypeEntitlementDto) {
+    await this.entitlements.setGroupTypeEntitlement(dto.groupMembershipTypeId, dto.key, dto.value, actor.sub);
+    return { ok: true };
+  }
+
+  @Delete('group-type/:groupMembershipTypeId/:key')
+  @HttpCode(200)
+  @RequirePermissions('group.entitlement.manage')
+  async removeGroupTypeEntitlement(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('groupMembershipTypeId', ParseIntPipe) groupMembershipTypeId: number,
+    @Param('key') key: string,
+  ) {
+    await this.entitlements.removeGroupTypeEntitlement(groupMembershipTypeId, key, actor.sub);
     return { ok: true };
   }
 

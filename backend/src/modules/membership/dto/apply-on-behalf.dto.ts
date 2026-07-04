@@ -1,12 +1,22 @@
 import { IsInt, IsOptional, IsPositive } from 'class-validator';
 
-// Exactly one of userId / groupEntityId is expected -- enforced in
-// MembershipLifecycleService.apply(), not here, since "exactly one of A or
-// B" isn't a single-property class-validator decorator.
+// Two valid shapes, cross-validated in MembershipLifecycleService.apply()
+// (multi-property rules aren't single-decorator territory):
+//   INDIVIDUAL: userId + membershipClassId
+//   GROUP:      groupEntityId + groupMembershipTypeId
+// Option B separation (migration 0026): group memberships reference
+// group_membership_types, never membership_classes -- MEM-006: "Group
+// Memberships are not Membership Classes."
 export class ApplyOnBehalfDto {
+  @IsOptional()
   @IsInt()
   @IsPositive()
-  membershipClassId: number;
+  membershipClassId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  groupMembershipTypeId?: number;
 
   @IsOptional()
   @IsInt()

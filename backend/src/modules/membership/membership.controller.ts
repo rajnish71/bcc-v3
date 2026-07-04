@@ -15,6 +15,7 @@ import { RbacGuard } from '../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../identity/rbac/permissions.decorator';
 import { MembershipLifecycleService } from './lifecycle/membership-lifecycle.service';
 import { MembershipNumberingService } from './numbering/membership-numbering.service';
+import { ApplicationWorkflowService } from './application/application-workflow.service';
 import { ApplyMembershipDto } from './dto/apply-membership.dto';
 import { ApplyOnBehalfDto } from './dto/apply-on-behalf.dto';
 import { RejectMembershipDto } from './dto/reject-membership.dto';
@@ -27,6 +28,7 @@ export class MembershipController {
   constructor(
     private readonly lifecycle: MembershipLifecycleService,
     private readonly numbering: MembershipNumberingService,
+    private readonly workflow: ApplicationWorkflowService,
   ) {}
 
   // -- Applications --------------------------------------------------
@@ -34,13 +36,7 @@ export class MembershipController {
   @Post('applications')
   @HttpCode(201)
   @UseGuards(AccessTokenGuard)
-  async apply(@CurrentUser() actor: AccessTokenPayload, @Body() dto: ApplyMembershipDto) {
-    return this.lifecycle.apply({
-      membershipClassId: dto.membershipClassId,
-      ownerType: 'INDIVIDUAL',
-      userId: actor.sub,
-    });
-  }
+placeholder
 
   @Post('applications/on-behalf')
   @HttpCode(201)
@@ -48,8 +44,9 @@ export class MembershipController {
   @RequirePermissions('membership.application.create_for_others')
   async applyOnBehalf(@Body() dto: ApplyOnBehalfDto) {
     return this.lifecycle.apply({
-      membershipClassId: dto.membershipClassId,
       ownerType: dto.groupEntityId ? 'GROUP' : 'INDIVIDUAL',
+      membershipClassId: dto.membershipClassId ?? null,
+      groupMembershipTypeId: dto.groupMembershipTypeId ?? null,
       userId: dto.groupEntityId ? null : dto.userId,
       groupEntityId: dto.groupEntityId ?? null,
     });
@@ -60,8 +57,17 @@ export class MembershipController {
   @UseGuards(AccessTokenGuard, RbacGuard)
   @RequirePermissions('membership.application.approve')
   async approve(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
-    await this.lifecycle.approve(id, actor.sub);
-    return { ok: true };
+    // Batch 3: a coordinator approval IS the COORDINATOR stage of the
+    // staged workflow (spec 02.4). For operational/group applications this
+    // is the only stage and completes approval; for constitutional-class
+    // applications it records the stage and reports what's next --
+    // PENDING -> APPROVED fires only on the FINAL stage.
+    return this.workflow.recordStageDecision({
+      membershipId: id,
+      stage: 'COORDINATOR',
+      decision: 'APPROVED',
+      actorUserId: actor.sub,
+    });
   }
 
   @Post(':id/reject')
@@ -73,8 +79,16 @@ export class MembershipController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: RejectMembershipDto,
   ) {
-    await this.lifecycle.reject(id, actor.sub, dto.reason);
-    return { ok: true };
+    // Coordinator-stage rejection: recorded as a stage decision, which then
+    // fires the PENDING -> REJECTED lifecycle transition (with emails).
+    // Committee/final rejections use their own stage endpoints.
+    return this.workflow.recordStageDecision({
+      membershipId: id,
+      stage: 'COORDINATOR',
+      decision: 'REJECTED',
+      actorUserId: actor.sub,
+      note: dto.reason,
+    });
   }
 
   // -- Activation / payment -------------------------------------------

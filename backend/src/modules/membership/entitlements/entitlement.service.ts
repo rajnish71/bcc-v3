@@ -38,7 +38,7 @@ export class EntitlementService {
   async resolve(membershipId: number): Promise<ResolvedEntitlements> {
     const membership = await db
       .selectFrom('memberships')
-      .select(['id', 'membership_class_id'])
+      .select(['id', 'owner_type', 'membership_class_id', 'group_membership_type_id'])
       .where('id', '=', membershipId)
       .executeTakeFirst();
     if (!membership) throw new NotFoundException('Membership record not found.');
@@ -46,20 +46,40 @@ export class EntitlementService {
     const resolved: Record<string, string> = {};
     const provenance: ResolvedEntitlements['provenance'] = [];
 
-    // Layer 1 -- class base
-    const classRows = await db
-      .selectFrom('class_entitlements')
-      .select(['entitlement_key', 'entitlement_value'])
-      .where('membership_class_id', '=', membership.membership_class_id)
-      .execute();
-    for (const row of classRows) {
-      resolved[row.entitlement_key] = row.entitlement_value;
-      provenance.push({
-        key: row.entitlement_key,
-        value: row.entitlement_value,
-        source: 'CLASS',
-        detail: `class_entitlements (class_id=${membership.membership_class_id})`,
-      });
+    // Layer 1 -- base. MEM-006's frozen formula names this term
+    // "Base(Membership Class)"; post-0026 (Option B separation) the base for
+    // a GROUP-owned membership is its group type's config, which fills the
+    // same slot in the formula without making group types classes.
+    if (membership.owner_type === 'GROUP' && membership.group_membership_type_id !== null) {
+      const groupRows = await db
+        .selectFrom('group_type_entitlements')
+        .select(['entitlement_key', 'entitlement_value'])
+        .where('group_membership_type_id', '=', membership.group_membership_type_id)
+        .execute();
+      for (const row of groupRows) {
+        resolved[row.entitlement_key] = row.entitlement_value;
+        provenance.push({
+          key: row.entitlement_key,
+          value: row.entitlement_value,
+          source: 'CLASS',
+          detail: `group_type_entitlements (group_type_id=${membership.group_membership_type_id})`,
+        });
+      }
+    } else if (membership.membership_class_id !== null) {
+      const classRows = await db
+        .selectFrom('class_entitlements')
+        .select(['entitlement_key', 'entitlement_value'])
+        .where('membership_class_id', '=', membership.membership_class_id)
+        .execute();
+      for (const row of classRows) {
+        resolved[row.entitlement_key] = row.entitlement_value;
+        provenance.push({
+          key: row.entitlement_key,
+          value: row.entitlement_value,
+          source: 'CLASS',
+          detail: `class_entitlements (class_id=${membership.membership_class_id})`,
+        });
+      }
     }
 
     // Layer 2 -- active recognition modifiers (at most one active
@@ -129,6 +149,19 @@ export class EntitlementService {
     return row?.entitlement_value ?? null;
   }
 
+  // GROUP-side twin of getClassConfigValue -- same layer-1-only policy
+  // reading, same rationale (renewal/grace/max_delegates are type-level
+  // policy, never overridable via layer 3).
+  async getGroupTypeConfigValue(groupMembershipTypeId: number, key: string): Promise<string | null> {
+    const row = await db
+      .selectFrom('group_type_entitlements')
+      .select('entitlement_value')
+      .where('group_membership_type_id', '=', groupMembershipTypeId)
+      .where('entitlement_key', '=', key)
+      .executeTakeFirst();
+    return row?.entitlement_value ?? null;
+  }
+
   // ---- Admin mutations (all audited) ----------------------------------
 
   async setClassEntitlement(
@@ -165,6 +198,43 @@ export class EntitlementService {
       actorType: 'ADMIN',
       actorUserId,
       oldValue: { membershipClassId, key },
+    });
+  }
+
+  async setGroupTypeEntitlement(
+    groupMembershipTypeId: number,
+    key: string,
+    value: string,
+    actorUserId: number,
+  ): Promise<void> {
+    await db
+      .insertInto('group_type_entitlements')
+      .values({ group_membership_type_id: groupMembershipTypeId, entitlement_key: key, entitlement_value: value })
+      .onDuplicateKeyUpdate({ entitlement_value: value })
+      .execute();
+
+    await logMembershipAudit({
+      membershipId: null,
+      eventType: 'GROUP_TYPE_ENTITLEMENT_SET',
+      actorType: 'ADMIN',
+      actorUserId,
+      newValue: { groupMembershipTypeId, key, value },
+    });
+  }
+
+  async removeGroupTypeEntitlement(groupMembershipTypeId: number, key: string, actorUserId: number): Promise<void> {
+    await db
+      .deleteFrom('group_type_entitlements')
+      .where('group_membership_type_id', '=', groupMembershipTypeId)
+      .where('entitlement_key', '=', key)
+      .execute();
+
+    await logMembershipAudit({
+      membershipId: null,
+      eventType: 'GROUP_TYPE_ENTITLEMENT_REMOVED',
+      actorType: 'ADMIN',
+      actorUserId,
+      oldValue: { groupMembershipTypeId, key },
     });
   }
 

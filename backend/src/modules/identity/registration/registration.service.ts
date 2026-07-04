@@ -48,6 +48,7 @@ import { AdminCreateAccountDto } from './dto/admin-create-account.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 import { EmailService } from '../../shared/communication/email.service';
+import { CommunicationService } from '../../shared/communication/communication.service';
 
 const EMAIL_VERIFICATION_TTL_HOURS = 24;
 const OTP_TTL_MINUTES = 5;
@@ -82,6 +83,7 @@ export class RegistrationService {
   constructor(
     private readonly authService: AuthService,
     private readonly emailService: EmailService,
+    private readonly communicationService: CommunicationService,
   ) {}
 
   // ======================================================================
@@ -155,13 +157,17 @@ export class RegistrationService {
       .execute();
 
     const verifyUrl = `${this.frontendBaseUrl()}/verify-email?token=${rawToken}`;
-    await this.emailService.send(
-      email,
-      'Verify your BCC email address',
-      `<p>Welcome to Bhopal Camera Club. Click the link below to verify your email:</p>` +
-        `<p><a href="${verifyUrl}">${verifyUrl}</a></p>` +
-        `<p>This link expires in ${EMAIL_VERIFICATION_TTL_HOURS} hours.</p>`,
-    );
+    // Dispatch via engine: logs, respects opt-out, fires in-app + email from template.
+    const userRow = await db
+      .selectFrom('users')
+      .select('full_name')
+      .where('id', '=', userId)
+      .executeTakeFirst();
+    const firstName = userRow?.full_name?.split(' ')[0] ?? 'there';
+    await this.communicationService.dispatch('AUTH_EMAIL_VERIFY', userId, {
+      first_name: firstName,
+      verification_url: verifyUrl,
+    });
   }
 
   // ======================================================================
@@ -360,13 +366,31 @@ export class RegistrationService {
       .execute();
 
     const magicUrl = `${this.frontendBaseUrl()}/magic-link?token=${rawToken}`;
-    await this.emailService.send(
-      dto.email,
-      'Your BCC sign-in link',
-      `<p>Click the link below to sign in to Bhopal Camera Club:</p>` +
-        `<p><a href="${magicUrl}">${magicUrl}</a></p>` +
-        `<p>This link expires in ${MAGIC_LINK_TTL_MINUTES} minutes and can only be used once.</p>`,
-    );
+    // Look up user for dispatch. If no account exists for this email, fall
+    // back to a direct email (enumeration-safe: both paths send an email).
+    const magicUser = await db
+      .selectFrom('users')
+      .select(['id', 'full_name'])
+      .where('email', '=', dto.email)
+      .executeTakeFirst();
+    if (magicUser) {
+      const firstName = magicUser.full_name?.split(' ')[0] ?? 'there';
+      await this.communicationService.dispatch('AUTH_MAGIC_LINK', magicUser.id, {
+        first_name: firstName,
+        magic_link_url: magicUrl,
+      });
+    } else {
+      // Pre-user path: no account yet -- send direct, no log entry possible.
+      await this.emailService.send(
+        dto.email,
+        'Your BCC sign-in link',
+        this.communicationService.wrapEmail(
+          `<p>Click the link below to sign in to Bhopal Camera Club:</p>` +
+          `<p style="margin:24px 0;"><a href="${magicUrl}" style="display:inline-block;background:#F5A82A;color:#0B0B0E;padding:12px 28px;border-radius:4px;text-decoration:none;font-weight:bold;">Sign In to BCC</a></p>` +
+          `<p style="color:#666;font-size:13px;">This link expires in ${MAGIC_LINK_TTL_MINUTES} minutes and can only be used once.</p>`,
+        ),
+      );
+    }
     return { message: 'Magic link sent' };
   }
 

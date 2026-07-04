@@ -1,0 +1,147 @@
+---
+/**
+ * MemberBadge.astro
+ * Renders a membership class badge + an optional recognition badge.
+ * Only the three public operational classes (Basic, Student, Individual)
+ * may be rendered on public-facing pages per MEM-006 public domain policy.
+ *
+ * Constitutional classes (Full, Life, Patron, Founding) are intentionally
+ * omitted from this component's public export — they may be added as a
+ * separate MemberBadge variant used only inside the authenticated Member Hub.
+ */
+
+type PublicClass = 'basic' | 'student' | 'individual';
+type AnyClass    = PublicClass | 'family' | 'senior' | 'honorary' | 'life' | 'patron' | 'founding';
+
+type RecognitionLabel =
+  | 'Master Photographer'
+  | 'Expert Photographer'
+  | 'Club Champion'
+  | 'Distinguished Member'
+  | 'Mentor';
+
+interface Props {
+  /** Membership class — determines badge color */
+  memberClass: AnyClass;
+  /** Optional recognition label (one per member, shown alongside class badge) */
+  recognition?: RecognitionLabel;
+  /** Badge size */
+  size?: 'sm' | 'md';
+}
+
+const { memberClass, recognition, size = 'md' } = Astro.props;
+
+const classLabels: Record<AnyClass, string> = {
+  basic:       'Basic',
+  student:     'Student',
+  individual:  'Individual',
+  family:      'Family',
+  senior:      'Senior',
+  honorary:    'Honorary',
+  life:        'Life',
+  patron:      'Patron',
+  founding:    'Founding',
+};
+
+// CSS custom property names — colours defined in tokens.css
+const classCssVar: Record<AnyClass, string> = {
+  basic:      'var(--badge-basic)',
+  student:    'var(--badge-student)',
+  individual: 'var(--badge-individual)',
+  family:     'var(--badge-family)',
+  senior:     'var(--badge-senior)',
+  honorary:   'var(--badge-honorary)',
+  life:       'var(--badge-life)',
+  patron:     'var(--badge-patron)',
+  founding:   'var(--badge-founding)',
+};
+
+// Recognition badge accent colors
+const recognitionColors: Record<NonNullable<RecognitionLabel>, string> = {
+  'Master Photographer':   '#F9B72B',
+  'Expert Photographer':   '#00C8E8',
+  'Club Champion':         '#E8622D',
+  'Distinguished Member':  '#E4007F',
+  'Mentor':                '#8CB43A',
+};
+
+const label   = classLabels[memberClass] ?? memberClass;
+const bgColor = classCssVar[memberClass] ?? 'var(--surface-2)';
+const recColor = recognition ? (recognitionColors[recognition] ?? '#888') : null;
+---
+
+<div class:list={['badge-wrap', size === 'sm' && 'badge-wrap--sm']}>
+  <!-- Class badge -->
+  <span
+    class="badge badge--class"
+    style={`--badge-bg: ${bgColor};`}
+    aria-label={`${label} member`}
+  >
+    {label}
+  </span>
+
+  <!-- Recognition badge (optional, max 1 per member) -->
+  {recognition && recColor && (
+    <span
+      class="badge badge--recognition"
+      style={`--rec-color: ${recColor};`}
+      aria-label={`Recognition: ${recognition}`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+        <polygon points="4,0 5,3 8,3 5.5,5 6.5,8 4,6 1.5,8 2.5,5 0,3 3,3" fill="currentColor"/>
+      </svg>
+      {recognition}
+    </span>
+  )}
+</div>
+
+<style>
+.badge-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge--class {
+  background: color-mix(in srgb, var(--badge-bg) 20%, transparent);
+  color: color-mix(in srgb, var(--badge-bg) 90%, #fff);
+  border: 1px solid color-mix(in srgb, var(--badge-bg) 40%, transparent);
+}
+
+/* Fallback for browsers without color-mix */
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .badge--class {
+    background: rgba(255,255,255,0.06);
+    color: #ccc;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+}
+
+.badge--recognition {
+  background: rgba(0,0,0,0.2);
+  color: var(--rec-color);
+  border: 1px solid color-mix(in srgb, var(--rec-color) 40%, transparent);
+}
+
+/* Small variant */
+.badge-wrap--sm .badge {
+  font-size: 9px;
+  padding: 2px 6px;
+}
+</style>

@@ -278,6 +278,16 @@ export class CommunicationService {
   }
 
   // -------------------------------------------------------------------------
+  // wrapEmail() -- public helper for pre-user sends (no userId available).
+  // Wraps a raw HTML fragment in the standard BCC email shell without
+  // touching the notification_log or opt-out system. Used by registration
+  // flows where the recipient may not yet have a platform account.
+  // -------------------------------------------------------------------------
+  wrapEmail(htmlFragment: string): string {
+    return EMAIL_SHELL.split('{{BODY_CONTENT}}').join(htmlFragment);
+  }
+
+  // -------------------------------------------------------------------------
   // render() -- {{key}} substitution, no external library
   // -------------------------------------------------------------------------
   private render(template: string, vars: Record<string, string>): string {

@@ -30,7 +30,7 @@ import {
 import { randomUUID } from 'crypto';
 import { db } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
-import { EmailService } from '../../shared/communication/email.service';
+import { CommunicationService } from '../../shared/communication/communication.service';
 import { R2Service } from '../../shared/storage/r2.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
@@ -45,7 +45,7 @@ export class ApplicationWorkflowService {
   constructor(
     private readonly lifecycle: MembershipLifecycleService,
     private readonly r2: R2Service,
-    private readonly emailService: EmailService,
+    private readonly communicationService: CommunicationService,
   ) {}
 
   // ---- shared -----------------------------------------------------------
@@ -365,14 +365,12 @@ export class ApplicationWorkflowService {
           )?.primary_contact_user_id;
 
     if (recipientUserId) {
-      const user = await db.selectFrom('users').select('email').where('id', '=', recipientUserId).executeTakeFirst();
-      if (user?.email) {
-        await this.emailService.send(
-          user.email,
-          'Your BCC membership application needs a clarification',
-          `<p>A reviewer has requested a clarification on your membership application:</p><blockquote>${escapeHtml(body)}</blockquote><p>Please sign in and respond from your application page.</p>`,
-        );
-      }
+      await this.communicationService.dispatch(
+        'MEMBERSHIP_APPLICATION_CLARIFICATION',
+        recipientUserId,
+        { clarification_note: escapeHtml(body) },
+        { actionUrl: '/member/application' },
+      );
     }
 
     return { messageId: Number(inserted.insertId) };

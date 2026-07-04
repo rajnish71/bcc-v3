@@ -38,8 +38,6 @@ export class GroupService {
 
   // ---- Authorization helper -------------------------------------------
 
-  // Throws unless the actor is the entity's primary contact or holds the
-  // staff permission (the controller passes canManageAny after RBAC check).
   private async requireManageRights(groupEntityId: number, actorUserId: number, canManageAny: boolean) {
     const group = await db
       .selectFrom('group_entities')
@@ -110,8 +108,6 @@ export class GroupService {
     if (updates.name !== undefined) set.name = updates.name;
 
     if (updates.primaryContactUserId !== undefined) {
-      // New primary contact must already be an active delegate -- you hand
-      // the keys to someone inside the group, not a stranger.
       const isDelegate = await db
         .selectFrom('group_delegates')
         .select('id')
@@ -159,7 +155,6 @@ export class GroupService {
   }
 
   async listGroupsForUser(userId: number) {
-    // Groups where the user is primary contact or an active delegate.
     return db
       .selectFrom('group_entities as ge')
       .select(['ge.id', 'ge.uuid', 'ge.type', 'ge.name', 'ge.primary_contact_user_id'])
@@ -204,13 +199,10 @@ export class GroupService {
       .where('group_entity_id', '=', groupEntityId)
       .where('user_id', '=', userId)
       .executeTakeFirst();
-    if (existing && existing.removed_at === null) {
+    if (existing && !existing.removed_at) {
       throw new ConflictException('This user is already an active delegate of this group.');
     }
 
-    // max_delegates enforcement -- counts ACTIVE delegates only. NULL config
-    // means "no limit configured": allowed, but seed_0005 should normally
-    // have populated it.
     const max = await this.maxDelegatesFor(group.type);
     if (max !== null) {
       const activeCountRow = await db
@@ -230,7 +222,11 @@ export class GroupService {
       // Re-adding a previously removed delegate: revive the row (the unique
       // key on (group_entity_id, user_id) makes a fresh INSERT impossible,
       // by design -- history stays on one row).
-placeholder
+      await db
+        .updateTable('group_delegates')
+        .set({ removed_at: null, added_at: toMysqlDatetime(new Date()) })
+        .where('id', '=', existing.id)
+        .execute();
     } else {
       await db
         .insertInto('group_delegates')

@@ -1,10 +1,14 @@
 // backend/src/modules/membership/membership.controller.ts
 //
-// HTTP surface for this pass: application intake + the seven-state
-// lifecycle + migration-only reserved-number assignment. Deliberately does
-// NOT include entitlement/recognition/group-CRUD/voting/reporting
-// endpoints -- those are separate future sessions (see chat history for the
-// gap list flagged at the start of this build).
+// HTTP surface: application intake (self + on-behalf) + seven-state lifecycle
+// + migration-only reserved-number assignment.
+//
+// Batch 3 change: POST /:id/approve and /:id/reject now route through
+// ApplicationWorkflowService.recordStageDecision() -- a coordinator approval
+// IS the COORDINATOR stage of the staged approval flow (spec 02.4). For
+// operational and group applications this is the sole required stage and
+// completes the transition; for constitutional-class applications it records
+// the stage and the next required stage is returned.
 
 import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
 import { db } from '../../database/db';
@@ -36,7 +40,13 @@ export class MembershipController {
   @Post('applications')
   @HttpCode(201)
   @UseGuards(AccessTokenGuard)
-placeholder
+  async apply(@CurrentUser() actor: AccessTokenPayload, @Body() dto: ApplyMembershipDto) {
+    return this.lifecycle.apply({
+      ownerType: 'INDIVIDUAL',
+      membershipClassId: dto.membershipClassId,
+      userId: actor.sub,
+    });
+  }
 
   @Post('applications/on-behalf')
   @HttpCode(201)
@@ -57,11 +67,9 @@ placeholder
   @UseGuards(AccessTokenGuard, RbacGuard)
   @RequirePermissions('membership.application.approve')
   async approve(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
-    // Batch 3: a coordinator approval IS the COORDINATOR stage of the
-    // staged workflow (spec 02.4). For operational/group applications this
-    // is the only stage and completes approval; for constitutional-class
-    // applications it records the stage and reports what's next --
-    // PENDING -> APPROVED fires only on the FINAL stage.
+    // A coordinator approval IS the COORDINATOR stage (spec 02.4).
+    // Operational/group: single stage, fires PENDING -> APPROVED.
+    // Constitutional: records stage, reports nextStage = COMMITTEE.
     return this.workflow.recordStageDecision({
       membershipId: id,
       stage: 'COORDINATOR',
@@ -79,9 +87,6 @@ placeholder
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: RejectMembershipDto,
   ) {
-    // Coordinator-stage rejection: recorded as a stage decision, which then
-    // fires the PENDING -> REJECTED lifecycle transition (with emails).
-    // Committee/final rejections use their own stage endpoints.
     return this.workflow.recordStageDecision({
       membershipId: id,
       stage: 'COORDINATOR',
@@ -92,9 +97,8 @@ placeholder
   }
 
   // -- Activation / payment -------------------------------------------
-  // Manual/coordinator activation path. The eventual Razorpay-webhook path
-  // (Module 11) will call MembershipLifecycleService.activate() directly
-  // from the webhook handler, not through this guarded HTTP route.
+  // Manual/coordinator activation path. Razorpay webhook (Module 11) will
+  // call lifecycle.activate() directly -- not through this guarded route.
 
   @Post(':id/activate')
   @HttpCode(200)
@@ -138,8 +142,6 @@ placeholder
   }
 
   // -- Expiry / renewal -------------------------------------------------
-  // Manual/coordinator-triggered for now -- no scheduled job exists yet
-  // (see MembershipLifecycleService header).
 
   @Post(':id/expire')
   @HttpCode(200)
@@ -183,8 +185,6 @@ placeholder
     return this.lifecycle.listForUser(actor.sub);
   }
 
-  // Coordinator worklist: ACTIVE memberships past their renewal deadline.
-  // No cron on this box -- expiry is human-triggered from this list.
   @Get('due-for-expiry/list')
   @HttpCode(200)
   @UseGuards(AccessTokenGuard, RbacGuard)
@@ -202,9 +202,6 @@ placeholder
   }
 
   // -- Migration-only numbering (Super Admin only) -----------------------
-  // MEM-007 §7: one-time migration allocation for Founding (00001-00007)
-  // and Historical Block (00008-00020) serials. Not part of routine
-  // membership administration -- see membership-numbering.service.ts header.
 
   @Post('migration/:id/assign-reserved-number')
   @HttpCode(200)
@@ -215,17 +212,29 @@ placeholder
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AssignReservedNumberDto,
   ) {
-    return db.transaction().execute((trx) =>
-      this.numbering.assignReservedNumber(
-        trx,
-        id,
-        dto.serial,
-        dto.assignmentType,
-        dto.joinYear,
-        dto.joinMonth,
-        actor.sub,
-        dto.notes,
-      ),
+    return this.numbering.assignReservedNumber(
+      null,
+      id,
+      dto.numberSerial,
+      dto.joinYear,
+      dto.joinMonth,
+      actor.sub,
+      dto.notes ?? null,
     );
+  }
+
+  // -- Worklist: pending applications / expiry candidates ----------------
+
+  @Get('admin/pending')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.record.view')
+  async pendingApplications() {
+    return db
+      .selectFrom('memberships')
+      .selectAll()
+      .where('lifecycle_state', '=', 'PENDING')
+      .orderBy('applied_at', 'asc')
+      .execute();
   }
 }

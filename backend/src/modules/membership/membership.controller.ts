@@ -11,7 +11,7 @@
 // the stage and the next required stage is returned.
 
 import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
-import { db } from '../../database/db';
+placeholder
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { CurrentUser } from '../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../identity/auth/token.util';
@@ -176,7 +176,22 @@ export class MembershipController {
     return { ok: true };
   }
 
-  // -- Reads ---------------------------------------------------------
+  // -- Worklist: pending applications / expiry candidates ----------------
+  // NOTE: this static route MUST be declared before GET /:id to prevent
+  // NestJS routing the string 'admin' as an :id param.
+
+  @Get('admin/pending')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.record.view')
+  async pendingApplications() {
+    return db
+      .selectFrom('memberships')
+      .selectAll()
+      .where('lifecycle_state', '=', 'PENDING')
+      .orderBy('applied_at', 'asc')
+      .execute();
+  }
 
   @Get('mine')
   @HttpCode(200)
@@ -202,6 +217,8 @@ export class MembershipController {
   }
 
   // -- Migration-only numbering (Super Admin only) -----------------------
+  // MEM-007 §7: one-time allocation for Founding (00001-00007) and
+  // Historical Block (00008-00020). Must run inside a transaction.
 
   @Post('migration/:id/assign-reserved-number')
   @HttpCode(200)
@@ -212,29 +229,17 @@ export class MembershipController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AssignReservedNumberDto,
   ) {
-    return this.numbering.assignReservedNumber(
-      null,
-      id,
-      dto.numberSerial,
-      dto.joinYear,
-      dto.joinMonth,
-      actor.sub,
-      dto.notes ?? null,
+    return db.transaction().execute((trx) =>
+      this.numbering.assignReservedNumber(
+        trx,
+        id,
+        dto.serial,
+        dto.assignmentType,
+        dto.joinYear,
+        dto.joinMonth,
+        actor.sub,
+        dto.notes ?? undefined,
+      ),
     );
-  }
-
-  // -- Worklist: pending applications / expiry candidates ----------------
-
-  @Get('admin/pending')
-  @HttpCode(200)
-  @UseGuards(AccessTokenGuard, RbacGuard)
-  @RequirePermissions('membership.record.view')
-  async pendingApplications() {
-    return db
-      .selectFrom('memberships')
-      .selectAll()
-      .where('lifecycle_state', '=', 'PENDING')
-      .orderBy('applied_at', 'asc')
-      .execute();
   }
 }

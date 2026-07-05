@@ -1,8 +1,8 @@
 ---
 /**
- * BaseLayout.astro
- * HTML shell used by every public page. Includes Nav + Footer.
- * Imports global CSS. Preloads fonts.
+ * BaseLayout.astro — HTML shell for all public pages.
+ * Imports design system CSS. Preloads fonts. Includes Nav + Footer.
+ * Accessibility: skip link, aria-label on main.
  */
 import Nav from '../components/layout/Nav.astro';
 import Footer from '../components/layout/Footer.astro';
@@ -10,20 +10,16 @@ import '../styles/tokens.css';
 import '../styles/global.css';
 
 interface Props {
-  /** Page <title> prefix — appended with " | Bhopal Camera Club" */
   title: string;
-  /** <meta name="description"> content */
   description?: string;
-  /** Open Graph image URL (absolute) */
   ogImage?: string;
-  /** Optional extra class on <body> */
   bodyClass?: string;
 }
 
 const {
   title,
-  description = 'Bhopal Camera Club — Photography community, Bhopal. Events, contests, exhibitions, and a curated portfolio of member work.',
-  ogImage = '/og-default.jpg',
+  description = 'Bhopal Camera Club — photography community since 2016. Events, exhibitions, workshops, and a curated portfolio of member work.',
+  ogImage = '/images/og-default.jpg',
   bodyClass = '',
 } = Astro.props;
 
@@ -44,35 +40,135 @@ const fullTitle = `${title} | Bhopal Camera Club`;
   <meta property="og:url"         content={canonicalURL.toString()} />
   <meta property="og:title"       content={fullTitle} />
   <meta property="og:description" content={description} />
-  <meta property="og:image"       content={ogImage} />
+  <meta property="og:image"       content={new URL(ogImage, Astro.site ?? 'https://v3bcc.bhopal.info').toString()} />
   <meta property="og:site_name"   content="Bhopal Camera Club" />
   <meta name="twitter:card"       content="summary_large_image" />
-  <meta name="twitter:title"      content={fullTitle} />
-  <meta name="twitter:description" content={description} />
-  <meta name="twitter:image"      content={ogImage} />
 
   <link rel="canonical" href={canonicalURL.toString()} />
 
-  <!-- Favicon placeholder -->
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- Favicon — real BCC aperture mark -->
+  <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
 
-  <!-- Fonts: preconnect + load Outfit + Inter -->
+  <!-- Fonts — preconnect then load Outfit + Inter + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet"
   />
 
   <title>{fullTitle}</title>
 </head>
 <body class={bodyClass}>
+
+  <!-- Accessibility: skip to main content -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <Nav />
 
-  <main id="main-content" class="page-enter">
+  <main id="main-content" tabindex="-1">
     <slot />
   </main>
 
   <Footer />
+
+  <!-- Central GSAP initialiser — runs after all page content is in DOM -->
+  <script>
+    import { gsap } from 'gsap';
+    import { ScrollTrigger } from 'gsap/ScrollTrigger';
+    gsap.registerPlugin(ScrollTrigger);
+
+    /**
+     * data-gsap="reveal"
+     * Fade + 24px rise on scroll entry — used on section headers, cards, etc.
+     */
+    document.querySelectorAll<HTMLElement>('[data-gsap="reveal"]').forEach((el) => {
+      gsap.to(el, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+      });
+    });
+
+    /**
+     * data-gsap="stagger"
+     * Cascades children with --m-stagger (80ms) between each.
+     */
+    document.querySelectorAll<HTMLElement>('[data-gsap="stagger"]').forEach((parent) => {
+      const children = parent.children;
+      gsap.to(children, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power2.out',
+        stagger: 0.08,
+        scrollTrigger: { trigger: parent, start: 'top 85%', once: true },
+      });
+    });
+
+    /**
+     * data-gsap="counter"
+     * Animates a numeric text value from 0 to its data-target on scroll entry.
+     * Use: <span data-gsap="counter" data-target="311">311</span>
+     */
+    document.querySelectorAll<HTMLElement>('[data-gsap="counter"]').forEach((el) => {
+      const target = parseFloat(el.dataset.target ?? el.textContent ?? '0');
+      const suffix = el.dataset.suffix ?? '';
+      const counter = { val: 0 };
+      gsap.to(counter, {
+        val: target,
+        duration: 1.4,
+        ease: 'power1.inOut',
+        scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+        onUpdate: () => {
+          el.textContent = Math.round(counter.val).toLocaleString('en-IN') + suffix;
+        },
+      });
+    });
+
+    /**
+     * data-gsap="image-reveal"
+     * Clip-path wipe from bottom to top — for featured / hero images.
+     */
+    document.querySelectorAll<HTMLElement>('[data-gsap="image-reveal"]').forEach((el) => {
+      gsap.fromTo(el,
+        { clipPath: 'inset(100% 0% 0% 0%)' },
+        {
+          clipPath: 'inset(0% 0% 0% 0%)',
+          duration: 1.1,
+          ease: 'expo.out',
+          scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+        }
+      );
+    });
+
+    /**
+     * data-gsap="parallax-soft"
+     * Background drifts at 0.92× scroll speed — subtle depth for full-bleed bands.
+     */
+    document.querySelectorAll<HTMLElement>('[data-gsap="parallax-soft"]').forEach((el) => {
+      gsap.to(el, {
+        yPercent: -8,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+    });
+
+    /**
+     * data-gsap="aperture-spin"
+     * Slow continuous rotation — for any aperture decorative mark.
+     */
+    document.querySelectorAll<HTMLElement>('[data-gsap="aperture-spin"]').forEach((el) => {
+      gsap.to(el, { rotation: 360, duration: 40, repeat: -1, ease: 'none' });
+    });
+  </script>
+
 </body>
 </html>

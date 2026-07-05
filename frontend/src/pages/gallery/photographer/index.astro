@@ -1,0 +1,185 @@
+---
+/**
+ * gallery/photographer/index.astro
+ * Route: /gallery/photographer/
+ * Photographer directory — grid of member profile cards.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeader from '../../../components/ui/SectionHeader.astro';
+---
+
+<BaseLayout
+  title="Photographers"
+  description="Meet the photographers of Bhopal Camera Club. Browse member profiles and explore their portfolios."
+>
+
+  <div class="page-hero surface-white">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Our Photographers"
+        title="The people behind the lens"
+        subtitle="BCC is its members. Browse profiles and explore their portfolios."
+        as="h1"
+        data-gsap="reveal"
+      />
+
+      <!-- Search -->
+      <div class="search-row">
+        <div class="search-field">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input type="search" id="ph-search" class="field search-input" placeholder="Search photographers…" aria-label="Search photographers" />
+        </div>
+        <select id="ph-sort" class="field" style="max-width:180px;" aria-label="Sort photographers">
+          <option value="name">Name A–Z</option>
+          <option value="photos">Most Photos</option>
+          <option value="joined">Newest Members</option>
+        </select>
+      </div>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <div class="container" style="padding-top:var(--s-4);padding-bottom:var(--s-12);">
+
+    <div class="ph-count" id="ph-count" aria-live="polite">
+      <span id="ph-count-num">—</span> photographers
+    </div>
+
+    <div class="ph-grid" id="ph-grid" data-gsap="stagger" aria-label="Photographer directory">
+      {[...Array(12)].map(() => (
+        <div class="ph-card-skel" aria-hidden="true">
+          <div class="skel ph-avatar-skel"></div>
+          <div class="skel" style="width:65%;height:12px;margin-top:var(--s-2);"></div>
+          <div class="skel" style="width:45%;height:9px;margin-top:6px;"></div>
+        </div>
+      ))}
+    </div>
+
+    <div id="ph-empty" hidden class="ph-empty">
+      <p>No photographers match your search.</p>
+      <button class="btn btn-outline btn-md" id="ph-clear">Clear search</button>
+    </div>
+
+  </div>
+</BaseLayout>
+
+<style>
+.page-hero { padding-top: calc(var(--nav-h) + var(--s-8)); padding-bottom: var(--s-6); }
+
+.search-row { display: flex; gap: var(--s-2); margin-top: var(--s-5); max-width: 520px; flex-wrap: wrap; }
+.search-field { position: relative; flex: 1; min-width: 200px; }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+.search-input { padding-left: 40px !important; }
+
+.ph-count { font-size: var(--text-small); color: var(--ink-400); padding: var(--s-3) 0; }
+#ph-count-num { font-weight: 600; color: var(--ink-600); }
+
+.ph-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-4);
+}
+
+.ph-card {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--s-2); padding: var(--s-4) var(--s-3);
+  text-align: center; text-decoration: none;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  transition: box-shadow var(--m-fast), transform var(--m-fast);
+}
+.ph-card:hover { box-shadow: var(--e-2); transform: translateY(-2px); }
+
+.ph-avatar {
+  width: 80px; height: 80px;
+  border-radius: var(--r-full);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1.5px solid var(--hairline);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  color: var(--ink-inverse);
+  flex-shrink: 0;
+  transition: border-color var(--m-fast);
+}
+.ph-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ph-card:hover .ph-avatar { border-color: var(--gold-500); }
+
+.ph-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--ink-900); }
+.ph-meta { font-size: 12px; color: var(--ink-400); }
+
+/* Skeleton */
+.ph-card-skel { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-4); }
+.ph-avatar-skel { width: 80px; height: 80px; border-radius: var(--r-full); }
+
+.ph-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-4); padding: var(--s-12) 0; text-align: center; color: var(--ink-400); }
+.ph-empty p { font-size: var(--text-body); color: var(--ink-600); }
+
+@media (max-width: 900px) { .ph-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .ph-grid { grid-template-columns: repeat(2, 1fr); } .search-row { flex-direction: column; } }
+</style>
+
+<script>
+  let allPhotographers: any[] = [];
+  let searchTerm = '';
+
+  async function load() {
+    const grid    = document.getElementById('ph-grid')!;
+    const countEl = document.getElementById('ph-count-num')!;
+    const sort    = (document.getElementById('ph-sort') as HTMLSelectElement)?.value ?? 'name';
+    try {
+      const res = await fetch(`/api/v1/photographers?limit=100&sort=${sort}`);
+      if (!res.ok) return;
+      const { data, meta } = await res.json();
+      allPhotographers = Array.isArray(data) ? data : [];
+      countEl.textContent = (meta?.total_count ?? allPhotographers.length).toLocaleString('en-IN');
+    } catch { countEl.textContent = '—'; }
+    render();
+  }
+
+  function render() {
+    const grid    = document.getElementById('ph-grid')!;
+    const emptyEl = document.getElementById('ph-empty')!;
+    grid.innerHTML = '';
+
+    const filtered = allPhotographers.filter(ph =>
+      !searchTerm || (ph.displayName ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (!filtered.length) { emptyEl.removeAttribute('hidden'); return; }
+    emptyEl.setAttribute('hidden', '');
+
+    filtered.forEach(ph => {
+      const initials = (ph.displayName ?? '?').slice(0,2).toUpperCase();
+      const card = document.createElement('a');
+      card.href = `/gallery/photographer/${ph.userid}/`;
+      card.className = 'ph-card';
+      card.innerHTML = `
+        <div class="ph-avatar avatar-forest">
+          ${ph.avatarUrl ? `<img src="${ph.avatarUrl}" alt="${ph.displayName}" loading="lazy" width="80" height="80" />` : initials}
+        </div>
+        <div class="ph-name">${ph.displayName ?? ''}</div>
+        <div class="ph-meta">${(ph.photoCount ?? 0).toLocaleString('en-IN')} photos</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  let searchTimer: ReturnType<typeof setTimeout>;
+  document.getElementById('ph-search')?.addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { searchTerm = (e.target as HTMLInputElement).value; render(); }, 180);
+  });
+
+  document.getElementById('ph-sort')?.addEventListener('change', () => load());
+  document.getElementById('ph-clear')?.addEventListener('click', () => {
+    (document.getElementById('ph-search') as HTMLInputElement).value = '';
+    searchTerm = '';
+    render();
+  });
+
+  load();
+</script>

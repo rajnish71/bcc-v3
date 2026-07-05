@@ -1,56 +1,54 @@
 /* ==========================================================================
-   BCC Design System — "Aperture, Focus & Light"
-   CSS Custom Properties — v1.0
-   FROZEN. Do not change values without a formal design-system revision.
+   BCC V3 Design Tokens — "Refined Editorial Luxury"
+   Version: 3.0  |  July 2026  |  FROZEN
+   Source of truth: design-tokens.md + BCC_V3_Design_System.md
+   DO NOT modify without a formal design-system revision.
    ========================================================================== */
 
 :root {
+
   /* ── Surfaces ── */
-  --bg:            #0B0B0E;   /* Darkroom black — primary page background */
-  --bg-2:          #101014;   /* Secondary fill — alternate section backgrounds */
-  --surface:       #15151C;   /* Card / panel surface */
-  --surface-2:     #1E1E28;   /* Elevated card / hovered surface */
-  --surface-3:     #26263A;   /* Tooltip / popover */
+  --surface-0:     #FFFFFF;          /* Cards, header, mats, label plates */
+  --surface-1:     #FAF8F4;          /* Page background, alternating sections */
+  --surface-2:     #F4F0E8;          /* Recessed plates: gallery wall, footer */
+  --surface-deep:  #141210;          /* Dark bands, filmstrips, image-grid gaps */
+  --image-backdrop:#1A1816;          /* Behind loading / letterboxed images */
 
-  /* ── Borders ── */
-  --border:        rgba(255,255,255,0.07);
-  --border-md:     rgba(255,255,255,0.12);
-  --border-strong: rgba(255,255,255,0.20);
-  --border-amber:  rgba(245,168,42,0.30);
-  --border-cyan:   rgba(0,200,232,0.25);
+  /* ── Ink (text) ── */
+  --ink-900:       #141210;          /* Headlines, primary text */
+  --ink-600:       #57514B;          /* Body text, secondary */
+  --ink-400:       #8B8378;          /* Captions, meta, labels */
+  --ink-inverse:   #FAF8F4;          /* Text on dark surfaces */
 
-  /* ── Text ── */
-  --text:          #F0EFF6;   /* Primary — slightly warm white */
-  --text-2:        #8A899E;   /* Secondary — muted lavender-gray */
-  --text-3:        #52516A;   /* Tertiary / placeholder */
-  --text-inverse:  #0B0B0E;   /* On light backgrounds */
+  /* ── Gold accent ── */
+  --gold-500:      #C9A961;          /* Hairline accents, active underlines */
+  --gold-600:      #A8843C;          /* Kickers, links, active chips */
+  --gold-gradient: linear-gradient(135deg, #C9A961 0%, #A8843C 100%);
+                                     /* THE primary CTA — one per view */
 
-  /* ── Amber (warm light leak) ── */
-  --amber:         #F5A82A;
-  --amber-dim:     #C4851F;
-  --amber-muted:   rgba(245,168,42,0.12);
-  --amber-glow:    rgba(245,168,42,0.20);
+  /* ── Gold CTA shadow (satin highlight) ── */
+  --cta-shadow: 0 2px 10px rgba(168,132,60,.30),
+                inset 0 1px 0 rgba(255,255,255,.25);
 
-  /* ── Cyan (focal glow) ── */
-  --cyan:          #00C8E8;
-  --cyan-dim:      #009DB8;
-  --cyan-muted:    rgba(0,200,232,0.10);
-  --cyan-glow:     rgba(0,200,232,0.18);
+  /* ── Forest accent ── */
+  --forest-600:      #3E5A48;        /* Avatar plates, success, photowalk tags */
+  --forest-gradient: linear-gradient(135deg, #3E5A48 0%, #2A3E32 100%);
+                                     /* Initials avatar plates */
 
-  /* ── Iris palette (aperture blade colors) ── */
-  --iris-orange:   #E8622D;
-  --iris-teal:     #00B4C8;
-  --iris-magenta:  #E4007F;
-  --iris-amber:    #F9B72B;
-  --iris-olive:    #8CB43A;
+  /* ── Hairlines ── */
+  --hairline:        #E7E1D6;        /* All borders / dividers — 1px */
+  --hairline-soft:   #F0EBE0;        /* Inner-card dividers */
+  --hairline-strong: #D8D2C6;        /* Input borders, secondary buttons */
 
-  /* ── Semantic ── */
-  --success:       #4CAF7D;
-  --warning:       #F5A82A;
-  --error:         #E8622D;
-  --info:          #00C8E8;
+  /* ── Activity tag colours ── */
+  --tag-photowalk-bg:   #E8EFE9;
+  --tag-photowalk-ink:  #3E5A48;
+  --tag-workshop-bg:    #F5EDD8;
+  --tag-workshop-ink:   #8C6830;
+  --tag-exhibition-bg:  #141210;
+  --tag-exhibition-ink: #FAF8F4;
 
-  /* ── Membership class badge colors (confirmed) ── */
+  /* ── Membership class badge colours (confirmed, all tiers) ── */
   --badge-basic:      #5C5876;
   --badge-student:    #1A9DAE;
   --badge-individual: #3E5A48;
@@ -61,48 +59,53 @@
   --badge-patron:     #8A6A2E;
   --badge-founding:   #8A6A2E;
 
-  /* ── Typography ── */
+  /* ── Typography families ── */
   --font-display: 'Outfit', sans-serif;
   --font-body:    'Inter', sans-serif;
   --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 
   /* ── Type scale ── */
-  --text-display: 5rem;
-  --text-hero:    3.75rem;
-  --text-h1:      3rem;
-  --text-h2:      2.25rem;
-  --text-h3:      1.75rem;
-  --text-h4:      1.25rem;
-  --text-lg:      1.125rem;
-  --text-base:    1rem;
-  --text-sm:      0.875rem;
-  --text-xs:      0.75rem;
-  --text-label:   0.6875rem;
+  --text-display: clamp(56px, 7vw, 96px);   /* Outfit 700, lh 0.95, ls -0.035em */
+  --text-h1:      clamp(36px, 4vw, 52px);   /* Outfit 700, lh 1.05, ls -0.025em */
+  --text-h2:      clamp(26px, 3vw, 34px);   /* Outfit 600-700, lh 1.15, ls -0.015em */
+  --text-h3:      21px;                      /* Outfit 600, lh 1.25 */
+  --text-body:    16px;                      /* Inter 400, lh 1.75 */
+  --text-small:   14px;                      /* Inter 400, lh 1.65 */
+  --text-label:   11px;                      /* Inter 600, uppercase, ls 0.18em */
+  --text-mono:    11px;                      /* JetBrains Mono 400, ls 0.06em */
 
-  /* ── Spacing (4px base) ── */
-  --space-1:   4px;
-  --space-2:   8px;
-  --space-3:   12px;
-  --space-4:   16px;
-  --space-5:   20px;
-  --space-6:   24px;
-  --space-8:   32px;
-  --space-10:  40px;
-  --space-12:  48px;
-  --space-16:  64px;
-  --space-20:  80px;
-  --space-24:  96px;
-  --space-32:  128px;
+  /* ── Spacing (8px base grid) ── */
+  --s-1:  8px;
+  --s-2:  16px;
+  --s-3:  24px;
+  --s-4:  32px;
+  --s-6:  48px;
+  --s-8:  64px;
+  --s-12: 96px;
+  --s-16: 128px;
 
-  /* ── Radii ── */
-  --radius:      8px;
-  --radius-md:   12px;
-  --radius-lg:   16px;
-  --radius-xl:   24px;
-  --radius-full: 9999px;
+  /* ── Border radius ── */
+  --r-0:    0px;      /* Images, cards, mats — photography NEVER rounded */
+  --r-1:    2px;      /* Buttons, plates */
+  --r-2:    8px;      /* Inputs only */
+  --r-full: 999px;    /* Avatars, filter chips */
+
+  /* ── Elevation (3 levels max) ── */
+  --e-1: 0 1px 2px rgba(20,18,16,.04);    /* Cards, mats */
+  --e-2: 0 8px 32px rgba(20,18,16,.07);   /* Hover lift, condensed header */
+  --e-3: 0 24px 64px rgba(20,18,16,.14);  /* Hero imagery & label plates ONLY */
+
+  /* ── Motion ── */
+  --m-fast:    0.2s ease;
+  --m-med:     0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --m-reveal:  0.7s;
+  --m-image:   0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --m-stagger: 80ms;
 
   /* ── Layout ── */
-  --nav-h:        68px;
-  --content-max:  1200px;
-  --content-wide: 1440px;
+  --nav-h:       96px;    /* Rest state */
+  --nav-h-min:   64px;    /* Condensed after 80px scroll */
+  --content-max: 1360px;
+  --gutter:      48px;    /* Desktop */
+  --gutter-mob:  20px;    /* Mobile */
 }

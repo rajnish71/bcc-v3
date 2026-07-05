@@ -1,0 +1,231 @@
+---
+/**
+ * activities.astro — Activities Page
+ * Route: /activities/
+ * Replaces the previously built /events/ route.
+ * Filterable: Photowalks · Workshops · Exhibitions (and all types)
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/ui/SectionHeader.astro';
+
+const TYPES = [
+  { value: 'all',         label: 'All' },
+  { value: 'photowalk',   label: 'Photowalks' },
+  { value: 'workshop',    label: 'Workshops' },
+  { value: 'exhibition',  label: 'Exhibitions' },
+  { value: 'meetup',      label: 'Meetups' },
+];
+---
+
+<BaseLayout
+  title="Activities"
+  description="BCC activities — photowalks, workshops, exhibitions, and meetups across Bhopal."
+>
+
+  <div class="page-hero surface-white">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Activities"
+        title="Events & Activities"
+        subtitle="Photowalks, workshops, exhibitions, and community meetups — open to members at every level."
+        as="h1"
+      />
+
+      <!-- Filter chips -->
+      <div class="filter-row" role="group" aria-label="Filter by type" id="type-filters">
+        {TYPES.map((t, i) => (
+          <button
+            class:list={['chip', i === 0 && 'active']}
+            data-type={t.value}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <div class="container" style="padding-top:var(--s-6);padding-bottom:var(--s-12);">
+
+    <!-- Upcoming -->
+    <div class="acts-section">
+      <div class="acts-section__head">
+        <h2 class="acts-section__title">Upcoming</h2>
+        <span class="acts-live" aria-label="Live listing">● Live</span>
+      </div>
+      <div class="acts-list" id="upcoming-list" aria-label="Upcoming activities">
+        {[1,2,3].map(() => (
+          <div class="act-row-skel">
+            <div class="skel" style="width:52px;height:60px;"></div>
+            <div class="skel" style="flex:1;height:60px;"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Past -->
+    <div class="acts-section" style="margin-top:var(--s-12);">
+      <div class="acts-section__head">
+        <h2 class="acts-section__title">Past Activities</h2>
+      </div>
+      <div class="acts-list" id="past-list" aria-label="Past activities"></div>
+      <div class="acts-load-more" id="load-more-wrap" hidden>
+        <button class="btn btn-outline btn-md" id="load-more-btn">Load more</button>
+      </div>
+    </div>
+
+    <div id="acts-empty" hidden class="acts-empty">
+      <p>No activities match this filter.</p>
+      <button class="btn btn-outline btn-md" id="clear-filter">Show all</button>
+    </div>
+
+  </div>
+</BaseLayout>
+
+<style>
+.page-hero { padding-top: calc(var(--nav-h) + var(--s-6)); padding-bottom: var(--s-4); }
+.filter-row { display: flex; flex-wrap: wrap; gap: var(--s-1); margin-top: var(--s-4); }
+
+.acts-section__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding-bottom: var(--s-3);
+  border-bottom: 2px solid var(--ink-900);
+  margin-bottom: var(--s-3);
+}
+.acts-section__title { font-family: var(--font-display); font-size: var(--text-h3); font-weight: 600; color: var(--ink-400); }
+.acts-live { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--forest-600); }
+
+.acts-list { display: flex; flex-direction: column; }
+
+/* Activity row */
+.act-row {
+  display: grid;
+  grid-template-columns: 72px auto 1fr auto;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--m-fast);
+}
+.act-row:first-child { border-top: 1px solid var(--hairline); }
+.act-row:hover { background: rgba(201,169,97,.04); }
+
+.act-date { text-align: center; }
+.act-date__day   { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--ink-900); line-height: 1; }
+.act-date__month { font-size: var(--text-label); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-400); }
+
+.act-thumb { width: 64px; height: 42px; overflow: hidden; background: var(--surface-2); border-radius: var(--r-0); flex-shrink: 0; }
+.act-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.act-title { font-family: var(--font-display); font-size: var(--text-h3); font-weight: 600; color: var(--ink-900); }
+.act-meta  { font-size: 12px; color: var(--ink-400); margin-top: 3px; }
+.act-action { font-size: 12px; font-weight: 600; color: var(--gold-600); white-space: nowrap; }
+
+.act-row-skel {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.acts-load-more { display: flex; justify-content: center; padding: var(--s-6) 0; }
+.acts-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-4); padding: var(--s-12) 0; text-align: center; color: var(--ink-400); }
+
+@media (max-width: 768px) {
+  .act-row { grid-template-columns: 60px 1fr; }
+  .act-thumb, .act-action { display: none; }
+}
+</style>
+
+<script>
+  const TAG_CLASSES: Record<string, string> = {
+    photowalk:  'tag tag-photowalk',
+    workshop:   'tag tag-workshop',
+    exhibition: 'tag tag-exhibition',
+  };
+
+  let currentType = 'all';
+  let pastCursor: string | null = null;
+
+  function formatDate(dateStr: string) {
+    const d = new Date(dateStr);
+    return { day: d.getDate().toString().padStart(2,'0'), month: d.toLocaleString('en-IN', { month: 'short' }).toUpperCase() };
+  }
+
+  function createRow(ev: any) {
+    const a = document.createElement('a');
+    a.href = `/activities/${ev.slug ?? ev.id}/`;
+    a.className = 'act-row';
+    const { day, month } = ev.date ? formatDate(ev.date) : { day: '—', month: '—' };
+    const tc = TAG_CLASSES[ev.type?.toLowerCase()] ?? '';
+    a.innerHTML = `
+      <div class="act-date"><div class="act-date__day">${day}</div><div class="act-date__month">${month}</div></div>
+      <div class="act-thumb">${ev.imageUrl ? `<img src="${ev.imageUrl}" alt="" loading="lazy" width="64" height="42" />` : ''}</div>
+      <div><div class="act-title">${ev.title ?? ''}</div><div class="act-meta">${[ev.time, ev.location].filter(Boolean).join(' · ')}</div></div>
+      <div class="act-action">Details →</div>
+    `;
+    return a;
+  }
+
+  async function loadUpcoming() {
+    const list = document.getElementById('upcoming-list')!;
+    const params = new URLSearchParams({ upcoming: 'true', limit: '10' });
+    if (currentType !== 'all') params.set('type', currentType);
+    try {
+      const res = await fetch(`/api/v1/events?${params}`);
+      if (!res.ok) return;
+      const { data } = await res.json();
+      const events = Array.isArray(data) ? data : [];
+      list.innerHTML = '';
+      if (!events.length) { list.innerHTML = `<p style="padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);">No upcoming activities right now. Check back soon!</p>`; return; }
+      events.forEach((ev: any) => list.appendChild(createRow(ev)));
+    } catch { list.innerHTML = ''; }
+  }
+
+  async function loadPast(reset = true) {
+    const list    = document.getElementById('past-list')!;
+    const loadWrap = document.getElementById('load-more-wrap')!;
+    if (reset) { list.innerHTML = ''; pastCursor = null; }
+    const params = new URLSearchParams({ past: 'true', limit: '10' });
+    if (currentType !== 'all') params.set('type', currentType);
+    if (pastCursor) params.set('cursor', pastCursor);
+    try {
+      const res = await fetch(`/api/v1/events?${params}`);
+      if (!res.ok) return;
+      const { data, meta } = await res.json();
+      (Array.isArray(data) ? data : []).forEach((ev: any) => list.appendChild(createRow(ev)));
+      pastCursor = meta?.next_cursor ?? null;
+      if (pastCursor) loadWrap.removeAttribute('hidden');
+      else            loadWrap.setAttribute('hidden', '');
+    } catch { /* silent */ }
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
+      currentType = btn.dataset.type ?? 'all';
+      loadUpcoming(); loadPast(true);
+    });
+  });
+
+  document.getElementById('load-more-btn')?.addEventListener('click', () => loadPast(false));
+  document.getElementById('clear-filter')?.addEventListener('click', () => {
+    currentType = 'all';
+    document.querySelectorAll('.chip').forEach(b => {
+      b.classList.toggle('active', b.dataset.type === 'all');
+      b.setAttribute('aria-pressed', b.dataset.type === 'all' ? 'true' : 'false');
+    });
+    loadUpcoming(); loadPast(true);
+  });
+
+  loadUpcoming();
+  loadPast(true);
+</script>

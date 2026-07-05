@@ -1,0 +1,290 @@
+---
+/**
+ * join.astro — Membership / Join Page
+ * Route: /join/
+ * Replaces previously built /membership/ route.
+ *
+ * MEM-006 ABSOLUTE PUBLIC DOMAIN POLICY:
+ * Only Basic Member, Student Member, and Individual Member may appear.
+ * Full / Life / Patron / Founding must NEVER appear — not in copy, FAQ,
+ * footnotes, or CTAs. No "upgrade pathway" language on this public page.
+ *
+ * MEM-006 P1 three-CTA distinction honoured:
+ * - Register (free identity) — step 1, links to /auth/register/
+ * - Apply for Membership — step 2, accessible from Member Hub after registration
+ * - Sign In — for returning registered users (nav)
+ * The nav gold CTA "Become a Member" brings users here; this page explains the steps.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/ui/SectionHeader.astro';
+
+const CLASSES = [
+  {
+    id: 'basic', label: 'Basic', badgeVar: '--badge-basic',
+    title: 'Basic Member', price: 'Free', priceSub: 'No annual fee',
+    desc: 'The starting point for every BCC member. Your platform identity, showcase access, and club news — at no cost.',
+    features: ['Platform profile', 'Public showcase access', 'Event announcements', 'BCC newsletter', 'Community forum'],
+  },
+  {
+    id: 'student', label: 'Student', badgeVar: '--badge-student',
+    title: 'Student Member', price: 'Annual fee', priceSub: 'Fee disclosed on application',
+    desc: 'For photography students and active learners. Workshops, mentored sessions, and events at student-concession rates.',
+    features: ['Everything in Basic', 'Workshop participation', 'Mentored feedback sessions', 'Portfolio on Showcase', 'Event participation (student rate)', 'Club activities and meetups'],
+  },
+  {
+    id: 'individual', label: 'Individual', badgeVar: '--badge-individual',
+    title: 'Individual Member', price: 'Annual fee', priceSub: 'Fee disclosed on application',
+    desc: 'Full participation for active photographers — contests, exhibitions, governance, and a digital membership card.',
+    features: ['Everything in Student', 'Contest submissions', 'Exhibition participation', 'Voting rights', 'Digital membership card', 'Priority event registration'],
+    featured: true,
+  },
+];
+
+const FAQS = [
+  { q: 'What membership classes does BCC offer?', a: 'Three classes are open to new applicants: Basic Member (free), Student Member (for students and learners), and Individual Member (for active practitioners). Each class has different participation rights and annual fees — see the comparison above.' },
+  { q: 'Do I need to register before applying?', a: 'Yes. Registration and membership are two separate steps. Register first (free, creates your BCC platform identity). Then apply for membership from your Member Hub. You cannot apply without registering first.' },
+  { q: 'Is Basic Membership really free?', a: 'Yes, entirely. No annual fee, no payment. For Student and Individual classes an annual fee applies; the exact amount is disclosed during the application process.' },
+  { q: 'How long does the application review take?', a: 'Applications are reviewed by the club committee. You will receive a decision by email within a few business days of submitting a complete application.' },
+  { q: 'Can I attend events before becoming a member?', a: 'Public events are open to all registered users. Some activities — workshops, mentored sessions, contests — are restricted to members with the appropriate membership class. Each event listing states which class is required.' },
+  { q: 'How do I renew my membership?', a: 'Annual memberships are renewed through your Member Hub before expiry. You will receive an email reminder. Basic Membership has no annual fee and does not require renewal.' },
+  { q: 'I have more questions. Who should I contact?', a: 'Use the Contact Us page, or write to the email address in the footer. The membership team is happy to answer questions about eligibility, the application process, and club activities.' },
+];
+---
+
+<BaseLayout
+  title="Join BCC"
+  description="Join Bhopal Camera Club. Three membership classes open to new applicants — Basic (free), Student, and Individual."
+>
+
+  <!-- Hero -->
+  <div class="join-hero surface-white">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Membership"
+        title="Join Bhopal Camera Club"
+        subtitle="We welcome photographers at every level. Registration is always free and comes before membership application."
+        as="h1"
+        align="center"
+        data-gsap="reveal"
+      />
+
+      <!-- 3-step flow -->
+      <div class="join-flow" data-gsap="stagger">
+        <div class="join-flow__step">
+          <div class="join-flow__num">01</div>
+          <div class="join-flow__label">Register Free</div>
+          <div class="join-flow__sub">Create your BCC platform identity — no cost, no commitment.</div>
+        </div>
+        <div class="join-flow__arrow" aria-hidden="true">→</div>
+        <div class="join-flow__step">
+          <div class="join-flow__num">02</div>
+          <div class="join-flow__label">Apply for Membership</div>
+          <div class="join-flow__sub">Choose a class and submit your application. Committee reviews in days.</div>
+        </div>
+        <div class="join-flow__arrow" aria-hidden="true">→</div>
+        <div class="join-flow__step">
+          <div class="join-flow__num">03</div>
+          <div class="join-flow__label">Start Participating</div>
+          <div class="join-flow__sub">Events, workshops, exhibitions, and the full BCC community.</div>
+        </div>
+      </div>
+
+      <div class="join-hero-ctas">
+        <a href="/auth/register/" class="btn btn-dark btn-lg">Register Free →</a>
+        <a href="/auth/signin/?next=/hub/membership/apply/" class="btn btn-outline btn-lg">Sign In &amp; Apply</a>
+      </div>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Class cards -->
+  <section class="section" aria-label="Membership classes" id="classes">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Classes"
+        title="Choose your membership class"
+        subtitle="All three classes are open to new applicants."
+        align="center"
+        data-gsap="reveal"
+      />
+
+      <div class="class-grid" data-gsap="stagger">
+        {CLASSES.map(cls => (
+          <div class:list={['class-card', cls.featured && 'class-card--featured']}>
+            {cls.featured && <div class="class-card__popular">Most Popular</div>}
+            <div class="class-card__top-bar" style={`background:var(${cls.badgeVar})`}></div>
+            <div class="class-card__body">
+              <div class="class-chip" style={`--chip-c:var(${cls.badgeVar})`}>{cls.label}</div>
+              <div class="class-title">{cls.title}</div>
+              <div class="class-price">
+                <span class="class-price__main">{cls.price}</span>
+                <span class="class-price__sub">{cls.priceSub}</span>
+              </div>
+              <p class="class-desc">{cls.desc}</p>
+              <ul class="class-feats">
+                {cls.features.map(f => <li>{f}</li>)}
+              </ul>
+              <a href="#apply" class="btn btn-dark btn-md class-cta">Apply for Membership</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Apply CTA block -->
+  <div class="surface-alt section-sm" id="apply">
+    <div class="container">
+      <div class="apply-block" data-gsap="reveal">
+        <div class="apply-block__text">
+          <div class="eyebrow">Ready to join?</div>
+          <h2 class="apply-block__title">Start your application</h2>
+          <p class="apply-block__body">Already registered? Sign in and head to your Member Hub to begin. Not registered yet? Create your free account first — it only takes a moment.</p>
+        </div>
+        <div class="apply-block__ctas">
+          <a href="/auth/signin/?next=/hub/membership/apply/" class="btn btn-gold btn-lg">Sign in &amp; Apply</a>
+          <a href="/auth/register/" class="btn btn-outline btn-lg">Register first →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <section class="section" id="faq" aria-label="FAQ">
+    <div class="container">
+      <SectionHeader eyebrow="FAQ" title="Frequently asked questions" align="center" data-gsap="reveal" />
+
+      <div class="faq-grid" data-gsap="stagger">
+        {FAQS.map((item, i) => (
+          <details class="faq-item">
+            <summary class="faq-q">
+              <span>{item.q}</span>
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="faq-a">{item.a}</div>
+          </details>
+        ))}
+      </div>
+
+      <p class="faq-footer">
+        More questions? <a href="/contact/" class="btn-text">Contact us →</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.join-hero { padding-top: calc(var(--nav-h) + var(--s-8)); padding-bottom: var(--s-6); }
+
+/* Flow diagram */
+.join-flow { display: flex; align-items: flex-start; justify-content: center; gap: var(--s-4); margin: var(--s-6) 0; flex-wrap: wrap; }
+.join-flow__step { text-align: center; max-width: 220px; }
+.join-flow__num  { font-family: var(--font-mono); font-size: var(--text-label); color: var(--gold-600); letter-spacing: 0.14em; margin-bottom: var(--s-1); }
+.join-flow__label { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--ink-900); margin-bottom: 4px; }
+.join-flow__sub  { font-size: 12px; color: var(--ink-400); line-height: 1.6; }
+.join-flow__arrow { font-size: 18px; color: var(--hairline-strong); margin-top: var(--s-5); flex-shrink: 0; }
+
+.join-hero-ctas { display: flex; gap: var(--s-3); justify-content: center; margin-top: var(--s-6); flex-wrap: wrap; }
+
+/* Class grid */
+.class-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-3);
+  margin-top: var(--s-6);
+}
+.class-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-top: none;
+  box-shadow: var(--e-1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow var(--m-fast), transform var(--m-fast);
+}
+.class-card:hover { box-shadow: var(--e-2); transform: translateY(-2px); }
+.class-card--featured { border-color: var(--gold-500); box-shadow: var(--e-2); }
+.class-card__popular {
+  position: absolute; top: 16px; right: -28px;
+  background: var(--gold-gradient);
+  color: var(--ink-inverse);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 36px; transform: rotate(45deg); white-space: nowrap;
+}
+.class-card__top-bar { height: 4px; }
+.class-card__body { padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-2); flex: 1; }
+
+.class-chip {
+  display: inline-block; width: fit-content;
+  padding: 2px 10px; border-radius: var(--r-full);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--chip-c);
+  background: color-mix(in srgb, var(--chip-c) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-c) 30%, transparent);
+}
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .class-chip { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.1); }
+}
+.class-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink-900); }
+.class-price { display: flex; flex-direction: column; gap: 2px; }
+.class-price__main { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-600); }
+.class-price__sub  { font-size: 11px; color: var(--ink-400); }
+.class-desc  { font-size: 13px; color: var(--ink-600); line-height: 1.65; flex: 1; }
+.class-feats { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.class-feats li { font-size: 13px; color: var(--ink-600); padding-left: 14px; position: relative; }
+.class-feats li::before { content:''; position:absolute; left:0; top:9px; width:7px; height:1px; background:var(--gold-500); }
+.class-cta { width: 100%; justify-content: center; margin-top: var(--s-2); }
+
+/* Apply block */
+.apply-block { display: flex; align-items: center; gap: var(--s-8); padding: var(--s-8); background: var(--surface-0); border: 1px solid var(--hairline); flex-wrap: wrap; }
+.apply-block__text { flex: 1; min-width: 280px; }
+.apply-block__title { font-family: var(--font-display); font-size: var(--text-h2); font-weight: 700; color: var(--ink-900); margin: var(--s-2) 0 var(--s-3); letter-spacing: -0.015em; }
+.apply-block__body  { font-size: var(--text-body); color: var(--ink-600); line-height: 1.75; }
+.apply-block__ctas  { display: flex; gap: var(--s-3); flex-wrap: wrap; flex-shrink: 0; }
+
+/* FAQ */
+.faq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-2); max-width: 960px; margin: var(--s-6) auto var(--s-6); }
+.faq-item { border: 1px solid var(--hairline); background: var(--surface-0); }
+.faq-q {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4); font-size: var(--text-small); font-weight: 500; color: var(--ink-900);
+  cursor: pointer; list-style: none; user-select: none; line-height: 1.5;
+}
+.faq-q::-webkit-details-marker { display: none; }
+.faq-chevron { flex-shrink: 0; color: var(--ink-400); margin-top: 2px; transition: transform var(--m-fast); }
+details[open] .faq-chevron { transform: rotate(180deg); }
+details[open] .faq-q { color: var(--gold-600); }
+.faq-a {
+  padding: 0 var(--s-4) var(--s-3);
+  font-size: var(--text-small); color: var(--ink-600); line-height: 1.7;
+  border-top: 1px solid var(--hairline); padding-top: var(--s-3);
+}
+.faq-footer { text-align: center; font-size: var(--text-small); color: var(--ink-400); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .class-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .faq-grid { grid-template-columns: 1fr; }
+  .apply-block__ctas { flex-direction: column; }
+  .join-flow__arrow { display: none; }
+}
+@media (max-width: 640px) {
+  .join-hero-ctas { flex-direction: column; align-items: stretch; }
+  .join-hero-ctas .btn { justify-content: center; }
+}
+</style>
+
+<script>
+  /* Smooth scroll to #apply / #faq from class card CTAs */
+  document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+      const id = link.getAttribute('href')?.slice(1);
+      const target = id ? document.getElementById(id) : null;
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+</script>

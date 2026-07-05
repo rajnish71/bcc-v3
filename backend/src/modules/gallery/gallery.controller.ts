@@ -74,10 +74,10 @@ export class GalleryController {
   @Get('photographer/:userId')
   async photographerGallery(
     @Param('userId', ParseIntPipe) userId: number,
+    @Req() req: any,
     @Query('genre')  genre?: string,
     @Query('limit')  limit?: string,
     @Query('offset') offset?: string,
-    @Req() req: any,
   ) {
     const requestingUserId: number | null = req.user?.sub ?? null;
     return this.gallery.getPhotographerGallery(requestingUserId, userId, {

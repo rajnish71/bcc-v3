@@ -185,7 +185,7 @@ export class GalleryService {
 
     // 5. Create PROCESSING photo record.
     //    Nullable fields typed as Nullable<T> are omitted (MySQL defaults NULL).
-    const now = toMysqlDatetime(new Date());
+    const now: any = toMysqlDatetime(new Date());
     await db
       .insertInto('photos')
       .values({
@@ -279,7 +279,7 @@ export class GalleryService {
       : null;
 
     // 6. Activate photo
-    const now = toMysqlDatetime(new Date());
+    const now: any = toMysqlDatetime(new Date());
     await db
       .updateTable('photos')
       .set({
@@ -464,7 +464,7 @@ export class GalleryService {
     if (photo.status === 'DELETED') {
       throw new ConflictException('Photo is already deleted.');
     }
-    const now = toMysqlDatetime(new Date());
+    const now: any = toMysqlDatetime(new Date());
     await db
       .updateTable('photos')
       .set({ status: 'DELETED', deleted_at: now, updated_at: now })
@@ -550,7 +550,7 @@ export class GalleryService {
   ): Promise<ReturnType<typeof formatAlbum>> {
     await this.requireActiveMembership(userId);
     const uuid = randomUUID();
-    const now  = toMysqlDatetime(new Date());
+    const now: any = toMysqlDatetime(new Date());
     await db
       .insertInto('photo_albums')
       .values({

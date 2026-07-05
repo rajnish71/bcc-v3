@@ -3,6 +3,10 @@
  * gallery/photographer/index.astro
  * Route: /gallery/photographer/
  * Photographer directory — grid of member profile cards.
+ *
+ * API: GET /api/v1/photographers?limit=100&sort=...
+ * Response: { data: [{ id, username, displayName, avatarUrl, photoCount, ... }], meta }
+ * Profile link: /gallery/photographer/:username/
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SectionHeader from '../../../components/ui/SectionHeader.astro';
@@ -23,7 +27,7 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
         data-gsap="reveal"
       />
 
-      <!-- Search -->
+      <!-- Search + sort -->
       <div class="search-row">
         <div class="search-field">
           <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -35,7 +39,7 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
         <select id="ph-sort" class="field" style="max-width:180px;" aria-label="Sort photographers">
           <option value="name">Name A–Z</option>
           <option value="photos">Most Photos</option>
-          <option value="joined">Newest Members</option>
+          <option value="joined">Joined First</option>
         </select>
       </div>
     </div>
@@ -48,6 +52,7 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
       <span id="ph-count-num">—</span> photographers
     </div>
 
+    <!-- Skeleton placeholders (removed after first data load) -->
     <div class="ph-grid" id="ph-grid" data-gsap="stagger" aria-label="Photographer directory">
       {[...Array(12)].map(() => (
         <div class="ph-card-skel" aria-hidden="true">
@@ -97,7 +102,7 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
   width: 80px; height: 80px;
   border-radius: var(--r-full);
   overflow: hidden;
-  background: var(--surface-2);
+  background: var(--forest-gradient);
   border: 1.5px solid var(--hairline);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-size: 20px; font-weight: 700;
@@ -110,16 +115,19 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
 
 .ph-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--ink-900); }
 .ph-meta { font-size: 12px; color: var(--ink-400); }
+.ph-city { font-size: 11px; color: var(--ink-400); }
 
-/* Skeleton */
+/* Skeletons */
 .ph-card-skel { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-4); }
 .ph-avatar-skel { width: 80px; height: 80px; border-radius: var(--r-full); }
 
+/* Empty state */
 .ph-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-4); padding: var(--s-12) 0; text-align: center; color: var(--ink-400); }
 .ph-empty p { font-size: var(--text-body); color: var(--ink-600); }
 
-@media (max-width: 900px) { .ph-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 640px) { .ph-grid { grid-template-columns: repeat(2, 1fr); } .search-row { flex-direction: column; } }
+@media (max-width: 1100px) { .ph-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 750px)  { .ph-grid { grid-template-columns: repeat(2, 1fr); } .search-row { flex-direction: column; } }
+@media (max-width: 400px)  { .ph-grid { grid-template-columns: 1fr; } }
 </style>
 
 <script>
@@ -127,7 +135,6 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
   let searchTerm = '';
 
   async function load() {
-    const grid    = document.getElementById('ph-grid')!;
     const countEl = document.getElementById('ph-count-num')!;
     const sort    = (document.getElementById('ph-sort') as HTMLSelectElement)?.value ?? 'name';
     try {
@@ -136,7 +143,9 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
       const { data, meta } = await res.json();
       allPhotographers = Array.isArray(data) ? data : [];
       countEl.textContent = (meta?.total_count ?? allPhotographers.length).toLocaleString('en-IN');
-    } catch { countEl.textContent = '—'; }
+    } catch {
+      countEl.textContent = '—';
+    }
     render();
   }
 
@@ -146,35 +155,49 @@ import SectionHeader from '../../../components/ui/SectionHeader.astro';
     grid.innerHTML = '';
 
     const filtered = allPhotographers.filter(ph =>
-      !searchTerm || (ph.displayName ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+      !searchTerm ||
+      (ph.displayName ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ph.city ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
-    if (!filtered.length) { emptyEl.removeAttribute('hidden'); return; }
+    if (!filtered.length) {
+      emptyEl.removeAttribute('hidden');
+      return;
+    }
     emptyEl.setAttribute('hidden', '');
 
     filtered.forEach(ph => {
-      const initials = (ph.displayName ?? '?').slice(0,2).toUpperCase();
+      const initials = (ph.displayName ?? '?').slice(0, 2).toUpperCase();
+      // Profile URL uses username slug (e.g. /gallery/photographer/rajnishkhare/)
       const card = document.createElement('a');
-      card.href = `/gallery/photographer/${ph.userid}/`;
+      card.href      = `/gallery/photographer/${ph.username}/`;
       card.className = 'ph-card';
       card.innerHTML = `
-        <div class="ph-avatar avatar-forest">
-          ${ph.avatarUrl ? `<img src="${ph.avatarUrl}" alt="${ph.displayName}" loading="lazy" width="80" height="80" />` : initials}
+        <div class="ph-avatar">
+          ${ph.avatarUrl
+            ? `<img src="${ph.avatarUrl}" alt="${ph.displayName}" loading="lazy" width="80" height="80" />`
+            : initials}
         </div>
         <div class="ph-name">${ph.displayName ?? ''}</div>
         <div class="ph-meta">${(ph.photoCount ?? 0).toLocaleString('en-IN')} photos</div>
+        ${ph.city ? `<div class="ph-city">${ph.city}</div>` : ''}
       `;
       grid.appendChild(card);
     });
   }
 
+  // Search with 180ms debounce
   let searchTimer: ReturnType<typeof setTimeout>;
   document.getElementById('ph-search')?.addEventListener('input', e => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => { searchTerm = (e.target as HTMLInputElement).value; render(); }, 180);
+    searchTimer = setTimeout(() => {
+      searchTerm = (e.target as HTMLInputElement).value.trim();
+      render();
+    }, 180);
   });
 
   document.getElementById('ph-sort')?.addEventListener('change', () => load());
+
   document.getElementById('ph-clear')?.addEventListener('click', () => {
     (document.getElementById('ph-search') as HTMLInputElement).value = '';
     searchTerm = '';

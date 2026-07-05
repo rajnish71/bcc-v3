@@ -1,6 +1,14 @@
 import { Kysely, MysqlDialect, Generated, ColumnType } from 'kysely';
 import { createPool } from 'mysql2';
 
+// ---------------------------------------------------------------------------
+// Helper: nullable column with no DB DEFAULT (NULL is the implicit default).
+// Using ColumnType<T|null, T|null|undefined, T|null> lets Kysely know the
+// field is optional on INSERT (omit = MySQL uses NULL) while remaining
+// explicitly nullable on UPDATE.
+// ---------------------------------------------------------------------------
+type Nullable<T> = ColumnType<T | null, T | null | undefined, T | null>;
+
 export interface UsersTable {
   id: Generated<number>;
   uuid: string;
@@ -235,8 +243,6 @@ export interface GroupDelegatesTable {
   group_entity_id: number;
   user_id: number;
   role: Generated<string>;
-  // added_at is writable on UPDATE: re-activating a removed delegate resets
-  // this column (group.service.ts addDelegate). Cannot be Generated<...,never>.
   added_at: ColumnType<Date, string | undefined, string>;
   removed_at: ColumnType<Date | null, string | null, string | null>;
 }
@@ -247,9 +253,6 @@ export interface MembershipsTable {
   owner_type: 'INDIVIDUAL' | 'GROUP';
   user_id: number | null;
   group_entity_id: number | null;
-  // Option B separation (migration 0026): exactly one of the next two columns
-  // is non-null, enforced by chk_membership_owner_axis CHECK constraint.
-  // MEM-006: "Group Memberships are not Membership Classes."
   membership_class_id: number | null;
   group_membership_type_id: number | null;
   lifecycle_state: 'PENDING' | 'APPROVED' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'TERMINATED' | 'REJECTED';
@@ -257,9 +260,6 @@ export interface MembershipsTable {
   join_month: number | null;
   number_serial: number | null;
   membership_number: string | null;
-  // Opaque unguessable QR/verify slug -- distinct from membership_number,
-  // which is sequential and must never appear in a public verify URL.
-  // Lazily generated; NULL until the member's first card is issued.
   card_verify_token: string | null;
   number_assigned_at: ColumnType<Date | null, string | null, string | null>;
   last_payment_status: Generated<'NONE' | 'PENDING' | 'FAILED' | 'SUCCEEDED'>;
@@ -288,7 +288,6 @@ export interface MemberRecognitionsTable {
   assigned_by_user_id: number | null;
   start_date: ColumnType<Date, string, string>;
   end_date: ColumnType<Date | null, string | null, string | null>;
-  // Generated STORED column -- never write to this directly.
   active_lock: Generated<number | null>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
@@ -463,11 +462,6 @@ export interface MembershipApprovalStagesTable {
 // Batch 4 -- Voting Register (migration 0028, MEM-006 section 02.11)
 // ============================================================================
 
-// Immutable point-in-time snapshots of voting-eligible members for AGM use.
-// Voting-eligible = ACTIVE state + Constitutional class (Full/Life/Patron/
-// Founding). This is a constitutional rule -- not entitlement configuration.
-// Rows are never updated after insert; the snapshot_json captures state as-at
-// generated_at. Quorum formula: ceil(eligible_count / 3) stored at generation.
 export interface VotingRegisterSnapshotsTable {
   id: Generated<number>;
   uuid: string;
@@ -475,7 +469,6 @@ export interface VotingRegisterSnapshotsTable {
   generated_by_user_id: number | null;
   eligible_count: number;
   quorum_threshold: number;
-  // JSON: VotingRegisterEntry[] -- see voting-register.service.ts
   snapshot_json: string;
   generated_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
@@ -578,15 +571,13 @@ export interface EventsTable {
   fee_type: Generated<'FREE' | 'FLAT' | 'MEMBER_DISCOUNTED'>;
   base_fee_paise: Generated<number>;
   eligibility_mode: Generated<EligibilityMode>;
-  // JSON-serialised number[] of membership_class.id values; null when
-  // eligibility_mode is not SPECIFIC_CLASSES.
   allowed_class_ids: string | null;
   difficulty_level: Generated<'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'>;
   age_restriction: Generated<'ALL' | 'ADULT' | 'FAMILY'>;
   weather_dependent: Generated<boolean>;
   volunteer_slots_needed: Generated<number>;
   what_to_bring: string | null;
-  tags: string | null;   // JSON-serialised string[]
+  tags: string | null;
   banner_r2_key: string | null;
   state: Generated<EventState>;
   cancellation_reason: string | null;
@@ -607,15 +598,13 @@ export interface EventRegistrationsTable {
   id: Generated<number>;
   uuid: string;
   event_id: number;
-  user_id: number | null;        // NULL for guest registrations
+  user_id: number | null;
   guest_name: string | null;
   guest_email: string | null;
   guest_phone: string | null;
   registration_type: 'MEMBER' | 'GUEST';
   status: Generated<RegistrationStatus>;
   waitlist_position: number | null;
-  // Phase 2a: manual fee tracking; Razorpay event payment integration deferred
-  // to Module 11 expansion.
   fee_paid_paise: Generated<number>;
   checked_in_at: ColumnType<Date | null, string | null, string | null>;
   checked_in_by: number | null;
@@ -629,7 +618,7 @@ export interface EventVolunteerSlotsTable {
   event_id: number;
   role_name: string;
   role_description: string | null;
-  skills_required: string | null;   // JSON-serialised string[]
+  skills_required: string | null;
   slots_count: Generated<number>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
@@ -645,6 +634,109 @@ export interface EventVolunteersTable {
   confirmed_at: ColumnType<Date | null, string | null, string | null>;
   checked_in_at: ColumnType<Date | null, string | null, string | null>;
 }
+
+// ============================================================================
+// Module 05 -- Photography Gallery & Digital Archive (migration 0034)
+// ============================================================================
+
+export type PhotoFileFormat =
+  | 'JPEG' | 'PNG' | 'TIFF' | 'HEIC' | 'WEBP'
+  | 'NEF' | 'CR2' | 'CR3' | 'ARW' | 'ORF' | 'DNG' | 'OTHER';
+
+export type PhotoStatus = 'PROCESSING' | 'ACTIVE' | 'DELETED';
+export type PhotoVisibility = 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED';
+export type PhotoGenre =
+  | 'WILDLIFE' | 'BIRD' | 'STREET' | 'PORTRAIT' | 'LANDSCAPE'
+  | 'ARCHITECTURE' | 'MACRO' | 'NIGHT' | 'TRAVEL' | 'AERIAL'
+  | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT' | 'OTHER';
+
+export interface PhotosTable {
+  id:                 Generated<number>;
+  uuid:               string;
+  owner_user_id:      number;
+  r2_key:             string;
+  original_filename:  string;
+  mime_type:          string;
+  file_format:        PhotoFileFormat;
+  // file_size_bytes: updated from R2 HEAD on /confirm; nullable until confirmed.
+  file_size_bytes:    Nullable<number>;
+  // sha256_hash: optional, client-provided on /confirm.
+  sha256_hash:        Nullable<string>;
+  status:             Generated<PhotoStatus>;
+  confirmed_at:       ColumnType<Date | null, string | null, string | null>;
+  deleted_at:         ColumnType<Date | null, string | null, string | null>;
+  // Content metadata -- all optional, owner sets on /confirm or PATCH.
+  title:              Nullable<string>;
+  caption:            Nullable<string>;
+  width_px:           Nullable<number>;
+  height_px:          Nullable<number>;
+  // EXIF -- all optional, client-provided on /confirm.
+  exif_camera_make:   Nullable<string>;
+  exif_camera_model:  Nullable<string>;
+  exif_lens_model:    Nullable<string>;
+  exif_focal_length:  Nullable<number>;
+  exif_aperture:      Nullable<number>;
+  exif_shutter_speed: Nullable<string>;
+  exif_iso:           Nullable<number>;
+  exif_taken_at:      ColumnType<Date | null, string | null, string | null>;
+  exif_gps_lat:       Nullable<number>;
+  exif_gps_lng:       Nullable<number>;
+  gps_stripped:       Generated<boolean>;
+  genre:              Nullable<PhotoGenre>;
+  visibility:         Generated<PhotoVisibility>;
+  source_event_id:    Nullable<number>;
+  created_at:         Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at:         Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export type AlbumType = 'MEMBER_CREATED' | 'AUTO_EVENT' | 'AUTO_CONTEST';
+export type AlbumVisibility = 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE';
+
+export interface PhotoAlbumsTable {
+  id:             Generated<number>;
+  uuid:           string;
+  owner_user_id:  number;
+  title:          string;
+  description:    Nullable<string>;
+  cover_photo_id: Nullable<number>;
+  album_type:     Generated<AlbumType>;
+  source_ref_id:  Nullable<number>;
+  visibility:     Generated<AlbumVisibility>;
+  sort_order:     Generated<number>;
+  created_at:     Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at:     Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface PhotoAlbumItemsTable {
+  id:         Generated<number>;
+  album_id:   number;
+  photo_id:   number;
+  sort_order: Generated<number>;
+  added_at:   Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export type TagCategory = 'GENRE' | 'SUBJECT' | 'LOCATION' | 'EQUIPMENT' | 'CUSTOM';
+
+export interface PhotoTagsTable {
+  id:           Generated<number>;
+  tag_key:      string;
+  display_name: string;
+  category:     TagCategory;
+  is_system:    Generated<boolean>;
+  is_active:    Generated<boolean>;
+  created_at:   Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface PhotoTagAssignmentsTable {
+  photo_id:    number;
+  tag_id:      number;
+  assigned_by: number;
+  assigned_at: ColumnType<Date, string, string>;
+}
+
+// ============================================================================
+// Database interface
+// ============================================================================
 
 export interface DB {
   users: UsersTable;
@@ -698,6 +790,12 @@ export interface DB {
   event_registrations: EventRegistrationsTable;
   event_volunteer_slots: EventVolunteerSlotsTable;
   event_volunteers: EventVolunteersTable;
+
+  photos: PhotosTable;
+  photo_albums: PhotoAlbumsTable;
+  photo_album_items: PhotoAlbumItemsTable;
+  photo_tags: PhotoTagsTable;
+  photo_tag_assignments: PhotoTagAssignmentsTable;
 }
 
 const dialect = new MysqlDialect({

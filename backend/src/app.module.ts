@@ -7,6 +7,7 @@ import { UsersModule } from './modules/identity/users/users.module';
 import { MembershipModule } from './modules/membership/membership.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { EventsModule } from './modules/events/events.module';
+import { GalleryModule } from './modules/gallery/gallery.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { EventsModule } from './modules/events/events.module';
     MembershipModule,
     NotificationModule,
     EventsModule,
+    GalleryModule,
   ],
   controllers: [AppController],
 })

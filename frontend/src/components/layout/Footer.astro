@@ -174,8 +174,8 @@ const socials: Array<{ label: string; href: string; icon: SocialIcon }> = [
 }
 .fip-badge { display: flex; align-items: center; gap: var(--s-2); }
 .fip-logo { flex-shrink: 0; }
-.fip-title { font-size: var(--text-label); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-400); margin-bottom: 2px; }
-.fip-sub   { font-size: 10px; color: var(--ink-400); font-family: var(--font-mono); letter-spacing: 0.04em; }
+.fip-title { font-size: var(--text-label); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-600); margin-bottom: 2px; }
+.fip-sub   { font-size: 10px; color: var(--ink-600); font-family: var(--font-mono); letter-spacing: 0.04em; }
 
 .social-row { display: flex; align-items: center; gap: var(--s-1); }
 .social-btn {
@@ -184,7 +184,7 @@ const socials: Array<{ label: string; href: string; icon: SocialIcon }> = [
   background: var(--surface-0);
   border: 1px solid var(--hairline);
   border-radius: var(--r-1);
-  color: var(--ink-400);
+  color: var(--ink-600);
   text-decoration: none;
   transition: color var(--m-fast), border-color var(--m-fast);
 }
@@ -199,19 +199,22 @@ const socials: Array<{ label: string; href: string; icon: SocialIcon }> = [
   border-bottom: 1px solid var(--hairline);
 }
 .footer-logo { height: 38px; width: auto; object-fit: contain; margin-bottom: var(--s-3); }
-.footer-tagline { font-size: 13px; color: var(--ink-400); line-height: 1.7; margin-bottom: var(--s-2); }
-.footer-established { font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em; }
+.footer-tagline { font-size: 13px; color: var(--ink-600); line-height: 1.7; margin-bottom: var(--s-2); }
+.footer-established { font-family: var(--font-mono); font-size: 10px; color: var(--ink-600); letter-spacing: 0.06em; margin-bottom: var(--s-2); }
+
+.brand-dots { display: flex; gap: 6px; margin-top: var(--s-2); }
+.brand-dot { width: 10px; height: 10px; border-radius: var(--r-full); }
 
 .footer-col-title {
   font-size: var(--text-label);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-400);
+  color: var(--ink-900);
   margin-bottom: var(--s-3);
 }
 .footer-links { list-style: none; display: flex; flex-direction: column; gap: var(--s-1); }
-.footer-link  { font-size: 13px; color: var(--ink-400); text-decoration: none; transition: color var(--m-fast); }
+.footer-link  { font-size: 13px; color: var(--ink-600); text-decoration: none; transition: color var(--m-fast); }
 .footer-link:hover { color: var(--ink-900); }
 .footer-link--dim { color: var(--ink-400); opacity: 0.45; cursor: not-allowed; }
 
@@ -222,7 +225,7 @@ const socials: Array<{ label: string; href: string; icon: SocialIcon }> = [
   justify-content: space-between;
   padding: var(--s-3) 0;
   font-size: 11px;
-  color: var(--ink-400);
+  color: var(--ink-600);
   gap: var(--s-4);
 }
 .footer-mono { font-family: var(--font-mono); letter-spacing: 0.04em; }

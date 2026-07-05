@@ -157,7 +157,7 @@ export class EventsService {
 
     const uuid = randomUUID();
     const slug = slugify(dto.title, uuid);
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
 
     await db
       .insertInto('events')
@@ -308,7 +308,7 @@ export class EventsService {
           .select(['full_name'])
           .where('id', '=', r.user_id)
           .executeTakeFirst();
-        await this.comm.dispatch(r.user_id, 'EVENT_CANCELLED', {
+        await this.comm.dispatch('EVENT_CANCELLED', r.user_id, {
           first_name: user?.full_name?.split(' ')[0] ?? 'Member',
           event_title: event.title,
           event_date: toDate(event.starts_at).toLocaleDateString('en-IN'),
@@ -360,7 +360,7 @@ export class EventsService {
       countQ = countQ.where('event_type', '=', filter.event_type as any);
     }
     if (filter.upcoming_only) {
-      const nowStr = toMysqlDatetime(new Date());
+      const nowStr = toMysqlDatetime(new Date()) as any;
       q = q.where('starts_at', '>=', nowStr);
       countQ = countQ.where('starts_at', '>=', nowStr);
     }
@@ -461,7 +461,7 @@ export class EventsService {
     }
 
     const uuid = randomUUID();
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
 
     await db
       .insertInto('event_registrations')
@@ -501,7 +501,7 @@ export class EventsService {
       const eventUrl = `${process.env.FRONTEND_BASE_URL ?? ''}/activities/${event.slug}`;
 
       if (status === 'REGISTERED') {
-        await this.comm.dispatch(actorId, 'EVENT_REGISTRATION_CONFIRMED', {
+        await this.comm.dispatch('EVENT_REGISTRATION_CONFIRMED', actorId, {
           first_name: firstName,
           event_title: event.title,
           event_date: eventDate,
@@ -510,7 +510,7 @@ export class EventsService {
           event_url: eventUrl,
         });
       } else {
-        await this.comm.dispatch(actorId, 'EVENT_REGISTRATION_WAITLISTED', {
+        await this.comm.dispatch('EVENT_REGISTRATION_WAITLISTED', actorId, {
           first_name: firstName,
           event_title: event.title,
           event_date: eventDate,
@@ -554,7 +554,7 @@ export class EventsService {
     }
 
     const wasRegistered = reg.status === 'REGISTERED';
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
 
     await db
       .updateTable('event_registrations')
@@ -573,7 +573,7 @@ export class EventsService {
         .select(['full_name'])
         .where('id', '=', reg.user_id)
         .executeTakeFirst();
-      await this.comm.dispatch(reg.user_id, 'EVENT_REGISTRATION_CANCELLED_SELF', {
+      await this.comm.dispatch('EVENT_REGISTRATION_CANCELLED_SELF', reg.user_id, {
         first_name: user?.full_name?.split(' ')[0] ?? 'Member',
         event_title: event.title,
         event_date: toDate(event.starts_at).toLocaleDateString('en-IN'),
@@ -606,7 +606,7 @@ export class EventsService {
     }
     if (reg.status === 'ATTENDED') return { ok: true }; // idempotent
 
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
     await db
       .updateTable('event_registrations')
       .set({ status: 'ATTENDED', checked_in_at: now, checked_in_by: actorId })
@@ -689,7 +689,7 @@ export class EventsService {
       throw new BadRequestException('Invite list is only for INVITE_ONLY events');
     }
 
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
     let added = 0;
     for (const userId of dto.user_ids) {
       try {
@@ -720,7 +720,7 @@ export class EventsService {
     actorId: number,
   ): Promise<{ id: number }> {
     await this.loadEvent(eventId);
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
 
     const result = await db
       .insertInto('event_volunteer_slots')
@@ -803,7 +803,7 @@ export class EventsService {
       throw new ConflictException('You have already applied as a volunteer for this event');
     }
 
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
     const result = await db
       .insertInto('event_volunteers')
       .values({
@@ -836,7 +836,7 @@ export class EventsService {
 
     if (!vol) throw new NotFoundException('Volunteer record not found');
 
-    const now = toMysqlDatetime(new Date());
+    const now = toMysqlDatetime(new Date()) as any;
     const patch: Record<string, unknown> = { status: dto.status };
 
     if (dto.status === 'CONFIRMED') patch.confirmed_at = now;
@@ -920,7 +920,7 @@ export class EventsService {
         .select(['full_name'])
         .where('id', '=', next.user_id)
         .executeTakeFirst();
-      await this.comm.dispatch(next.user_id, 'EVENT_SLOT_AVAILABLE', {
+      await this.comm.dispatch('EVENT_SLOT_AVAILABLE', next.user_id, {
         first_name: user?.full_name?.split(' ')[0] ?? 'Member',
         event_title: event.title,
         event_date: toDate(event.starts_at).toLocaleDateString('en-IN'),

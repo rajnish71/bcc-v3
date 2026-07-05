@@ -4,21 +4,28 @@
  * Design system: BCC_V3_Design_System.md §13 (frozen)
  *
  * Desktop:
- *   Left: BCC logo (full lockup — /images/bcc-logo-default.png)
+ *   Left:   BCC logo (full lockup — /images/bcc-logo-default.png)
  *   Centre: Home · About · Activities · Showcase · Journal
  *   Right (Guest):  "Sign In" [text link] + "Become a Member" [gold CTA]
- *   Right (Member): Avatar [forest-gradient] + "Member Hub" [outline gold]
+ *   Right (Member): Avatar [forest-gradient] + Name + Bell + "Member Hub" [outline gold]
  *
  * Behaviour:
  *   - Rest height: 96px. Condenses to 64px after 80px scroll (GSAP header-condense).
  *   - Active link: 2px gold-500 underline.
- *   - Mobile: hamburger → full-height drawer.
+ *   - Mobile: hamburger -> full-height drawer.
  *   - Auth state: defaults to Guest; client script swaps if bcc_user in localStorage.
  *
- * MEM-006 P1 note: "Become a Member" → /join — that page explains the Register →
+ * Token convention (established here):
+ *   localStorage 'bcc_user'  = { displayName, initials }   -- set on sign-in
+ *   localStorage 'bcc_token' = JWT access token string     -- set on sign-in
+ *   Auth pages must write BOTH keys on successful authentication.
+ *
+ * MEM-006 P1 note: "Become a Member" -> /join -> that page explains the Register ->
  * Apply distinction. The nav CTA is the top-of-funnel entry point; it does not
  * collapse the two steps into one.
  */
+
+import NotificationBell from '../ui/NotificationBell.astro';
 
 const p = Astro.url.pathname;
 const isActive = (href: string) =>
@@ -36,9 +43,8 @@ const NAV_LINKS = [
 <header id="site-nav" class="nav" data-gsap="header-condense">
   <div class="nav-inner container">
 
-    <!-- ── Logo ── -->
+    <!-- Logo -->
     <a href="/" class="nav-brand" aria-label="Bhopal Camera Club — Home">
-      <!-- Full lockup: coloured aperture mark + wordmark in black -->
       <img
         src="/images/bcc-logo-default.png"
         alt="Bhopal Camera Club"
@@ -50,7 +56,7 @@ const NAV_LINKS = [
       />
     </a>
 
-    <!-- ── Desktop nav links ── -->
+    <!-- Desktop nav links -->
     <nav class="nav-links" aria-label="Main navigation">
       {NAV_LINKS.map(({ label, href }) => (
         <a
@@ -63,10 +69,10 @@ const NAV_LINKS = [
       ))}
     </nav>
 
-    <!-- ── Right rail: auth CTAs ── -->
+    <!-- Right rail: auth CTAs -->
     <!--
-      Default: Guest state.
-      Client script swaps to Member state if localStorage.bcc_user is present.
+      Default: Guest state (server-rendered).
+      Client script swaps to Member state when bcc_user is found in localStorage.
       Primary gold CTA ("Become a Member") is the ONE gold CTA on this view.
     -->
     <div class="nav-auth" id="nav-auth">
@@ -83,12 +89,13 @@ const NAV_LINKS = [
           <span id="nav-initials">?</span>
         </div>
         <span class="nav-name" id="nav-name"></span>
+        <NotificationBell />
         <a href="/hub/" class="btn btn-outline-gold btn-md">Member Hub</a>
       </div>
 
     </div>
 
-    <!-- ── Hamburger (mobile) ── -->
+    <!-- Hamburger (mobile) -->
     <button
       class="nav-hamburger"
       id="nav-hamburger"
@@ -105,9 +112,9 @@ const NAV_LINKS = [
 </header>
 
 
-<!-- ════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════════════
      MOBILE DRAWER
-     ════════════════════════════════════════════════════════ -->
+     ═══════════════════════════════════════════════════════════════ -->
 <div
   id="nav-drawer"
   class="drawer"
@@ -159,9 +166,18 @@ const NAV_LINKS = [
           </div>
           <div>
             <div class="nav-name" id="drawer-name" style="font-size:14px;"></div>
-            <a href="/hub/" style="font-size:12px;color:var(--gold-600);">Member Hub →</a>
+            <a href="/hub/" style="font-size:12px;color:var(--gold-600);">Member Hub</a>
           </div>
         </div>
+        <!-- Notifications link in mobile drawer -->
+        <a href="/hub/#notifications" class="drawer__notif-link" id="drawer-notif-link">
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M9 2a5.5 5.5 0 0 0-5.5 5.5v2.25L2 12h14l-1.5-2.25V7.5A5.5 5.5 0 0 0 9 2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M7 12v.5a2 2 0 0 0 4 0V12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          Notifications
+          <span class="drawer__notif-badge" id="drawer-notif-badge" hidden>0</span>
+        </a>
       </div>
 
     </div>
@@ -171,7 +187,7 @@ const NAV_LINKS = [
 
 
 <style>
-/* ── Nav shell ── */
+/* Nav shell */
 .nav {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -182,7 +198,6 @@ const NAV_LINKS = [
   transition: height var(--m-med), box-shadow var(--m-med);
   will-change: height;
 }
-/* Condensed state — added by GSAP after 80px scroll */
 .nav--condensed {
   height: var(--nav-h-min);
   box-shadow: var(--e-2);
@@ -195,10 +210,10 @@ const NAV_LINKS = [
   gap: var(--s-4);
 }
 
-/* ── Logo ── */
+/* Logo */
 .nav-brand { display: flex; align-items: center; flex-shrink: 0; text-decoration: none; }
 .nav-logo {
-  height: 44px;        /* Rest state */
+  height: 44px;
   width: auto;
   object-fit: contain;
   transition: height var(--m-med);
@@ -206,7 +221,7 @@ const NAV_LINKS = [
 .nav--condensed .nav-logo { height: 36px; }
 .nav-logo--sm { height: 36px; }
 
-/* ── Desktop nav links ── */
+/* Desktop nav links */
 .nav-links {
   flex: 1;
   display: flex;
@@ -234,7 +249,7 @@ const NAV_LINKS = [
   border-bottom-color: var(--gold-500);
 }
 
-/* ── Auth area ── */
+/* Auth area */
 .nav-auth { flex-shrink: 0; }
 .nav-auth__guest { display: flex; align-items: center; gap: var(--s-2); }
 .nav-auth__member { display: flex; align-items: center; gap: var(--s-2); }
@@ -267,7 +282,7 @@ const NAV_LINKS = [
   white-space: nowrap;
 }
 
-/* ── Hamburger ── */
+/* Hamburger */
 .nav-hamburger {
   display: none;
   flex-direction: column;
@@ -291,7 +306,7 @@ const NAV_LINKS = [
   border-radius: 1px;
 }
 
-/* ── Drawer ── */
+/* Drawer */
 .drawer {
   display: none;
   position: fixed;
@@ -372,11 +387,45 @@ const NAV_LINKS = [
 
 .drawer__member-row { display: flex; align-items: center; gap: var(--s-2); }
 
-/* ── Mobile breakpoint ── */
+/* Notifications link in mobile drawer */
+.drawer__notif-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--s-3);
+  padding: 10px 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-600);
+  text-decoration: none;
+  transition: background var(--m-fast), color var(--m-fast);
+}
+.drawer__notif-link:hover { background: var(--surface-2); color: var(--ink-900); }
+
+.drawer__notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--gold-gradient);
+  border-radius: var(--r-full);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-inverse);
+  margin-left: auto;
+}
+
+/* Mobile breakpoint */
 @media (max-width: 900px) {
   .nav-links, .nav-auth { display: none; }
   .nav-hamburger { display: flex; }
-  .drawer { display: block; } /* always in DOM; aria-hidden controls visibility */
+  .drawer { display: block; }
 }
 </style>
 
@@ -384,15 +433,15 @@ const NAV_LINKS = [
 <script>
   /**
    * Nav scripts:
-   * 1. GSAP header-condense (96px → 64px after 80px scroll)
+   * 1. GSAP header-condense (96px -> 64px after 80px scroll)
    * 2. Mobile drawer toggle + overlay close + escape key
-   * 3. Auth state from localStorage
+   * 3. Auth state from localStorage (bcc_user + bcc_token)
    */
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
-  /* ── 1. Header condense ── */
+  /* 1. Header condense */
   const nav = document.getElementById('site-nav');
   if (nav) {
     ScrollTrigger.create({
@@ -403,7 +452,7 @@ const NAV_LINKS = [
     });
   }
 
-  /* ── 2. Mobile drawer ── */
+  /* 2. Mobile drawer */
   const hamburger   = document.getElementById('nav-hamburger');
   const drawer      = document.getElementById('nav-drawer');
   const overlay     = document.getElementById('drawer-overlay');
@@ -429,7 +478,7 @@ const NAV_LINKS = [
     if (e.key === 'Escape' && drawer?.getAttribute('aria-hidden') === 'false') closeDrawer();
   });
 
-  /* ── 3. Auth state ── */
+  /* 3. Auth state */
   try {
     const raw = localStorage.getItem('bcc_user');
     if (raw) {
@@ -438,9 +487,9 @@ const NAV_LINKS = [
         const initials = user.initials || user.displayName.slice(0, 2).toUpperCase();
 
         // Desktop
-        const guest = document.getElementById('nav-guest');
+        const guest  = document.getElementById('nav-guest');
         const member = document.getElementById('nav-member');
-        if (guest) guest.hidden = true;
+        if (guest)  guest.hidden  = true;
         if (member) member.hidden = false;
         const ni = document.getElementById('nav-initials');
         if (ni) ni.textContent = initials;
@@ -456,6 +505,21 @@ const NAV_LINKS = [
         if (di) di.textContent = initials;
         const dn = document.getElementById('drawer-name');
         if (dn) dn.textContent = user.displayName;
+
+        // Mirror unread badge to mobile drawer (populated by NotificationBell script)
+        // NotificationBell sets #bell-badge; we read its count and mirror to drawer badge.
+        const bellBadge   = document.getElementById('bell-badge');
+        const drawerBadge = document.getElementById('drawer-notif-badge');
+        if (bellBadge && drawerBadge) {
+          const mirrorBadge = () => {
+            const hidden = bellBadge.hidden;
+            drawerBadge.hidden = hidden;
+            if (!hidden) drawerBadge.textContent = bellBadge.textContent;
+          };
+          // Poll every 2s for badge sync (cheap DOM read -- no network calls)
+          mirrorBadge();
+          setInterval(mirrorBadge, 2000);
+        }
       }
     }
   } catch { /* Stay in guest state */ }

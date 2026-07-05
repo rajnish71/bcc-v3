@@ -347,7 +347,7 @@ export class MembershipLifecycleService {
   }
 
   // ======================================================================
-  // APPROVED — payment failure (stays APPROVED; MEM-007: no number
+  // APPROVED -- payment failure (stays APPROVED; MEM-007: no number
   // assignment happens on this path)
   // ======================================================================
   async recordPaymentFailure(membershipId: number, notes?: string): Promise<void> {
@@ -410,12 +410,7 @@ export class MembershipLifecycleService {
       newValue: { state: 'ACTIVE' },
     });
 
-    // TODO(Module17): add MEMBERSHIP_REINSTATED type; using direct send until type is seeded.
-    await this.notifyMemberDirect(
-      membership,
-      'Your BCC membership has been reinstated',
-      '<p>Your suspension has been lifted. Full membership benefits are restored.</p>',
-    );
+    await this.notifyMember(membership, 'MEMBERSHIP_REINSTATED');
   }
 
   // ======================================================================
@@ -504,12 +499,9 @@ export class MembershipLifecycleService {
       newValue: { state: 'ACTIVE', note: 'renewal' },
     });
 
-    // TODO(Module17): add MEMBERSHIP_RENEWED type; using direct send until type is seeded.
-    await this.notifyMemberDirect(
-      membership,
-      'Your BCC membership has been renewed',
-      `<p>Your membership has been renewed and is now active. Your membership number remains <strong>${membership.membership_number ?? ''}</strong> -- it never changes.</p>`,
-    );
+    await this.notifyMember(membership, 'MEMBERSHIP_RENEWED', {
+      membership_number: membership.membership_number ?? '',
+    });
   }
 
   // ======================================================================
@@ -627,40 +619,6 @@ export class MembershipLifecycleService {
     );
   }
 
-  // notifyMemberDirect -- fallback for transitions that lack a seeded type
-  // (MEMBERSHIP_REINSTATED, MEMBERSHIP_RENEWED). Sends via email shell only;
-  // does NOT log to notification_log. Remove once type + template are seeded.
-  private async notifyMemberDirect(
-    membership: Pick<MembershipRow, 'owner_type' | 'user_id' | 'group_entity_id'>,
-    subject: string,
-    htmlFragment: string,
-  ): Promise<void> {
-    const userId =
-      membership.owner_type === 'INDIVIDUAL'
-        ? membership.user_id
-        : await this.groupPrimaryContact(membership.group_entity_id);
-    if (!userId) return;
-
-    const user = await db
-      .selectFrom('users')
-      .select('email')
-      .where('id', '=', userId)
-      .executeTakeFirst();
-    if (!user?.email) return;
-
-    const html = this.communicationService.wrapEmail(htmlFragment);
-    // EmailService is no longer injected -- reach it via CommunicationService
-    // by calling the raw Resend endpoint would duplicate code. Use a one-off
-    // dispatch workaround: since CommunicationService.emailService is private,
-    // expose a thin bypass via dispatchRaw (added in a future pass) or keep
-    // this branch as a plain fetch. For now, console.warn and skip.
-    // TODO: wire once MEMBERSHIP_REINSTATED / MEMBERSHIP_RENEWED types seeded.
-    console.warn(
-      `[Comms] notifyMemberDirect: no type seeded for "${subject}" -- skipping email until type is added to taxonomy.`,
-    );
-    void html; // suppress unused-var lint
-  }
-
   // Looks up amount_paise from the payments table for PAYMENT_FAILED variables.
   private async resolvePaymentAmount(paymentId: number | null): Promise<string> {
     if (!paymentId) return '';
@@ -681,13 +639,4 @@ export class MembershipLifecycleService {
       .executeTakeFirst();
     return group?.primary_contact_user_id ?? null;
   }
-}
-
-function escapeHtml(input: string): string {
-  return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }

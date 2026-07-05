@@ -460,7 +460,7 @@ export interface MembershipApprovalStagesTable {
 }
 
 // ============================================================================
-// Batch 4 -- Voting Register (migration 0028, MEM-006 §02.11)
+// Batch 4 -- Voting Register (migration 0028, MEM-006 section 02.11)
 // ============================================================================
 
 // Immutable point-in-time snapshots of voting-eligible members for AGM use.
@@ -541,6 +541,111 @@ export interface InAppNotificationsTable {
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
 
+// ============================================================================
+// Module 04 -- Events & Activity Management (migration 0033)
+// ============================================================================
+
+export type EventType =
+  | 'PHOTOWALK' | 'BIRD_WALK' | 'WORKSHOP' | 'SEMINAR'
+  | 'TOUR' | 'MEETUP' | 'TRAINING' | 'CONSERVATION'
+  | 'EXHIBITION_EVENT' | 'GOVERNANCE' | 'AWARD_CEREMONY'
+  | 'ONLINE' | 'COLLABORATIVE' | 'OTHER';
+
+export type EventState = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';
+export type EligibilityMode =
+  | 'OPEN' | 'MEMBERS_ONLY' | 'SPECIFIC_CLASSES'
+  | 'INVITE_ONLY' | 'CONSTITUTIONAL_MEMBERS_ONLY';
+export type RegistrationStatus = 'REGISTERED' | 'WAITLISTED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
+export type VolunteerStatus = 'APPLIED' | 'CONFIRMED' | 'CHECKED_IN' | 'NO_SHOW' | 'CANCELLED';
+
+export interface EventsTable {
+  id: Generated<number>;
+  uuid: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  event_type: EventType;
+  occurrence: Generated<'SINGLE' | 'RECURRING'>;
+  starts_at: ColumnType<Date, string, string>;
+  ends_at: ColumnType<Date | null, string | null, string | null>;
+  location_name: string | null;
+  location_address: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_landmark: string | null;
+  capacity: number | null;
+  waitlist_enabled: Generated<boolean>;
+  fee_type: Generated<'FREE' | 'FLAT' | 'MEMBER_DISCOUNTED'>;
+  base_fee_paise: Generated<number>;
+  eligibility_mode: Generated<EligibilityMode>;
+  // JSON-serialised number[] of membership_class.id values; null when
+  // eligibility_mode is not SPECIFIC_CLASSES.
+  allowed_class_ids: string | null;
+  difficulty_level: Generated<'ALL' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'>;
+  age_restriction: Generated<'ALL' | 'ADULT' | 'FAMILY'>;
+  weather_dependent: Generated<boolean>;
+  volunteer_slots_needed: Generated<number>;
+  what_to_bring: string | null;
+  tags: string | null;   // JSON-serialised string[]
+  banner_r2_key: string | null;
+  state: Generated<EventState>;
+  cancellation_reason: string | null;
+  created_by: number;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface EventInviteListTable {
+  id: Generated<number>;
+  event_id: number;
+  user_id: number;
+  invited_by: number;
+  invited_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface EventRegistrationsTable {
+  id: Generated<number>;
+  uuid: string;
+  event_id: number;
+  user_id: number | null;        // NULL for guest registrations
+  guest_name: string | null;
+  guest_email: string | null;
+  guest_phone: string | null;
+  registration_type: 'MEMBER' | 'GUEST';
+  status: Generated<RegistrationStatus>;
+  waitlist_position: number | null;
+  // Phase 2a: manual fee tracking; Razorpay event payment integration deferred
+  // to Module 11 expansion.
+  fee_paid_paise: Generated<number>;
+  checked_in_at: ColumnType<Date | null, string | null, string | null>;
+  checked_in_by: number | null;
+  registered_at: Generated<ColumnType<Date, string | undefined, never>>;
+  cancelled_at: ColumnType<Date | null, string | null, string | null>;
+  cancellation_reason: string | null;
+}
+
+export interface EventVolunteerSlotsTable {
+  id: Generated<number>;
+  event_id: number;
+  role_name: string;
+  role_description: string | null;
+  skills_required: string | null;   // JSON-serialised string[]
+  slots_count: Generated<number>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface EventVolunteersTable {
+  id: Generated<number>;
+  event_id: number;
+  slot_id: number | null;
+  user_id: number;
+  status: Generated<VolunteerStatus>;
+  hours_logged: number | null;
+  applied_at: Generated<ColumnType<Date, string | undefined, never>>;
+  confirmed_at: ColumnType<Date | null, string | null, string | null>;
+  checked_in_at: ColumnType<Date | null, string | null, string | null>;
+}
+
 export interface DB {
   users: UsersTable;
   user_avatars: UserAvatarsTable;
@@ -587,6 +692,12 @@ export interface DB {
   notification_templates: NotificationTemplatesTable;
   notification_log: NotificationLogTable;
   in_app_notifications: InAppNotificationsTable;
+
+  events: EventsTable;
+  event_invite_list: EventInviteListTable;
+  event_registrations: EventRegistrationsTable;
+  event_volunteer_slots: EventVolunteerSlotsTable;
+  event_volunteers: EventVolunteersTable;
 }
 
 const dialect = new MysqlDialect({

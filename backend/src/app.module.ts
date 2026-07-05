@@ -6,6 +6,7 @@ import { RegistrationModule } from './modules/identity/registration/registration
 import { UsersModule } from './modules/identity/users/users.module';
 import { MembershipModule } from './modules/membership/membership.module';
 import { NotificationModule } from './modules/notifications/notification.module';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { NotificationModule } from './modules/notifications/notification.module'
     UsersModule,
     MembershipModule,
     NotificationModule,
+    EventsModule,
   ],
   controllers: [AppController],
 })

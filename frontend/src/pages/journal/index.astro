@@ -1,0 +1,352 @@
+---
+/**
+ * journal/index.astro — Journal Index Page
+ * Route: /journal/
+ *
+ * Displays a list of guides, field reports, and tutorials.
+ * Fetches dynamic content from the NestJS backend `/api/v1/journal`
+ * and falls back to pre-seeded editorial logs.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+
+// Fallback articles if backend is offline during build
+const fallbackPosts = [
+  {
+    id: 'old-city-heritage-walk-field-report',
+    slug: 'old-city-heritage-walk-field-report',
+    title: 'Old City Heritage Walk: A Field Report',
+    description: 'A detailed field report documenting the heritage photowalk in Chowk Bazaar, Bhopal.',
+    pubDate: '2026-06-23T10:00:00Z',
+    heroImage: '/images/Orchha-Reflection-Ankit-Tiwari-1024x737.jpeg',
+    category: 'Field Report',
+    readingTime: '4 min',
+    excerpt: 'Last weekend, over 25 photographers joined us in the narrow lanes of Chowk Bazaar to document the historic monuments and daily street life of Bhopal...'
+  },
+  {
+    id: 'golden-hour-photography-guide',
+    slug: 'golden-hour-photography-guide',
+    title: 'Mastering the Golden Hour',
+    description: 'A comprehensive guide on camera settings, metering modes, and composition for shooting during golden hour.',
+    pubDate: '2026-07-01T15:00:00Z',
+    heroImage: '/images/StreetLife-Rahil-Khan-1024x768.jpeg',
+    category: 'Guide',
+    readingTime: '6 min',
+    excerpt: 'Shooting during the golden hour presents unique opportunities and challenges. Learn how to manage high dynamic range, preserve highlight details, and capture warm composition...'
+  }
+];
+
+const featuredPost = fallbackPosts[0];
+const gridPosts = fallbackPosts.slice(1);
+---
+
+<BaseLayout
+  title="Journal"
+  description="Guides, tutorials, field reports, and perspectives written by the Bhopal Camera Club community."
+>
+  <div class="journal-wrapper">
+    <!-- Header -->
+    <header class="journal-header surface-white">
+      <div class="container">
+        <SectionHeader
+          eyebrow="Stories & Craft"
+          title="The Journal"
+          subtitle="Guides, tutorial logs, event field reports, and artistic perspectives written by the Bhopal Camera Club community."
+          as="h1"
+          data-gsap="reveal"
+        />
+      </div>
+      <div class="hairline"></div>
+    </header>
+
+    <!-- Featured Post -->
+    {featuredPost && (
+      <section class="section featured-section" aria-label="Featured article">
+        <div class="container">
+          <a href={`/journal/${featuredPost.slug}/`} id="featured-link" class="featured-card vf-card">
+            <div class="featured-img-wrap">
+              <img id="featured-img" src={featuredPost.heroImage} alt="" class="featured-img" />
+              <span class="vf-tl" aria-hidden="true"></span>
+              <span class="vf-bl" aria-hidden="true"></span>
+            </div>
+            <div class="featured-content">
+              <span id="featured-cat" class="tag tag-exhibition">{featuredPost.category}</span>
+              <h2 id="featured-title" class="featured-title">{featuredPost.title}</h2>
+              <p id="featured-excerpt" class="featured-excerpt">{featuredPost.excerpt}</p>
+              <div class="featured-meta">
+                <span id="featured-date">June 23, 2026</span>
+                <span class="sep">·</span>
+                <span id="featured-read">{featuredPost.readingTime} read</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
+    )}
+
+    <!-- Grid List -->
+    <section class="section archive-section" aria-label="Latest articles">
+      <div class="container">
+        <SectionHeader
+          eyebrow="Archive Logs"
+          title="Latest Articles"
+          align="left"
+        />
+
+        <div id="journal-grid" class="journal-grid" data-gsap="stagger">
+          {gridPosts.map(post => (
+            <a href={`/journal/${post.slug}/`} class="journal-card vf-card">
+              <div class="card-img-wrap">
+                <img src={post.heroImage} alt="" class="card-img" />
+                <span class="vf-br" aria-hidden="true"></span>
+                <span class="vf-bl" aria-hidden="true"></span>
+              </div>
+              <div class="card-body">
+                <span class="tag tag-photowalk">{post.category}</span>
+                <h3 class="card-title">{post.title}</h3>
+                <p class="card-excerpt">{post.excerpt}</p>
+                <div class="card-meta">
+                  <span>July 1, 2026</span>
+                  <span class="sep">·</span>
+                  <span>{post.readingTime} read</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+.journal-wrapper {
+  background-color: var(--surface-1);
+  min-height: 100vh;
+}
+.journal-header {
+  padding-top: calc(var(--nav-h) + var(--s-8));
+  padding-bottom: var(--s-6);
+}
+
+/* Featured Card */
+.featured-card {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--m-fast) ease-in-out, box-shadow var(--m-fast) ease-in-out;
+}
+.featured-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--e-2);
+}
+.featured-img-wrap {
+  position: relative;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  border-right: 1px solid var(--hairline);
+}
+.featured-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.featured-content {
+  padding: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+.featured-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin: var(--s-1) 0;
+}
+.featured-excerpt {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-600);
+}
+.featured-meta {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+  margin-top: var(--s-2);
+}
+
+/* Crop Marks for Viewfinder theme */
+.vf-card {
+  position: relative;
+}
+.vf-card .vf-tl, .vf-card .vf-bl, .vf-card .vf-tr, .vf-card .vf-br {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 10;
+  pointer-events: none;
+}
+.vf-card .vf-tl { top: var(--s-2); left: var(--s-2); border-top: 1px solid rgba(255,255,255,0.4); border-left: 1px solid rgba(255,255,255,0.4); }
+.vf-card .vf-bl { bottom: var(--s-2); left: var(--s-2); border-bottom: 1px solid rgba(255,255,255,0.4); border-left: 1px solid rgba(255,255,255,0.4); }
+.vf-card .vf-tr { top: var(--s-2); right: var(--s-2); border-top: 1px solid rgba(0,0,0,0.15); border-right: 1px solid rgba(0,0,0,0.15); }
+.vf-card .vf-br { bottom: var(--s-2); right: var(--s-2); border-bottom: 1px solid rgba(0,0,0,0.15); border-right: 1px solid rgba(0,0,0,0.15); }
+
+/* Grid Card */
+.journal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-4);
+  margin-top: var(--s-6);
+}
+.journal-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--m-fast) ease-in-out, box-shadow var(--m-fast) ease-in-out;
+}
+.journal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--e-2);
+}
+.card-img-wrap {
+  position: relative;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  border-bottom: 1px solid var(--hairline);
+}
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-body {
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  flex: 1;
+}
+.card-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.3;
+}
+.card-excerpt {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-600);
+  flex: 1;
+}
+.card-meta {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+  margin-top: var(--s-1);
+}
+.sep {
+  margin: 0 var(--s-1);
+  color: var(--hairline-strong);
+}
+
+@media (max-width: 900px) {
+  .featured-card {
+    grid-template-columns: 1fr;
+  }
+  .featured-img-wrap {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+  }
+}
+@media (max-width: 640px) {
+  .journal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+  async function loadJournalIndex() {
+    try {
+      const res = await fetch('/api/v1/journal?limit=20');
+      if (!res.ok) throw new Error('API error');
+      const { data } = await res.json();
+      const posts = Array.isArray(data) ? data : [];
+      if (posts.length > 0) {
+        renderFeatured(posts[0]);
+        if (posts.length > 1) {
+          renderGrid(posts.slice(1));
+        }
+      }
+    } catch {
+      // Keep static pre-seeded fallback
+    }
+  }
+
+  function renderFeatured(post: any) {
+    document.getElementById('featured-link')!.setAttribute('href', `/journal/${post.slug}/`);
+    document.getElementById('featured-img')!.setAttribute('src', post.heroImage);
+    document.getElementById('featured-img')!.setAttribute('alt', post.title);
+    document.getElementById('featured-cat')!.textContent = post.category || 'Journal';
+    document.getElementById('featured-title')!.textContent = post.title;
+    document.getElementById('featured-excerpt')!.textContent = post.excerpt || '';
+    document.getElementById('featured-read')!.textContent = `${post.readingTime || '5 min'} read`;
+
+    const formattedDate = new Date(post.pubDate).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    document.getElementById('featured-date')!.textContent = formattedDate;
+  }
+
+  function renderGrid(posts: any[]) {
+    const grid = document.getElementById('journal-grid')!;
+    grid.innerHTML = '';
+    posts.forEach(post => {
+      const formattedDate = new Date(post.pubDate).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const card = document.createElement('a');
+      card.href = `/journal/${post.slug}/`;
+      card.className = 'journal-card vf-card';
+      card.innerHTML = `
+        <div class="card-img-wrap">
+          <img src="${post.heroImage}" alt="" class="card-img" />
+          <span class="vf-br" aria-hidden="true"></span>
+          <span class="vf-bl" aria-hidden="true"></span>
+        </div>
+        <div class="card-body">
+          <span class="tag tag-photowalk">${post.category || 'Journal'}</span>
+          <h3 class="card-title">${post.title}</h3>
+          <p class="card-excerpt">${post.excerpt || ''}</p>
+          <div class="card-meta">
+            <span>${formattedDate}</span>
+            <span class="sep">·</span>
+            <span>${post.readingTime || '5 min'} read</span>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  loadJournalIndex();
+</script>

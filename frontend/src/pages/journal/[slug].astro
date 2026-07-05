@@ -1,0 +1,318 @@
+---
+/**
+ * journal/[slug].astro — Journal Article Detail Page
+ * Route: /journal/[slug]/
+ *
+ * Renders the full article content, category tags, author byline,
+ * publish date, reading time, share controls, and dynamic body text.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  let posts = [];
+  try {
+    const res = await fetch('http://localhost:3000/api/v1/journal?limit=100');
+    if (res.ok) {
+      const json = await res.json();
+      posts = json.data || [];
+    }
+  } catch (e) {
+    // Silent warn
+  }
+
+  // Pre-defined static paths for offline build resilience
+  const paths = [
+    { params: { slug: 'old-city-heritage-walk-field-report' } },
+    { params: { slug: 'golden-hour-photography-guide' } }
+  ];
+
+  posts.forEach((p: any) => {
+    if (p.slug && !paths.some(path => path.params.slug === p.slug)) {
+      paths.push({ params: { slug: p.slug } });
+    }
+  });
+
+  return paths;
+}
+
+const { slug } = Astro.params;
+
+// Fallback details if database is offline
+const fallbackPosts: Record<string, any> = {
+  'old-city-heritage-walk-field-report': {
+    title: 'Old City Heritage Walk: A Field Report',
+    category: 'Field Report',
+    pubDate: '2026-06-23T10:00:00Z',
+    readingTime: '4 min',
+    heroImage: '/images/Orchha-Reflection-Ankit-Tiwari-1024x737.jpeg',
+    body: 'Last weekend, over 25 photographers joined us in the narrow lanes of Chowk Bazaar to document the historic monuments and daily street life of Bhopal. Starting from the grand courtyard of Taj-ul-Masajid, our walk navigated through Moti Masjid and culminated in Chowk Bazaar. Members captured stunning street scenes, architectural details, and frames showing early morning light reflections. Key coordinator Sauvik Acharyya led a street composition workshop session during the photowalk.'
+  },
+  'golden-hour-photography-guide': {
+    title: 'Mastering the Golden Hour',
+    category: 'Guide',
+    pubDate: '2026-07-01T15:00:00Z',
+    readingTime: '6 min',
+    heroImage: '/images/StreetLife-Rahil-Khan-1024x768.jpeg',
+    body: 'Shooting during the golden hour presents unique opportunities and challenges. Learn how to manage high dynamic range, preserve highlight details, and capture warm compositions. 1. Metering Modes: Use Spot Metering to isolate highlights and prevent blowing out skies. 2. White Balance: Set your white balance manually to Shade or Cloudy to enhance warm orange/gold colors instead of letting Auto White Balance cool down the scene. 3. Lens Flare: Embrace creative flare by shooting directly into the sun at wide apertures, or use a lens hood to minimize contrast loss.'
+  }
+};
+
+const defaultPost = fallbackPosts[slug] || {
+  title: 'Journal Log Entry',
+  category: 'Log',
+  pubDate: new Date().toISOString(),
+  readingTime: '5 min',
+  heroImage: '/images/StreetLife-Rahil-Khan-1024x768.jpeg',
+  body: 'This log entry contains field notes, perspectives, and educational reviews shared by the Bhopal Camera Club community.'
+};
+---
+
+<BaseLayout
+  title={defaultPost.title}
+  description={defaultPost.body.slice(0, 150)}
+>
+  <article class="journal-article">
+    <!-- Article Header -->
+    <header class="article-hero" data-gsap="reveal">
+      <div class="hero-image-window vf-card">
+        <img id="article-hero-img" src={defaultPost.heroImage} alt="" class="article-hero-img" />
+        <span class="vf-br" aria-hidden="true"></span>
+        <span class="vf-bl" aria-hidden="true"></span>
+      </div>
+
+      <div class="container hero-container">
+        <span id="article-cat" class="tag tag-exhibition">{defaultPost.category}</span>
+        <h1 id="article-title" class="article-title">{defaultPost.title}</h1>
+        <div class="article-meta">
+          <span id="article-date">June 23, 2026</span>
+          <span class="sep">·</span>
+          <span id="article-read">{defaultPost.readingTime} read</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Body Section -->
+    <section class="article-body-section">
+      <div class="container article-max-width">
+        <!-- Author byline -->
+        <div class="author-bar">
+          <div class="author-avatar">B</div>
+          <div class="author-info">
+            <span class="author-name">BCC Editor</span>
+            <span class="author-role">Camera Club Editorial Team</span>
+          </div>
+          <button class="btn btn-outline btn-md share-btn" id="btn-share-post">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            Share
+          </button>
+        </div>
+
+        <!-- Rendered prose text -->
+        <div id="article-body" class="prose-content">
+          <p>{defaultPost.body}</p>
+        </div>
+
+        <!-- Footer actions -->
+        <footer class="article-footer">
+          <a href="/journal/" class="btn btn-outline btn-md">&larr; Back to Journal</a>
+          <a href="/join/" class="btn btn-dark btn-md">Become a Member</a>
+        </footer>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+.journal-article {
+  background-color: var(--surface-1);
+  min-height: 100vh;
+  padding-bottom: var(--s-12);
+}
+
+/* Hero Section */
+.article-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+}
+.hero-image-window {
+  width: 100%;
+  aspect-ratio: 16/7;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--hairline);
+  position: relative;
+}
+.article-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hero-container {
+  padding-top: var(--s-6);
+  padding-bottom: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+.article-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin: var(--s-1) 0;
+}
+.article-meta {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-400);
+}
+.sep {
+  margin: 0 var(--s-1);
+  color: var(--hairline-strong);
+}
+
+/* Crop Marks for Viewfinder theme */
+.vf-card {
+  position: relative;
+}
+.vf-card .vf-bl, .vf-card .vf-br {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 10;
+  pointer-events: none;
+}
+.vf-card .vf-bl { bottom: var(--s-2); left: var(--s-2); border-bottom: 1px solid rgba(255,255,255,0.4); border-left: 1px solid rgba(255,255,255,0.4); }
+.vf-card .vf-br { bottom: var(--s-2); right: var(--s-2); border-bottom: 1px solid rgba(255,255,255,0.4); border-right: 1px solid rgba(255,255,255,0.4); }
+
+/* Body Content */
+.article-max-width {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 var(--s-3);
+}
+.author-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: var(--s-6);
+}
+.author-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-full);
+  background: var(--forest-gradient);
+  color: var(--surface-0);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline-strong);
+}
+.author-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.author-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.author-role {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+}
+.share-btn {
+  font-size: 11px;
+}
+
+.prose-content {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  margin-bottom: var(--s-8);
+}
+.prose-content p {
+  margin-bottom: var(--s-4);
+}
+
+.article-footer {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-6);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+</style>
+
+<script>
+  const slug = window.location.pathname.split('/').filter(Boolean).pop();
+
+  async function loadArticle() {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/journal/${slug}`);
+      if (!res.ok) throw new Error('API error');
+      const { data } = await res.json();
+      if (data) {
+        document.getElementById('article-hero-img')!.setAttribute('src', data.heroImage);
+        document.getElementById('article-hero-img')!.setAttribute('alt', data.title);
+        document.getElementById('article-cat')!.textContent = data.category || 'Journal';
+        document.getElementById('article-title')!.textContent = data.title;
+        document.getElementById('article-read')!.textContent = `${data.readingTime || '5 min'} read`;
+        document.getElementById('article-body')!.innerHTML = data.body.split('\n\n').map((p: string) => `<p>${p}</p>`).join('');
+
+        const formattedDate = new Date(data.pubDate).toLocaleDateString('en-IN', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        document.getElementById('article-date')!.textContent = formattedDate;
+      }
+    } catch {
+      // Keep static pre-seeded fallback
+      const fallbackDate = new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      document.getElementById('article-date')!.textContent = fallbackDate;
+    }
+  }
+
+  // Handle share button
+  document.getElementById('btn-share-post')?.addEventListener('click', () => {
+    if (navigator.share) {
+      navigator.share({
+        title: document.title,
+        url: window.location.href
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      const alertBox = document.createElement('div');
+      alertBox.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--ink-900);color:var(--surface-0);font-family:var(--font-body);font-size:12px;padding:10px 16px;z-index:1000;border-radius:4px;';
+      alertBox.textContent = 'Link copied to clipboard!';
+      document.body.appendChild(alertBox);
+      setTimeout(() => alertBox.remove(), 2500);
+    }
+  });
+
+  loadArticle();
+</script>

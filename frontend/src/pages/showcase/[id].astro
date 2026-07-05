@@ -1,0 +1,422 @@
+---
+/**
+ * showcase/[id].astro
+ * Dynamic Route: /showcase/[id]/
+ *
+ * Lightbox photo detail view. Displays the full photograph inside a viewfinder frame,
+ * metadata specs sheet (camera, lens, exposure), and photographer details.
+ *
+ * Uses hybrid pre-rendering and client-side hydration for build resilience.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+
+export async function getStaticPaths() {
+  let photos = [];
+  try {
+    const res = await fetch('http://localhost:3000/api/v1/photos?limit=100');
+    if (res.ok) {
+      const json = await res.json();
+      photos = json.data || [];
+    }
+  } catch (e) {
+    // Silent warn
+  }
+
+  // Pre-defined static paths for offline compilation
+  const paths = [
+    { params: { id: 'orchha-reflection' } },
+    { params: { id: 'street-life' } },
+    { params: { id: 'lake-sunset' } },
+    { params: { id: 'heritage-details' } }
+  ];
+
+  photos.forEach((p: any) => {
+    if (p.id && !paths.some(path => path.params.id === String(p.id))) {
+      paths.push({ params: { id: String(p.id) } });
+    }
+  });
+
+  return paths;
+}
+
+const { id } = Astro.params;
+
+// Fallback details if database is offline
+const fallbackPhotos: Record<string, any> = {
+  'orchha-reflection': {
+    title: 'Orchha Reflection',
+    photographer: 'Ankit Tiwari',
+    photographerId: 'ankit-tiwari',
+    date: '2026-06-15T12:00:00Z',
+    category: 'Landscape',
+    description: 'A perfect reflection of the Orchha Cenotaphs captured across the Betwa River during a calm early morning photowalk.',
+    src: '/images/Orchha-Reflection-Ankit-Tiwari-1024x737.jpeg',
+    exif: {
+      camera: 'Canon EOS R5',
+      lens: 'RF 24-70mm f/2.8L IS USM',
+      focalLength: '24mm',
+      shutterSpeed: '1/125s',
+      aperture: 'f/8.0',
+      iso: '100'
+    }
+  },
+  'street-life': {
+    title: 'Street Life in Chowk',
+    photographer: 'Rahil Khan',
+    photographerId: 'rahil-khan',
+    date: '2026-06-22T08:30:00Z',
+    category: 'Street',
+    description: 'Documenting the vibrant market interactions and textures in the heritage lanes of Chowk Bazaar, Bhopal.',
+    src: '/images/StreetLife-Rahil-Khan-1024x768.jpeg',
+    exif: {
+      camera: 'Fujifilm X-T4',
+      lens: 'XF 35mm f/1.4 R',
+      focalLength: '35mm',
+      shutterSpeed: '1/250s',
+      aperture: 'f/2.8',
+      iso: '400'
+    }
+  }
+};
+
+const defaultPhoto = fallbackPhotos[id] || {
+  title: 'Showcase Photograph',
+  photographer: 'BCC Member',
+  photographerId: 'unknown',
+  date: new Date().toISOString(),
+  category: 'General',
+  description: 'A curated photograph submitted to the Bhopal Camera Club showcase platform.',
+  src: '/images/Orchha-Reflection-Ankit-Tiwari-1024x737.jpeg',
+  exif: {
+    camera: 'Digital Camera',
+    lens: 'Standard Zoom Lens',
+    focalLength: '50mm',
+    shutterSpeed: '1/125s',
+    aperture: 'f/5.6',
+    iso: '200'
+  }
+};
+---
+
+<BaseLayout
+  title={defaultPhoto.title}
+  description={`${defaultPhoto.title} by ${defaultPhoto.photographer} — Bhopal Camera Club Showcase`}
+>
+  <!-- Photo Viewport (Dark Lightbox Section) -->
+  <section class="photo-viewport" aria-label="Photograph view">
+    <div class="viewport-container">
+      <div class="photo-frame vf-card">
+        <img
+          id="photo-img"
+          src={defaultPhoto.src}
+          alt={defaultPhoto.title}
+          class="full-photo"
+        />
+        <!-- Viewfinder Crop Marks -->
+        <span class="vf-br" aria-hidden="true"></span>
+        <span class="vf-bl" aria-hidden="true"></span>
+        <span class="vf-tr" aria-hidden="true"></span>
+        <span class="vf-tl" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Photo Details / Metadata split -->
+  <div class="container details-layout">
+    <!-- Left Column: Story -->
+    <main class="photo-narrative">
+      <div class="photo-header">
+        <span id="photo-category" class="tag tag-exhibition">{defaultPhoto.category}</span>
+        <h1 id="photo-title" class="photo-title-text">{defaultPhoto.title}</h1>
+        <p class="photo-byline">
+          By <a id="photo-author-link" href={`/gallery/photographer/${defaultPhoto.photographerId}/`} class="photographer-link">{defaultPhoto.photographer}</a>
+          <span class="sep">·</span>
+          Published <span id="photo-date">—</span>
+        </p>
+      </div>
+
+      <div class="photo-story">
+        <h3 class="story-title">Behind the Frame</h3>
+        <div id="photo-description" class="story-body">
+          <p>{defaultPhoto.description}</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Column: EXIF panel -->
+    <aside class="photo-sidebar">
+      <div class="specs-panel">
+        <div class="specs-header">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="3"/>
+            <path d="M1 5h3l1.5-2h5L12 5h3v9H1V5z"/>
+          </svg>
+          EXIF Metadata
+        </div>
+
+        <div class="specs-body">
+          <div class="spec-item">
+            <span class="spec-lbl">Camera Body</span>
+            <span id="exif-camera" class="spec-val">{defaultPhoto.exif.camera}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-lbl">Lens</span>
+            <span id="exif-lens" class="spec-val">{defaultPhoto.exif.lens}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-lbl">Focal Length</span>
+            <span id="exif-focal" class="spec-val">{defaultPhoto.exif.focalLength}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-lbl">Aperture</span>
+            <span id="exif-aperture" class="spec-val">{defaultPhoto.exif.aperture}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-lbl">Shutter Speed</span>
+            <span id="exif-shutter" class="spec-val">{defaultPhoto.exif.shutterSpeed}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-lbl">ISO Speed</span>
+            <span id="exif-iso" class="spec-val">{defaultPhoto.exif.iso}</span>
+          </div>
+        </div>
+
+        <div class="specs-footer">
+          <a id="download-btn" href={defaultPhoto.src} download class="btn btn-outline btn-md action-btn">
+            Download Original
+          </a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+/* Viewport Frame styling */
+.photo-viewport {
+  background: #0B0B0E;
+  padding: var(--s-8) 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid var(--hairline-strong);
+}
+.viewport-container {
+  max-width: 1200px;
+  width: 90%;
+  display: flex;
+  justify-content: center;
+}
+.photo-frame {
+  position: relative;
+  max-height: 70vh;
+  background: #000;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.full-photo {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+}
+
+/* Viewfinder Crop Marks - Absolute overlays */
+.vf-card .vf-tr, .vf-card .vf-tl {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+  z-index: 10;
+  pointer-events: none;
+}
+.vf-card .vf-br, .vf-card .vf-bl {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.4);
+  z-index: 10;
+  pointer-events: none;
+}
+.vf-card .vf-tl { top: var(--s-3); left: var(--s-3); border-left: 1.5px solid rgba(255, 255, 255, 0.4); }
+.vf-card .vf-tr { top: var(--s-3); right: var(--s-3); border-right: 1.5px solid rgba(255, 255, 255, 0.4); }
+.vf-card .vf-bl { bottom: var(--s-3); left: var(--s-3); border-left: 1.5px solid rgba(255, 255, 255, 0.4); }
+.vf-card .vf-br { bottom: var(--s-3); right: var(--s-3); border-right: 1.5px solid rgba(255, 255, 255, 0.4); }
+
+/* Details split */
+.details-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--s-8);
+  padding-top: var(--s-8);
+  padding-bottom: var(--s-12);
+}
+
+/* Story and header */
+.photo-narrative {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+.photo-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+.photo-title-text {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.02em;
+}
+.photo-byline {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-400);
+}
+.photographer-link {
+  font-weight: 600;
+  color: var(--gold-600);
+  text-decoration: none;
+}
+.photographer-link:hover {
+  text-decoration: underline;
+}
+.sep {
+  margin: 0 var(--s-1);
+  color: var(--hairline-strong);
+}
+
+.photo-story {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-6);
+}
+.story-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: var(--s-2);
+}
+.story-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-600);
+}
+
+/* Sidebar EXIF panel */
+.specs-panel {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--e-1);
+}
+.specs-header {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--hairline-soft);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-900);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.specs-body {
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+.spec-lbl {
+  color: var(--ink-400);
+}
+.spec-val {
+  font-weight: 500;
+  color: var(--ink-900);
+}
+.specs-footer {
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--hairline-soft);
+  background: var(--surface-1);
+}
+.action-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .details-layout {
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
+  }
+}
+</style>
+
+<script>
+  const photoId = window.location.pathname.split('/').filter(Boolean).pop();
+
+  async function loadPhotoDetails() {
+    if (!photoId) return;
+    try {
+      const res = await fetch(`/api/v1/photos/${photoId}`);
+      if (!res.ok) throw new Error('API Error');
+      const { data } = await res.json();
+      if (data) {
+        document.getElementById('photo-img')!.setAttribute('src', data.src);
+        document.getElementById('photo-img')!.setAttribute('alt', data.title);
+        document.getElementById('photo-title')!.textContent = data.title;
+        document.getElementById('photo-category')!.textContent = data.category || 'Curated';
+        document.getElementById('photo-description')!.innerHTML = `<p>${data.description}</p>`;
+
+        const authorLink = document.getElementById('photo-author-link')!;
+        authorLink.textContent = data.photographer;
+        authorLink.setAttribute('href', `/gallery/photographer/${data.photographerId}/`);
+
+        // Update EXIF
+        if (data.exif) {
+          document.getElementById('exif-camera')!.textContent = data.exif.camera || '—';
+          document.getElementById('exif-lens')!.textContent = data.exif.lens || '—';
+          document.getElementById('exif-focal')!.textContent = data.exif.focalLength || '—';
+          document.getElementById('exif-aperture')!.textContent = data.exif.aperture || '—';
+          document.getElementById('exif-shutter')!.textContent = data.exif.shutterSpeed || '—';
+          document.getElementById('exif-iso')!.textContent = data.exif.iso || '—';
+        }
+
+        // Set download button
+        document.getElementById('download-btn')!.setAttribute('href', data.src);
+
+        // Format date
+        const formattedDate = new Date(data.date).toLocaleDateString('en-IN', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        document.getElementById('photo-date')!.textContent = formattedDate;
+      }
+    } catch {
+      // Keep static fallback, format date
+      const fallbackDate = new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      document.getElementById('photo-date')!.textContent = fallbackDate;
+    }
+  }
+
+  loadPhotoDetails();
+</script>

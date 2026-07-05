@@ -9,9 +9,10 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import type { FastifyRequest } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { RegistrationService } from './registration.service';
 import type { DeviceContext } from '../auth/auth.service';
 import { AccessTokenGuard } from '../auth/access-token.guard';
@@ -82,11 +83,11 @@ export class RegistrationController {
   }
 
   // -- 3. Social login -------------------------------------------------
-  // No longer a POST endpoint that trusts caller-supplied provider data --
-  // that was a real "log in as anyone" hole once OAuthService existed to
-  // compare against. The callback below does the code exchange itself and
-  // only ever calls registerOrLoginWithSocial with a provider-verified
-  // profile.
+  // OAuth flow: frontend fetches authorize-url, redirects user to provider.
+  // Provider redirects back to /api/v1/registration/social/:provider/callback.
+  // Callback exchanges code, creates/logs in user, then redirects browser
+  // to /auth/callback with tokens in the URL hash fragment (never sent to
+  // any server -- hash fragments are browser-only).
 
   @Get('social/:provider/authorize-url')
   @HttpCode(200)
@@ -96,20 +97,38 @@ export class RegistrationController {
   }
 
   @Get('social/:provider/callback')
-  @HttpCode(200)
   async socialCallback(
     @Param('provider') providerParam: string,
     @Query('code') code: string,
     @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
   ) {
-    const provider = this.parseProvider(providerParam);
-    if (!code) throw new BadRequestException('Missing authorization code');
+    try {
+      const provider = this.parseProvider(providerParam);
+      if (!code) throw new Error('missing_code');
 
-    const profile = await this.oauthService.exchangeCodeForProfile(provider, code);
-    return this.registrationService.registerOrLoginWithSocial(
-      { provider, providerUserId: profile.providerUserId, email: profile.email, fullName: profile.fullName },
-      deviceContextFrom(req),
-    );
+      const profile = await this.oauthService.exchangeCodeForProfile(provider, code);
+      const result = await this.registrationService.registerOrLoginWithSocial(
+        {
+          provider,
+          providerUserId: profile.providerUserId,
+          email: profile.email,
+          fullName: profile.fullName,
+        },
+        deviceContextFrom(req),
+      );
+
+      // Tokens go in the URL hash fragment: the browser never sends the hash
+      // to the Astro static server, so these never appear in Nginx access logs.
+      const at = encodeURIComponent(result.tokens.accessToken);
+      const rt = encodeURIComponent(result.tokens.refreshToken);
+      const isNew = result.wasNewUser ? '1' : '0';
+
+      return reply.redirect(302, `/auth/callback#at=${at}&rt=${rt}&new=${isNew}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? encodeURIComponent(err.message) : 'oauth_error';
+      return reply.redirect(302, `/auth/signin?error=${msg}`);
+    }
   }
 
   // -- 4. Magic link -----------------------------------------------------

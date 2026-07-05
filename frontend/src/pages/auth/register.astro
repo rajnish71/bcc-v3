@@ -1,0 +1,424 @@
+---
+/**
+ * auth/register.astro -- Registration page
+ * Route: /auth/register/
+ *
+ * MEM-006 P1: Registration creates a platform identity ONLY.
+ * It does NOT create membership. The page explains this distinction.
+ *
+ * Flow on email+password success:
+ *   Backend returns { user, tokens } and sends a verification email.
+ *   Frontend stores tokens + user, redirects to /verify-email/
+ *   (user sees a "check your email" message before the hub).
+ *
+ * Social registration: same path as signin -- both create or log in.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Register" description="Create your free Bhopal Camera Club account." bodyClass="auth-page">
+  <section class="auth-section">
+    <div class="auth-card" role="main" aria-label="Create account">
+
+      <a href="/" class="auth-logo" aria-label="Bhopal Camera Club home">
+        <img src="/images/bcc-logo-default.png" alt="Bhopal Camera Club" width="160" height="44" loading="eager" />
+      </a>
+
+      <h1 class="auth-heading">Create your BCC account</h1>
+
+      <!-- Identity-only note (MEM-006 P1) -->
+      <div class="auth-notice">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M8 7v4M8 5h.01" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <span>Registration creates your <strong>platform identity</strong> only. Membership is a separate step available from your Member Hub.</span>
+      </div>
+
+      <!-- Error / success banner -->
+      <div id="auth-error" class="auth-banner auth-banner--error" hidden role="alert"></div>
+
+      <!-- Form -->
+      <div id="auth-form-wrap">
+        <div class="auth-field">
+          <label class="auth-label" for="fullName">Full name</label>
+          <input
+            id="fullName"
+            type="text"
+            name="fullName"
+            class="auth-input"
+            placeholder="Your full name"
+            autocomplete="name"
+            required
+          />
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="email">Email address</label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            class="auth-input"
+            placeholder="you@example.com"
+            autocomplete="email"
+            inputmode="email"
+            required
+          />
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            class="auth-input"
+            placeholder="8 or more characters"
+            autocomplete="new-password"
+            required
+            minlength="8"
+          />
+          <span class="auth-hint">At least 8 characters</span>
+        </div>
+
+        <label class="auth-checkbox-label">
+          <input id="terms" type="checkbox" class="auth-checkbox" required />
+          <span>I agree to BCC's <a href="/terms/" class="auth-link">Terms of Use</a> and <a href="/conduct/" class="auth-link">Code of Conduct</a></span>
+        </label>
+
+        <button id="register-btn" type="button" class="btn btn-dark btn-lg auth-btn">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="auth-divider" aria-hidden="true">
+        <span class="auth-divider__line"></span>
+        <span class="auth-divider__text">or register with</span>
+        <span class="auth-divider__line"></span>
+      </div>
+
+      <!-- Social buttons -->
+      <div class="auth-social">
+        <button id="google-btn" type="button" class="auth-social-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <button id="facebook-btn" type="button" class="auth-social-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="#1877F2">
+            <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.97H15.83c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+          </svg>
+          <span>Continue with Facebook</span>
+        </button>
+      </div>
+
+      <p class="auth-footer-text">
+        Already have an account?
+        <a href="/auth/signin/" class="auth-link">Sign in</a>
+      </p>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.auth-page { background: var(--surface-1); }
+
+.auth-section {
+  min-height: calc(100vh - 96px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-8) var(--s-3);
+}
+
+.auth-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  box-shadow: var(--e-2);
+  padding: var(--s-8) var(--s-6);
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.auth-logo {
+  display: block;
+  margin: 0 auto var(--s-1);
+  width: fit-content;
+}
+
+.auth-heading {
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  text-align: center;
+  margin: 0;
+}
+
+/* Identity-only notice (MEM-006 P1) */
+.auth-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  font-size: 12px;
+  color: var(--ink-600);
+  line-height: 1.55;
+}
+.auth-notice svg { flex-shrink: 0; margin-top: 1px; color: var(--gold-600); }
+
+.auth-banner {
+  padding: 10px 14px;
+  border-radius: var(--r-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+.auth-banner--error {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+}
+
+.auth-field { display: flex; flex-direction: column; gap: 6px; }
+
+.auth-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-600);
+  font-family: var(--font-body);
+}
+
+.auth-input {
+  height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--r-2);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: border-color var(--m-fast);
+}
+.auth-input:focus {
+  outline: none;
+  border-color: var(--gold-600);
+  box-shadow: 0 0 0 3px rgba(168,132,60,.15);
+}
+.auth-input::placeholder { color: var(--ink-400); }
+
+.auth-hint {
+  font-size: 11px;
+  color: var(--ink-400);
+  font-family: var(--font-body);
+}
+
+.auth-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-600);
+  line-height: 1.55;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.auth-checkbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  accent-color: var(--gold-600);
+}
+
+.auth-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--s-1);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.auth-divider__line {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+.auth-divider__text {
+  font-size: 11px;
+  color: var(--ink-400);
+  white-space: nowrap;
+  font-family: var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.auth-social { display: flex; flex-direction: column; gap: var(--s-1); }
+
+.auth-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 44px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--r-2);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background var(--m-fast), border-color var(--m-fast);
+  width: 100%;
+}
+.auth-social-btn:hover {
+  background: var(--surface-1);
+  border-color: var(--ink-400);
+}
+.auth-social-btn:focus-visible { outline: 2px solid var(--gold-600); outline-offset: 3px; }
+
+.auth-footer-text {
+  font-size: 13px;
+  color: var(--ink-400);
+  text-align: center;
+  margin: 0;
+}
+.auth-link {
+  color: var(--gold-600);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .auth-card { padding: var(--s-6) var(--s-3); border: none; box-shadow: none; }
+  .auth-section { padding: var(--s-4) var(--s-2); align-items: flex-start; }
+}
+</style>
+
+<script>
+  const API = '/api/v1';
+
+  function qs<T extends HTMLElement>(id: string): T | null {
+    return document.getElementById(id) as T | null;
+  }
+
+  function showError(msg: string): void {
+    const banner = qs<HTMLElement>('auth-error');
+    if (!banner) return;
+    banner.textContent = msg;
+    banner.hidden = false;
+  }
+
+  function hideError(): void {
+    const banner = qs<HTMLElement>('auth-error');
+    if (banner) banner.hidden = true;
+  }
+
+  function setLoading(btn: HTMLButtonElement, loading: boolean): void {
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Creating account...' : 'Create Account';
+  }
+
+  function storeSession(token: string, refresh: string, fullName: string): void {
+    const initials = fullName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    localStorage.setItem('bcc_token', token);
+    localStorage.setItem('bcc_refresh', refresh);
+    localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials }));
+  }
+
+  /* -- Email + password registration ------------------------------------ */
+  qs<HTMLButtonElement>('register-btn')?.addEventListener('click', async () => {
+    hideError();
+    const nameEl  = qs<HTMLInputElement>('fullName');
+    const emailEl = qs<HTMLInputElement>('email');
+    const passEl  = qs<HTMLInputElement>('password');
+    const termsEl = qs<HTMLInputElement>('terms');
+    const btn     = qs<HTMLButtonElement>('register-btn');
+    if (!nameEl || !emailEl || !passEl || !termsEl || !btn) return;
+
+    const fullName = nameEl.value.trim();
+    const email    = emailEl.value.trim();
+    const password = passEl.value;
+
+    if (!fullName)         { showError('Please enter your full name.'); nameEl.focus();  return; }
+    if (!email)            { showError('Please enter your email address.'); emailEl.focus(); return; }
+    if (password.length < 8) { showError('Password must be at least 8 characters.'); passEl.focus(); return; }
+    if (!termsEl.checked) { showError('Please agree to the Terms of Use and Code of Conduct.'); return; }
+
+    setLoading(btn, true);
+
+    try {
+      const res = await fetch(`${API}/registration/email-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { message?: string };
+        const raw = err.message;
+        const msg = res.status === 409
+          ? 'An account with this email already exists. Try signing in instead.'
+          : (typeof raw === 'string' ? raw : JSON.stringify(raw)) || 'Registration failed. Please try again.';
+        showError(msg);
+        setLoading(btn, false);
+        return;
+      }
+
+      const data = await res.json() as { user: { fullName?: string }; tokens: { accessToken: string; refreshToken: string } };
+      storeSession(data.tokens.accessToken, data.tokens.refreshToken, data.user.fullName || fullName);
+
+      // Registration sends a verification email automatically.
+      // Send user to verify-email page to prompt them to check inbox.
+      window.location.replace('/verify-email/');
+
+    } catch {
+      showError('A network error occurred. Please check your connection.');
+      setLoading(btn, false);
+    }
+  });
+
+  /* -- Social login ----------------------------------------------------- */
+  async function startSocialLogin(provider: 'google' | 'facebook'): Promise<void> {
+    hideError();
+    try {
+      const res = await fetch(`${API}/registration/social/${provider}/authorize-url`);
+      if (!res.ok) throw new Error('Could not start social login.');
+      const data = await res.json() as { authorizeUrl?: string };
+      if (!data.authorizeUrl) throw new Error('No authorize URL returned.');
+      window.location.href = data.authorizeUrl;
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'Social login failed.');
+    }
+  }
+
+  qs<HTMLButtonElement>('google-btn')?.addEventListener('click', () => startSocialLogin('google'));
+  qs<HTMLButtonElement>('facebook-btn')?.addEventListener('click', () => startSocialLogin('facebook'));
+
+  /* -- Redirect if already signed in ------------------------------------ */
+  try {
+    const token = localStorage.getItem('bcc_token');
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (payload.exp * 1000 > Date.now()) window.location.replace('/hub/');
+    }
+  } catch { /* ignore */ }
+</script>

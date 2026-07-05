@@ -1,0 +1,170 @@
+---
+/**
+ * auth/callback.astro -- OAuth callback receiver
+ * Route: /auth/callback/
+ *
+ * The NestJS social callback handler redirects here after exchanging the
+ * OAuth code. Tokens are passed in the URL hash fragment:
+ *   /auth/callback#at=<accessToken>&rt=<refreshToken>&new=1
+ *
+ * The hash never leaves the browser (not sent to Nginx, not in access logs).
+ *
+ * Steps:
+ *   1. Parse hash params (at, rt, new).
+ *   2. Store tokens in localStorage.
+ *   3. Fetch /users/me for display name.
+ *   4. Store bcc_user in localStorage.
+ *   5. Redirect to /hub/membership/apply/ if new=1, else /hub/.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Signing you in..." bodyClass="auth-page">
+  <section class="callback-section" aria-label="Completing sign-in">
+
+    <div class="callback-card" id="callback-state-loading">
+      <div class="callback-dots" aria-label="Loading" role="status">
+        <span class="callback-dot"></span>
+        <span class="callback-dot"></span>
+        <span class="callback-dot"></span>
+      </div>
+      <p class="callback-msg">Signing you in&hellip;</p>
+    </div>
+
+    <div class="callback-card" id="callback-state-error" hidden>
+      <div class="callback-icon callback-icon--error" aria-hidden="true">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="callback-heading">Sign-in failed</h1>
+      <p class="callback-sub" id="callback-error-msg">Something went wrong. Please try again.</p>
+      <a href="/auth/signin/" class="btn btn-dark btn-md" style="margin-top:8px">Back to Sign In</a>
+    </div>
+
+  </section>
+</BaseLayout>
+
+<style>
+.auth-page { background: var(--surface-1); }
+
+.callback-section {
+  min-height: calc(100vh - 96px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-8) var(--s-3);
+}
+
+.callback-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+}
+
+.callback-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.callback-dot {
+  width: 10px; height: 10px;
+  background: var(--gold-600);
+  border-radius: var(--r-full);
+  animation: cb-pulse 1.2s ease-in-out infinite both;
+}
+.callback-dot:nth-child(2) { animation-delay: 0.2s; }
+.callback-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes cb-pulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1;   }
+}
+
+.callback-msg {
+  font-size: 14px;
+  color: var(--ink-400);
+  margin: 0;
+  font-family: var(--font-body);
+}
+
+.callback-icon--error {
+  color: #EF4444;
+  margin-bottom: var(--s-1);
+}
+
+.callback-heading {
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0;
+}
+
+.callback-sub {
+  font-size: 14px;
+  color: var(--ink-400);
+  margin: 0;
+  font-family: var(--font-body);
+}
+</style>
+
+<script>
+  const API = '/api/v1';
+
+  function showError(msg: string): void {
+    const loading = document.getElementById('callback-state-loading');
+    const error   = document.getElementById('callback-state-error');
+    const errMsg  = document.getElementById('callback-error-msg');
+    if (loading) loading.hidden = true;
+    if (error)   error.hidden = false;
+    if (errMsg)  errMsg.textContent = msg;
+  }
+
+  async function handleCallback(): Promise<void> {
+    const hash = window.location.hash.slice(1); // remove leading '#'
+    if (!hash) {
+      showError('No authentication data received. Please try signing in again.');
+      return;
+    }
+
+    const params = new URLSearchParams(hash);
+    const at     = params.get('at');
+    const rt     = params.get('rt');
+    const isNew  = params.get('new') === '1';
+
+    if (!at || !rt) {
+      showError('Incomplete authentication data. Please try signing in again.');
+      return;
+    }
+
+    // Store tokens
+    localStorage.setItem('bcc_token', decodeURIComponent(at));
+    localStorage.setItem('bcc_refresh', decodeURIComponent(rt));
+
+    // Fetch user profile
+    try {
+      const res = await fetch(`${API}/users/me`, {
+        headers: { Authorization: `Bearer ${decodeURIComponent(at)}` },
+      });
+      if (res.ok) {
+        const user = await res.json() as { fullName?: string };
+        const fullName = user.fullName || 'Member';
+        const initials = fullName.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+        localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials }));
+      }
+    } catch { /* non-critical -- nav will show fallback */ }
+
+    // Clear hash from URL to avoid token leakage on back-navigation
+    history.replaceState(null, '', window.location.pathname);
+
+    // New users go to membership apply; returning users go to hub
+    window.location.replace(isNew ? '/hub/membership/apply/' : '/hub/');
+  }
+
+  handleCallback();
+</script>

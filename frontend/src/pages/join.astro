@@ -132,6 +132,80 @@ const FAQS = [
     </div>
   </section>
 
+  <!-- Comparison Section -->
+  <section class="section compare-section" id="compare" aria-label="Compare classes">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Compare"
+        title="Which class is right for you?"
+        align="center"
+        data-gsap="reveal"
+      />
+
+      <div class="compare-table-wrapper" data-gsap="reveal">
+        <div class="compare-table">
+          <!-- Header row -->
+          <div class="compare-row compare-header">
+            <div class="compare-cell cell-feature">Feature</div>
+            <div class="compare-cell cell-tier"><span class="tier-dot" style="background:#5C5876"></span>Basic</div>
+            <div class="compare-cell cell-tier"><span class="tier-dot" style="background:#1A9DAE"></span>Student</div>
+            <div class="compare-cell cell-tier"><span class="tier-dot" style="background:#3E5A48"></span>Individual</div>
+          </div>
+
+          <!-- Rows -->
+          <div class="compare-row compare-alt">
+            <div class="compare-cell cell-feature">Photo upload limit</div>
+            <div class="compare-cell">[XX]/mo</div>
+            <div class="compare-cell">[XX]/mo</div>
+            <div class="compare-cell">[XX]/mo</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell cell-feature">Gallery visibility</div>
+            <div class="compare-cell">Public</div>
+            <div class="compare-cell">Public</div>
+            <div class="compare-cell">Public</div>
+          </div>
+          <div class="compare-row compare-alt">
+            <div class="compare-cell cell-feature">Contest participation</div>
+            <div class="compare-cell check-icon">✓</div>
+            <div class="compare-cell check-icon">✓</div>
+            <div class="compare-cell check-icon">✓</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell cell-feature">Event discount</div>
+            <div class="compare-cell">—</div>
+            <div class="compare-cell">[X]%</div>
+            <div class="compare-cell">[X]%</div>
+          </div>
+          <div class="compare-row compare-alt">
+            <div class="compare-cell cell-feature">Member directory listing</div>
+            <div class="compare-cell check-icon">✓</div>
+            <div class="compare-cell check-icon">✓</div>
+            <div class="compare-cell check-icon">✓</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell cell-feature">Download originals</div>
+            <div class="compare-cell cross-icon">✗</div>
+            <div class="compare-cell">Configurable</div>
+            <div class="compare-cell check-icon">✓</div>
+          </div>
+          <div class="compare-row compare-alt">
+            <div class="compare-cell cell-feature">School access level</div>
+            <div class="compare-cell">Foundation</div>
+            <div class="compare-cell">Intermediate</div>
+            <div class="compare-cell">Intermediate</div>
+          </div>
+          <div class="compare-row compare-fee">
+            <div class="compare-cell cell-feature">Annual fee</div>
+            <div class="compare-cell">[₹XXX]</div>
+            <div class="compare-cell">[₹XXX]</div>
+            <div class="compare-cell">[₹XXX]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Apply CTA block -->
   <div class="surface-alt section-sm" id="apply">
     <div class="container">
@@ -238,6 +312,94 @@ const FAQS = [
 .class-feats li { font-size: 13px; color: var(--ink-600); padding-left: 14px; position: relative; }
 .class-feats li::before { content:''; position:absolute; left:0; top:9px; width:7px; height:1px; background:var(--gold-500); }
 .class-cta { width: 100%; justify-content: center; margin-top: var(--s-2); }
+
+/* Compare Table */
+.compare-section {
+  background: var(--surface-0);
+  border-top: 1px solid var(--hairline);
+}
+.compare-table-wrapper {
+  max-width: 960px;
+  margin: var(--s-6) auto 0;
+}
+.compare-table {
+  width: 100%;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+.compare-row:last-child {
+  border-bottom: none;
+}
+.compare-header {
+  background: var(--ink-900);
+  color: var(--ink-inverse);
+  border-bottom: 1px solid var(--ink-900);
+}
+.compare-row.compare-alt {
+  background: var(--surface-1);
+}
+.compare-cell {
+  padding: var(--s-3) var(--s-2);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.compare-cell.cell-feature {
+  justify-content: flex-start;
+  text-align: left;
+  font-weight: 500;
+  color: var(--ink-900);
+  padding-left: var(--s-4);
+}
+.compare-header .compare-cell {
+  color: var(--ink-inverse);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  padding: var(--s-3) var(--s-2);
+}
+.compare-header .compare-cell.cell-feature {
+  color: var(--ink-400);
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-left: var(--s-4);
+}
+.tier-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  display: inline-block;
+  margin-right: 6px;
+}
+.compare-row.compare-fee {
+  border-top: 1px solid var(--hairline-strong);
+  font-weight: 600;
+}
+.compare-row.compare-fee .compare-cell {
+  color: var(--ink-900);
+  font-weight: 600;
+}
+.check-icon {
+  color: var(--forest-600);
+  font-weight: 600;
+}
+.cross-icon {
+  color: #B23A2E;
+  font-weight: 600;
+}
 
 /* Apply block */
 .apply-block { display: flex; align-items: center; gap: var(--s-8); padding: var(--s-8); background: var(--surface-0); border: 1px solid var(--hairline); flex-wrap: wrap; }

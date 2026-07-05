@@ -1,0 +1,448 @@
+---
+/**
+ * activities/[id].astro
+ * Dynamic Route: /activities/[id]/ (or slug)
+ *
+ * Activity/Event detail view. Displays description, location pin, gear checklist,
+ * price/eligibility, and registration state.
+ *
+ * Uses a hybrid static pre-rendering model with client-side hydration to ensure
+ * robust offline builds and dynamic live updates.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+
+export async function getStaticPaths() {
+  let events = [];
+  try {
+    const res = await fetch('http://localhost:3000/api/v1/events?limit=100');
+    if (res.ok) {
+      const json = await res.json();
+      events = json.data || [];
+    }
+  } catch (e) {
+    // Silent warn, fallback to standard mock paths
+  }
+
+  // Pre-defined static paths to ensure successful offline compilation
+  const paths = [
+    { params: { id: 'old-city-heritage-walk' } },
+    { params: { id: 'golden-hour-masterclass' } },
+    { params: { id: 'monsoon-reflections-exhibition' } },
+    { params: { id: 'van-vihar-birding-walk' } },
+    { params: { id: 'pachmarhi-weekend-photo-tour' } },
+    { params: { id: 'understanding-copyright' } }
+  ];
+
+  events.forEach((ev: any) => {
+    if (ev.slug && !paths.some(p => p.params.id === ev.slug)) {
+      paths.push({ params: { id: ev.slug } });
+    }
+    if (ev.id && !paths.some(p => p.params.id === String(ev.id))) {
+      paths.push({ params: { id: String(ev.id) } });
+    }
+  });
+
+  return paths;
+}
+
+const { id } = Astro.params;
+
+// Fallback details used if backend is offline during client rendering
+const fallbackEvents: Record<string, any> = {
+  'old-city-heritage-walk': {
+    title: 'Old City Heritage Walk',
+    type: 'Photowalk',
+    date: '2026-07-14T06:00:00Z',
+    location: 'Chowk Bazaar, Bhopal',
+    description: 'Explore the labyrinthine lanes of old Bhopal at golden hour. Capture the striking architecture of Taj-ul-Masajid, street life, and the daily hustle of local markets.',
+    price: 0,
+    eligibility: 'Open to All',
+    spotsLeft: 18,
+    difficulty: 'Beginner-friendly',
+    gear: ['Camera with standard lens (24-70mm equivalent)', 'Comfortable walking shoes', 'Water bottle']
+  },
+  'golden-hour-masterclass': {
+    title: 'Golden Hour Masterclass',
+    type: 'Workshop',
+    date: '2026-07-19T16:00:00Z',
+    location: 'Partner Studio Space, MP Nagar',
+    description: 'A hands-on technical deep-dive into shooting during the golden hour. Covers advanced topics like highlight preservation, creative flare, silhouetting, and post-processing RAW images.',
+    price: 500,
+    eligibility: 'Members Only',
+    spotsLeft: 9,
+    difficulty: 'Intermediate',
+    gear: ['DSLR or Mirrorless camera', 'Prime lens (50mm or 85mm recommended)', 'Tripod', 'Laptop with Lightroom/Photoshop']
+  }
+};
+
+const defaultEvent = fallbackEvents[id] || {
+  title: 'Club Activity Detail',
+  type: 'Photowalk',
+  date: new Date().toISOString(),
+  location: 'Bhopal, Madhya Pradesh',
+  description: 'Join the Bhopal Camera Club for a guided photography session, mentored feedback, and community engagement.',
+  price: 0,
+  eligibility: 'Open to All',
+  spotsLeft: 10,
+  difficulty: 'All levels',
+  gear: ['Any camera or smartphone', 'Comfortable clothes']
+};
+---
+
+<BaseLayout
+  title={defaultEvent.title}
+  description={defaultEvent.description}
+>
+  <!-- Event Page Hero -->
+  <div class="event-hero surface-white">
+    <div class="container">
+      <div class="event-meta-top">
+        <span id="event-tag" class="tag tag-photowalk">{defaultEvent.type}</span>
+        <span id="event-difficulty" class="event-difficulty-badge">{defaultEvent.difficulty}</span>
+      </div>
+      <h1 id="event-title" class="event-title">{defaultEvent.title}</h1>
+      <p id="event-subtitle" class="event-subtitle-location">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        {defaultEvent.location}
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Event Body Content -->
+  <div class="container event-layout">
+    <!-- Left Column: Details -->
+    <main class="event-main">
+      <SectionHeader eyebrow="Overview" title="Activity Details" align="left" />
+      <div id="event-description" class="event-description-text">
+        <p>{defaultEvent.description}</p>
+      </div>
+
+      <div class="event-gear-checklist">
+        <h3 class="checklist-title">What to Bring</h3>
+        <ul id="event-gear-list" class="checklist-items">
+          {defaultEvent.gear.map((item: string) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </div>
+    </main>
+
+    <!-- Right Column: Registration Card -->
+    <aside class="event-sidebar">
+      <div class="sticky-sidebar">
+        <div class="reg-card">
+          <div class="reg-card__header">
+            <span class="reg-card__label">Participation Fee</span>
+            <span id="event-price" class="reg-card__price">
+              {defaultEvent.price === 0 ? 'Free' : `₹${defaultEvent.price.toLocaleString('en-IN')}`}
+            </span>
+          </div>
+
+          <div class="reg-card__body">
+            <div class="reg-card__spec">
+              <span class="spec-label">Eligibility</span>
+              <span id="event-eligibility" class="spec-value tag tag-exhibition">{defaultEvent.eligibility}</span>
+            </div>
+            <div class="reg-card__spec">
+              <span class="spec-label">Spots Remaining</span>
+              <span id="event-spots" class="spec-value">{defaultEvent.spotsLeft} spots available</span>
+            </div>
+            <div class="reg-card__spec">
+              <span class="spec-label">Schedule</span>
+              <span id="event-time" class="spec-value">—</span>
+            </div>
+          </div>
+
+          <div class="reg-card__footer">
+            <button id="register-btn" class="btn btn-dark btn-md reg-btn" disabled>
+              Loading Registration...
+            </button>
+            <p id="reg-status-sub" class="reg-sub-label">Please sign in to register.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+.event-hero {
+  padding-top: calc(var(--nav-h) + var(--s-8));
+  padding-bottom: var(--s-6);
+}
+.event-meta-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+.event-difficulty-badge {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+}
+.event-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin-bottom: var(--s-3);
+}
+.event-subtitle-location {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-600);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+/* Layout */
+.event-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--s-8);
+  padding-top: var(--s-8);
+  padding-bottom: var(--s-12);
+}
+
+.event-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+.event-description-text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink-600);
+}
+.event-gear-checklist {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-6);
+  margin-top: var(--s-2);
+}
+.checklist-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: var(--s-3);
+}
+.checklist-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.checklist-items li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-600);
+  padding-left: 20px;
+  position: relative;
+}
+.checklist-items li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--gold-600);
+  font-weight: 600;
+}
+
+/* Sidebar & Registration Card */
+.event-sidebar {
+  position: relative;
+}
+.sticky-sidebar {
+  position: sticky;
+  top: calc(var(--nav-h) + var(--s-4));
+}
+.reg-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--e-1);
+}
+.reg-card__header {
+  padding: var(--s-4);
+  border-bottom: 1px solid var(--hairline-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.reg-card__label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-400);
+}
+.reg-card__price {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold-600);
+}
+.reg-card__body {
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.reg-card__spec {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.spec-label {
+  color: var(--ink-400);
+}
+.spec-value {
+  color: var(--ink-900);
+  font-weight: 500;
+}
+.reg-card__footer {
+  padding: var(--s-4);
+  border-top: 1px solid var(--hairline-soft);
+  background: var(--surface-1);
+}
+.reg-btn {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: var(--s-2);
+}
+.reg-sub-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .event-layout {
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
+  }
+  .sticky-sidebar {
+    position: static;
+  }
+}
+</style>
+
+<script>
+  // Dynamically load event content and registration status client-side
+  const eventId = window.location.pathname.split('/').filter(Boolean).pop();
+
+  const TAG_CLASSES: Record<string, string> = {
+    photowalk:  'tag tag-photowalk',
+    workshop:   'tag tag-workshop',
+    exhibition: 'tag tag-exhibition',
+  };
+
+  async function loadEventDetails() {
+    if (!eventId) return;
+    try {
+      const res = await fetch(`/api/v1/events/${eventId}`);
+      if (!res.ok) throw new Error('API Error');
+      const { data } = await res.json();
+      if (data) {
+        // Update Title and subtitle
+        document.getElementById('event-title')!.textContent = data.title;
+        document.getElementById('event-subtitle')!.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="margin-right:4px;">
+            <circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.5"/>
+          </svg> ${data.location}
+        `;
+
+        // Update Tag & Difficulty
+        const tagEl = document.getElementById('event-tag')!;
+        tagEl.textContent = data.type;
+        tagEl.className = TAG_CLASSES[data.type?.toLowerCase()] || 'tag tag-photowalk';
+        document.getElementById('event-difficulty')!.textContent = data.difficulty || 'All levels';
+
+        // Update Price & details
+        document.getElementById('event-price')!.textContent = data.price === 0 ? 'Free' : `₹${data.price.toLocaleString('en-IN')}`;
+        document.getElementById('event-eligibility')!.textContent = data.eligibility || 'Open to All';
+        document.getElementById('event-spots')!.textContent = `${data.spotsLeft ?? 10} spots available`;
+        document.getElementById('event-description')!.innerHTML = `<p>${data.description}</p>`;
+
+        // Update checklist
+        const gearList = document.getElementById('event-gear-list')!;
+        gearList.innerHTML = '';
+        const gearItems = Array.isArray(data.gear) ? data.gear : ['Any camera or smartphone', 'Comfortable clothes'];
+        gearItems.forEach((item: string) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          gearList.appendChild(li);
+        });
+
+        // Set date string
+        const formattedDate = new Date(data.date).toLocaleString('en-IN', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        document.getElementById('event-time')!.textContent = formattedDate;
+
+        updateRegisterButton(data);
+      }
+    } catch {
+      // Keep fallback static details but format time
+      const fallbackTime = new Date().toLocaleString('en-IN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      document.getElementById('event-time')!.textContent = fallbackTime;
+      updateRegisterButton({ price: 0, eligibility: 'Open to All', spotsLeft: 10 });
+    }
+  }
+
+  function updateRegisterButton(event: any) {
+    const regBtn = document.getElementById('register-btn') as HTMLButtonElement;
+    const subLabel = document.getElementById('reg-status-sub')!;
+
+    // Check if user is logged in
+    const isLoggedIn = document.cookie.includes('session'); 
+
+    if (event.spotsLeft <= 0) {
+      regBtn.textContent = 'Sold Out';
+      regBtn.disabled = true;
+      subLabel.textContent = 'No slots remaining for this activity.';
+    } else if (!isLoggedIn && event.eligibility !== 'Open to All') {
+      regBtn.textContent = 'Members Only';
+      regBtn.disabled = true;
+      subLabel.innerHTML = 'This event is restricted to members. Please <a href="/auth/signin/" style="color:var(--gold-600);text-decoration:underline;">sign in</a>.';
+    } else {
+      regBtn.textContent = event.price === 0 ? 'Register Now (Free)' : 'Pay & Register →';
+      regBtn.removeAttribute('disabled');
+      subLabel.textContent = 'One-click registration and payment via Razorpay.';
+
+      regBtn.addEventListener('click', () => {
+        if (!isLoggedIn) {
+          window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
+        } else {
+          // Trigger registration flow
+          window.location.href = `/hub/membership/apply/`;
+        }
+      });
+    }
+  }
+
+  loadEventDetails();
+</script>

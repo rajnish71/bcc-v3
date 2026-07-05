@@ -104,16 +104,16 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
     </div>
 
     <!-- Empty state -->
-    <div id="showcase-empty" hidden class="gallery-empty" style="padding:var(--space-20) 0;">
+    <div id="showcase-empty" hidden class="gallery-empty" style="padding:var(--s-12) 0;">
       <div class="gallery-empty__icon">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="22.5" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-          <circle cx="24" cy="24" r="8" stroke="rgba(245,168,42,0.4)" stroke-width="1.5"/>
-          <circle cx="24" cy="24" r="2" fill="rgba(245,168,42,0.6)"/>
+          <circle cx="24" cy="24" r="22.5" stroke="rgba(20,18,16,0.1)" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="8" stroke="rgba(168,132,60,0.4)" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="2" fill="rgba(168,132,60,0.6)"/>
         </svg>
       </div>
       <p class="gallery-empty__text">No photographs match this filter.</p>
-      <button class="btn btn-ghost" id="clear-filter-btn">Clear filter</button>
+      <button class="btn btn-outline btn-md" id="clear-filter-btn">Clear filter</button>
     </div>
 
   </div>
@@ -124,8 +124,8 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 <style>
 /* ── Showcase hero ── */
 .showcase-hero {
-  padding-top: calc(var(--nav-h) + var(--space-12));
-  padding-bottom: var(--space-10);
+  padding-top: calc(var(--nav-h) + var(--s-12));
+  padding-bottom: var(--s-8);
   position: relative;
 }
 .showcase-hero__line {
@@ -134,7 +134,7 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--amber) 30%, var(--cyan) 70%, transparent);
+  background: linear-gradient(to right, transparent, var(--gold-500) 30%, var(--gold-600) 70%, transparent);
   opacity: 0.3;
 }
 
@@ -143,91 +143,93 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
   position: sticky;
   top: var(--nav-h);
   z-index: 100;
-  background: rgba(11,11,14,0.92);
+  background: rgba(250, 248, 244, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  padding: var(--space-3) 0;
-  margin-bottom: var(--space-8);
+  border-bottom: 1px solid var(--hairline);
+  padding: var(--s-2) 0;
+  margin-bottom: var(--s-8);
 }
 
 .filter-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-6);
+  gap: var(--s-4);
   flex-wrap: wrap;
 }
 
 .filter-chips {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--s-2);
   flex-wrap: wrap;
 }
 .filter-chip {
-  padding: 6px 14px;
-  font-size: var(--text-xs);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--text-3);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  padding: 4px 12px;
   font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-600);
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition: border-color var(--m-fast), color var(--m-fast);
 }
-.filter-chip:hover { color: var(--text-2); border-color: var(--border-md); }
+.filter-chip:hover { border-color: var(--hairline-strong); color: var(--ink-900); }
 .filter-chip.active {
-  color: var(--amber);
-  border-color: var(--border-amber);
-  background: var(--amber-muted);
+  border-color: var(--gold-500);
+  color: var(--gold-600);
+  border-top: 3px solid var(--gold-500);
+  padding-top: 2px;
 }
 
 .filter-right {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--s-2);
   flex-shrink: 0;
 }
 .filter-select {
-  padding: 7px 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-2);
-  font-size: var(--text-xs);
+  padding: 8px 12px;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-2);
+  color: var(--ink-900);
+  font-size: var(--text-small);
   font-family: var(--font-body);
   outline: none;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color var(--m-fast);
   -webkit-appearance: none;
 }
-.filter-select:focus { border-color: var(--amber); }
+.filter-select:focus { border-color: var(--gold-500); }
 
 /* ── Photo count ── */
 .photo-count {
-  font-size: var(--text-sm);
-  color: var(--text-3);
-  margin-bottom: var(--space-5);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  margin-bottom: var(--s-4);
   letter-spacing: 0.02em;
 }
-#count-number { font-weight: 600; color: var(--text-2); }
+#count-number { font-weight: 600; color: var(--ink-900); }
 
 /* ── Grid + skeleton (shared via global.css) ── */
 .grid-row   { display: flex; gap: 8px; margin-bottom: 8px; }
 .grid-row:last-child { margin-bottom: 0; }
-.skel-photo { background: var(--surface-2); border-radius: 2px; animation: shimmer 1.6s ease-in-out infinite; }
+.skel-photo { background: var(--surface-2); border-radius: 0; animation: shimmer 1.6s ease-in-out infinite; }
 @keyframes shimmer { 0%,100% { opacity:.4; } 50% { opacity:.7; } }
 
 /* ── Load more ── */
-.load-more-wrap { display: flex; justify-content: center; padding: var(--space-10) 0 var(--space-20); }
+.load-more-wrap { display: flex; justify-content: center; padding: var(--s-8) 0 var(--s-12); }
 
 /* ── Gallery empty ── */
-.gallery-empty { text-align: center; color: var(--text-3); }
-.gallery-empty__icon { margin-bottom: var(--space-4); display: flex; justify-content: center; }
-.gallery-empty__text { font-size: var(--text-base); color: var(--text-2); margin-bottom: var(--space-6); }
+.gallery-empty { text-align: center; color: var(--ink-600); }
+.gallery-empty__icon { margin-bottom: var(--s-3); display: flex; justify-content: center; }
+.gallery-empty__text { font-size: var(--text-body); color: var(--ink-900); margin-bottom: var(--s-4); }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {

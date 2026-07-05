@@ -1,0 +1,478 @@
+---
+/**
+ * about.astro — About Us Page
+ * Route: /about/
+ *
+ * Implements the organizational story, timeline milestones, legal society registration,
+ * Federation of Indian Photography (FIP) corporate status, and committee monograms.
+ * Integrates GSAP reveals and follows Refined Editorial Luxury visual tokens.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/ui/SectionHeader.astro';
+
+const TIMELINE = [
+  { year: 'May 2015', title: 'First informal grouping', desc: 'A group of local photography enthusiasts began meeting informally in Bhopal to share critiques and capture the lakes together.' },
+  { year: 'Apr 2016', title: 'First Organized Photowalk', desc: 'Held on Heritage Day, our first structured walk took place at the historic Taj-ul-Masajid, establishing our core focus on documentation.' },
+  { year: 'Jun 2016', title: 'Facebook Group Created', desc: 'On June 8th, 2016, our official Facebook group was created, serving as the digital foundation for our growing community.' },
+  { year: 'Oct 2019', title: 'Formal Society Registration', desc: 'Bhopal Camera Club was formally registered as an official society under the MP Society Registrikaran Adhiniyam 1973.' },
+  { year: 'Jun 2026', title: 'New Platform Launch', desc: 'We launched the bcc.bhopal.info portal, expanding our school curriculum and preparing for our 10th anniversary next year.' },
+];
+
+const COMMITTEE = [
+  { name: 'Rajnish Khare', role: 'Core Coordinator', initials: 'RK', since: '2015', bio: 'Lead travel and street photographer, and core coordinator managing Bhopal Camera Club operations.' },
+  { name: 'Kshitij Patle', role: 'Core Coordinator', initials: 'KP', since: '2016', bio: 'Energetic travel storyteller documenting remote places, trails, and local interactions.' },
+  { name: 'Rahil Khan', role: 'Core Coordinator', initials: 'RK2', since: '2016', bio: 'Contemporary street visual artist capturing dynamic urban moments and frame compositions.' },
+  { name: 'Sauvik Acharyya', role: 'Core Coordinator', initials: 'SA', since: '2018', bio: 'Street documentarian capturing everyday life, street markets, and candid frames.' },
+  { name: 'Vikas Gangpari', role: 'Core Coordinator', initials: 'VG', since: '2020', bio: 'Core coordinator and travel photographer assisting in organizing club educational activities.' },
+  { name: 'Taurez Anwar', role: 'Core Coordinator', initials: 'TA', since: '2020', bio: 'Core coordinator and wildlife photographer assisting in documentation of natural reserves.' }
+];
+---
+
+<BaseLayout
+  title="About Us"
+  description="Learn about the Bhopal Camera Club — community, timeline, registered status, and leadership."
+>
+
+  <!-- 1. Page Hero -->
+  <div class="page-hero surface-white">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Our Mission"
+        title="To cultivate Bhopal's visual storytellers — one frame, one walk, one workshop at a time."
+        as="h1"
+      />
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- 2. Story / Pillars Grid -->
+  <section class="section pillars-section" aria-label="Our pillars">
+    <div class="container">
+      <div class="pillars-grid" data-gsap="stagger">
+        <div class="pillar-card">
+          <span class="pillar-num">01</span>
+          <h3 class="pillar-name">Community</h3>
+          <p class="pillar-desc">Photography is most powerful when shared. Our club is a space where beginners find mentors and masters find inspiration.</p>
+        </div>
+        <div class="pillar-card">
+          <span class="pillar-num">02</span>
+          <h3 class="pillar-name">Craft</h3>
+          <p class="pillar-desc">From technical excellence to artistic vision — structured programmes across genres, from street photography to astrophotography.</p>
+        </div>
+        <div class="pillar-card">
+          <span class="pillar-num">03</span>
+          <h3 class="pillar-name">City</h3>
+          <p class="pillar-desc">Bhopal is our muse — its lakes, heritage, wildlife, and people. We document and celebrate this city's extraordinary visual richness.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Timeline section -->
+  <section class="section timeline-section" aria-label="Our story">
+    <div class="container">
+      <div class="section-header-wrap" data-gsap="reveal">
+        <SectionHeader
+          eyebrow="Our Story"
+          title="A Legacy of Light"
+          subtitle="Celebrating our foundation every year in the second week of June. Next year, we celebrate our 10th anniversary milestone."
+        />
+      </div>
+
+      <div class="timeline-row-layout" data-gsap="stagger">
+        <div class="timeline-line"></div>
+        {TIMELINE.map(item => (
+          <div class="timeline-node">
+            <span class="node-year">{item.year}</span>
+            <div class="node-dot"></div>
+            <div class="node-content">
+              <h4 class="node-title">{item.title}</h4>
+              <p class="node-desc">{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Registration and Affiliation -->
+  <section class="section affiliation-section" aria-label="Registration and affiliation">
+    <div class="container">
+      <div class="affiliation-split">
+        <div class="affiliation-details" data-gsap="reveal">
+          <SectionHeader
+            eyebrow="Registration Details"
+            title="Officially Registered Society"
+            subtitle="The Bhopal Camera Club is formally registered under the Madhya Pradesh Society Registrikaran Adhiniyam 1973. This status enables us to coordinate with national cultural boards and administer educational projects across Central India."
+          />
+          <div class="specs-table">
+            <div class="spec-row">
+              <span class="spec-lbl">Name</span>
+              <span class="spec-val">Bhopal Camera Club Society</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-lbl">Registry Act</span>
+              <span class="spec-val">MP Society Registrikaran 1973</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-lbl">Headquarters</span>
+              <span class="spec-val">Bhopal, Madhya Pradesh</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="affiliation-fip-card" data-gsap="reveal">
+          <div class="fip-mat">
+            <span class="tag tag-exhibition">Exhibition</span>
+            <h3 class="fip-title">National Corporate Member</h3>
+            <p class="fip-desc">
+              We are a corporate member of <strong>The Federation of Indian Photography (FIP)</strong>, the national body representative of FIAP (Fédération Internationale de l'Art Photographique).
+            </p>
+            <div class="fip-code-row">
+              <span class="code-lbl">FIP Member No:</span>
+              <span class="code-val">CM 1098</span>
+            </div>
+            <p class="fip-sub-desc">
+              This credential links our member photographers to national salons and corporate accreditation registries.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Leadership / Committee Grid -->
+  <section class="section committee-section" aria-label="Leadership team">
+    <div class="container">
+      <div class="section-header-wrap" data-gsap="reveal">
+        <SectionHeader
+          eyebrow="Leadership"
+          title="The Minds Behind the Club"
+          subtitle="Passionate photographers who volunteer their time to keep BCC thriving."
+        />
+      </div>
+
+      <div class="committee-grid" data-gsap="stagger">
+        {COMMITTEE.map(m => (
+          <div class="committee-mat-card">
+            <div class="avatar-ring-container">
+              <div class="committee-avatar-circle">
+                {m.initials}
+              </div>
+            </div>
+            <div class="committee-info">
+              <h4 class="member-name">{m.name}</h4>
+              <span class="member-role">{m.role}</span>
+              <span class="member-since">Since {m.since}</span>
+              <p class="member-bio">{m.bio}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* Page hero override */
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+
+/* Pillars grid */
+.pillars-section {
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline);
+}
+.pillars-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-4);
+}
+.pillar-card {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline-soft);
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-0);
+}
+.pillar-num {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold-500);
+  margin-bottom: var(--s-2);
+}
+.pillar-name {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: var(--s-2);
+}
+.pillar-desc {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-600);
+}
+
+/* Timeline */
+.timeline-section {
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--hairline);
+}
+.section-header-wrap {
+  margin-bottom: var(--s-6);
+}
+.timeline-row-layout {
+  display: flex;
+  position: relative;
+  padding-top: var(--s-3);
+  overflow-x: auto;
+  gap: var(--s-4);
+  scrollbar-width: thin;
+}
+.timeline-line {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ink-900);
+  z-index: 1;
+}
+.timeline-node {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 240px;
+  z-index: 2;
+}
+.node-year {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  margin-bottom: var(--s-2);
+}
+.node-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-full);
+  background: var(--gold-500);
+  border: 2px solid var(--ink-900);
+  margin-bottom: var(--s-2);
+  align-self: flex-start;
+}
+.node-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: var(--s-1);
+}
+.node-desc {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-600);
+}
+
+/* Affiliation */
+.affiliation-section {
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline);
+}
+.affiliation-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-6);
+}
+.affiliation-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.specs-table {
+  width: 100%;
+  border-top: 1px solid var(--hairline);
+  margin-top: var(--s-2);
+}
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--hairline-soft);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.spec-lbl {
+  color: var(--ink-400);
+}
+.spec-val {
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.affiliation-fip-card {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  padding: var(--s-4);
+  border-radius: var(--r-0);
+}
+.fip-mat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+.fip-title {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.fip-desc {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-600);
+}
+.fip-code-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-strong);
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.code-lbl {
+  color: var(--ink-400);
+}
+.code-val {
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.fip-sub-desc {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-400);
+  line-height: 1.4;
+}
+
+/* Committee */
+.committee-section {
+  background: var(--surface-1);
+}
+.committee-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-3);
+}
+.committee-mat-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  box-shadow: var(--e-1);
+  border-radius: var(--r-0);
+}
+.avatar-ring-container {
+  align-self: flex-start;
+}
+.committee-avatar-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-full);
+  background: var(--forest-gradient);
+  color: var(--surface-0);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--surface-0);
+  box-shadow: 0 0 0 1px var(--hairline-strong);
+}
+.committee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.member-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.member-role {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.member-since {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+}
+.member-bio {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-600);
+  margin-top: var(--s-2);
+}
+
+/* Responsive */
+@media (min-width: 900px) {
+  .pillars-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .affiliation-split {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+}
+@media (min-width: 640px) {
+  .committee-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .committee-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .timeline-row-layout {
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+  .timeline-line {
+    top: 0;
+    bottom: 0;
+    left: 6px;
+    width: 2px;
+    height: 100%;
+  }
+  .timeline-node {
+    flex: none;
+    flex-direction: row;
+    gap: var(--s-2);
+  }
+  .node-dot {
+    margin-bottom: 0;
+    margin-top: 6px;
+  }
+}
+</style>

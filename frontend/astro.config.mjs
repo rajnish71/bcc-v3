@@ -1,10 +1,12 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://v3bcc.bhopal.info',
   output: 'static',
+  integrations: [sitemap()],
   vite: {
     css: {
       // Tell LightningCSS to target modern evergreen browsers including Firefox,

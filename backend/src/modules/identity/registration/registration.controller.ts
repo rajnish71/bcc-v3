@@ -88,6 +88,9 @@ export class RegistrationController {
   // Callback exchanges code, creates/logs in user, then redirects browser
   // to /auth/callback with tokens in the URL hash fragment (never sent to
   // any server -- hash fragments are browser-only).
+  //
+  // Fastify reply.redirect() takes a URL string only -- no status-code
+  // overload in this version. Defaults to 302 Found.
 
   @Get('social/:provider/authorize-url')
   @HttpCode(200)
@@ -124,10 +127,10 @@ export class RegistrationController {
       const rt = encodeURIComponent(result.tokens.refreshToken);
       const isNew = result.wasNewUser ? '1' : '0';
 
-      return reply.redirect(302, `/auth/callback#at=${at}&rt=${rt}&new=${isNew}`);
+      return reply.redirect(`/auth/callback#at=${at}&rt=${rt}&new=${isNew}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? encodeURIComponent(err.message) : 'oauth_error';
-      return reply.redirect(302, `/auth/signin?error=${msg}`);
+      return reply.redirect(`/auth/signin?error=${msg}`);
     }
   }
 

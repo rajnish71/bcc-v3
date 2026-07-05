@@ -10,7 +10,10 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter({ trustProxy: true }),
   );
-  app.setGlobalPrefix('api/v1');
+  // NOTE: setGlobalPrefix is intentionally NOT set here.
+  // All controllers declare their own full path including 'api/v1/...'
+  // Nginx proxies /api/v1/ -> http://127.0.0.1:3001/api/v1/ (path preserved)
+  // so the controller-level prefix is the single source of truth.
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );

@@ -7,36 +7,36 @@
 //   - Photographer detail: profile + recognition + social handles + photo count.
 //   - Portfolio = gallery photos (curated pinning is a Phase 3 hub feature).
 //
-// MEM-006 PUBLIC DOMAIN POLICY:
-//   Constitutional class names (Full, Life, Patron, Founding) must not appear
-//   on public-facing pages. The `memberClass` field in the API response maps
-//   constitutional classes to the generic token 'member' for the public domain.
-//   The raw class code/name is NOT included in the public response shape.
-//   Rajnish: confirm this interpretation or adjust PUBLIC_CLASS_MASK below.
+// MEM-006 PUBLIC DOMAIN POLICY (confirmed Jul 2026):
+//   Constitutional class badges ARE shown on photographer profile pages.
+//   (e.g. "Founding Member" badge on Rajnish's profile is correct.)
+//   Class names are hidden only on join/membership WORKFLOW pages (/join, /membership).
+//   PUBLIC_CLASS_MASK maps all classes to descriptive tokens for the frontend badge component.
 //
 // PHOTO COUNT:
 //   Counts ACTIVE photos with PUBLIC or MEMBERS_ONLY visibility.
 //   PRIVATE and UNLISTED photos are excluded from the public count.
 //
 // PHOTO SORT ('photos'):
-//   For Phase 2a the photo-count sort fetches up to 1 000 rows and sorts
-//   in JS (dataset is tiny). If membership ever grows large enough for this
-//   to matter, convert to a SQL subquery sort.
+//   For Phase 2a the photo-count sort fetches up to 1000 rows and sorts
+//   in JS (dataset is tiny). Convert to a SQL subquery if membership grows large.
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../../database/db';
 
 // ---------------------------------------------------------------------------
-// Public domain class mask (MEM-006 policy)
+// Class token map -- returned in API response as `memberClass`
+// Frontend badge component uses these tokens for colours and labels.
+// Constitutional classes show their real token (not masked to 'member').
 // ---------------------------------------------------------------------------
 const PUBLIC_CLASS_MASK: Record<string, string> = {
   BASIC_MEMBER:      'basic',
   STUDENT_MEMBER:    'student',
   INDIVIDUAL_MEMBER: 'individual',
-  FULL_MEMBER:       'member',
-  LIFE_MEMBER:       'member',
-  PATRON_MEMBER:     'member',
-  FOUNDING_MEMBER:   'member',
+  FULL_MEMBER:       'full',
+  LIFE_MEMBER:       'life',
+  PATRON_MEMBER:     'patron',
+  FOUNDING_MEMBER:   'founding',
 };
 
 // Recognition display labels
@@ -56,12 +56,9 @@ function maskClass(code: unknown): string {
   return PUBLIC_CLASS_MASK[String(code)] ?? 'member';
 }
 
-// Build photo count map for a batch of userIds.
 async function batchPhotoCounts(userIds: number[]): Promise<Record<number, number>> {
   if (userIds.length === 0) return {};
 
-  // Count each owner separately — can't mix string columns and eb callbacks
-  // in a single select() array in this Kysely version, so we use two selects.
   const rows = await db
     .selectFrom('photos')
     .where('owner_user_id', 'in', userIds)
@@ -96,11 +93,6 @@ export class PhotographerProfilesService {
     sort:   'name' | 'photos' | 'joined';
     genre?: string;
   }) {
-    // Base conditions reused for count and rows:
-    //   - ACTIVE user, not deleted, PUBLIC profile
-    //   - has an ACTIVE individual membership (membership_class_id is not null)
-    //   - has a username (required to build the profile URL slug)
-
     // ------------------------------------------------------------------
     // Total count
     // ------------------------------------------------------------------
@@ -124,12 +116,10 @@ export class PhotographerProfilesService {
 
     // ------------------------------------------------------------------
     // Row fetch
-    // For photo sort: fetch up to 1 000, sort in JS, then page.
-    // For name/joined sort: let DB paginate directly.
     // ------------------------------------------------------------------
     const photoSort = opts.sort === 'photos';
-    const dbLimit  = photoSort ? 1000 : opts.limit;
-    const dbOffset = photoSort ? 0    : opts.offset;
+    const dbLimit   = photoSort ? 1000 : opts.limit;
+    const dbOffset  = photoSort ? 0    : opts.offset;
 
     const rows = await db
       .selectFrom('users as u')
@@ -171,11 +161,11 @@ export class PhotographerProfilesService {
     // ------------------------------------------------------------------
     // Photo counts (batched)
     // ------------------------------------------------------------------
-    const userIds    = rows.map(r => r.id);
-    const photoMap   = await batchPhotoCounts(userIds);
+    const userIds  = rows.map(r => r.id);
+    const photoMap = await batchPhotoCounts(userIds);
 
     // ------------------------------------------------------------------
-    // Optional genre filter: only keep photographers with ≥1 photo in genre
+    // Optional genre filter
     // ------------------------------------------------------------------
     let genreSet: Set<number> | null = null;
     if (opts.genre) {
@@ -191,7 +181,7 @@ export class PhotographerProfilesService {
     }
 
     // ------------------------------------------------------------------
-    // Build result list
+    // Build result
     // ------------------------------------------------------------------
     let items = rows
       .filter(r => genreSet == null || genreSet.has(r.id))
@@ -254,13 +244,9 @@ export class PhotographerProfilesService {
       .executeTakeFirst();
 
     if (!user) throw new NotFoundException('Photographer not found.');
+    if (user.profile_visibility === 'PRIVATE') throw new NotFoundException('Photographer not found.');
 
-    // PRIVATE profile -> 404 on the public surface (same as not found)
-    if (user.profile_visibility === 'PRIVATE') {
-      throw new NotFoundException('Photographer not found.');
-    }
-
-    // Active recognition (at most one per member — MEM-006)
+    // Active recognition
     const recognition = await db
       .selectFrom('member_recognitions')
       .where('membership_id', '=', user.membership_id as number)

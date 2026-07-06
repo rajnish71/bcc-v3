@@ -23,7 +23,7 @@ class GenerateSnapshotDto {
   label!: string;
 }
 
-@Controller('membership/voting-register')
+@Controller('api/v1/membership/voting-register')
 @UseGuards(AccessTokenGuard)
 export class VotingRegisterController {
   constructor(private readonly service: VotingRegisterService) {}

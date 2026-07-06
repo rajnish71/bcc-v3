@@ -10,7 +10,7 @@ import { AssignRecognitionDto } from '../dto/assign-recognition.dto';
 import { RevokeRecognitionDto } from '../dto/revoke-recognition.dto';
 import { SetRecognitionCriteriaDto } from '../dto/set-recognition-criteria.dto';
 
-@Controller('membership/recognitions')
+@Controller('api/v1/membership/recognitions')
 @UseGuards(AccessTokenGuard, RbacGuard)
 export class RecognitionController {
   constructor(private readonly recognitions: RecognitionService) {}

@@ -33,7 +33,7 @@ import { AddDelegateDto } from '../dto/add-delegate.dto';
 
 const MANAGE_ANY = 'group.entity.manage_any';
 
-@Controller('membership/groups')
+@Controller('api/v1/membership/groups')
 @UseGuards(AccessTokenGuard)
 export class GroupController {
   constructor(

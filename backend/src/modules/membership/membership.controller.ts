@@ -27,7 +27,7 @@ import { SuspendMembershipDto } from './dto/suspend-membership.dto';
 import { TerminateMembershipDto } from './dto/terminate-membership.dto';
 import { AssignReservedNumberDto } from './dto/assign-reserved-number.dto';
 
-@Controller('membership')
+@Controller('api/v1/membership')
 export class MembershipController {
   constructor(
     private readonly lifecycle: MembershipLifecycleService,

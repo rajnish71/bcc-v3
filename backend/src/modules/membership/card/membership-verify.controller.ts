@@ -15,7 +15,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { MembershipCardService } from './membership-card.service';
 
-@Controller('membership/verify')
+@Controller('api/v1/membership/verify')
 export class MembershipVerifyController {
   constructor(private readonly cardService: MembershipCardService) {}
 

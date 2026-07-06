@@ -19,7 +19,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AccessTokenPayload } from '../auth/token.util';
 import { AssignRoleDto } from './dto/assign-role.dto';
 
-@Controller('rbac')
+@Controller('api/v1/rbac')
 @UseGuards(AccessTokenGuard, RbacGuard)
 export class RbacController {
   constructor(private readonly rbacService: RbacService) {}

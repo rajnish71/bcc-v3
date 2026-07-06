@@ -10,7 +10,7 @@ import { AccessTokenGuard } from '../auth/access-token.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AccessTokenPayload } from '../auth/token.util';
 
-@Controller('users')
+@Controller('api/v1/users')
 export class UsersController {
   @Get('me')
   @UseGuards(AccessTokenGuard)

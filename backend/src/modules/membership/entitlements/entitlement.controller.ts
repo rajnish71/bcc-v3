@@ -11,7 +11,7 @@ import { SetGroupTypeEntitlementDto } from '../dto/set-group-type-entitlement.dt
 import { SetRecognitionModifierDto } from '../dto/set-recognition-modifier.dto';
 import { CreateOverrideDto } from '../dto/create-override.dto';
 
-@Controller('membership/entitlements')
+@Controller('api/v1/membership/entitlements')
 @UseGuards(AccessTokenGuard, RbacGuard)
 export class EntitlementController {
   constructor(private readonly entitlements: EntitlementService) {}

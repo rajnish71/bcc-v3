@@ -35,7 +35,7 @@ import { ReviewDocumentDto } from '../dto/review-document.dto';
 import { ApplicationMessageDto, RespondToClarificationDto } from '../dto/application-message.dto';
 import { StageDecisionDto } from '../dto/stage-decision.dto';
 
-@Controller('membership/applications')
+@Controller('api/v1/membership/applications')
 export class ApplicationWorkflowController {
   constructor(
     private readonly workflow: ApplicationWorkflowService,

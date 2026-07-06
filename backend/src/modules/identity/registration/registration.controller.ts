@@ -39,7 +39,7 @@ function deviceContextFrom(req: FastifyRequest): DeviceContext {
   };
 }
 
-@Controller('registration')
+@Controller('api/v1/registration')
 export class RegistrationController {
   constructor(
     private readonly registrationService: RegistrationService,

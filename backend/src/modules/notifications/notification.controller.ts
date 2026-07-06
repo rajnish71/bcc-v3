@@ -37,7 +37,7 @@ import { CurrentUser } from '../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../identity/auth/token.util';
 import { NotificationService } from './notification.service';
 
-@Controller('notifications')
+@Controller('api/v1/notifications')
 @UseGuards(AccessTokenGuard)
 export class NotificationController {
   constructor(private readonly notifications: NotificationService) {}

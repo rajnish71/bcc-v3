@@ -25,7 +25,7 @@ import { RbacService } from '../../identity/rbac/rbac.service';
 import { MembershipCardService } from './membership-card.service';
 import { db } from '../../../database/db';
 
-@Controller('membership/memberships')
+@Controller('api/v1/membership/memberships')
 @UseGuards(AccessTokenGuard)
 export class MembershipCardController {
   constructor(

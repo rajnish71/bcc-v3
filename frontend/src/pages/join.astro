@@ -89,9 +89,26 @@ const FAQS = [
         </div>
       </div>
 
-      <div class="join-hero-ctas">
+      <div class="join-hero-ctas auth-hide">
         <a href="/auth/register/" class="btn btn-dark btn-lg">Register Free →</a>
         <a href="/auth/signin/?next=/hub/membership/apply/" class="btn btn-outline btn-lg">Sign In &amp; Apply</a>
+      </div>
+
+      <!-- Logged-in / Authenticated Member Banner -->
+      <div class="authenticated-member-banner" id="authenticated-member-banner" style="display: none;">
+        <div class="authenticated-member-banner__content">
+          <div class="authenticated-member-banner__icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div class="authenticated-member-banner__text-group">
+            <h3 class="authenticated-member-banner__title">You are logged in</h3>
+            <p class="authenticated-member-banner__desc">You have an active session. Visit your Member Hub to check your membership status, apply for a membership class, or access exclusive features.</p>
+          </div>
+        </div>
+        <a href="/hub/" class="btn btn-gold btn-md">Go to Member Hub</a>
       </div>
     </div>
     <div class="hairline"></div>
@@ -124,7 +141,7 @@ const FAQS = [
               <ul class="class-feats">
                 {cls.features.map(f => <li>{f}</li>)}
               </ul>
-              <a href="#apply" class="btn btn-dark btn-md class-cta">Apply for Membership</a>
+              <a href="#apply" class="btn btn-dark btn-md class-cta auth-hide">Apply for Membership</a>
             </div>
           </div>
         ))}
@@ -215,7 +232,7 @@ const FAQS = [
           <h2 class="apply-block__title">Start your application</h2>
           <p class="apply-block__body">Already registered? Sign in and head to your Member Hub to begin. Not registered yet? Create your free account first — it only takes a moment.</p>
         </div>
-        <div class="apply-block__ctas">
+        <div class="apply-block__ctas auth-hide">
           <a href="/auth/signin/?next=/hub/membership/apply/" class="btn btn-gold btn-lg">Sign in &amp; Apply</a>
           <a href="/auth/register/" class="btn btn-outline btn-lg">Register first →</a>
         </div>
@@ -261,6 +278,67 @@ const FAQS = [
 .join-flow__arrow { font-size: 18px; color: var(--hairline-strong); margin-top: var(--s-5); flex-shrink: 0; }
 
 .join-hero-ctas { display: flex; gap: var(--s-3); justify-content: center; margin-top: var(--s-6); flex-wrap: wrap; }
+
+/* Authenticated Member Banner styling */
+.authenticated-member-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-6);
+  background: var(--surface-1);
+  border: 1px solid var(--gold-500);
+  border-radius: var(--r-1);
+  max-width: 680px;
+  margin: var(--s-6) auto 0;
+  text-align: left;
+}
+.authenticated-member-banner__content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+.authenticated-member-banner__icon {
+  color: var(--gold-600);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.authenticated-member-banner__text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.authenticated-member-banner__title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0;
+}
+.authenticated-member-banner__desc {
+  font-size: 13px;
+  color: var(--ink-600);
+  line-height: 1.6;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .authenticated-member-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: var(--s-4);
+  }
+  .authenticated-member-banner__content {
+    flex-direction: column;
+    align-items: center;
+  }
+  .authenticated-member-banner__icon {
+    margin-top: 0;
+  }
+  .authenticated-member-banner .btn {
+    justify-content: center;
+  }
+}
 
 /* Class grid */
 .class-grid {
@@ -449,4 +527,12 @@ details[open] .faq-q { color: var(--gold-600); }
       if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
   });
+
+  /* Authenticated state check to show banner */
+  try {
+    if (localStorage.getItem('bcc_user')) {
+      const banner = document.getElementById('authenticated-member-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+  } catch (e) {}
 </script>

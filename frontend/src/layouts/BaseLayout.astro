@@ -72,6 +72,21 @@ const fullTitle = `${title} | Bhopal Camera Club`;
 
   <Footer />
 
+  <style is:global>
+    body.bcc-is-authenticated .auth-hide,
+    body.bcc-is-authenticated .guest-only {
+      display: none !important;
+    }
+  </style>
+
+  <script>
+    try {
+      if (localStorage.getItem('bcc_user')) {
+        document.body.classList.add('bcc-is-authenticated');
+      }
+    } catch (e) {}
+  </script>
+
   <!-- Central GSAP initialiser — runs after all page content is in DOM -->
   <script>
     import { gsap } from 'gsap';

@@ -510,6 +510,8 @@ import HubLayout from '../../layouts/HubLayout.astro';
 </style>
 
 <script>
+  import { logout } from '../../lib/auth';
+
   const API = '/api/v1';
 
   function token(): string | null { return localStorage.getItem('bcc_token'); }
@@ -539,18 +541,7 @@ import HubLayout from '../../layouts/HubLayout.astro';
   }
 
   /* -- Sign out --------------------------------------------------------- */
-  document.getElementById('hub-signout-btn')?.addEventListener('click', async () => {
-    const refresh = localStorage.getItem('bcc_refresh');
-    if (refresh) {
-      fetch(`${API}/auth/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: refresh }),
-      }).catch(() => {});
-    }
-    ['bcc_token', 'bcc_refresh', 'bcc_user'].forEach(k => localStorage.removeItem(k));
-    window.location.replace('/');
-  });
+  document.getElementById('hub-signout-btn')?.addEventListener('click', logout);
 
   /* -- Identity card ---------------------------------------------------- */
   async function loadIdentity(): Promise<void> {

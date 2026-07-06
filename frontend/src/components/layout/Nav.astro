@@ -91,6 +91,7 @@ const NAV_LINKS = [
         <span class="nav-name" id="nav-name"></span>
         <NotificationBell />
         <a id="nav-profile-link" href="/gallery/photographer/" class="nav-profile-link" hidden>My Profile</a>
+        <button id="nav-signout-btn" type="button" class="nav-profile-link">Sign Out</button>
         <a href="/hub/" class="btn btn-outline-gold btn-md">Member Hub</a>
       </div>
 
@@ -165,10 +166,15 @@ const NAV_LINKS = [
           <div class="nav-avatar avatar avatar-forest" style="width:40px;height:40px;font-size:15px;">
             <span id="drawer-initials">?</span>
           </div>
-          <div>
+          <div style="display: flex; flex-direction: column;">
             <div class="nav-name" id="drawer-name" style="font-size:14px;"></div>
-            <a id="drawer-profile-link" href="/gallery/photographer/" style="font-size:12px;color:var(--ink-600);" hidden>My Profile</a>
-            <a href="/hub/" style="font-size:12px;color:var(--gold-600);">Member Hub</a>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 2px; line-height: 1;">
+              <a id="drawer-profile-link" href="/gallery/photographer/" style="font-size:12px;color:var(--ink-600);" hidden>My Profile</a>
+              <span id="drawer-profile-sep" style="font-size:10px;color:var(--ink-400);" hidden>·</span>
+              <a href="/hub/" style="font-size:12px;color:var(--gold-600);">Member Hub</a>
+              <span style="font-size:10px;color:var(--ink-400);">·</span>
+              <button id="drawer-signout-btn" type="button" style="font-size:12px;color:var(--ink-600);background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);line-height:1;">Sign Out</button>
+            </div>
           </div>
         </div>
         <!-- Notifications link in mobile drawer -->
@@ -267,6 +273,14 @@ const NAV_LINKS = [
   transition: color var(--m-fast), border-color var(--m-fast);
 }
 .nav-profile-link:hover { color: var(--gold-600); border-color: var(--gold-500); }
+button.nav-profile-link {
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  padding: 0 0 1px 0;
+  line-height: inherit;
+}
 
 .nav-signin {
   font-family: var(--font-body);
@@ -445,6 +459,8 @@ const NAV_LINKS = [
 
 
 <script>
+  import { logout } from '../../lib/auth';
+
   /**
    * Nav scripts:
    * 1. GSAP header-condense (96px -> 64px after 80px scroll)
@@ -521,6 +537,8 @@ const NAV_LINKS = [
           if (drawerProfileLink) {
             (drawerProfileLink as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
             drawerProfileLink.removeAttribute('hidden');
+            const drawerProfileSep = document.getElementById('drawer-profile-sep');
+            if (drawerProfileSep) drawerProfileSep.removeAttribute('hidden');
           }
         }
 
@@ -551,4 +569,8 @@ const NAV_LINKS = [
       }
     }
   } catch { /* Stay in guest state */ }
+
+  /* -- Sign out handlers -- */
+  document.getElementById('nav-signout-btn')?.addEventListener('click', logout);
+  document.getElementById('drawer-signout-btn')?.addEventListener('click', logout);
 </script>

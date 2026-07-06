@@ -51,6 +51,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <div class="auth-field">
           <div class="auth-label-row">
             <label class="auth-label" for="password">Password</label>
+            <a href="/auth/forgot-password/" class="auth-link auth-link--small">Forgot password?</a>
           </div>
           <input
             id="password"
@@ -270,6 +271,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.auth-link--small { font-size: 12px; font-weight: 400; }
 
 @media (max-width: 480px) {
   .auth-card { padding: var(--s-6) var(--s-3); border: none; box-shadow: none; }

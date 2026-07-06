@@ -15,7 +15,7 @@ import MemberBadge from '../../../components/ui/MemberBadge.astro';
 export async function getStaticPaths() {
   let photographers = [];
   try {
-    const res = await fetch('http://localhost:3000/api/v1/photographers?limit=100');
+    const res = await fetch('http://localhost:3001/api/v1/photographers?limit=100');
     if (res.ok) {
       const json = await res.json();
       photographers = json.data || [];
@@ -353,27 +353,31 @@ const defaultPhotographer = fallbackPhotographers[userid] || {
         badgeWrap.appendChild(badgeSpan);
       }
 
-      // 2. Fetch Photos Portfolio
-      const photosRes = await fetch(`/api/v1/photos?photographerId=${userId}&limit=100`);
-      if (photosRes.ok) {
-        const { data: photos } = await photosRes.json();
-        const grid = document.getElementById('portfolio-grid')!;
-        if (Array.isArray(photos) && photos.length > 0) {
-          grid.innerHTML = '';
-          photos.forEach((photo: any) => {
-            const card = document.createElement('a');
-            card.href = `/showcase/${photo.id}/`;
-            card.className = 'portfolio-card vf-card';
-            card.innerHTML = `
-              <img src="${photo.src}" alt="${photo.title}" class="portfolio-img" loading="lazy" />
-              <div class="card-overlay">
-                <span class="card-title">${photo.title}</span>
-              </div>
-              <span class="vf-br" aria-hidden="true"></span>
-              <span class="vf-bl" aria-hidden="true"></span>
-            `;
-            grid.appendChild(card);
-          });
+      // 2. Fetch Photos Portfolio via gallery endpoint (requires numeric userId from profile)
+      const numericId = profile?.id;
+      if (numericId) {
+        const photosRes = await fetch(`/api/v1/gallery/photographer/${numericId}?limit=100`);
+        if (photosRes.ok) {
+          const { photos } = await photosRes.json();
+          const grid = document.getElementById('portfolio-grid')!;
+          if (Array.isArray(photos) && photos.length > 0) {
+            grid.innerHTML = '';
+            photos.forEach((photo: any) => {
+              const imgSrc = photo.urls?.medium ?? photo.urls?.original ?? '';
+              const card = document.createElement('a');
+              card.href = `/showcase/${photo.uuid}/`;
+              card.className = 'portfolio-card vf-card';
+              card.innerHTML = `
+                <img src="${imgSrc}" alt="${photo.title ?? ''}" class="portfolio-img" loading="lazy" />
+                <div class="card-overlay">
+                  <span class="card-title">${photo.title ?? ''}</span>
+                </div>
+                <span class="vf-br" aria-hidden="true"></span>
+                <span class="vf-bl" aria-hidden="true"></span>
+              `;
+              grid.appendChild(card);
+            });
+          }
         }
       }
     } catch {

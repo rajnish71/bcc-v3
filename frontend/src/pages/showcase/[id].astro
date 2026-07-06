@@ -14,10 +14,11 @@ import SectionHeader from '../../components/ui/SectionHeader.astro';
 export async function getStaticPaths() {
   let photos = [];
   try {
-    const res = await fetch('http://localhost:3000/api/v1/photos?limit=100');
+    const res = await fetch('http://localhost:3001/api/v1/gallery/feed?limit=100');
     if (res.ok) {
       const json = await res.json();
-      photos = json.data || [];
+      // gallery/feed returns { photos: [...], total: N } where id field is 'uuid'
+      photos = json.photos || [];
     }
   } catch (e) {
     // Silent warn
@@ -32,8 +33,9 @@ export async function getStaticPaths() {
   ];
 
   photos.forEach((p: any) => {
-    if (p.id && !paths.some(path => path.params.id === String(p.id))) {
-      paths.push({ params: { id: String(p.id) } });
+    const photoId = p.uuid || p.id;
+    if (photoId && !paths.some(path => path.params.id === String(photoId))) {
+      paths.push({ params: { id: String(photoId) } });
     }
   });
 

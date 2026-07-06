@@ -375,10 +375,22 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
     }
 
     try {
-      const res = await fetch(`/api/v1/photos?${params}`);
+      const res = await fetch(`/api/v1/gallery/feed?${params}`);
       if (!res.ok) throw new Error('API error');
-      const { data, meta } = await res.json();
-      const photos = Array.isArray(data) ? data : [];
+      const payload = await res.json();
+      // Gallery feed returns { photos: [...], total: N }
+      const raw: any[] = Array.isArray(payload.photos) ? payload.photos : [];
+      const total: number = payload.total ?? raw.length;
+
+      // Normalize gallery feed shape to what renderGrid expects
+      const photos = raw.map((p: any) => ({
+        id:           p.uuid,
+        title:        p.title ?? '',
+        photographer: photographerMap[p.owner_user_id] ?? '',
+        imageUrl:     p.urls?.medium ?? p.urls?.original ?? '',
+        href:         `/showcase/${p.uuid}/`,
+        aspect:       (p.width_px && p.height_px) ? p.width_px / p.height_px : 1.5,
+      }));
 
       skel?.setAttribute('hidden', '');
 
@@ -391,10 +403,9 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
       allPhotos = reset ? photos : [...allPhotos, ...photos];
       renderGrid(photos, !reset);
 
-      if (countEl) countEl.textContent = meta?.total_count?.toLocaleString() ?? String(allPhotos.length);
-      cursor = meta?.next_cursor ?? null;
-      if (cursor) loadMore?.removeAttribute('hidden');
-      else         loadMore?.setAttribute('hidden', '');
+      if (countEl) countEl.textContent = total.toLocaleString('en-IN');
+      // Gallery feed has no cursor pagination yet; hide load-more
+      loadMore?.setAttribute('hidden', '');
 
     } catch {
       skel?.setAttribute('hidden', '');
@@ -441,25 +452,30 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
     fetchPhotos(true);
   });
 
-  /* ── Initial load ── */
-  fetchPhotos(true);
-
-  /* ── Populate photographer select ── */
-  (async () => {
+  /* ── Photographer map (id -> displayName) ──
+     Loaded FIRST so photo cards can show photographer names on first render. */
+  const photographerMap: Record<number, string> = {};
+  async function loadPhotographers(): Promise<void> {
     try {
       const res = await fetch('/api/v1/photographers?limit=100');
       if (!res.ok) return;
       const { data } = await res.json();
       const sel = document.getElementById('photographer-select') as HTMLSelectElement | null;
-      if (!sel || !Array.isArray(data)) return;
+      if (!Array.isArray(data)) return;
       data.forEach((ph: any) => {
-        const opt = document.createElement('option');
-        opt.value = ph.userid;
-        opt.textContent = ph.displayName;
-        sel.appendChild(opt);
+        if (ph.id != null) photographerMap[ph.id] = ph.displayName ?? '';
+        if (sel) {
+          const opt = document.createElement('option');
+          opt.value = ph.id ?? ph.username;
+          opt.textContent = ph.displayName;
+          sel.appendChild(opt);
+        }
       });
     } catch { /* silent */ }
-  })();
+  }
+
+  /* ── Initial load: photographers first, then photos ── */
+  loadPhotographers().then(() => fetchPhotos(true));
 
   /* ── Recompute grid on resize ── */
   let resizeTimer: ReturnType<typeof setTimeout>;

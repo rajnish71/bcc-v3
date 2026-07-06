@@ -16,8 +16,8 @@
  *   - Auth state: defaults to Guest; client script swaps if bcc_user in localStorage.
  *
  * Token convention (established here):
- *   localStorage 'bcc_user'  = { displayName, initials }   -- set on sign-in
- *   localStorage 'bcc_token' = JWT access token string     -- set on sign-in
+ *   localStorage 'bcc_user'  = { displayName, initials, username }   -- set on sign-in
+ *   localStorage 'bcc_token' = JWT access token string               -- set on sign-in
  *   Auth pages must write BOTH keys on successful authentication.
  *
  * MEM-006 P1 note: "Become a Member" -> /join -> that page explains the Register ->
@@ -90,6 +90,7 @@ const NAV_LINKS = [
         </div>
         <span class="nav-name" id="nav-name"></span>
         <NotificationBell />
+        <a id="nav-profile-link" href="/gallery/photographer/" class="nav-profile-link" hidden>My Profile</a>
         <a href="/hub/" class="btn btn-outline-gold btn-md">Member Hub</a>
       </div>
 
@@ -166,6 +167,7 @@ const NAV_LINKS = [
           </div>
           <div>
             <div class="nav-name" id="drawer-name" style="font-size:14px;"></div>
+            <a id="drawer-profile-link" href="/gallery/photographer/" style="font-size:12px;color:var(--ink-600);" hidden>My Profile</a>
             <a href="/hub/" style="font-size:12px;color:var(--gold-600);">Member Hub</a>
           </div>
         </div>
@@ -253,6 +255,18 @@ const NAV_LINKS = [
 .nav-auth { flex-shrink: 0; }
 .nav-auth__guest { display: flex; align-items: center; gap: var(--s-2); }
 .nav-auth__member { display: flex; align-items: center; gap: var(--s-2); }
+
+.nav-profile-link {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: 500;
+  color: var(--ink-600);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hairline-strong);
+  padding-bottom: 1px;
+  transition: color var(--m-fast), border-color var(--m-fast);
+}
+.nav-profile-link:hover { color: var(--gold-600); border-color: var(--gold-500); }
 
 .nav-signin {
   font-family: var(--font-body);
@@ -482,7 +496,7 @@ const NAV_LINKS = [
   try {
     const raw = localStorage.getItem('bcc_user');
     if (raw) {
-      const user = JSON.parse(raw) as { displayName?: string; initials?: string };
+      const user = JSON.parse(raw) as { displayName?: string; initials?: string; username?: string };
       if (user?.displayName) {
         const initials = user.initials || user.displayName.slice(0, 2).toUpperCase();
 
@@ -495,6 +509,20 @@ const NAV_LINKS = [
         if (ni) ni.textContent = initials;
         const nn = document.getElementById('nav-name');
         if (nn) nn.textContent = user.displayName;
+
+        // Inject "My Profile" link if username is known
+        if (user.username) {
+          const profileLink = document.getElementById('nav-profile-link');
+          if (profileLink) {
+            (profileLink as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
+            profileLink.removeAttribute('hidden');
+          }
+          const drawerProfileLink = document.getElementById('drawer-profile-link');
+          if (drawerProfileLink) {
+            (drawerProfileLink as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
+            drawerProfileLink.removeAttribute('hidden');
+          }
+        }
 
         // Mobile
         const dg = document.getElementById('drawer-guest');

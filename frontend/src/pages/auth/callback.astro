@@ -152,10 +152,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         headers: { Authorization: `Bearer ${decodeURIComponent(at)}` },
       });
       if (res.ok) {
-        const user = await res.json() as { fullName?: string };
+        const user = await res.json() as { fullName?: string; username?: string };
         const fullName = user.fullName || 'Member';
+        const username = user.username || '';
         const initials = fullName.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-        localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials }));
+        localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials, username }));
       }
     } catch { /* non-critical -- nav will show fallback */ }
 

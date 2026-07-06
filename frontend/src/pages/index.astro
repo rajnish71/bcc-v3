@@ -463,15 +463,15 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
   gap: var(--s-4);
   margin-bottom: var(--s-4);
 }
-.jrow { display: flex; gap: 8px; margin-bottom: 8px; }
-.jrow:last-child { margin-bottom: 0; }
+:global(.jrow) { display: flex; gap: 8px; margin-bottom: 8px; }
+:global(.jrow:last-child) { margin-bottom: 0; }
 .gallery-footnote {
   margin-top: var(--s-4);
   font-size: var(--text-small);
   color: var(--ink-400);
 }
 /* Real photo cards in grid */
-.jrow .photo-card {
+:global(.jrow .photo-card) {
   overflow: hidden;
   flex-shrink: 0;
   border-radius: var(--r-0);
@@ -481,7 +481,7 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
   display: block;
   text-decoration: none;
 }
-.jrow .photo-card img {
+:global(.jrow .photo-card img) {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -489,9 +489,9 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
   border-radius: var(--r-0);
   transition: transform var(--m-image);
 }
-.jrow .photo-card:hover img { transform: scale(1.03); }
+:global(.jrow .photo-card:hover img) { transform: scale(1.03); }
 /* Caption on hover */
-.jrow .photo-card .photo-caption {
+:global(.jrow .photo-card .photo-caption) {
   position: absolute;
   bottom: 0; left: 0; right: 0;
   padding: var(--s-3);
@@ -499,9 +499,9 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
   opacity: 0;
   transition: opacity var(--m-fast);
 }
-.jrow .photo-card:hover .photo-caption { opacity: 1; }
-.photo-caption__title       { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--ink-inverse); }
-.photo-caption__photographer { font-size: 11px; color: rgba(250,248,244,.65); }
+:global(.jrow .photo-card:hover .photo-caption) { opacity: 1; }
+:global(.photo-caption__title)       { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--ink-inverse); }
+:global(.photo-caption__photographer) { font-size: 11px; color: rgba(250,248,244,.65); }
 
 /* ── Events ── */
 .events-header {
@@ -710,7 +710,7 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 <script>
   /**
    * Home page scripts:
-   * 1. Spotlight hero — load from /api/v1/photos/spotlight
+   * 1. Spotlight hero — load from /api/v1/gallery/feed (latest photo)
    * 2. Gallery wall — fetch + justified layout
    * 3. Events — fetch upcoming 3
    * 4. Journal — fetch latest 3 posts
@@ -723,22 +723,22 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
   /* ── 1. Spotlight ── */
   (async () => {
     try {
-      const res = await fetch('/api/v1/photos/spotlight');
+      // Phase 2a: latest gallery feed photo used as spotlight.
+      // Dedicated curation endpoint (with credit + origin) is Phase 2b.
+      const res = await fetch('/api/v1/gallery/feed?limit=1');
       if (!res.ok) return;
-      const { data } = await res.json();
-      if (!data?.imageUrl) return;
+      const { photos: _sp } = await res.json();
+      const sp = Array.isArray(_sp) && _sp.length > 0 ? _sp[0] : null;
+      if (!sp) return;
+
+      const imageUrl = sp.urls?.large ?? sp.urls?.original ?? '';
+      if (!imageUrl) return;
 
       const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
-      if (img) { img.src = data.imageUrl; img.alt = data.title ?? ''; img.onload = () => img.classList.add('loaded'); }
+      if (img) { img.src = imageUrl; img.alt = sp.title ?? ''; img.onload = () => img.classList.add('loaded'); }
 
       const title = document.getElementById('spotlight-title');
-      if (title && data.title) title.textContent = data.title;
-
-      const credit = document.getElementById('spotlight-credit');
-      if (credit && data.photographer) credit.textContent = `Photograph by ${data.photographer.displayName}`;
-
-      const activity = document.getElementById('spotlight-activity');
-      if (activity && data.activityOrigin) activity.textContent = `From: ${data.activityOrigin}`;
+      if (title && sp.title) title.textContent = sp.title;
     } catch { /* fallback gradient stays */ }
   })();
 
@@ -777,8 +777,19 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 
     let photos: any[] = [];
     try {
-      const res = await fetch('/api/v1/photos?showcase=true&limit=12');
-      if (res.ok) { const { data } = await res.json(); photos = Array.isArray(data) ? data : []; }
+      // gallery/feed returns { photos: [...], total: N }.
+      // Normalise each item to the shape buildRows() expects.
+      const res = await fetch('/api/v1/gallery/feed?limit=12');
+      if (res.ok) {
+        const { photos: _raw } = await res.json();
+        photos = (Array.isArray(_raw) ? _raw : []).map((p: any) => ({
+          id:           p.uuid,
+          title:        p.title ?? '',
+          photographer: null,
+          imageUrl:     p.urls?.medium ?? p.urls?.original ?? '',
+          aspect:       (p.width_px && p.height_px) ? p.width_px / p.height_px : 1.5,
+        }));
+      }
     } catch { /* empty */ }
 
     skel?.remove();

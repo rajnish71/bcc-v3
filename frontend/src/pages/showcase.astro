@@ -218,8 +218,8 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 #count-number { font-weight: 600; color: var(--ink-900); }
 
 /* ── Grid + skeleton (shared via global.css) ── */
-.grid-row   { display: flex; gap: 8px; margin-bottom: 8px; }
-.grid-row:last-child { margin-bottom: 0; }
+:global(.grid-row)   { display: flex; gap: 8px; margin-bottom: 8px; }
+:global(.grid-row:last-child) { margin-bottom: 0; }
 .skel-photo { background: var(--surface-2); border-radius: 0; animation: shimmer 1.6s ease-in-out infinite; }
 @keyframes shimmer { 0%,100% { opacity:.4; } 50% { opacity:.7; } }
 

@@ -3,39 +3,54 @@
  * gallery/photographer/[userid].astro
  * Dynamic Route: /gallery/photographer/[userid]/
  *
- * Photographer profile detail view. Displays photographer card, membership status/badge,
- * stats overview, bio, and a responsive grid of their uploaded showcase photography.
+ * The route segment is named `userid` for historical reasons but its value
+ * is always a username string (e.g. "rajnishkhare"). The client-side script
+ * reads the last URL path segment and passes it directly to
+ * GET /api/v1/photographers/:username, which expects a username.
  *
- * Uses hybrid pre-rendering and client-side hydration for build resilience.
+ * getStaticPaths() fetches the live photographer list from the backend at
+ * build time. The hardcoded fallback paths below are a build-time safety net
+ * only -- they use actual DB usernames (no hyphens) and cover the most
+ * active members so that a build triggered while the backend is briefly
+ * unavailable still produces useful pages.
+ *
+ * Profile data itself is always fetched client-side on page load, so static
+ * fallback content (name, bio, etc.) is only visible for the few hundred
+ * milliseconds before the API responds.
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SectionHeader from '../../../components/ui/SectionHeader.astro';
 import MemberBadge from '../../../components/ui/MemberBadge.astro';
 
 export async function getStaticPaths() {
-  let photographers = [];
+  let photographers: any[] = [];
   try {
     const res = await fetch('http://localhost:3001/api/v1/photographers?limit=100');
     if (res.ok) {
       const json = await res.json();
       photographers = json.data || [];
     }
-  } catch (e) {
-    // Silent warn
+  } catch {
+    // Backend unavailable at build time -- fall through to hardcoded paths below.
   }
 
-  // Pre-defined static paths for offline compilation
-  const paths = [
-    { params: { userid: 'ankit-tiwari' } },
-    { params: { userid: 'rahil-khan' } },
-    { params: { userid: 'sauvik-acharyya' } },
-    { params: { userid: 'rajnish-khare' } },
-    { params: { userid: 'kshitij-patle' } }
+  // Hardcoded safety-net paths using real DB usernames (no hyphens).
+  // These are overridden/extended by the live API list above.
+  const paths: { params: { userid: string } }[] = [
+    { params: { userid: 'rajnishkhare' } },
+    { params: { userid: 'ankittiwari' } },
+    { params: { userid: 'rahilkhan' } },
+    { params: { userid: 'sauvikacharyya' } },
+    { params: { userid: 'kshitijpatle' } },
+    { params: { userid: 'anupamkharegupta' } },
   ];
 
+  // Add every active photographer returned by the API.
+  // Field is `username` (not `userid`) -- that was the bug in the original
+  // version of this file that caused all dynamic paths to be silently dropped.
   photographers.forEach((p: any) => {
-    if (p.userid && !paths.some(path => path.params.userid === p.userid)) {
-      paths.push({ params: { userid: p.userid } });
+    if (p.username && !paths.some(path => path.params.userid === p.username)) {
+      paths.push({ params: { userid: p.username } });
     }
   });
 
@@ -44,45 +59,39 @@ export async function getStaticPaths() {
 
 const { userid } = Astro.params;
 
-// Fallback details if database is offline
+// Minimal fallback shown for the SSG snapshot while the client-side fetch runs.
+// Keys must match actual DB usernames.
 const fallbackPhotographers: Record<string, any> = {
-  'ankit-tiwari': {
+  'ankittiwari': {
     displayName: 'Ankit Tiwari',
-    userid: 'ankit-tiwari',
-    memberClass: 'student',
+    memberClass: 'basic',
     joined: '2020',
-    bio: 'Travel and documentary photographer capturing the quiet landscapes and cultural heritage of Central India. Passionate about early morning light.',
-    photoCount: 12,
-    photos: [
-      { id: 'orchha-reflection', title: 'Orchha Reflection', src: '/images/Orchha-Reflection-Ankit-Tiwari-1024x737.jpeg', aspect: 1.38 }
-    ]
+    bio: 'Travel and documentary photographer capturing the quiet landscapes and cultural heritage of Central India.',
+    photoCount: 0,
+    photos: [],
   },
-  'rahil-khan': {
+  'rahilkhan': {
     displayName: 'Rahil Khan',
-    userid: 'rahil-khan',
-    memberClass: 'individual',
+    memberClass: 'basic',
     joined: '2016',
-    bio: 'Contemporary street visual artist capturing dynamic urban moments, frames, and high-contrast shadow compositions in old Bhopal markets.',
-    photoCount: 24,
-    photos: [
-      { id: 'street-life', title: 'Street Life in Chowk', src: '/images/StreetLife-Rahil-Khan-1024x768.jpeg', aspect: 1.33 }
-    ]
-  }
+    bio: 'Contemporary street visual artist capturing dynamic urban moments in old Bhopal markets.',
+    photoCount: 0,
+    photos: [],
+  },
 };
 
-const defaultPhotographer = fallbackPhotographers[userid] || {
+const defaultPhotographer = fallbackPhotographers[userid] ?? {
   displayName: 'Club Photographer',
-  userid: userid,
   memberClass: 'basic',
   joined: '2026',
-  bio: 'A member photographer of the Bhopal Camera Club sharing their vision and documenting regional narratives.',
-  photoCount: 1,
-  photos: []
+  bio: 'A member photographer of the Bhopal Camera Club.',
+  photoCount: 0,
+  photos: [],
 };
 ---
 
 <BaseLayout
-  title={`${defaultPhotographer.displayName} — Profile`}
+  title={`${defaultPhotographer.displayName} · Profile`}
   description={`Explore photography portfolios and member details for ${defaultPhotographer.displayName} on Bhopal Camera Club.`}
 >
   <!-- Profile Header Card (Viewfinder Editorial themed) -->
@@ -131,20 +140,7 @@ const defaultPhotographer = fallbackPhotographers[userid] || {
       />
 
       <div id="portfolio-grid" class="portfolio-grid" data-gsap="stagger">
-        {defaultPhotographer.photos.length > 0 ? (
-          defaultPhotographer.photos.map((photo: any) => (
-            <a href={`/showcase/${photo.id}/`} class="portfolio-card vf-card">
-              <img src={photo.src} alt={photo.title} class="portfolio-img" loading="lazy" />
-              <div class="card-overlay">
-                <span class="card-title">{photo.title}</span>
-              </div>
-              <span class="vf-br" aria-hidden="true"></span>
-              <span class="vf-bl" aria-hidden="true"></span>
-            </a>
-          ))
-        ) : (
-          <p id="no-photos-msg" class="empty-msg">No photographs uploaded to the showcase yet.</p>
-        )}
+        <p id="no-photos-msg" class="empty-msg">Loading portfolio…</p>
       </div>
     </div>
   </section>
@@ -191,7 +187,6 @@ const defaultPhotographer = fallbackPhotographers[userid] || {
   border-radius: var(--r-full);
   object-fit: cover;
 }
-
 .info-col {
   display: flex;
   flex-direction: column;
@@ -317,71 +312,85 @@ const defaultPhotographer = fallbackPhotographers[userid] || {
 </style>
 
 <script>
-  const userId = window.location.pathname.split('/').filter(Boolean).pop();
+  // The last URL segment is the username (e.g. "rajnishkhare").
+  // The route param is named `userid` for historical reasons but holds a username.
+  const username = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
 
   async function loadPhotographerProfile() {
-    if (!userId) return;
+    if (!username) return;
     try {
-      // 1. Fetch Profile Info
-      const profileRes = await fetch(`/api/v1/photographers/${userId}`);
-      if (!profileRes.ok) throw new Error('API Error');
+      // 1. Fetch profile by username
+      const profileRes = await fetch(`/api/v1/photographers/${username}`);
+      if (!profileRes.ok) throw new Error(`HTTP ${profileRes.status}`);
       const { data: profile } = await profileRes.json();
-      if (profile) {
-        document.getElementById('ph-name')!.textContent = profile.displayName;
-        document.getElementById('ph-bio')!.textContent = profile.bio || 'No bio provided yet.';
-        document.getElementById('ph-joined')!.textContent = profile.joined || '2026';
-        document.getElementById('ph-photos-count')!.textContent = String(profile.photoCount ?? 0);
+      if (!profile) throw new Error('Empty profile response');
 
-        const initials = (profile.displayName ?? '?').slice(0,2).toUpperCase();
-        const avatarCircle = document.getElementById('ph-avatar-circle')!;
-        if (profile.avatarUrl) {
-          avatarCircle.innerHTML = `<img src="${profile.avatarUrl}" alt="${profile.displayName}" width="110" height="110" />`;
-        } else {
-          avatarCircle.textContent = initials;
-        }
+      // Update page title
+      document.title = `${profile.displayName} · Profile · Bhopal Camera Club`;
 
-        // Dynamically recreate the membership badge using classes mapping
-        const badgeWrap = document.getElementById('ph-badge-wrap')!;
-        badgeWrap.innerHTML = '';
-        const memberClass = profile.memberClass || 'basic';
-        const badgeSpan = document.createElement('span');
-        badgeSpan.className = `tag tag-${memberClass}`;
-        badgeSpan.style.textTransform = 'uppercase';
-        badgeSpan.style.fontSize = '9px';
-        badgeSpan.style.fontWeight = '700';
-        badgeSpan.textContent = memberClass;
-        badgeWrap.appendChild(badgeSpan);
+      // Update header fields
+      (document.getElementById('ph-name') as HTMLElement).textContent = profile.displayName;
+      (document.getElementById('ph-bio') as HTMLElement).textContent =
+        profile.bio || 'No bio provided yet.';
+      (document.getElementById('ph-joined') as HTMLElement).textContent =
+        String(profile.memberSince ?? '—');
+      (document.getElementById('ph-photos-count') as HTMLElement).textContent =
+        String(profile.photoCount ?? 0);
+
+      // Avatar
+      const avatarCircle = document.getElementById('ph-avatar-circle') as HTMLElement;
+      if (profile.avatarUrl) {
+        avatarCircle.innerHTML = `<img src="${profile.avatarUrl}" alt="${profile.displayName}" width="110" height="110" />`;
+      } else {
+        avatarCircle.textContent = (profile.displayName ?? '?').slice(0, 2).toUpperCase();
       }
 
-      // 2. Fetch Photos Portfolio via gallery endpoint (requires numeric userId from profile)
-      const numericId = profile?.id;
-      if (numericId) {
-        const photosRes = await fetch(`/api/v1/gallery/photographer/${numericId}?limit=100`);
-        if (photosRes.ok) {
-          const { photos } = await photosRes.json();
-          const grid = document.getElementById('portfolio-grid')!;
-          if (Array.isArray(photos) && photos.length > 0) {
-            grid.innerHTML = '';
-            photos.forEach((photo: any) => {
-              const imgSrc = photo.urls?.medium ?? photo.urls?.original ?? '';
-              const card = document.createElement('a');
-              card.href = `/showcase/${photo.uuid}/`;
-              card.className = 'portfolio-card vf-card';
-              card.innerHTML = `
-                <img src="${imgSrc}" alt="${photo.title ?? ''}" class="portfolio-img" loading="lazy" />
-                <div class="card-overlay">
-                  <span class="card-title">${photo.title ?? ''}</span>
-                </div>
-                <span class="vf-br" aria-hidden="true"></span>
-                <span class="vf-bl" aria-hidden="true"></span>
-              `;
-              grid.appendChild(card);
-            });
-          }
-        }
+      // Membership badge (recreate from class token)
+      const badgeWrap = document.getElementById('ph-badge-wrap') as HTMLElement;
+      badgeWrap.innerHTML = '';
+      const memberClass: string = profile.memberClass ?? 'basic';
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = `tag tag-${memberClass}`;
+      badgeSpan.style.cssText = 'text-transform:uppercase;font-size:9px;font-weight:700;';
+      badgeSpan.textContent = memberClass.replace(/_/g, ' ');
+      badgeWrap.appendChild(badgeSpan);
+
+      // 2. Fetch photos using the numeric user id returned by the profile endpoint
+      const numericId: number | undefined = profile.id;
+      if (!numericId) return;
+
+      const photosRes = await fetch(`/api/v1/gallery/photographer/${numericId}?limit=100`);
+      if (!photosRes.ok) return;
+      const { photos } = await photosRes.json();
+
+      const grid = document.getElementById('portfolio-grid') as HTMLElement;
+      if (!Array.isArray(photos) || photos.length === 0) {
+        grid.innerHTML = `<p class="empty-msg">No photographs uploaded to the showcase yet.</p>`;
+        return;
       }
+
+      grid.innerHTML = '';
+      photos.forEach((photo: any) => {
+        const imgSrc: string = photo.urls?.medium ?? photo.urls?.original ?? '';
+        const card = document.createElement('a');
+        card.href = `/showcase/${photo.uuid}/`;
+        card.className = 'portfolio-card vf-card';
+        card.innerHTML = `
+          <img src="${imgSrc}" alt="${photo.title ?? ''}" class="portfolio-img" loading="lazy" />
+          <div class="card-overlay">
+            <span class="card-title">${photo.title ?? ''}</span>
+          </div>
+          <span class="vf-br" aria-hidden="true"></span>
+          <span class="vf-bl" aria-hidden="true"></span>
+        `;
+        grid.appendChild(card);
+      });
+
     } catch {
-      // Keep static fallbacks
+      // Keep the static fallback content visible -- user sees a real page
+      // rather than a blank error state.
+      const grid = document.getElementById('portfolio-grid') as HTMLElement;
+      grid.innerHTML = `<p class="empty-msg">Unable to load portfolio. Please try again later.</p>`;
     }
   }
 

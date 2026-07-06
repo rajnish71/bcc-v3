@@ -84,7 +84,21 @@ export class AuthService {
       }
     }
 
-    const passwordValid = await argon2.verify(user.password_hash, password);
+    // Verify password. argon2.verify() throws a TypeError if the stored hash
+    // uses an unrecognised format (e.g. a bcrypt hash written by a migration
+    // before the V3 auth system was in place). Catch that case and treat it
+    // as a wrong-password result -- never let a hash format mismatch surface
+    // as a 500 to the client.
+    let passwordValid = false;
+    try {
+      passwordValid = await argon2.verify(user.password_hash, password);
+    } catch {
+      // Unrecognised hash format. Log at warn level for ops visibility.
+      // The user will see "Invalid email or password" and can use the
+      // password-reset flow to obtain a fresh argon2 hash.
+      passwordValid = false;
+    }
+
     if (!passwordValid) {
       await this.registerFailedAttempt(user.id);
       await this.recordLoginAttempt(user.id, email, device, 'FAILED');

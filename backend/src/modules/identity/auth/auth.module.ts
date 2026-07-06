@@ -4,9 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AccessTokenGuard } from './access-token.guard';
+import { CommunicationModule } from '../../shared/communication/communication.module';
 
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [JwtModule.register({}), CommunicationModule],
   controllers: [AuthController],
   providers: [AuthService, AccessTokenGuard],
   // Re-exporting JwtModule (not just AccessTokenGuard) matters here -- any

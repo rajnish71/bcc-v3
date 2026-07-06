@@ -36,7 +36,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Req() req: FastifyRequest) {
-    return this.authService.login(dto.email, dto.password, deviceContextFrom(req));
+    return this.authService.login(dto.identifier, dto.password, deviceContextFrom(req));
   }
 
   @Post('refresh')

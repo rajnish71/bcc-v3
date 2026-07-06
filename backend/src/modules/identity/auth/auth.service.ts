@@ -61,20 +61,28 @@ export class AuthService {
   // -- Login ------------------------------------------------------------
 
   async login(
-    email: string,
+    identifier: string, // email address or username
     password: string,
     device: DeviceContext,
   ): Promise<TokenPair> {
-    const user = await db
-      .selectFrom('users')
-      .selectAll()
-      .where('email', '=', email)
-      .executeTakeFirst();
+    // Detect whether identifier is an email (contains '@') or a username.
+    const isEmail = identifier.includes('@');
+    const user = isEmail
+      ? await db
+          .selectFrom('users')
+          .selectAll()
+          .where('email', '=', identifier.toLowerCase().trim())
+          .executeTakeFirst()
+      : await db
+          .selectFrom('users')
+          .selectAll()
+          .where('username', '=', identifier.trim())
+          .executeTakeFirst();
 
     // Same generic failure for "no such user" and "wrong password" --
     // don't leak account existence.
     if (!user || !user.password_hash) {
-      await this.recordLoginAttempt(null, email, device, 'FAILED');
+      await this.recordLoginAttempt(null, identifier, device, 'FAILED');
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -88,7 +96,7 @@ export class AuthService {
       const lockedAt = new Date(lockout.locked_at).getTime();
       const unlockAt = lockedAt + LOCKOUT_MINUTES * 60 * 1000;
       if (Date.now() < unlockAt) {
-        await this.recordLoginAttempt(user.id, email, device, 'LOCKED');
+        await this.recordLoginAttempt(user.id, identifier, device, 'LOCKED');
         throw new ForbiddenException(
           'Account temporarily locked due to repeated failed attempts',
         );
@@ -111,18 +119,18 @@ export class AuthService {
 
     if (!passwordValid) {
       await this.registerFailedAttempt(user.id);
-      await this.recordLoginAttempt(user.id, email, device, 'FAILED');
+      await this.recordLoginAttempt(user.id, identifier, device, 'FAILED');
       throw new UnauthorizedException('Invalid email or password');
     }
 
     if (user.status !== 'ACTIVE') {
-      await this.recordLoginAttempt(user.id, email, device, 'FAILED');
+      await this.recordLoginAttempt(user.id, identifier, device, 'FAILED');
       throw new ForbiddenException(`Account is ${user.status.toLowerCase()}`);
     }
 
     // Success -- clear any failed-attempt counter, record history, issue tokens.
     await this.clearFailedAttempts(user.id);
-    await this.recordLoginAttempt(user.id, email, device, 'SUCCESS');
+    await this.recordLoginAttempt(user.id, identifier, device, 'SUCCESS');
 
     return this.issueTokenPair(user.id, user.uuid, user.status, device);
   }

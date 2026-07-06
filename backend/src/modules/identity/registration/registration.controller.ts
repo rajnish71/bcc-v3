@@ -127,10 +127,14 @@ export class RegistrationController {
       const rt = encodeURIComponent(result.tokens.refreshToken);
       const isNew = result.wasNewUser ? '1' : '0';
 
-      return reply.redirect(`/auth/callback#at=${at}&rt=${rt}&new=${isNew}`);
+      // Explicit 302: Fastify v5 reply.redirect() uses the status code already
+      // set on the reply (NestJS @Get sets 200 by default) unless an explicit
+      // code is passed as the second argument. Trailing slash prevents a
+      // Nginx 301 that would strip the hash fragment and lose the tokens.
+      reply.redirect(`/auth/callback/#at=${at}&rt=${rt}&new=${isNew}`, 302);
     } catch (err: unknown) {
       const msg = err instanceof Error ? encodeURIComponent(err.message) : 'oauth_error';
-      return reply.redirect(`/auth/signin?error=${msg}`);
+      reply.redirect(`/auth/signin/?error=${msg}`, 302);
     }
   }
 

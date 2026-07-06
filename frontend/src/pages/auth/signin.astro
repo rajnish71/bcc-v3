@@ -35,15 +35,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <!-- Email + Password form -->
       <div id="auth-form-wrap">
         <div class="auth-field">
-          <label class="auth-label" for="email">Email address</label>
+          <label class="auth-label" for="identifier">Email or username</label>
           <input
-            id="email"
-            type="email"
-            name="email"
+            id="identifier"
+            type="text"
+            name="identifier"
             class="auth-input"
-            placeholder="you@example.com"
-            autocomplete="email"
-            inputmode="email"
+            placeholder="Email or username"
+            autocomplete="username email"
+            spellcheck="false"
             required
           />
         </div>
@@ -325,7 +325,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   /* -- Email + password sign-in ----------------------------------------- */
   qs<HTMLButtonElement>('signin-btn')?.addEventListener('click', async () => {
     hideError();
-    const emailEl  = qs<HTMLInputElement>('email');
+    const emailEl  = qs<HTMLInputElement>('identifier');
     const passEl   = qs<HTMLInputElement>('password');
     const btn      = qs<HTMLButtonElement>('signin-btn');
     if (!emailEl || !passEl || !btn) return;
@@ -333,7 +333,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const email    = emailEl.value.trim();
     const password = passEl.value;
 
-    if (!email || !password) { showError('Please enter your email and password.'); return; }
+    if (!email || !password) { showError('Please enter your email or username and password.'); return; }
 
     setLoading(btn, true);
 
@@ -342,7 +342,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const loginRes = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier: email, password }),
       });
 
       if (!loginRes.ok) {

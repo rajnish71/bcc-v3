@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#F2EFE9;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#EFE3C8}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+img{display:block}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#F2EFE9;padding:0 0 120px;" data-screen-label="V6 Design Spec">
+
+<!-- ════════ COVER ════════ -->
+<header style="background:linear-gradient(180deg,#FFFFFF 0%,#FAF8F4 100%);border-bottom:1px solid #E7E1D6;padding:96px 0 72px;">
+  <div style="max-width:1140px;margin:0 auto;padding:0 48px;">
+    <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:64px;width:auto;margin-bottom:48px;"/>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#A8843C;font-weight:600;">Design Authority · V6 · July 2026</span>
+      <span style="background:#3E7A52;color:#FFFFFF;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">SUPERSEDES v5 01</span>
+    </div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(44px,5.5vw,72px);font-weight:700;letter-spacing:-0.03em;line-height:1.0;margin-bottom:28px;">Refined Editorial Luxury</h1>
+    <p style="font-size:18px;line-height:1.7;color:#57514B;max-width:680px;font-weight:300;margin-bottom:16px;">The single design authority for every V6 wireframe. Reconciles the existing visual language with the live BCC V3 architecture. Future wireframes must not depend on any older V5 design document.</p>
+    <p style="font-size:13px;line-height:1.6;color:#8B8378;max-width:560px;margin-bottom:40px;font-style:italic;">This is the authoritative V6 design document. The visual language is definitive. All V6 wireframes inherit directly from this document — no older V5 design documents apply.</p>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;border-top:1px solid #E7E1D6;padding-top:28px;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Visual Language</div><div style="font-size:14px;font-weight:500;">Refined Editorial Luxury</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Stack</div><div style="font-size:14px;font-weight:500;">Astro · Vanilla CSS · GSAP · NestJS · REST · MySQL · Kysely · R2 · ImageKit</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Header States</div><div style="font-size:14px;font-weight:500;">6 — Guest · User · Member · Editor · Moderator · Admin</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Photography</div><div style="font-size:14px;font-weight:500;">Natural aspect ratio · No cropping · Justified layouts</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ════════ SECTION 1 — VISUAL DIRECTION ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Visual Direction">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">01</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Visual Direction — Refined Editorial Luxury</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:48px;">The V6 direction is confirmed: <strong style="color:#141210;font-weight:600;">Refined Editorial Luxury</strong> — the hybrid of all three V5 concepts. The visual language name is updated from "Premium Editorial" to "Premium Editorial × Contemporary Luxury", with the resolved design system name "Refined Editorial Luxury" as the canonical identifier.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid #E7E1D6;margin-bottom:48px;">
+    <div style="padding:28px 32px;border-right:1px solid #E7E1D6;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:12px;">FROM CONCEPT A — LEICA EDITORIAL</div>
+      <div style="font-size:14px;line-height:1.8;color:#57514B;">Structural skeleton — hairline rules, asymmetric editorial grid, exhibition-label captions, typographic restraint. Photography presented like prints in a portfolio box.</div>
+    </div>
+    <div style="padding:28px 32px;border-right:1px solid #E7E1D6;background:#FAF8F4;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:12px;">FROM CONCEPT B — APPLE LUXURY</div>
+      <div style="font-size:14px;line-height:1.8;color:#57514B;">Material finish — warm ivory satin surfaces, soft layered depth, one metallic-gold CTA per view, gentle light gradients. Interface recedes to let photography lead.</div>
+    </div>
+    <div style="padding:28px 32px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:12px;">FROM CONCEPT C — PHOTOGRAPHY MAGAZINE</div>
+      <div style="font-size:14px;line-height:1.8;color:#57514B;">Photography density — full-bleed image moments, justified member gallery grids, category plates. Photography at ≈70% visual share across all pages.</div>
+    </div>
+  </div>
+
+  <div style="background:#141210;color:#FAF8F4;padding:48px 56px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#C9A961,transparent);"></div>
+    <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:16px;">Confirmed V6 Direction</div>
+    <h3 style="font-family:'Outfit',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.02em;margin-bottom:20px;">Refined Editorial Luxury</h3>
+    <p style="font-size:15px;line-height:1.8;color:#D8D2C6;max-width:720px;">Foundation is typography + hairlines, not effects. Gloss used only as seasoning: one gradient CTA, one satin nav surface, soft shadows ≤ 3 levels. Photography at ≈70% visual share. Natural aspect ratios preserved on all photographs. Will hold up over a 5–10 year horizon.</p>
+  </div>
+</section>
+
+<!-- ════════ SECTION 2 — HEADER STATE MACHINE ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Header State Machine">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">02</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Header — 6-State Session Machine</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:12px;">The SiteHeader renders one of six distinct states based on the authenticated session role. Role determines visible navigation, right-rail controls, and available member actions.</p>
+  <p style="font-size:14px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;"><strong style="color:#141210;font-weight:600;">GSAP ScrollTrigger:</strong> Top of page — transparent white surface. After <strong style="color:#141210;font-weight:600;">60px</strong> scroll — dark glass surface with backdrop blur. Logo height 56px at rest, 44px condensed.</p>
+
+  <!-- State + scroll switcher -->
+  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+    <button onClick="{{ stGuest }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ stGuestBorder }};background:{{ stGuestBg }};color:{{ stGuestColor }};transition:all 0.2s;">Guest</button>
+    <button onClick="{{ stUser }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ stUserBorder }};background:{{ stUserBg }};color:{{ stUserColor }};transition:all 0.2s;">User</button>
+    <button onClick="{{ stMember }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ stMemberBorder }};background:{{ stMemberBg }};color:{{ stMemberColor }};transition:all 0.2s;">Member</button>
+    <button onClick="{{ stEditor }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ stEditorBorder }};background:{{ stEditorBg }};color:{{ stEditorColor }};transition:all 0.2s;">Editor</button>
+    <button onClick="{{ stModerator }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ stModeratorBorder }};background:{{ stModeratorBg }};color:{{ stModeratorColor }};transition:all 0.2s;">Moderator</button>
+    <button onClick="{{ stAdmin }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ stAdminBorder }};background:{{ stAdminBg }};color:{{ stAdminColor }};transition:all 0.2s;">Admin</button>
+    <div style="width:1px;background:#D8D2C6;margin:0 4px;"></div>
+    <button onClick="{{ toggleCondensed }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ condBorder }};background:{{ condBg }};color:{{ condColor }};transition:all 0.2s;">{{ condLabel }}</button>
+  </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;margin-bottom:20px;letter-spacing:0.04em;">↑ Toggle Scrolled to see dark glass surface (60px trigger)</div>
+
+  <!-- LIVE HEADER DEMO -->
+  <div style="border:1px solid #E7E1D6;background:linear-gradient(180deg,#FAF8F4,#F2EFE9);padding-bottom:40px;margin-bottom:20px;">
+    <div style="background:{{ demoHeaderBg }};border-bottom:{{ demoHeaderBorder }};box-shadow:{{ demoHeaderShadow }};backdrop-filter:{{ demoBackdropFilter }};height:{{ demoHeaderHeight }};display:flex;align-items:center;padding:0 40px;justify-content:space-between;transition:all 0.35s cubic-bezier(0.4,0,0.2,1);">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:{{ demoLogoHeight }};width:auto;filter:{{ logoFilter }};transition:all 0.35s cubic-bezier(0.4,0,0.2,1);"/>
+      <div style="display:flex;gap:24px;font-size:13px;font-weight:500;color:{{ navColor }};">
+        <span style="color:{{ navActiveColor }};">Home</span>
+        <span>About</span>
+        <span>Showcase</span>
+        <span style="display:flex;align-items:center;gap:4px;">Activities <span style="font-size:10px;opacity:0.6;">▾</span></span>
+        <span style="display:flex;align-items:center;gap:4px;color:{{ learnColor }};opacity:{{ learnOpacity }};">Learn <span style="font-size:10px;opacity:0.6;">▾</span></span>
+        <sc-if value="{{ showMembershipNav }}" hint-placeholder-val="{{ true }}"><span style="color:{{ navColor }};">Membership</span></sc-if>
+        <span style="color:{{ journalColor }};">{{ journalLabel }}</span>
+        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}"><span style="color:#C9A961;display:flex;align-items:center;gap:5px;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A961;display:inline-block;"></span>Admin</span></sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ true }}">
+          <span style="font-size:13px;color:{{ navColor }};cursor:pointer;">Sign In</span>
+          <span style="font-size:11px;font-weight:600;letter-spacing:0.05em;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:12px 24px;border-radius:2px;box-shadow:0 2px 10px rgba(168,132,60,0.3),inset 0 1px 0 rgba(255,255,255,0.25);cursor:pointer;">Become a Member</span>
+        </sc-if>
+        <sc-if value="{{ isUserOnly }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:12px;font-weight:600;letter-spacing:0.04em;border:1px solid #D8D2C6;color:#57514B;padding:11px 20px;border-radius:2px;cursor:pointer;">Apply for Membership</span>
+          <span style="display:flex;align-items:center;gap:8px;cursor:pointer;"><span style="width:34px;height:34px;border-radius:50%;background:#8B8378;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#FFFFFF;">RU</span></span>
+        </sc-if>
+        <sc-if value="{{ hasMembership }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:12px;font-weight:600;color:#141210;border:1px solid #C9A961;padding:11px 20px;border-radius:2px;cursor:pointer;background:linear-gradient(180deg,rgba(201,169,97,0.08),rgba(201,169,97,0.16));">Member Hub</span>
+          </sc-if>
+          <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:12px;font-weight:600;background:#141210;color:#C9A961;padding:11px 20px;border-radius:2px;cursor:pointer;">Admin Console</span>
+          </sc-if>
+          <span style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <span style="width:34px;height:34px;border-radius:50%;background:{{ avatarBg }};display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:{{ avatarColor }};border:2px solid #FFFFFF;box-shadow:0 0 0 1px #E7E1D6;">{{ avatarInitials }}</span>
+            <span style="font-size:10px;color:{{ navColor }};opacity:0.6;">▾</span>
+          </span>
+        </sc-if>
+      </div>
+    </div>
+    <!-- Annotation cards -->
+    <div style="padding:28px 40px 0;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px 22px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:8px;">Primary Action</div><div style="font-size:13px;line-height:1.6;color:#37322C;">{{ statePrimary }}</div></div>
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px 22px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:8px;">What Changed</div><div style="font-size:13px;line-height:1.6;color:#37322C;">{{ stateChanged }}</div></div>
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px 22px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:8px;">Session Condition</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#37322C;">{{ stateCondition }}</div></div>
+      </div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:56px;">DEMO — Interactive reference only. Session role is resolved by the authentication layer; states shown are representative of the live system's six role conditions.</p>
+
+  <!-- CTA + Terminology rationale -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:14px;">CTA Decision</div>
+      <h4 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;margin-bottom:14px;">"Become a Member" — confirmed</h4>
+      <ul style="font-size:13px;line-height:1.9;color:#57514B;padding-left:18px;">
+        <li><strong style="color:#141210;font-weight:600;">Identity over action</strong> — "member" frames belonging; "join" frames a transaction.</li>
+        <li><strong style="color:#141210;font-weight:600;">No acronym dependency</strong> — first-time visitors may not parse "BCC".</li>
+        <li><strong style="color:#141210;font-weight:600;">Single gold CTA rule</strong> — only gradient-gold element in the Guest header. All other CTAs are outline or text.</li>
+      </ul>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:14px;">Guest vs User Distinction</div>
+      <h4 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;margin-bottom:14px;">MEM-006 P1 — Identity ≠ Membership</h4>
+      <div style="font-size:13px;line-height:1.9;color:#57514B;">
+        <strong style="color:#141210;font-weight:600;">Guest</strong> — unauthenticated. Sees "Become a Member" gold CTA and "Sign In" text.<br/>
+        <strong style="color:#141210;font-weight:600;">User</strong> — authenticated, no membership. Sees "Apply for Membership" outline and grey avatar. Can register for public activities.<br/>
+        The distinction honours constitutional P1: registration creates identity, not membership.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SECTION 3 — HEADER ROLE BEHAVIOUR ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Header Role Behaviour">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">03</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Header Role Behaviour — Reference</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Each role maps to a distinct header state. Roles are resolved from the authenticated session at render time. Unauthenticated and pre-membership states (Guest, User) are inferred from authentication presence and membership status.</p>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;">
+    <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;padding:14px 28px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Role</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Access Context</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Right Rail Controls</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Avatar / Avatar Menu</span>
+    </div>
+    <sc-for list="{{ roles }}" as="r" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;padding:18px 28px;border-bottom:1px solid #F0EBE0;align-items:start;gap:8px;">
+        <div>
+          <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#141210;margin-bottom:4px;">{{ r.role }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;">{{ r.auth }}</div>
+        </div>
+        <div style="font-size:13px;line-height:1.7;color:#57514B;padding-right:12px;">{{ r.access }}</div>
+        <div style="font-size:13px;line-height:1.7;color:#57514B;padding-right:12px;">{{ r.ctas }}</div>
+        <div style="font-size:13px;line-height:1.7;color:#57514B;">{{ r.menu }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Mobile header per state -->
+  <h3 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:600;margin-top:56px;margin-bottom:24px;">Mobile Header — Key States (breakpoint 900px)</h3>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+    <div>
+      <div style="border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #E7E1D6;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:34px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:10px;font-weight:600;letter-spacing:0.04em;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:8px 12px;border-radius:2px;">Join</span><div style="display:flex;flex-direction:column;gap:4px;padding:8px;"><span style="width:16px;height:1.5px;background:#141210;display:block;"></span><span style="width:16px;height:1.5px;background:#141210;display:block;"></span></div></div>
+        </div>
+      </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;margin-top:8px;text-align:center;">Guest</div>
+    </div>
+    <div>
+      <div style="border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #E7E1D6;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:34px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;"><span style="width:30px;height:30px;border-radius:50%;background:#8B8378;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#FFFFFF;">RU</span><div style="display:flex;flex-direction:column;gap:4px;padding:8px;"><span style="width:16px;height:1.5px;background:#141210;display:block;"></span><span style="width:16px;height:1.5px;background:#141210;display:block;"></span></div></div>
+        </div>
+      </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;margin-top:8px;text-align:center;">User (no member)</div>
+    </div>
+    <div>
+      <div style="border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #E7E1D6;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:34px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;"><span style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#FFFFFF;">AB</span><div style="display:flex;flex-direction:column;gap:4px;padding:8px;"><span style="width:16px;height:1.5px;background:#141210;display:block;"></span><span style="width:16px;height:1.5px;background:#141210;display:block;"></span></div></div>
+        </div>
+      </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;margin-top:8px;text-align:center;">Member / Editor / Mod</div>
+    </div>
+    <div>
+      <div style="border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #E7E1D6;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:34px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;"><span style="width:30px;height:30px;border-radius:50%;background:#141210;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#C9A961;">AD</span><div style="display:flex;flex-direction:column;gap:4px;padding:8px;"><span style="width:16px;height:1.5px;background:#141210;display:block;"></span><span style="width:16px;height:1.5px;background:#141210;display:block;"></span></div></div>
+        </div>
+      </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;margin-top:8px;text-align:center;">Admin (gold-on-dark)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SECTION 4 — DESIGN TOKENS ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Design Tokens">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">04</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Design Tokens</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:48px;">All tokens ship as CSS custom properties on <span style="font-family:'JetBrains Mono',monospace;font-size:14px;background:#FFFFFF;border:1px solid #E7E1D6;padding:1px 8px;">:root</span> in <span style="font-family:'JetBrains Mono',monospace;font-size:14px;background:#FFFFFF;border:1px solid #E7E1D6;padding:1px 8px;">tokens.css</span>. Unchanged from V5. Audit <span style="font-family:'JetBrains Mono',monospace;font-size:14px;background:#FFFFFF;border:1px solid #E7E1D6;padding:1px 8px;">frontend/src/styles/tokens.css</span> to confirm no inline styles bypass these.</p>
+
+  <h3 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;margin-bottom:18px;">Color — Surfaces, Ink, Accent</h3>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#E7E1D6;border:1px solid #E7E1D6;margin-bottom:10px;">
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#FFFFFF;border-bottom:1px solid #F0EBE0;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--surface-0</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#FFFFFF</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#FAF8F4;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--surface-1</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#FAF8F4</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#F4F0E8;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--surface-2</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#F4F0E8</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#141210;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--ink-900</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#141210</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#57514B;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--ink-600</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#57514B</div></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#E7E1D6;border:1px solid #E7E1D6;margin-bottom:48px;">
+    <div style="background:#FFFFFF;"><div style="height:64px;background:linear-gradient(135deg,#C9A961,#A8843C);"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--gold-gradient</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#C9A961→#A8843C</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#A8843C;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--gold-600</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#A8843C</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#3E5A48;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--forest-600</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#3E5A48</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#E7E1D6;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--hairline</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#E7E1D6</div></div></div>
+    <div style="background:#FFFFFF;"><div style="height:64px;background:#8B8378;"></div><div style="padding:10px 14px;"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;">--ink-400</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">#8B8378</div></div></div>
+  </div>
+
+  <h3 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;margin-bottom:18px;">Type Scale — Outfit (headings) / Inter (body) / JetBrains Mono (labels, EXIF)</h3>
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:48px;">
+    <div style="display:grid;grid-template-columns:180px 1fr 220px;align-items:baseline;padding:22px 32px;border-bottom:1px solid #F0EBE0;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">--text-display</span><span style="font-family:'Outfit',sans-serif;font-size:56px;font-weight:700;letter-spacing:-0.03em;line-height:1;">Display</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">clamp(56px,7vw,96px) / 0.95</span></div>
+    <div style="display:grid;grid-template-columns:180px 1fr 220px;align-items:baseline;padding:22px 32px;border-bottom:1px solid #F0EBE0;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">--text-h1</span><span style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;line-height:1.05;">Heading One</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">clamp(36px,4vw,52px) / 1.05</span></div>
+    <div style="display:grid;grid-template-columns:180px 1fr 220px;align-items:baseline;padding:22px 32px;border-bottom:1px solid #F0EBE0;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">--text-h2</span><span style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:600;letter-spacing:-0.015em;">Heading Two</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">clamp(26px,3vw,34px) / 1.15</span></div>
+    <div style="display:grid;grid-template-columns:180px 1fr 220px;align-items:baseline;padding:22px 32px;border-bottom:1px solid #F0EBE0;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">--text-body</span><span style="font-size:16px;line-height:1.75;color:#37322C;">Body copy uses Inter at 16px with relaxed leading for editorial reading comfort.</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">16px / 1.75 · Inter 400</span></div>
+    <div style="display:grid;grid-template-columns:180px 1fr 220px;align-items:baseline;padding:22px 32px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">--text-label</span><span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8B8378;font-weight:600;">Exhibition Label / Kicker · EXIF Data</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">11px / 0.18em · JetBrains Mono</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:26px;">
+      <h4 style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;margin-bottom:14px;">Spacing (8px base)</h4>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2.2;color:#57514B;">--s-1: 8px · --s-2: 16px<br/>--s-3: 24px · --s-4: 32px<br/>--s-6: 48px · --s-8: 64px<br/>--s-12: 96px · --s-16: 128px</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:26px;">
+      <h4 style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;margin-bottom:14px;">Radius — restrained</h4>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2.2;color:#57514B;">--r-0: 0 (images, cards, frames)<br/>--r-1: 2px (buttons, chips)<br/>--r-2: 8px (inputs, toasts)<br/>--r-full: 999px (avatars only)</div>
+      <div style="font-size:11px;color:#8B8378;line-height:1.6;margin-top:10px;">Photography is never rounded. Square frames = print heritage.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:26px;">
+      <h4 style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;margin-bottom:14px;">Elevation — 3 levels max</h4>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2.1;color:#57514B;">--e-1: 0 1px 2px rgba(20,18,16,.04)<br/>--e-2: 0 8px 32px rgba(20,18,16,.07)<br/>--e-3: 0 24px 64px rgba(20,18,16,.14)</div>
+      <div style="font-size:11px;color:#8B8378;line-height:1.6;margin-top:10px;">e-3 reserved for hero imagery only.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SECTION 5 — PHOTOGRAPHY PHILOSOPHY ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Photography Philosophy">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">05</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Photography Philosophy — Natural Aspect Ratio</h2></div>
+
+  <!-- The rule -->
+  <div style="background:#141210;color:#FAF8F4;padding:40px 48px;margin-bottom:40px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#C9A961,transparent);"></div>
+    <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:16px;">V6 Photography Rule — Non-Negotiable</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:40px;">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A3493B;margin-bottom:12px;text-decoration:line-through;opacity:0.7;">DEPRECATED — V5 behaviour</div>
+        <ul style="font-size:14px;line-height:2;color:#B8B0A4;padding-left:0;list-style:none;">
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#A3493B;flex-shrink:0;">✕</span> object-fit: cover on all gallery cells</li>
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#A3493B;flex-shrink:0;">✕</span> Forced 4:5 aspect ratio on all images</li>
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#A3493B;flex-shrink:0;">✕</span> Cropped landscape, portrait, panorama to uniform frame</li>
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#A3493B;flex-shrink:0;">✕</span> Fixed-height containers with overflow:hidden</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C9A961;margin-bottom:12px;">V6 RULE</div>
+        <ul style="font-size:14px;line-height:2;color:#FAF8F4;padding-left:0;list-style:none;">
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#C9A961;flex-shrink:0;">✓</span> Every photograph at its original aspect ratio</li>
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#C9A961;flex-shrink:0;">✓</span> Never crop photographs. Never use object-fit: cover</li>
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#C9A961;flex-shrink:0;">✓</span> Portrait, landscape and panorama supported equally</li>
+          <li style="display:flex;gap:10px;align-items:baseline;"><span style="color:#C9A961;flex-shrink:0;">✓</span> Justified layouts preferred — same row height, natural widths</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Justified grid demo -->
+  <p style="font-size:15px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:20px;"><strong style="color:#141210;font-weight:600;">Justified layout:</strong> Images arranged in rows with a shared target height. Each image's width is proportional to its natural aspect ratio — no cropping, no letterboxing. ImageKit serves the original; the browser computes display width.</p>
+
+  <!-- Demo Row 1 -->
+  <div style="display:flex;gap:2px;background:#141210;border:1px solid #141210;margin-bottom:2px;overflow:hidden;">
+    <div style="flex:1.78;height:200px;background:#1A1816;display:flex;align-items:flex-end;justify-content:flex-start;position:relative;">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#2A2420,#1A1816);opacity:0.9;"></div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:rgba(255,255,255,0.15);letter-spacing:0.1em;">16:9</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);">landscape</div></div>
+      <div style="position:absolute;bottom:8px;left:10px;font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,255,255,0.9);padding:3px 8px;color:#141210;">16:9 · NATURAL RATIO</div>
+    </div>
+    <div style="flex:0.75;height:200px;background:#1E1C1A;display:flex;align-items:flex-end;justify-content:flex-start;position:relative;">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:rgba(255,255,255,0.15);letter-spacing:0.1em;">3:4</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);">portrait</div></div>
+      <div style="position:absolute;bottom:8px;left:10px;font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,255,255,0.9);padding:3px 8px;color:#141210;">3:4 · NATURAL RATIO</div>
+    </div>
+    <div style="flex:1.5;height:200px;background:#1C1A18;display:flex;align-items:flex-end;justify-content:flex-start;position:relative;">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:rgba(255,255,255,0.15);letter-spacing:0.1em;">3:2</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);">landscape</div></div>
+      <div style="position:absolute;bottom:8px;left:10px;font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,255,255,0.9);padding:3px 8px;color:#141210;">3:2 · NATURAL RATIO</div>
+    </div>
+    <div style="flex:0.8;height:200px;background:#211F1C;display:flex;align-items:flex-end;justify-content:flex-start;position:relative;">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:rgba(255,255,255,0.15);letter-spacing:0.1em;">4:5</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);">portrait</div></div>
+      <div style="position:absolute;bottom:8px;left:10px;font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,255,255,0.9);padding:3px 8px;color:#141210;">4:5 · NATURAL RATIO</div>
+    </div>
+  </div>
+  <!-- Demo Row 2 — panorama -->
+  <div style="display:flex;gap:2px;background:#141210;border:1px solid #141210;border-top:none;margin-bottom:12px;overflow:hidden;">
+    <div style="flex:3;height:130px;background:#181614;display:flex;align-items:flex-end;justify-content:flex-start;position:relative;">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:rgba(255,255,255,0.15);letter-spacing:0.12em;">3:1 PANORAMA</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);">Full row width at natural ratio</div></div>
+      <div style="position:absolute;bottom:8px;left:10px;font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,255,255,0.9);padding:3px 8px;color:#141210;">3:1 PANORAMA · FULL ROW · NO CROP</div>
+    </div>
+    <div style="flex:1;height:130px;background:#1E1C1A;display:flex;align-items:flex-end;justify-content:flex-start;position:relative;">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:rgba(255,255,255,0.15);">1:1</div></div>
+      <div style="position:absolute;bottom:8px;left:10px;font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,255,255,0.9);padding:3px 8px;color:#141210;">1:1</div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:40px;">PLACEHOLDER — production: ImageKit serves originals at natural dimensions. No server-side crop. Justified row height configurable per context.</p>
+
+  <!-- Context strategy table -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <h4 style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;margin-bottom:16px;">Context Strategy — V6</h4>
+      <div style="font-size:13px;color:#57514B;">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F0EBE0;padding:8px 0;gap:12px;"><span>Showcase / gallery feed</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;white-space:nowrap;">Justified rows · 240px target height</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F0EBE0;padding:8px 0;gap:12px;"><span>Photographer portfolio</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;white-space:nowrap;">Justified rows · 220px target height</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F0EBE0;padding:8px 0;gap:12px;"><span>Hero / full-bleed</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;white-space:nowrap;">Natural ratio · full width</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F0EBE0;padding:8px 0;gap:12px;"><span>Event card cover</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;white-space:nowrap;">Natural ratio · 100% width</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F0EBE0;padding:8px 0;gap:12px;"><span>Lightbox / detail view</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;white-space:nowrap;">Natural ratio · contain · dark surround</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;gap:12px;"><span>Panoramas (any context)</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#141210;white-space:nowrap;">Full row · natural ratio</span></div>
+      </div>
+      <div style="margin-top:16px;padding:12px 16px;background:#FDF5F5;border:1px solid #E8CACA;">
+        <div style="font-size:11px;font-weight:700;color:#A3493B;letter-spacing:0.08em;margin-bottom:4px;">FORBIDDEN IN ALL CONTEXTS</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A3493B;">object-fit: cover · Fixed aspect-ratio containers</div>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <h4 style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;margin-bottom:16px;">Fallback &amp; States — V6</h4>
+      <div style="font-size:13px;line-height:1.9;color:#57514B;">
+        <strong style="color:#141210;font-weight:600;">Missing image:</strong> --surface-2 plate + monogram logo at 12% opacity + exhibition-label kicker. Maintains layout rhythm without a broken image.<br/>
+        <strong style="color:#141210;font-weight:600;">Loading:</strong> Satin shimmer on --surface-2 at the natural ratio of the expected image. No spinners.<br/>
+        <strong style="color:#141210;font-weight:600;">Hover:</strong> Caption bar overlays at bottom of frame — no scale transform. Caption slides up 0.4s cubic.<br/>
+        <strong style="color:#141210;font-weight:600;">Mobile (&lt;768px):</strong> Justified grid collapses to 2-col then 1-col natural-ratio stack. Hover captions become persistent labels.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SECTION 6 — ROUTE RECONCILIATION ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Route Reconciliation">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">06</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Route Reconciliation</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Canonical V6 routes aligned with the V3 codebase audit. Every wireframe must use these routes. Deprecated routes must not appear in any V6 design document.</p>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:32px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 160px;padding:14px 28px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">V5 / Deprecated</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">V6 Canonical</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Status</span>
+    </div>
+    <sc-for list="{{ routeChanges }}" as="rc" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:1fr 1fr 160px;padding:16px 28px;border-bottom:1px solid #F0EBE0;align-items:start;gap:8px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A3493B;text-decoration:line-through;">{{ rc.v5 }}</div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#3E7A52;margin-bottom:4px;">{{ rc.v6 }}</div>
+          <div style="font-size:12px;color:#8B8378;line-height:1.5;">{{ rc.note }}</div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:#57514B;">{{ rc.status }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ════════ SECTION 7 — NAVIGATION, FOOTER & STRUCTURAL PHILOSOPHY ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Navigation and Footer">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">07</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Navigation, Footer &amp; Structural Philosophy</h2></div>
+
+  <!-- Navigation -->
+  <h3 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:600;margin-bottom:20px;">Navigation Architecture</h3>
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;margin-bottom:40px;">
+    <!-- Desktop nav visual -->
+    <div style="background:#FAF8F4;border:1px solid #E7E1D6;padding:16px 28px;display:flex;gap:32px;align-items:center;margin-bottom:24px;font-size:13px;font-weight:500;">
+      <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:2px;">Home</span>
+      <span style="color:#57514B;">About</span>
+      <span style="color:#57514B;">Showcase</span>
+      <span style="display:flex;align-items:center;gap:4px;color:#57514B;">Activities <span style="font-size:10px;">▾</span></span>
+      <span style="display:flex;align-items:center;gap:4px;color:#57514B;">Learn <span style="font-size:10px;">▾</span></span>
+      <span style="color:#57514B;">Membership</span>
+      <span style="color:#57514B;">Journal</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Activities ▾ Dropdown</div>
+        <div style="font-size:13px;line-height:2.1;color:#57514B;">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F0EBE0;padding:4px 0;"><span>Contests</span><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:#F4F0E8;padding:2px 8px;">COMING SOON · Phase 2b</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Exhibitions</span><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:#F4F0E8;padding:2px 8px;">COMING SOON · Phase 3</span></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Learn ▾ Dropdown</div>
+        <div style="font-size:13px;line-height:2.1;color:#57514B;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Photography School</span><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:#F4F0E8;padding:2px 8px;">COMING SOON · Phase 4</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid #E7E1D6;margin-top:20px;padding-top:16px;font-size:13px;color:#57514B;line-height:1.7;"><strong style="color:#141210;font-weight:600;">Coming Soon items:</strong> Rendered in navigation at reduced opacity (0.45) with cursor:default. Link is disabled. Label appended in smaller type. Never hidden — visibility of upcoming features drives membership conversion.</div>
+  </div>
+
+  <!-- Footer -->
+  <h3 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:600;margin-bottom:20px;">Footer — SiteFooter.astro</h3>
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;margin-bottom:48px;">
+    <!-- Row 1: FIP trust + social -->
+    <div style="background:#141210;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:#8B8378;font-weight:600;">Corporate Member</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#FAF8F4;">Federation of Indian Photography</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#C9A961;">CM1098</div>
+      </div>
+      <div style="display:flex;gap:20px;">
+        <span style="font-size:11px;color:#8B8378;">Instagram</span>
+        <span style="font-size:11px;color:#8B8378;">Facebook</span>
+        <span style="font-size:11px;color:#8B8378;">YouTube</span>
+        <span style="font-size:11px;color:#8B8378;">X</span>
+      </div>
+    </div>
+    <!-- Row 2: four columns -->
+    <div style="background:#1A1816;padding:40px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;">
+      <div>
+        <img src="uploads/BCC Square Logo.png" alt="BCC" style="height:40px;width:auto;filter:brightness(0) invert(1);margin-bottom:16px;opacity:0.85;"/>
+        <div style="font-size:12px;line-height:1.9;color:#8B8378;">Bhopal Camera Club — India's premier photography community. Dedicated to the art and craft of photography since 2016.</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#57514B;font-weight:600;margin-bottom:14px;">Navigate</div>
+        <div style="font-size:12px;line-height:2.2;color:#8B8378;">Home<br/>About<br/>Showcase<br/>Activities<br/>Journal</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#57514B;font-weight:600;margin-bottom:14px;">Explore</div>
+        <div style="font-size:12px;line-height:2.2;color:#8B8378;">Photography School<br/>Contests<br/>Exhibitions<br/>Membership<br/>Member Hub</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#57514B;font-weight:600;margin-bottom:14px;">Guidelines</div>
+        <div style="font-size:12px;line-height:2.2;color:#8B8378;">Privacy Policy<br/>Terms of Use<br/>Code of Conduct<br/>Contact Us</div>
+      </div>
+    </div>
+    <!-- Row 3: copyright -->
+    <div style="background:#141210;padding:14px 40px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;">© 2026 Bhopal Camera Club · v3bcc.bhopal.info</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;">FIP Corporate Member · CM1098</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SECTION 8 — PUBLIC / MEMBER SEPARATION & HUB ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Separation and Hub">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">08</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Public / Member Separation &amp; Member Hub</h2></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">MEM-006 P1 — Design Mandate</div>
+      <h4 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;margin-bottom:20px;">Identity, Registration, and Membership are independent</h4>
+      <!-- Flow -->
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div style="background:#FAF8F4;border:1px solid #E7E1D6;padding:16px 20px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;margin-bottom:4px;">Step 1</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;">Registration</div>
+          <div style="font-size:12px;color:#57514B;margin-top:4px;">Creates identity only. No membership implied. User role. Access to public content.</div>
+        </div>
+        <div style="display:flex;justify-content:center;padding:6px 0;"><span style="font-size:18px;color:#A8843C;">↓</span></div>
+        <div style="background:#FAF8F4;border:1px solid #E7E1D6;padding:16px 20px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;margin-bottom:4px;">Step 2</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;">Membership Application</div>
+          <div style="font-size:12px;color:#57514B;margin-top:4px;">Separate workflow. Form, review, approval. Lifecycle: PENDING → APPROVED → ACTIVE.</div>
+        </div>
+        <div style="display:flex;justify-content:center;padding:6px 0;"><span style="font-size:18px;color:#A8843C;">↓</span></div>
+        <div style="background:#3E5A48;border:1px solid #2A3E32;padding:16px 20px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.5);margin-bottom:4px;">Step 3</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#FFFFFF;">Membership Active</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;">Full entitlements. Member Hub accessible. ACTIVE state. MEM-007 number assigned.</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;border-top:1px solid #E7E1D6;padding-top:16px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Design Mandates</div>
+        <ul style="font-size:12px;line-height:2.1;color:#57514B;list-style:none;padding:0;">
+          <li style="display:flex;gap:8px;"><span style="color:#C9A961;flex-shrink:0;">—</span>Registration creates identity only.</li>
+          <li style="display:flex;gap:8px;"><span style="color:#C9A961;flex-shrink:0;">—</span>Membership is a separate constitutional process.</li>
+          <li style="display:flex;gap:8px;"><span style="color:#C9A961;flex-shrink:0;">—</span>Public pages never expose operational member functionality.</li>
+          <li style="display:flex;gap:8px;"><span style="color:#C9A961;flex-shrink:0;">—</span>Member Hub is accessible only after successful authentication and authorisation.</li>
+        </ul>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:#8B8378;line-height:1.7;font-style:italic;">Design language must reinforce each step as a distinct milestone — never merge or imply automatic progression.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">Member Hub — Design Philosophy</div>
+      <h4 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;margin-bottom:16px;">Hub as an Independent Application</h4>
+      <div style="font-size:13px;line-height:1.9;color:#57514B;">
+        <strong style="color:#141210;font-weight:600;">Definition:</strong> The Member Hub is an independent application sharing the same visual language as the public website, while prioritising productivity, workflow efficiency, and member operations over editorial presentation.<br/><br/>
+        <strong style="color:#141210;font-weight:600;">Interaction philosophy:</strong> The Hub follows a distinct interaction philosophy — task-oriented, sidebar-anchored, and operationally dense — while maintaining complete brand consistency with the public site.<br/><br/>
+        <strong style="color:#141210;font-weight:600;">Left-rail navigation:</strong> Persistent vertical sidebar anchors the Hub experience. Sections: Overview, My Gallery, Profile, Renewals, Membership Card. Role-elevated sections (Editor, Moderator, Admin) appear below in the sidebar.<br/><br/>
+        <strong style="color:#141210;font-weight:600;">Responsive Hub:</strong> Below 900px, left rail collapses to a top tab bar. Below 600px, tab bar scrolls horizontally. Hub layout never stacks nav above content on mobile — horizontal scroll tab preferred.<br/><br/>
+        <strong style="color:#141210;font-weight:600;">Auth gating:</strong> The Member Hub is accessible only after successful authentication and authorisation. Unauthenticated or insufficiently authorised access redirects to the sign-in page, preserving the intended destination.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SECTION 9 — COMPONENT CONTRACTS ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Component Contracts">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">09</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Component Contracts</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Design contracts covering visual responsibility, supported states, and responsive behaviour for each named component. Detailed implementation specification is documented separately for engineering.</p>
+
+  <sc-for list="{{ components }}" as="c" hint-placeholder-count="4">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:20px;">
+      <div style="padding:20px 28px;border-bottom:1px solid #F0EBE0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;font-weight:500;">{{ c.file }}</span><span style="font-size:12px;color:#8B8378;">{{ c.purpose }}</span></div>
+        
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;">
+        <div style="padding:16px 28px;border-right:1px solid #F0EBE0;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;margin-bottom:8px;">Visual Responsibility</div><div style="font-size:12px;line-height:1.8;color:#57514B;">{{ c.visual }}</div></div>
+        <div style="padding:16px 28px;border-right:1px solid #F0EBE0;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;margin-bottom:8px;">Supported States</div><div style="font-size:12px;line-height:1.8;color:#57514B;">{{ c.states }}</div></div>
+        <div style="padding:16px 28px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;margin-bottom:8px;">Responsive Behaviour</div><div style="font-size:12px;line-height:1.8;color:#57514B;">{{ c.responsive }}</div></div>
+      </div>
+    </div>
+  </sc-for>
+</section>
+
+<!-- ════════ SECTION 10 — COMPONENT NAMING PHILOSOPHY ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Component Naming Philosophy">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">10</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Component Naming Philosophy</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:48px;">Standardised naming conventions for all reusable V6 components. Names communicate scope (Site, Page, Section, Hub) and content type. This is a naming guideline only — implementation detail is defined separately.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:14px;">Shell Components</div>
+      <div style="font-size:12px;color:#8B8378;margin-bottom:16px;line-height:1.6;">Global wrappers present on every page. Prefix: <span style="font-family:'JetBrains Mono',monospace;color:#A8843C;">Site</span></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:14px;line-height:2.6;color:#141210;">SiteHeader<br/>SiteFooter</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:14px;">Page-level Components</div>
+      <div style="font-size:12px;color:#8B8378;margin-bottom:16px;line-height:1.6;">Top-level page sections. Prefix: <span style="font-family:'JetBrains Mono',monospace;color:#A8843C;">Page</span> or <span style="font-family:'JetBrains Mono',monospace;color:#A8843C;">Section</span></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:14px;line-height:2.6;color:#141210;">PageHero<br/>SectionHeader<br/>StatBand</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:14px;">Content Components</div>
+      <div style="font-size:12px;color:#8B8378;margin-bottom:16px;line-height:1.6;">Reusable content units. Named by content type.</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:14px;line-height:2.6;color:#141210;">JustifiedGrid<br/>EventRow<br/>PhotographerCard<br/>JournalCard<br/>MembershipTierCard</div>
+    </div>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:14px;">Hub Components</div>
+    <div style="font-size:12px;color:#8B8378;margin-bottom:16px;line-height:1.6;">Components exclusive to the Member Hub context. Prefix: <span style="font-family:'JetBrains Mono',monospace;color:#A8843C;">Hub</span></div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:14px;line-height:2.6;color:#141210;">HubSidebar</div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #E7E1D6;font-size:12px;color:#8B8378;line-height:1.7;font-style:italic;">Naming conventions apply across all V6 design documentation and handoff. They do not prescribe file structure or framework conventions — those are defined in the engineering specification.</div>
+  </div>
+</section>
+
+<!-- ════════ SECTION 11 — MOTION SYSTEM ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Motion System">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">11</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">GSAP Motion System</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Motion declared via <span style="font-family:'JetBrains Mono',monospace;font-size:14px;background:#FFFFFF;border:1px solid #E7E1D6;padding:1px 8px;">data-gsap</span> attributes on HTML elements. A single motion controller binds all scroll-triggered effects. Header condense triggers after <strong style="color:#141210;font-weight:700;">60px</strong> scroll. Always respect <span style="font-family:'JetBrains Mono',monospace;font-size:14px;background:#FFFFFF;border:1px solid #E7E1D6;padding:1px 8px;">prefers-reduced-motion</span> — disable all transforms, opacity transitions only.</p>
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;">
+    <div style="display:grid;grid-template-columns:220px 1fr 200px 160px;padding:14px 28px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Hook</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Behavior</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Duration / Ease</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Used By</span>
+    </div>
+    <sc-for list="{{ motions }}" as="m" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:220px 1fr 200px 160px;padding:16px 28px;border-bottom:1px solid #F0EBE0;align-items:baseline;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">{{ m.hook }}</span>
+        <span style="font-size:13px;line-height:1.6;color:#37322C;padding-right:24px;">{{ m.behavior }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">{{ m.timing }}</span>
+        <span style="font-size:12px;color:#8B8378;">{{ m.usedBy }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ════════ SECTION 12 — PAGE BLUEPRINTS ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Page Blueprints">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">12</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Page Blueprints — Component Trees</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Composition per page route. All photography components enforce the natural aspect ratio rule. Photographer profile at canonical route /photographers/[username].</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="6">
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;gap:8px;"><h4 style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;">{{ p.name }}</h4><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;white-space:nowrap;">{{ p.route }}</span></div>
+        <pre style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.85;color:#37322C;white-space:pre-wrap;">{{ p.tree }}</pre>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ════════ SECTION 13 — TECHNOLOGY CONSTRAINTS ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Technology Constraints">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">13</span><h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Technology Constraints</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:8px;">Frozen technology constraints for the V6 platform — AUTHORITATIVE (MISSION-007A). Every V6 wireframe must design within the capabilities of the technologies listed here. Technology not listed is outside V6 scope.</p>
+  <p style="font-size:14px;line-height:1.6;color:#A3493B;max-width:680px;margin-bottom:40px;font-weight:500;">OUTSIDE V6 SCOPE: Microservices · GraphQL · Multiple frontend frameworks · Kubernetes · React/Next.js · Vue · Any technology not listed below.</p>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:48px;">
+    <div style="display:grid;grid-template-columns:160px 200px 1fr;padding:14px 28px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Layer</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Technology</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Role in BCC Platform</span>
+    </div>
+    <sc-for list="{{ techStack }}" as="t" hint-placeholder-count="8">
+      <div style="display:grid;grid-template-columns:160px 200px 1fr;padding:14px 28px;border-bottom:1px solid #F0EBE0;align-items:start;gap:8px;">
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8B8378;font-weight:600;padding-top:1px;">{{ t.layer }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;line-height:1.5;">{{ t.technology }}</span>
+        <span style="font-size:13px;line-height:1.7;color:#57514B;">{{ t.role }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+
+</section>
+
+<!-- ════════ HANDOFF FOOTER ════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;">
+  <div style="background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border:1px solid #E7E1D6;padding:56px;text-align:center;">
+    <img src="uploads/BCC Square Logo.png" alt="BCC" style="height:52px;width:auto;margin:0 auto 24px;"/>
+    <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:12px;">V6 Design Authority · July 2026</div>
+    <h3 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px;">Every V6 wireframe inherits from this document</h3>
+    <p style="font-size:14px;line-height:1.8;color:#57514B;max-width:600px;margin:0 auto;">This document supersedes "01 BCC Design Principles". Future wireframes must not reference V5 documents. Routes are canonical. Photography philosophy is non-negotiable. Stack is frozen. Constitutional documents MEM-006 and MEM-007 govern all membership architecture unconditionally.</p>
+  </div>
+</section>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { headerState: "guest", condensed: false };
+
+  renderVals() {
+    const { headerState, condensed } = this.state;
+
+    const isGuest      = headerState === "guest";
+    const isUserOnly   = headerState === "user";
+    const isMember     = headerState === "member";
+    const isEditor     = headerState === "editor";
+    const isModerator  = headerState === "moderator";
+    const isAdmin      = headerState === "admin";
+    const hasMembership = isMember || isEditor || isModerator || isAdmin;
+    const notAdmin     = !isAdmin;
+
+    // Segment button helper
+    const seg = (active) => ({
+      bg: active ? "#141210" : "#FFFFFF",
+      color: active ? "#FAF8F4" : "#57514B",
+      border: active ? "#141210" : "#D8D2C6",
+    });
+    const g = seg(isGuest), u = seg(isUserOnly), m = seg(isMember),
+          e = seg(isEditor), mo = seg(isModerator), a = seg(isAdmin);
+
+    // Header visual — condensed = dark glass after 60px scroll
+    const demoHeaderBg       = condensed ? "rgba(20,18,16,0.90)" : "rgba(255,255,255,0.97)";
+    const demoHeaderBorder   = condensed ? "none" : "1px solid #E7E1D6";
+    const demoHeaderShadow   = condensed ? "0 8px 32px rgba(20,18,16,0.22)" : "none";
+    const demoBackdropFilter = condensed ? "blur(14px) saturate(180%)" : "none";
+    const demoHeaderHeight   = condensed ? "64px" : "96px";
+    const demoLogoHeight     = condensed ? "44px" : "56px";
+    const logoFilter         = condensed ? "brightness(0) invert(1)" : "none";
+    const navColor           = condensed ? "#C8C0B8" : "#57514B";
+    const navActiveColor     = condensed ? "#FFFFFF" : "#141210";
+
+    // Nav items per state
+    const showMembershipNav  = isGuest || isUserOnly;
+    const journalLabel       = isEditor ? "Journal ✎" : "Journal";
+    const journalColor       = isEditor ? (condensed ? "#C9A961" : "#A8843C") : navColor;
+    const learnColor         = condensed ? "#6B6460" : "#8B8378";
+    const learnOpacity       = "0.85";
+
+    // Avatar
+    const avatars = {
+      user:      { initials: "RU", bg: "#6B6460", color: "#FFFFFF" },
+      member:    { initials: "AB", bg: "linear-gradient(135deg,#3E5A48,#2A3E32)", color: "#FFFFFF" },
+      editor:    { initials: "CE", bg: "linear-gradient(135deg,#2A5A7A,#1A3A5A)", color: "#FFFFFF" },
+      moderator: { initials: "MO", bg: "linear-gradient(135deg,#6B4A2A,#4A3018)", color: "#FFFFFF" },
+      admin:     { initials: "AD", bg: "#141210", color: "#C9A961" },
+    };
+    const av = avatars[headerState] || {};
+    const avatarInitials = av.initials || "";
+    const avatarBg       = av.bg || "";
+    const avatarColor    = av.color || "";
+
+    // State descriptions
+    const stateInfo = {
+      guest:     { primary: "Become a Member — single gold CTA. Sign In stays quiet text. Membership link in nav drives discovery.", changed: "Default public state. Full discovery nav. No role-gated items rendered.", condition: "No active session.\nUser is not authenticated." },
+      user:      { primary: "Apply for Membership outline button. User is authenticated but has no membership — can register for eligible public activities.", changed: "Gold CTA replaced with outline 'Apply for Membership'. Grey avatar replaces Join chip. Membership nav link remains.", condition: "Authenticated.\nNo active membership." },
+      member:    { primary: "Member Hub replaces all acquisition CTAs. Avatar menu: Profile, My Gallery, Renewals, Sign Out.", changed: "Membership nav item removed. Member Hub outline-gold button + forest avatar. All acquisition CTAs gone.", condition: "Authenticated.\nMembership: ACTIVE.\nRole: Member." },
+      editor:    { primary: "Full Member Hub access plus journal and content management permissions via RBAC.", changed: "Journal nav item gains ✎ indicator. Content Editor badge in avatar dropdown. Same hub as Member.", condition: "Authenticated.\nMembership: ACTIVE.\nRole: Content Editor." },
+      moderator: { primary: "Member Hub access. Moderation tools strictly bounded by RBAC. No content creation permissions granted.", changed: "Moderation queue badge on avatar. Mod queue accessible from Member Hub sidebar only. Nav unchanged.", condition: "Authenticated.\nMembership: ACTIVE.\nRole: Moderator." },
+      admin:     { primary: "Full administration. Admin Console replaces Member Hub button. Never visible to lower roles.", changed: "Admin Console dark button replaces Member Hub. Gold-on-dark avatar. Admin nav item appears. Highest-trust state.", condition: "Authenticated.\nMembership: ACTIVE.\nRole: Admin." },
+    };
+    const info = stateInfo[headerState];
+
+    // Role behaviour table
+    const roles = [
+      { role: "Guest", auth: "Unauthenticated", access: "Public discovery navigation. Browse all public content. Cannot register for members-only activities.", ctas: "Sign In (text) · Become a Member (gold gradient)", menu: "Not shown" },
+      { role: "User", auth: "Authenticated · no membership", access: "Authenticated, no membership. Can register for public-eligible activities. Cannot access members-only content.", ctas: "Apply for Membership (outline) · Grey avatar", menu: "Profile · Account Settings · Sign Out" },
+      { role: "Member", auth: "Authenticated · membership ACTIVE", access: "Full member entitlements. Constitutional/operational class per MEM-006. Hub fully accessible.", ctas: "Member Hub (outline gold) · Avatar (forest green)", menu: "Profile · My Gallery · Renewals · Sign Out" },
+      { role: "Content Editor", auth: "Authenticated · RBAC role assigned", access: "Member entitlements plus journal and content management permissions. RBAC-bounded.", ctas: "Member Hub · Avatar (teal) · Journal ✎ in nav", menu: "Profile · My Gallery · Journal CMS · Renewals · Sign Out" },
+      { role: "Moderator", auth: "Authenticated · RBAC role assigned", access: "Member entitlements plus moderation tools only. No content creation. Strictly RBAC-bounded.", ctas: "Member Hub · Avatar (amber) · Mod queue badge", menu: "Profile · My Gallery · Mod Queue · Renewals · Sign Out" },
+      { role: "Admin", auth: "Authenticated · RBAC Admin role", access: "Full administration. All modules. Never visible to lower roles. Constitutional boundaries unconditionally enforced.", ctas: "Admin Console (dark button) · Avatar (gold-on-dark)", menu: "Admin Console · Member Hub · Profile · Sign Out" },
+    ];
+
+    // Route reconciliation
+    const routeChanges = [
+      { v5: "/gallery/photographer/", v6: "/photographers/", note: "Canonical route from V6. All photographer profile links use this path.", status: "BREAKING — Rename" },
+      { v5: "/gallery/photographer/[username]/", v6: "/photographers/[username]/", note: "Photographer profile canonical path. File renamed from [userid] to [username].", status: "BREAKING — Rename" },
+      { v5: "/gallery/ (implied)", v6: "/showcase/", note: "/showcase is the canonical public gallery route. No 'gallery' namespace in V6.", status: "Confirmed" },
+      { v5: "N/A", v6: "/learn/", note: "Phase 4 — Photography School entry. Shown greyed in Learn ▾ dropdown with COMING SOON marker.", status: "Phase 4" },
+      { v5: "/auth/signin/", v6: "/auth/signin/", note: "Current live path. Vanity redirect /signin → /auth/signin planned for V6 launch.", status: "Redirect planned" },
+      { v5: "N/A", v6: "/privacy/ · /terms/ · /conduct/ · /contact/", note: "Static placeholder pages required — footer links broken until created.", status: "Required" },
+    ];
+
+    // Component contracts
+    const components = [
+      { file: "SiteHeader", purpose: "Session-aware navigation — 6-state machine",
+        visual: "Single-surface nav bar rendering one of six role states. Transparent at rest, dark glass after scroll threshold. Logo scales between rest and condensed states. One gold CTA per view maximum.",
+        states: "6 auth states (Guest, User, Member, Editor, Moderator, Admin). Rest and condensed (scrolled) surfaces. Mobile drawer state below 900px.",
+        responsive: "Full nav desktop → hamburger drawer ≤900px. Logo scales 56→34px. CTAs collapse into drawer." },
+      { file: "SiteFooter", purpose: "Global footer — identical on every page",
+        visual: "Three-row dark surface: FIP trust + social row / four-column nav grid / copyright bar. Inverted logo on dark background.",
+        states: "Single static state — no conditional rendering.",
+        responsive: "4-col grid → 2-col ≤768px → 1-col ≤480px. Social links always visible." },
+      { file: "JustifiedGrid", purpose: "Natural-ratio photo grid — justified rows",
+        visual: "Photographs in rows sharing a target height. Each image's display width is proportional to its natural aspect ratio. No cropping, no letterboxing. 2px dark gap between images.",
+        states: "Loading: satin shimmer at natural ratio. Populated: justified layout. Empty: hairline dashed frame + label. Filter-empty: inline message.",
+        responsive: "Justified rows desktop → 2-col natural stack ≤768px → 1-col ≤480px. Target row height reduces on narrow viewports." },
+      { file: "PhotographerCard", purpose: "Photographer directory entry",
+        visual: "Portrait photograph at natural ratio. Name, genre tags, photo count. Links to canonical /photographers/[username] route.",
+        states: "Default and hover (light elevation). Loading shimmer at natural ratio.",
+        responsive: "3-col grid → 2-col ≤768px → 1-col ≤480px. Portrait ratio preserved at all sizes." },
+      { file: "EventRow / EventCard", purpose: "Activity listing with registration",
+        visual: "Event cover image at natural ratio. Title, date, location, registration status badge. EventRow is the compact horizontal variant for dense listings.",
+        states: "Open registration · Registered · Waitlist · Full · Past event.",
+        responsive: "Card grid → 1-col ≤600px. EventRow stays horizontal with truncated title." },
+      { file: "MembershipTierCard", purpose: "Tier comparison — public tiers only",
+        visual: "Three-column card layout comparing public membership tiers. Gold accent on highlighted tier. Constitutional tiers never displayed publicly (MEM-006 §Public Domain).",
+        states: "Default · Selected · Highlighted per tier.",
+        responsive: "3-col desktop → swipe-snap carousel ≤768px." },
+      { file: "HubSidebar", purpose: "Member Hub persistent vertical navigation",
+        visual: "Left-rail sidebar anchoring the Hub layout. Sections: Overview, My Gallery, Profile, Renewals, Membership Card. Role-elevated sections below. Active item: gold left border.",
+        states: "Expanded (desktop). Collapsed to top tab bar. Mobile horizontal-scroll tab bar.",
+        responsive: "Left rail ≥900px → top tab bar 600–900px → horizontal-scroll tab bar ≤600px." },
+      { file: "JournalCard", purpose: "Editorial article preview",
+        visual: "Hero image at natural ratio. Article kicker in exhibition-label style. Title in Outfit. Author and date in Inter small. Featured variant is full-width.",
+        states: "Default · Hover (light elevation + underline title) · Featured (full-width variant).",
+        responsive: "3-col grid → 2-col → 1-col. Featured card always full-width." },
+    ];
+
+    // Motion hooks
+    const motions = [
+      { hook: "data-gsap=\"reveal\"", behavior: "Fade + 24px rise on scroll into view, once", timing: "0.7s · power2.out", usedBy: "All sections" },
+      { hook: "data-gsap=\"stagger\"", behavior: "Children cascade with 80ms stagger delay", timing: "0.6s · power2.out", usedBy: "Grids, nav items, stats" },
+      { hook: "data-gsap=\"image-reveal\"", behavior: "Clip-path wipe bottom-up + 1.06→1.0 scale settle", timing: "1.1s · expo.out", usedBy: "Hero, featured photos" },
+      { hook: "data-gsap=\"parallax-soft\"", behavior: "Background drifts at 0.92× scroll speed", timing: "scrub · linear", usedBy: "Full-bleed bands" },
+      { hook: "data-gsap=\"counter\"", behavior: "Numbers count up when StatBand enters viewport", timing: "1.4s · power1.inOut", usedBy: "StatBand" },
+      { hook: "data-gsap=\"header-condense\"", behavior: "After 60px scroll: transparent→dark-glass, logo 56→44px, text goes light, backdrop-filter:blur(14px)", timing: "0.35s · power3.out", usedBy: "SiteHeader" },
+      { hook: "data-gsap=\"aperture-spin\"", behavior: "Infinite slow rotation — decorative aperture icon", timing: "40s · linear · infinite", usedBy: "Decorative elements" },
+    ];
+
+    // Page blueprints
+    const pages = [
+      { name: "Home", route: "/", tree: "BaseLayout\n  SiteHeader {session}\n  HeroShowcase {spotlightPhoto, naturalRatio:true}\n  StatBand {clubStats[]}\n  JustifiedGrid {recentPhotos[], targetRowHeight:240}\n  EventRow ×3 {upcomingEvents[]}\n  MembershipTierCard {plans[], publicOnly:true}\n  JournalCard ×3 {recentPosts[]}\n  SiteFooter" },
+      { name: "Showcase", route: "/showcase", tree: "BaseLayout\n  SiteHeader {session}\n  FilterTabs {categories[]}\n  JustifiedGrid {photos[], targetRowHeight:240}\n  Pagination\n  SiteFooter" },
+      { name: "Activities", route: "/activities", tree: "BaseLayout\n  SiteHeader {session}\n  PageHero {title}\n  FilterTabs {categories[]}\n  EventCard grid {events[]}\n  EmptyState (if events empty)\n  SiteFooter" },
+      { name: "Activities Detail", route: "/activities/[id]", tree: "BaseLayout\n  SiteHeader {session}\n  EventHero {event.cover, naturalRatio:true}\n  EventMeta {event}\n  RegistrationCard {event, userState}\n  SiteFooter" },
+      { name: "Membership / Join", route: "/join", tree: "BaseLayout (guest/user only — members redirect to /hub)\n  SiteHeader {session}\n  PageHero {title, intro}\n  MembershipTierCard {plans[], publicOnly:true}\n  ApplicationFlow {formSchema}\n    StepIndicator\n    FormStep ×3\n    SuccessState\n  SiteFooter" },
+      { name: "Journal", route: "/journal", tree: "BaseLayout\n  SiteHeader {session}\n  PageHero {title}\n  JournalCard featured {featuredPost}\n  JournalCard grid {posts[]}\n  Pagination\n  SiteFooter" },
+      { name: "Journal Detail", route: "/journal/[slug]", tree: "BaseLayout\n  SiteHeader {session}\n  ArticleHero {post.heroImage, naturalRatio:true}\n  ArticleBody {post.content}\n  AuthorCard {post.author}\n  RelatedPosts {related[]}\n  SiteFooter" },
+      { name: "Photographer Directory", route: "/photographers/", tree: "BaseLayout\n  SiteHeader {session}\n  PageHero {title}\n  SearchFilter {genres[], city}\n  PhotographerCard grid {photographers[]}\n  Pagination\n  SiteFooter" },
+      { name: "Photographer Profile", route: "/photographers/[username]", tree: "BaseLayout\n  SiteHeader {session}\n  ProfileHero {photographer, naturalRatio:true}\n  JustifiedGrid {photos[], justified:true}\n  AchievementBand {awards[]}\n  SiteFooter" },
+      { name: "Member Hub", route: "/hub", tree: "HubLayout (auth-gated — role ≥ member)\n  SiteHeader {session}\n  HubSidebar {hubNav[], role}\n  HubDashboard {member, stats}\n  JustifiedGrid {memberPhotos[], justified:true}\n  SiteFooter" },
+      { name: "Sign In", route: "/auth/signin", tree: "MinimalLayout\n  BrandBar {logo}\n  AuthCard\n    SignInForm\n    OAuthButtons {google, facebook}\n    ForgotPassword\n    RegisterPrompt" },
+      { name: "Membership Apply", route: "/hub/membership/apply", tree: "HubLayout (auth-gated — role: User, no active membership)\n  SiteHeader {session}\n  HubSidebar {applyNav}\n  ApplicationForm {formSchema}\n    ClassSelector (publicOnly)\n    DocumentUpload\n    PaymentStep (Razorpay)\n    SuccessState" },
+    ];
+
+    // Technology constraints
+    const techStack = [
+      { layer: "Frontend", technology: "Astro (TypeScript)", role: "All public pages delivered as pre-rendered static HTML. Dynamic content loaded client-side on demand. Chosen for performance and minimal runtime weight." },
+      { layer: "CSS", technology: "Vanilla CSS + tokens.css", role: "Custom properties on :root for all design tokens. No CSS frameworks. GSAP for animation. Tokens govern all colour, spacing, radius, and elevation." },
+      { layer: "Animation", technology: "GSAP 3 + ScrollTrigger", role: "All transitions and scroll-driven effects. data-gsap attribute hooks declared in markup. Header condense at 60px. Always respect prefers-reduced-motion." },
+      { layer: "Backend", technology: "NestJS + Fastify", role: "All business logic. Modular monolith. REST at /api/v1/. RBAC guards. Entitlement resolution. MEM-006 enforcement." },
+      { layer: "API", technology: "REST / JSON / OpenAPI 3.x", role: "Typed client generated from OpenAPI spec. All endpoints versioned at /api/v1/. No GraphQL." },
+      { layer: "Database", technology: "MySQL + Kysely", role: "Single relational database. SQL migrations. Constitutional tables trigger-protected. Membership number write-once." },
+      { layer: "Storage", technology: "Cloudflare R2", role: "Original and pre-compressed assets. S3-compatible. Zero egress fees. Existing bucket retained across V6 migration." },
+      { layer: "CDN / Image", technology: "ImageKit.io", role: "CDN delivery. Serves images at requested dimensions. Does NOT crop in V6 — natural ratio served at origin dimensions. Existing ImageKit configuration retained." },
+      { layer: "Auth", technology: "JWT + Session Tokens", role: "Session tokens manage authenticated state. Token validation occurs on each protected page load. Multi-factor authentication planned for Phase 2." },
+      { layer: "Payments", technology: "Razorpay", role: "INR-only. UPI, net banking, cards, wallets. Idempotency enforced. Payment events trigger membership status transitions." },
+      { layer: "Email", technology: "Resend", role: "29 notification types, 54 templates (Hindi + English). All communication routed through the platform notification service." },
+      { layer: "WhatsApp / SMS", technology: "MSG91 / Interakt", role: "WhatsApp Business API. India-first channel priority for ALERT type notifications." },
+      { layer: "Infra / CI/CD", technology: "Docker · Nginx · GitHub Actions", role: "Single production server. Automated build and deploy pipeline — push to master branch triggers build and deployment." },
+    ];
+
+
+
+    return {
+      // State switchers
+      stGuest:     () => this.setState({ headerState: "guest" }),
+      stUser:      () => this.setState({ headerState: "user" }),
+      stMember:    () => this.setState({ headerState: "member" }),
+      stEditor:    () => this.setState({ headerState: "editor" }),
+      stModerator: () => this.setState({ headerState: "moderator" }),
+      stAdmin:     () => this.setState({ headerState: "admin" }),
+      toggleCondensed: () => this.setState((s) => ({ condensed: !s.condensed })),
+
+      // Segment button styles
+      stGuestBg: g.bg, stGuestColor: g.color, stGuestBorder: g.border,
+      stUserBg: u.bg, stUserColor: u.color, stUserBorder: u.border,
+      stMemberBg: m.bg, stMemberColor: m.color, stMemberBorder: m.border,
+      stEditorBg: e.bg, stEditorColor: e.color, stEditorBorder: e.border,
+      stModeratorBg: mo.bg, stModeratorColor: mo.color, stModeratorBorder: mo.border,
+      stAdminBg: a.bg, stAdminColor: a.color, stAdminBorder: a.border,
+
+      // Condensed toggle button
+      condBg: condensed ? "#A8843C" : "#FFFFFF",
+      condColor: condensed ? "#FFFFFF" : "#57514B",
+      condBorder: condensed ? "#A8843C" : "#D8D2C6",
+      condLabel: condensed ? "Scrolled ✓ (60px)" : "Scrolled ✗ (top)",
+
+      // Header demo values
+      demoHeaderBg, demoHeaderBorder, demoHeaderShadow, demoBackdropFilter,
+      demoHeaderHeight, demoLogoHeight, logoFilter, navColor, navActiveColor,
+
+      // Nav state
+      showMembershipNav, journalLabel, journalColor, learnColor, learnOpacity,
+
+      // State booleans
+      isGuest, isUserOnly, hasMembership, notAdmin, isAdmin,
+      isEditor, isModerator,
+
+      // Avatar
+      avatarInitials, avatarBg, avatarColor,
+
+      // State info
+      statePrimary: info.primary,
+      stateChanged: info.changed,
+      stateCondition: info.condition,
+
+      // Data
+      roles, routeChanges, components, motions, pages, techStack,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

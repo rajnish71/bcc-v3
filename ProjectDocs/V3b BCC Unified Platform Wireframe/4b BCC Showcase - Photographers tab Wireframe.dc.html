@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+  <meta name="design_doc_mode" content="canvas">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #E8E6E1; }
+    *, *::before, *::after { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="font-family:'Inter',system-ui,sans-serif; background:#E8E6E1; padding:44px 44px 80px; min-width:1900px;">
+
+  <!-- Doc header -->
+  <div style="margin-bottom:36px;">
+    <div style="font:800 22px/1.1 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:5px;">BCC Unified Platform V3 — Photographers Directory <span style="font:400 14px 'Inter',sans-serif; color:#AAAAAA;">/photographers</span></div>
+    <div style="font:400 12px 'Inter',sans-serif; color:#888; letter-spacing:0.02em;">Lo-fidelity wireframe · Desktop 1280px + Mobile 390px · July 2026</div>
+  </div>
+
+  <!-- Annotation legend -->
+  <div style="display:flex; gap:16px; margin-bottom:32px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">1</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Class filter — directory lookup, no membership CTA attached</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">2</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Class badge colour tokens confirmed — applied in hi-fi, no joining CTA</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">3</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Cards link to /photographers/[username] — individual profile page</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">4</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Recognition badges separate from class badges — both shown simultaneously</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">5</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Empty state on zero results — card grid replaced, controls remain</span>
+    </div>
+  </div>
+
+  <!-- Side-by-side columns -->
+  <div style="display:flex; gap:48px; align-items:flex-start;">
+
+    <!-- ═══════════════════════ DESKTOP 1280px ═══════════════════════ -->
+    <div style="flex-shrink:0; width:1280px;">
+      <div style="text-align:center; font:600 11px 'Inter',sans-serif; color:#777; letter-spacing:0.10em; text-transform:uppercase; padding-bottom:10px; border-bottom:2px solid #BBBBBB; margin-bottom:0;">Desktop · 1280px</div>
+      <div style="border:1.5px solid #BBBBBB; overflow:visible; background:#F2F2F2; position:relative;">
+
+        <!-- ── NAV ── -->
+        <div style="position:relative; height:68px; background:#FFFFFF; border-bottom:1.5px solid #D0D0D0; display:flex; align-items:center; padding:0 40px; gap:0; z-index:20;">
+          <!-- Logo -->
+          <div style="display:flex; align-items:center; gap:10px; flex-shrink:0; margin-right:32px;">
+            <div style="width:34px;height:34px;background:#D8D8D8;border:1px solid #C0C0C0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;font-style:italic;">logo</div>
+            <div style="font:700 13px 'Outfit',sans-serif; color:#333;">Bhopal Camera Club</div>
+          </div>
+          <!-- Centre nav -->
+          <div style="flex:1; display:flex; justify-content:center; gap:6px; align-items:center;">
+            <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; cursor:pointer;">Home</span>
+            <!-- Showcase — active parent, dropdown open -->
+            <div style="position:relative;">
+              <div style="font:600 12px 'Inter',sans-serif; color:#1a1a1a; padding:6px 10px; border-bottom:2px solid #F5A82A; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                Showcase <span style="font-size:8px; color:#F5A82A;">▾</span>
+              </div>
+              <!-- Dropdown — open state showing Photographers as active -->
+              <div style="position:absolute; top:calc(100% + 1px); left:0; background:#FFFFFF; border:1.5px solid #D0D0D0; border-radius:6px; min-width:190px; box-shadow:0 4px 12px rgba(0,0,0,0.08); z-index:100; overflow:hidden;">
+                <div style="padding:4px 0;">
+                  <div style="padding:9px 16px; padding-left:19px;">
+                    <span style="font:400 11px 'Inter',sans-serif; color:#555;">Showcase (photos)</span>
+                  </div>
+                  <div style="padding:9px 16px; background:rgba(245,168,42,0.08); border-left:3px solid #F5A82A; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font:600 11px 'Inter',sans-serif; color:#1a1a1a;">Photographers</span>
+                    <span style="font:400 9px 'Inter',sans-serif; color:#F5A82A;">← current</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Activities -->
+            <div style="position:relative;">
+              <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                Activities <span style="font-size:8px; color:#AAAAAA;">▾</span>
+              </span>
+            </div>
+            <!-- Learn — coming soon -->
+            <div style="position:relative;">
+              <span style="font:400 12px 'Inter',sans-serif; color:#BBBBBB; padding:6px 10px; display:flex; align-items:center; gap:4px; cursor:not-allowed;">
+                Learn <span style="font-size:8px;">▾</span>
+                <span style="font:600 8px 'Inter',sans-serif; color:#BBBBBB; border:1px solid #CCCCCC; border-radius:99px; padding:1px 6px; letter-spacing:0.04em;">COMING SOON</span>
+              </span>
+            </div>
+            <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; cursor:pointer;">Membership</span>
+            <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; cursor:pointer;">Journal</span>
+          </div>
+          <!-- Right CTAs -->
+          <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+            <div style="border:1.5px solid #999; border-radius:4px; padding:6px 14px; font:500 11px 'Inter',sans-serif; color:#666;">Sign In</div>
+            <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:6px 14px; font:500 11px 'Inter',sans-serif; color:#fff; background:#F5A82A;">Register</div>
+          </div>
+        </div>
+
+        <!-- ── PAGE HEADER ── -->
+        <div style="background:#1E1E1E; padding:0 40px; height:200px; display:flex; align-items:center;">
+          <div style="max-width:1200px; width:100%;">
+            <div style="font:600 10px 'Inter',sans-serif; letter-spacing:0.16em; text-transform:uppercase; color:#F5A82A; margin-bottom:8px;">THE COMMUNITY</div>
+            <div style="font:800 42px/1.05 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:10px;">Photographers</div>
+            <div style="font:400 13px 'Inter',sans-serif; color:#888;">15 active BCC photographers — Bhopal's photography community</div>
+          </div>
+        </div>
+
+        <!-- ── SEARCH + FILTER BAR ── -->
+        <div style="position:relative; background:#FAFAFA; border-bottom:1.5px solid #D8D8D8; padding:10px 40px; display:flex; align-items:center; gap:10px;">
+          <!-- Callout 1 -->
+          <div style="position:absolute; top:5px; right:8px; display:flex; align-items:center; gap:5px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">1</div>
+          </div>
+          <!-- Search input -->
+          <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:4px; padding:7px 12px; font:400 11px 'Inter',sans-serif; color:#AAAAAA; background:#fff; display:flex; align-items:center; gap:8px;">
+            <span style="color:#BBBBBB; font-size:13px;">⌕</span>
+            <span>Search photographers by name or genre...</span>
+          </div>
+          <!-- Class filter -->
+          <div style="flex-shrink:0; width:180px; border:1.5px solid #D0D0D0; border-radius:4px; padding:7px 10px; font:400 11px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+            <span>All Classes</span><span style="font-size:8px; color:#AAAAAA;">▾</span>
+          </div>
+          <!-- Genre filter -->
+          <div style="flex-shrink:0; width:160px; border:1.5px solid #D0D0D0; border-radius:4px; padding:7px 10px; font:400 11px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+            <span>All Genres</span><span style="font-size:8px; color:#AAAAAA;">▾</span>
+          </div>
+          <!-- Sort -->
+          <div style="flex-shrink:0; width:160px; border:1.5px solid #D0D0D0; border-radius:4px; padding:7px 10px; font:400 11px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+            <span>Name A–Z</span><span style="font-size:8px; color:#AAAAAA;">▾</span>
+          </div>
+        </div>
+
+        <!-- Annotation 1 note -->
+        <div style="background:rgba(245,168,42,0.06); border-left:3px solid rgba(245,168,42,0.4); padding:7px 14px; display:flex; gap:8px; align-items:flex-start;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+          <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#777;">Class filter lists all membership classes (Basic → Founding) for directory lookup purposes — not a membership promotion. Options: All Classes / Basic / Student / Individual / Full / Life / Patron / Founding Member. No joining CTA or application pathway is associated with any filter option or its results.</div>
+        </div>
+
+        <!-- ── RESULTS COUNT BAR ── -->
+        <div style="background:#F2F2F2; border-bottom:1px solid #E4E4E4; padding:7px 40px; display:flex; align-items:center; justify-content:space-between;">
+          <span style="font:400 10px 'Inter',sans-serif; color:#AAAAAA;">Showing 15 photographers</span>
+          <span style="font:500 10px 'Inter',sans-serif; color:#BBBBBB; font-style:italic;">Clear filters <span style="font:400 9px 'Inter',sans-serif; color:#CCCCCC;">(amber · conditional — visible only when filters active)</span></span>
+        </div>
+
+        <!-- ── PHOTOGRAPHER CARD GRID ── -->
+        <div style="background:#ECECEC; padding:28px 40px 36px; position:relative;">
+          <div style="max-width:1200px; margin:0 auto;">
+
+            <!-- ROW 1: 4 cards -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:20px;">
+
+              <!-- CARD 1: Basic Member -->
+              <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
+                <!-- Cover strip -->
+                <div style="height:120px; background:#C8C8C8; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center; position:relative;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <!-- Avatar -->
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#D4D4D4; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <!-- Identity -->
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:6px; text-align:center;">
+                  <!-- Class badge -->
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em; position:relative;">
+                    Basic Member
+                    <div style="position:absolute; top:-10px; right:-10px; display:flex; align-items:center; gap:3px;">
+                      <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:7px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid #C4851F;">2</div>
+                    </div>
+                  </div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Wildlife</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Bird</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Macro</div>
+                  </div>
+                </div>
+                <!-- Stats -->
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;">
+                    <div style="font:600 12px 'Outfit',sans-serif; color:#444;">34</div>
+                    <div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div>
+                  </div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;">
+                    <div style="font:600 12px 'Outfit',sans-serif; color:#444;">2</div>
+                    <div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div>
+                  </div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;">
+                    <div style="font:600 12px 'Outfit',sans-serif; color:#444;">2022</div>
+                    <div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div>
+                  </div>
+                </div>
+                <!-- Footer -->
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                </div>
+              </div>
+
+              <!-- CARD 2: Student Member -->
+              <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
+                <div style="height:120px; background:#C4C4C4; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#D0D0D0; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:6px; text-align:center;">
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em;">Student Member</div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Street</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Portrait</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">12</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">0</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">2024</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+                </div>
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                </div>
+              </div>
+
+              <!-- CARD 3: Individual Member + Senior Member recognition -->
+              <div style="background:#FAFAFA; border:1.5px dashed #AAAAAA; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+                <!-- Callout 4 marker on this card -->
+                <div style="position:absolute; top:6px; right:6px; z-index:10; display:flex; align-items:center; gap:3px;">
+                  <span style="font:400 8px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+                  <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:7px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid #C4851F;">4</div>
+                </div>
+                <!-- Dashed label -->
+                <div style="position:absolute; top:-1px; left:-1px; background:#555; color:#fff; font:600 7px 'Inter',sans-serif; padding:2px 7px; border-radius:0 0 4px 0; z-index:9; letter-spacing:0.04em;">HAS RECOGNITION BADGE</div>
+                <div style="height:120px; background:#BEBEBE; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#CCCCCC; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:5px; text-align:center;">
+                  <!-- Class badge -->
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em;">Individual Member</div>
+                  <!-- Recognition badge — smaller, muted -->
+                  <div style="background:#EBEBEB; border-radius:99px; padding:2px 10px; font:500 8px 'Inter',sans-serif; color:#999; letter-spacing:0.02em;">Senior Member</div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Landscape</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Architecture</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">67</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">5</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">2019</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+                </div>
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center; position:relative;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                  <!-- Callout 3 -->
+                  <div style="position:absolute; bottom:8px; right:8px; display:flex; align-items:center; gap:3px;">
+                    <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:7px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid #C4851F;">3</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 4: Full Member -->
+              <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
+                <div style="height:120px; background:#C6C6C6; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#D4D4D4; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:6px; text-align:center;">
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em;">Full Member</div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Wildlife</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Macro</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Night</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">89</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">8</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">2018</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+                </div>
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                </div>
+              </div>
+
+            </div><!-- /row 1 -->
+
+            <!-- Annotation 2 note between rows -->
+            <div style="display:flex; align-items:flex-start; gap:8px; background:rgba(245,168,42,0.07); border:1px dashed rgba(245,168,42,0.5); border-radius:5px; padding:8px 12px; margin-bottom:20px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+              <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#666;">Class badge colour tokens (applied in hi-fi): Basic <span style="font:600 9px 'Inter',sans-serif;">#5C5876</span> · Student <span style="font:600 9px 'Inter',sans-serif;">#1A9DAE</span> · Individual <span style="font:600 9px 'Inter',sans-serif;">#3E5A48</span> · Full <span style="font:600 9px 'Inter',sans-serif;">#F5A82A</span> · Life <span style="font:600 9px 'Inter',sans-serif;">#A8843C</span> · Patron <span style="font:600 9px 'Inter',sans-serif;">#8A6A2E</span> · Founding <span style="font:600 9px 'Inter',sans-serif;">#8A6A2E</span>. In this wireframe all badges are outline pills only. <strong>No joining CTA or application link attached to any badge.</strong></div>
+            </div>
+
+            <!-- ROW 2: 4 cards -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:20px;">
+
+              <!-- CARD 5: Life Member -->
+              <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
+                <div style="height:120px; background:#CACACA; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#D8D8D8; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:6px; text-align:center;">
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em;">Life Member</div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Portrait</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Street</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Travel</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">124</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">11</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">2017</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+                </div>
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                </div>
+              </div>
+
+              <!-- CARD 6: Patron Member -->
+              <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
+                <div style="height:120px; background:#C2C2C2; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#CCCCCC; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:6px; text-align:center;">
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em;">Patron Member</div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Bird</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Wildlife</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">203</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">19</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">2016</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+                </div>
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                </div>
+              </div>
+
+              <!-- CARD 7: Individual Member + Honorary Mentor recognition -->
+              <div style="background:#FAFAFA; border:1.5px dashed #AAAAAA; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+                <div style="position:absolute; top:-1px; left:-1px; background:#555; color:#fff; font:600 7px 'Inter',sans-serif; padding:2px 7px; border-radius:0 0 4px 0; z-index:9; letter-spacing:0.04em;">HAS RECOGNITION BADGE</div>
+                <div style="height:120px; background:#C0C0C0; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#D0D0D0; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:5px; text-align:center;">
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em;">Individual Member</div>
+                  <!-- Recognition badge -->
+                  <div style="background:#EBEBEB; border-radius:99px; padding:2px 10px; font:500 8px 'Inter',sans-serif; color:#999; letter-spacing:0.02em;">Honorary Mentor</div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Landscape</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Bird</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">45</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">4</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">2020</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+                </div>
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                </div>
+              </div>
+
+              <!-- CARD 8: Basic Member -->
+              <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
+                <div style="height:120px; background:#C8C8C8; border-bottom:1px solid #D0D0D0; display:flex; align-items:center; justify-content:center;">
+                  <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:0 16px;">
+                  <div style="width:72px; height:72px; border-radius:50%; background:#D4D4D4; border:2.5px solid #FAFAFA; margin-top:-36px; display:flex; align-items:center; justify-content:center; font:400 8px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.10);">avatar</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding:10px 16px 0; gap:6px; text-align:center;">
+                  <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#777; letter-spacing:0.03em;">Basic Member</div>
+                  <div style="font:600 13px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+                  <div style="font:400 10px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Street</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Architecture</div>
+                    <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 9px; font:400 9px 'Inter',sans-serif; color:#888;">Night</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:14px 16px 0; border-top:1px solid #EBEBEB; padding-top:10px;">
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">28</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">1</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+                  <div style="width:1px; height:28px; background:#E0E0E0;"></div>
+                  <div style="flex:1; text-align:center;"><div style="font:600 12px 'Outfit',sans-serif; color:#444;">2023</div><div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+                </div>
+                <div style="border-top:1px solid #EBEBEB; margin-top:12px; padding:10px 16px; text-align:center;">
+                  <span style="font:500 11px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A; cursor:pointer;">View Profile →</span>
+                </div>
+              </div>
+
+            </div><!-- /row 2 -->
+
+            <!-- Annotation 3 note -->
+            <div style="display:flex; align-items:flex-start; gap:8px; background:rgba(245,168,42,0.07); border:1px dashed rgba(245,168,42,0.5); border-radius:5px; padding:8px 12px; margin-bottom:16px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+              <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#666;">Each card links to <strong>/photographers/[username]</strong> — the individual Photographer Profile page (Phase 0.5). Profile page shows full portfolio, bio, gear list, contest history, and activity history.</div>
+            </div>
+
+            <!-- Annotation 4 note -->
+            <div style="display:flex; align-items:flex-start; gap:8px; background:rgba(245,168,42,0.07); border:1px dashed rgba(245,168,42,0.5); border-radius:5px; padding:8px 12px; margin-bottom:16px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">4</div>
+              <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#666;">Recognition badges (Senior Member, Honorary Senior Member, Honorary Member, Honorary Mentor, Honorary Grandmaster) are separate from membership class badges. A member holds <strong>one class badge AND at most one active recognition badge</strong>. Both shown simultaneously on the card (class badge + smaller muted recognition pill below). Recognition does not affect or replace the class badge.</div>
+            </div>
+
+            <!-- Annotation 5 note — empty state described only -->
+            <div style="display:flex; align-items:flex-start; gap:8px; background:#F8F8F8; border:1px dashed #CCCCCC; border-radius:5px; padding:8px 12px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">5</div>
+              <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#888;"><strong style="color:#666;">Empty state (not rendered — zero filter results):</strong> Card grid area replaced with: muted camera icon placeholder (grey) · "No photographers found matching your filters" · [Clear Filters] amber ghost button. Header, search input, filter dropdowns, and results count bar all remain visible.</div>
+            </div>
+
+          </div>
+        </div><!-- /card grid -->
+
+        <!-- ── FOOTER ── -->
+        <div style="background:#E8E8E8; padding:40px 40px 0; border-top:1px solid #D4D4D4;">
+          <div style="max-width:1200px; margin:0 auto;">
+            <!-- FIP + Social -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid #D0D0D0;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:44px;height:44px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:4px;display:flex;align-items:center;justify-content:center;font:600 8px 'Inter',sans-serif;color:#999;">FIP</div>
+                <div style="font:400 10px 'Inter',sans-serif;color:#777;line-height:1.5;">Corporate Member · Federation of Indian Photography<br/>CM 1098</div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">IG</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">FB</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">FBG</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">X</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">YT</div>
+              </div>
+            </div>
+            <!-- 4 col -->
+            <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:32px; margin-bottom:32px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <div style="width:28px;height:28px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">logo</div>
+                  <div style="font:700 12px 'Outfit',sans-serif;color:#333;">Bhopal Camera Club</div>
+                </div>
+                <div style="font:400 10px/1.6 'Inter',sans-serif;color:#AAAAAA;margin-bottom:10px;">Bhopal's photography community since 2016.</div>
+                <div style="height:9px;background:#E0E0E0;border-radius:2px;width:88%;margin-bottom:4px;"></div>
+                <div style="height:9px;background:#E0E0E0;border-radius:2px;width:72%;"></div>
+              </div>
+              <div>
+                <div style="font:600 10px 'Inter',sans-serif;color:#555;margin-bottom:12px;letter-spacing:0.06em;">NAVIGATE</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Home</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Showcase</span>
+                  <span style="font:600 10px 'Inter',sans-serif;color:#444;">Photographers</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Events</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Membership</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Journal</span>
+                </div>
+              </div>
+              <div>
+                <div style="font:600 10px 'Inter',sans-serif;color:#555;margin-bottom:12px;letter-spacing:0.06em;">MEMBERSHIP</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Register Free</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Apply for Membership</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Member Hub</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">About BCC</span>
+                </div>
+              </div>
+              <div>
+                <div style="font:600 10px 'Inter',sans-serif;color:#555;margin-bottom:12px;letter-spacing:0.06em;">CONTACT</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Get in Touch</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Partnerships</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Press</span>
+                </div>
+              </div>
+            </div>
+            <div style="border-top:1px solid #D0D0D0; padding:16px 0; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font:400 10px 'Inter',sans-serif; color:#CCCCCC;">© 2026 Bhopal Camera Club · All rights reserved</span>
+              <span style="font:400 10px 'Inter',sans-serif; color:#CCCCCC;">Privacy · Terms</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /desktop frame -->
+    </div><!-- /desktop col -->
+
+
+    <!-- ═══════════════════════ MOBILE 390px ═══════════════════════ -->
+    <div style="flex-shrink:0; width:390px;">
+      <div style="text-align:center; font:600 11px 'Inter',sans-serif; color:#777; letter-spacing:0.10em; text-transform:uppercase; padding-bottom:10px; border-bottom:2px solid #BBBBBB; margin-bottom:0;">Mobile · 390px</div>
+      <div style="border:1.5px solid #BBBBBB; background:#F2F2F2;">
+
+        <!-- ── MOBILE NAV ── -->
+        <div style="height:56px; background:#FFFFFF; border-bottom:1.5px solid #D0D0D0; display:flex; align-items:center; padding:0 16px; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:28px;height:28px;background:#D8D8D8;border:1px solid #C0C0C0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:6px;color:#999;">logo</div>
+            <div style="font:700 11px 'Outfit',sans-serif; color:#333;">Bhopal Camera Club</div>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <div style="font:400 11px 'Inter',sans-serif; color:#F5A82A;">☰</div>
+          </div>
+        </div>
+
+        <!-- ── MOBILE PAGE HEADER ── -->
+        <div style="background:#1E1E1E; padding:24px 16px 28px;">
+          <div style="font:600 9px 'Inter',sans-serif; letter-spacing:0.16em; text-transform:uppercase; color:#F5A82A; margin-bottom:6px;">THE COMMUNITY</div>
+          <div style="font:800 28px/1.1 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:7px;">Photographers</div>
+          <div style="font:400 11px 'Inter',sans-serif; color:#888; line-height:1.5;">15 active BCC photographers — Bhopal's photography community</div>
+        </div>
+
+        <!-- ── MOBILE SEARCH + FILTER ── -->
+        <div style="background:#FAFAFA; border-bottom:1.5px solid #D8D8D8; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+          <!-- Row 1: Search -->
+          <div style="border:1.5px solid #D0D0D0; border-radius:4px; padding:8px 10px; font:400 11px 'Inter',sans-serif; color:#AAAAAA; background:#fff; display:flex; align-items:center; gap:7px;">
+            <span style="color:#BBBBBB; font-size:12px;">⌕</span>
+            <span style="font-size:10px;">Search photographers by name or genre...</span>
+          </div>
+          <!-- Row 2: 3 equal-width dropdowns -->
+          <div style="display:flex; gap:7px;">
+            <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:4px; padding:6px 7px; font:400 9px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+              <span>All Classes</span><span style="font-size:7px; color:#AAAAAA;">▾</span>
+            </div>
+            <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:4px; padding:6px 7px; font:400 9px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+              <span>All Genres</span><span style="font-size:7px; color:#AAAAAA;">▾</span>
+            </div>
+            <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:4px; padding:6px 7px; font:400 9px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+              <span>Name A–Z</span><span style="font-size:7px; color:#AAAAAA;">▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MOBILE RESULTS COUNT ── -->
+        <div style="background:#F2F2F2; border-bottom:1px solid #E4E4E4; padding:6px 12px;">
+          <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA;">Showing 15 photographers</span>
+        </div>
+
+        <!-- ── MOBILE CARD GRID (1-col) ── -->
+        <div style="background:#ECECEC; padding:16px 12px; display:flex; flex-direction:column; gap:14px;">
+
+          <!-- Mobile Card 1: Basic Member -->
+          <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden;">
+            <div style="height:100px; background:#C8C8C8; display:flex; align-items:center; justify-content:center;">
+              <span style="font:400 8px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; padding:0 14px;">
+              <div style="width:60px; height:60px; border-radius:50%; background:#D4D4D4; border:2px solid #FAFAFA; margin-top:-30px; display:flex; align-items:center; justify-content:center; font:400 7px 'Inter',sans-serif; color:#AAAAAA; box-shadow:0 1px 3px rgba(0,0,0,0.10);">avatar</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; padding:8px 14px 0; gap:5px; text-align:center;">
+              <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:2px 10px; font:600 8px 'Inter',sans-serif; color:#777;">Basic Member</div>
+              <div style="font:600 12px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+              <div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+              <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 8px; font:400 8px 'Inter',sans-serif; color:#888;">Wildlife</div>
+                <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 8px; font:400 8px 'Inter',sans-serif; color:#888;">Bird</div>
+                <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 8px; font:400 8px 'Inter',sans-serif; color:#888;">Macro</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:10px 14px 0; border-top:1px solid #EBEBEB; padding-top:8px;">
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">34</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+              <div style="width:1px; height:22px; background:#E0E0E0;"></div>
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">2</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+              <div style="width:1px; height:22px; background:#E0E0E0;"></div>
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">2022</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+            </div>
+            <div style="border-top:1px solid #EBEBEB; margin-top:10px; padding:9px 14px; text-align:center;">
+              <span style="font:500 10px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A;">View Profile →</span>
+            </div>
+          </div>
+
+          <!-- Mobile Card 3: Individual + Senior Member (recognition demo) -->
+          <div style="background:#FAFAFA; border:1.5px dashed #AAAAAA; border-radius:8px; overflow:hidden; position:relative;">
+            <div style="position:absolute; top:-1px; left:-1px; background:#555; color:#fff; font:600 6px 'Inter',sans-serif; padding:2px 6px; border-radius:0 0 3px 0; z-index:9; letter-spacing:0.03em;">HAS RECOGNITION BADGE</div>
+            <div style="height:100px; background:#BEBEBE; display:flex; align-items:center; justify-content:center;">
+              <span style="font:400 8px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; padding:0 14px;">
+              <div style="width:60px; height:60px; border-radius:50%; background:#CCCCCC; border:2px solid #FAFAFA; margin-top:-30px; display:flex; align-items:center; justify-content:center; font:400 7px 'Inter',sans-serif; color:#AAAAAA; box-shadow:0 1px 3px rgba(0,0,0,0.10);">avatar</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; padding:8px 14px 0; gap:4px; text-align:center;">
+              <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:2px 10px; font:600 8px 'Inter',sans-serif; color:#777;">Individual Member</div>
+              <div style="background:#EBEBEB; border-radius:99px; padding:2px 9px; font:500 7px 'Inter',sans-serif; color:#999;">Senior Member</div>
+              <div style="font:600 12px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+              <div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+              <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 8px; font:400 8px 'Inter',sans-serif; color:#888;">Landscape</div>
+                <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 8px; font:400 8px 'Inter',sans-serif; color:#888;">Architecture</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:10px 14px 0; border-top:1px solid #EBEBEB; padding-top:8px;">
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">67</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+              <div style="width:1px; height:22px; background:#E0E0E0;"></div>
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">5</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+              <div style="width:1px; height:22px; background:#E0E0E0;"></div>
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">2019</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+            </div>
+            <div style="border-top:1px solid #EBEBEB; margin-top:10px; padding:9px 14px; text-align:center;">
+              <span style="font:500 10px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A;">View Profile →</span>
+            </div>
+          </div>
+
+          <!-- Mobile Card 6: Patron Member -->
+          <div style="background:#FAFAFA; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden;">
+            <div style="height:100px; background:#C2C2C2; display:flex; align-items:center; justify-content:center;">
+              <span style="font:400 8px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">cover photo</span>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; padding:0 14px;">
+              <div style="width:60px; height:60px; border-radius:50%; background:#CCCCCC; border:2px solid #FAFAFA; margin-top:-30px; display:flex; align-items:center; justify-content:center; font:400 7px 'Inter',sans-serif; color:#AAAAAA; box-shadow:0 1px 3px rgba(0,0,0,0.10);">avatar</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; padding:8px 14px 0; gap:5px; text-align:center;">
+              <div style="border:1.5px solid #AAAAAA; border-radius:99px; padding:2px 10px; font:600 8px 'Inter',sans-serif; color:#777;">Patron Member</div>
+              <div style="font:600 12px 'Outfit',sans-serif; color:#222;">[Photographer Name]</div>
+              <div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB;">@username</div>
+              <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 8px; font:400 8px 'Inter',sans-serif; color:#888;">Bird</div>
+                <div style="border:1px solid #CCCCCC; border-radius:99px; padding:2px 8px; font:400 8px 'Inter',sans-serif; color:#888;">Wildlife</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:center; gap:0; margin:10px 14px 0; border-top:1px solid #EBEBEB; padding-top:8px;">
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">203</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Photos</div></div>
+              <div style="width:1px; height:22px; background:#E0E0E0;"></div>
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">19</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Contest Wins</div></div>
+              <div style="width:1px; height:22px; background:#E0E0E0;"></div>
+              <div style="flex:1; text-align:center;"><div style="font:600 11px 'Outfit',sans-serif; color:#444;">2016</div><div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB;">Member since</div></div>
+            </div>
+            <div style="border-top:1px solid #EBEBEB; margin-top:10px; padding:9px 14px; text-align:center;">
+              <span style="font:500 10px 'Inter',sans-serif; color:#F5A82A; border-bottom:1px solid #F5A82A;">View Profile →</span>
+            </div>
+          </div>
+
+          <!-- Scroll indicator -->
+          <div style="text-align:center; padding:4px 0 2px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#CCCCCC; font-style:italic;">↓ 5 more cards below</span>
+          </div>
+
+        </div><!-- /mobile card grid -->
+
+        <!-- ── MOBILE FOOTER ── -->
+        <div style="background:#E8E8E8; padding:20px 14px 0; border-top:1px solid #D0D0D0;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <div style="width:24px;height:24px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:6px;color:#999;">logo</div>
+            <div style="font:700 11px 'Outfit',sans-serif;color:#333;">Bhopal Camera Club</div>
+          </div>
+          <div style="font:400 9px/1.6 'Inter',sans-serif;color:#AAAAAA;margin-bottom:14px;">Bhopal's photography community since 2016</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #D4D4D4;">
+            <div style="width:36px;height:36px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:4px;display:flex;align-items:center;justify-content:center;font:600 7px 'Inter',sans-serif;color:#999;">FIP</div>
+            <div style="font:400 9px 'Inter',sans-serif;color:#888;line-height:1.4;">Corporate Member · FIP<br/>CM 1098</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <div style="font:600 9px 'Inter',sans-serif;color:#555;margin-bottom:8px;letter-spacing:0.04em;">NAVIGATE</div>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Home</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Showcase</span>
+                <span style="font:600 9px 'Inter',sans-serif;color:#444;">Photographers</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Events</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Membership</span>
+              </div>
+            </div>
+            <div>
+              <div style="font:600 9px 'Inter',sans-serif;color:#555;margin-bottom:8px;letter-spacing:0.04em;">MEMBERSHIP</div>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Register Free</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Apply for Membership</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Member Hub</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">About BCC</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;margin-bottom:14px;">
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">IG</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">FB</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">FBG</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">X</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">YT</div>
+          </div>
+          <div style="border-top:1px solid #D0D0D0; padding:12px 0; font:400 8px 'Inter',sans-serif; color:#CCCCCC;">© 2026 Bhopal Camera Club</div>
+        </div>
+
+      </div><!-- /mobile frame -->
+    </div><!-- /mobile col -->
+
+  </div><!-- /columns -->
+</div>
+
+</x-dc>
+</body>
+</html>

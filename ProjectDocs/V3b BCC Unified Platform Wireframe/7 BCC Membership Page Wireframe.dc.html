@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<template id="__bundler_thumbnail" data-bg-color="#E8E6E1">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#E8E6E1"/>
+    <rect x="15" y="15" width="70" height="14" fill="#1E1E1E"/>
+    <circle cx="25" cy="40" r="6" fill="#999"/>
+    <circle cx="50" cy="40" r="6" fill="#999"/>
+    <circle cx="75" cy="40" r="6" fill="#999"/>
+    <rect x="15" y="55" width="20" height="30" fill="#C8C8C8"/>
+    <rect x="40" y="55" width="20" height="30" fill="#C8C8C8"/>
+    <rect x="65" y="55" width="20" height="30" fill="#F5A82A" opacity="0.85"/>
+  </svg>
+</template>
+<helmet data-dc-atomics>
+  <meta name="design_doc_mode" content="canvas">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #E8E6E1; }
+    *, *::before, *::after { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="font-family:'Inter',system-ui,sans-serif; background:#E8E6E1; padding:44px 44px 80px; min-width:1900px;">
+
+  <!-- Doc header -->
+  <div style="margin-bottom:36px;">
+    <div style="font:800 22px/1.1 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:5px;">BCC Unified Platform V3 — Membership / Join Page (/membership)</div>
+    <div style="font:400 12px 'Inter',sans-serif; color:#888; letter-spacing:0.02em;">Lo-fidelity wireframe · Desktop 1280px + Mobile 390px · v3bcc.bhopal.info · July 2026</div>
+    <div style="margin-top:12px; display:flex; align-items:flex-start; gap:10px; padding:12px 16px; background:#FBECEA; border:1.5px solid #E0A8A0; border-radius:6px; max-width:900px;">
+      <div style="min-width:20px;height:20px;border:1.5px solid #B23A2E;border-radius:50%;background:#FFF;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#B23A2E;flex-shrink:0;">!</div>
+      <div style="font:400 11px/1.55 'Inter',sans-serif; color:#8A2E24;"><strong>Governance-critical page (MEM-006 P1).</strong> Only 3 operational classes (Basic, Student, Individual) appear anywhere below. Constitutional/voting classes (Full, Life, Patron, Founding) never appear on this page — no card, footnote, or mention. Registration and Membership are shown as two separate, sequential steps — never one conflated CTA.</div>
+    </div>
+  </div>
+
+  <!-- Columns -->
+  <div style="display:flex; gap:48px; align-items:flex-start;">
+
+    <!-- ════════════════════════ DESKTOP 1280px ════════════════════════ -->
+    <div style="flex-shrink:0; width:1280px;">
+      <div style="text-align:center; font:600 11px 'Inter',sans-serif; color:#777; letter-spacing:0.10em; text-transform:uppercase; padding-bottom:10px; border-bottom:2px solid #BBBBBB; margin-bottom:0;">Desktop · 1280px</div>
+      <div style="border:1.5px solid #BBBBBB; overflow:hidden; background:#F2F2F2;">
+
+        <!-- NAV PLACEHOLDER -->
+        <div style="height:44px; background:#F5F5F5; border-bottom:1.5px dashed #BBBBBB; display:flex; align-items:center; justify-content:center;">
+          <span style="font:400 10px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">[NAV — see Shared Layout Components wireframe]</span>
+        </div>
+
+        <!-- 1. PAGE HEADER -->
+        <div style="background:#1E1E1E; padding:0 40px;">
+          <div style="max-width:1200px; margin:0 auto; padding:44px 0; text-align:center;">
+            <div style="font:600 10px 'Inter',sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:#F5A82A; margin-bottom:10px;">MEMBERSHIP</div>
+            <div style="font:700 32px 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:8px;">Shoot more. Share more. Belong.</div>
+            <div style="font:400 13px 'Inter',sans-serif; color:#999;">Start with a free account. Apply for the membership class that fits you.</div>
+          </div>
+        </div>
+
+        <!-- 2. TWO-STEP FLOW DIAGRAM -->
+        <div style="background:#FFFFFF; padding:48px 40px; border-bottom:1px solid #D8D8D8; position:relative;">
+          <div style="position:absolute; top:14px; right:14px; display:flex; align-items:center; gap:4px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">1</div>
+          </div>
+          <div style="max-width:900px; margin:0 auto;">
+
+            <!-- 3-node flow -->
+            <div style="display:flex; align-items:flex-start; position:relative; margin-bottom:36px;">
+              <!-- connecting line -->
+              <div style="position:absolute; top:24px; left:16.5%; right:16.5%; height:2px; background:#D8D8D8; z-index:0;"></div>
+
+              <!-- Node 1 -->
+              <div style="flex:1; text-align:center; position:relative; z-index:1;">
+                <div style="width:48px;height:48px;border-radius:50%;background:#1E1E1E;color:#fff;font:700 15px 'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">1</div>
+                <div style="width:56px;height:56px;border:1.5px solid #C8C8C8;border-radius:8px;background:#F5F5F5;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                  <span style="font:400 8px 'Inter',sans-serif;color:#AAAAAA;text-align:center;">person<br/>icon</span>
+                </div>
+                <div style="font:700 15px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:6px;">Register Free</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; line-height:1.5; padding:0 12px;">Create your platform identity — no fee, no commitment</div>
+              </div>
+
+              <!-- Node 2 -->
+              <div style="flex:1; text-align:center; position:relative; z-index:1;">
+                <div style="width:48px;height:48px;border-radius:50%;background:#1E1E1E;color:#fff;font:700 15px 'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">2</div>
+                <div style="width:56px;height:56px;border:1.5px solid #C8C8C8;border-radius:8px;background:#F5F5F5;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                  <span style="font:400 8px 'Inter',sans-serif;color:#AAAAAA;text-align:center;">form<br/>icon</span>
+                </div>
+                <div style="font:700 15px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:6px;">Apply for a Class</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; line-height:1.5; padding:0 12px;">Choose Basic, Student or Individual and submit your application</div>
+              </div>
+
+              <!-- Node 3 -->
+              <div style="flex:1; text-align:center; position:relative; z-index:1;">
+                <div style="width:48px;height:48px;border-radius:50%;background:#DDDDDD;color:#999;font:700 15px 'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">3</div>
+                <div style="width:56px;height:56px;border:1.5px solid #C8C8C8;border-radius:8px;background:#F5F5F5;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                  <span style="font:400 8px 'Inter',sans-serif;color:#AAAAAA;text-align:center;">camera<br/>icon</span>
+                </div>
+                <div style="font:700 15px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:6px;">Start Participating</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; line-height:1.5; padding:0 12px;">Contests, events, galleries and the member directory</div>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <div style="text-align:center;">
+              <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:14px 0; font:600 13px 'Inter',sans-serif; color:#1a1a1a; background:#F5A82A; display:inline-block; width:280px;">Create Your Free Account</div>
+              <div style="font:400 11px 'Inter',sans-serif; color:#888; margin-top:14px;">Already registered? <span style="color:#C4851F; font-weight:500;">Sign In →</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. MEMBERSHIP CLASS CARDS -->
+        <div style="background:#F0F0F0; padding:48px 40px; border-bottom:1px solid #D8D8D8; position:relative;">
+          <div style="position:absolute; top:14px; right:14px; display:flex; align-items:center; gap:4px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">2</div>
+          </div>
+          <div style="max-width:1200px; margin:0 auto;">
+            <div style="text-align:center; margin-bottom:28px;">
+              <div style="font:600 10px 'Inter',sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:#F5A82A; margin-bottom:8px;">CHOOSE YOUR CLASS</div>
+              <div style="font:700 26px 'Outfit',sans-serif; color:#1a1a1a;">Three ways to belong</div>
+            </div>
+
+            <div style="display:flex; gap:20px;">
+
+              <!-- Card A: Basic -->
+              <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:8px; background:#FFFFFF; padding:24px;">
+                <div style="border:1px solid #5C5876; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#5C5876; display:inline-block; margin-bottom:14px;">BASIC MEMBER</div>
+                <div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB; margin-bottom:14px; margin-top:-10px;">badge colour ref: #5C5876 (outline only in lo-fi)</div>
+                <div style="font:700 20px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:6px;">Basic Member</div>
+                <div style="font:700 13px 'Inter',sans-serif; color:#1a1a1a; margin-bottom:8px;">[₹XXX] / year</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; margin-bottom:16px; line-height:1.5;">Entry-level participation for casual members [placeholder]</div>
+                <div style="height:1px; background:#E4E4E4; margin-bottom:16px;"></div>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:85%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:70%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:78%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:60%; margin-top:3px;"></div></div>
+                </div>
+                <div style="border:1.5px solid #999; border-radius:4px; padding:11px 0; font:500 11px 'Inter',sans-serif; color:#666; text-align:center;">Apply for Basic →</div>
+              </div>
+
+              <!-- Card B: Student -->
+              <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:8px; background:#FFFFFF; padding:24px;">
+                <div style="border:1px solid #1A9DAE; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#1A9DAE; display:inline-block; margin-bottom:14px;">STUDENT MEMBER</div>
+                <div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB; margin-bottom:14px; margin-top:-10px;">badge colour ref: #1A9DAE (outline only in lo-fi)</div>
+                <div style="font:700 20px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:6px;">Student Member</div>
+                <div style="font:700 13px 'Inter',sans-serif; color:#1a1a1a; margin-bottom:4px;">[₹XXX] / year</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#B23A2E; margin-bottom:12px;">Requires student ID verification</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; margin-bottom:16px; line-height:1.5;">Discounted access for enrolled students [placeholder]</div>
+                <div style="height:1px; background:#E4E4E4; margin-bottom:16px;"></div>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:85%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:70%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:78%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:60%; margin-top:3px;"></div></div>
+                </div>
+                <div style="border:1.5px solid #999; border-radius:4px; padding:11px 0; font:500 11px 'Inter',sans-serif; color:#666; text-align:center;">Apply for Student →</div>
+              </div>
+
+              <!-- Card C: Individual (featured) -->
+              <div style="flex:1; border:2px solid #F5A82A; border-radius:8px; background:#FFFFFF; padding:24px; position:relative; box-shadow:0 4px 16px rgba(245,168,42,0.12);">
+                <div style="position:absolute; top:-12px; right:20px; background:#F5A82A; color:#1a1a1a; font:600 9px 'Inter',sans-serif; padding:4px 12px; border-radius:99px;">Recommended</div>
+                <div style="border:1px solid #3E5A48; border-radius:99px; padding:3px 12px; font:600 9px 'Inter',sans-serif; color:#3E5A48; display:inline-block; margin-bottom:14px;">INDIVIDUAL MEMBER</div>
+                <div style="font:400 8px 'Inter',sans-serif; color:#BBBBBB; margin-bottom:14px; margin-top:-10px;">badge colour ref: #3E5A48 (outline only in lo-fi)</div>
+                <div style="font:700 20px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:6px;">Individual Member</div>
+                <div style="font:700 13px 'Inter',sans-serif; color:#1a1a1a; margin-bottom:8px;">[₹XXX] / year</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; margin-bottom:16px; line-height:1.5;">Full standard participation for individual photographers [placeholder]</div>
+                <div style="height:1px; background:#E4E4E4; margin-bottom:16px;"></div>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:85%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:70%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:78%; margin-top:3px;"></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;"><span style="color:#999; font-size:11px; flex-shrink:0;">✓</span><div style="height:8px; background:#EEEEEE; border-radius:2px; width:60%; margin-top:3px;"></div></div>
+                </div>
+                <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:11px 0; font:600 11px 'Inter',sans-serif; color:#1a1a1a; background:#F5A82A; text-align:center;">Apply for Individual →</div>
+                <div style="position:absolute; top:14px; left:-12px; display:flex; align-items:center; gap:4px;">
+                  <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">3</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. COMPARISON TABLE -->
+        <div style="background:#FFFFFF; padding:48px 40px; border-bottom:1px solid #D8D8D8; position:relative;">
+          <div style="position:absolute; top:14px; right:14px; display:flex; align-items:center; gap:4px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">5</div>
+          </div>
+          <div style="max-width:1200px; margin:0 auto;">
+            <div style="text-align:center; margin-bottom:24px;">
+              <div style="font:600 10px 'Inter',sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:#F5A82A; margin-bottom:8px;">COMPARE</div>
+              <div style="font:700 24px 'Outfit',sans-serif; color:#1a1a1a;">Which class is right for you?</div>
+            </div>
+
+            <div style="border:1px solid #D8D8D8; border-radius:8px; overflow:hidden;">
+              <!-- Header row -->
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#1E1E1E;">
+                <div style="padding:14px 20px; font:600 10px 'Inter',sans-serif; color:#999; letter-spacing:0.06em; text-transform:uppercase;">Feature</div>
+                <div style="padding:14px 12px; text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;"><span style="width:8px;height:8px;border:1.5px solid #5C5876;border-radius:50%;display:inline-block;"></span><span style="font:600 11px 'Outfit',sans-serif; color:#F2F2F2;">Basic</span></div>
+                <div style="padding:14px 12px; text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;"><span style="width:8px;height:8px;border:1.5px solid #1A9DAE;border-radius:50%;display:inline-block;"></span><span style="font:600 11px 'Outfit',sans-serif; color:#F2F2F2;">Student</span></div>
+                <div style="padding:14px 12px; text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;"><span style="width:8px;height:8px;border:1.5px solid #3E5A48;border-radius:50%;display:inline-block;"></span><span style="font:600 11px 'Outfit',sans-serif; color:#F2F2F2;">Individual</span></div>
+              </div>
+
+              <!-- Rows -->
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FAFAFA;">
+                <div style="padding:12px 20px; font:400 11px 'Inter',sans-serif; color:#444;">Photo upload limit</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">[XX]/mo</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">[XX]/mo</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">[XX]/mo</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FFFFFF;">
+                <div style="padding:12px 20px; font:400 11px 'Inter',sans-serif; color:#444;">Gallery visibility</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">Public</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">Public</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">Public</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FAFAFA;">
+                <div style="padding:12px 20px; font:400 11px 'Inter',sans-serif; color:#444;">Contest participation</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#5C8A5C;">✓</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#5C8A5C;">✓</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#5C8A5C;">✓</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FFFFFF;">
+                <div style="padding:12px 20px; font:400 11px 'Inter',sans-serif; color:#444;">Event discount</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#BBBBBB;">—</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">[X]%</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">[X]%</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FAFAFA;">
+                <div style="padding:12px 20px; font:400 11px 'Inter',sans-serif; color:#444;">Member directory listing</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#5C8A5C;">✓</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#5C8A5C;">✓</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#5C8A5C;">✓</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FFFFFF;">
+                <div style="padding:12px 20px; font:400 11px 'Inter',sans-serif; color:#444;">Download originals</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#B23A2E;">✗</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">Configurable</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#5C8A5C;">✓</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FAFAFA;">
+                <div style="padding:12px 20px; font:400 11px 'Inter',sans-serif; color:#444;">School access level</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">Foundation</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">Intermediate</div>
+                <div style="padding:12px 12px; text-align:center; font:400 11px 'Inter',sans-serif; color:#666;">Intermediate</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; background:#FFFFFF;">
+                <div style="padding:12px 20px; font:600 11px 'Inter',sans-serif; color:#1a1a1a;">Annual fee</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#1a1a1a;">[₹XXX]</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#1a1a1a;">[₹XXX]</div>
+                <div style="padding:12px 12px; text-align:center; font:600 11px 'Inter',sans-serif; color:#1a1a1a;">[₹XXX]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. FAQ ACCORDION -->
+        <div style="background:#F0F0F0; padding:48px 40px; border-bottom:1px solid #D8D8D8; position:relative;">
+          <div style="position:absolute; top:14px; right:14px; display:flex; align-items:center; gap:4px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">6</div>
+          </div>
+          <div style="max-width:800px; margin:0 auto;">
+            <div style="text-align:center; margin-bottom:24px;">
+              <div style="font:600 10px 'Inter',sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:#F5A82A; margin-bottom:8px;">QUESTIONS</div>
+              <div style="font:700 24px 'Outfit',sans-serif; color:#1a1a1a;">Frequently asked</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:1px; background:#D8D8D8; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden;">
+              <!-- Expanded row -->
+              <div style="background:#FFFFFF; padding:18px 20px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                  <span style="font:600 12px 'Inter',sans-serif; color:#1a1a1a;">What's the difference between registering and becoming a member?</span>
+                  <span style="font:400 12px 'Inter',sans-serif; color:#F5A82A; flex-shrink:0; margin-left:12px;">▾</span>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; padding-left:2px;">
+                  <div style="height:8px; background:#EEEEEE; border-radius:2px; width:95%;"></div>
+                  <div style="height:8px; background:#EEEEEE; border-radius:2px; width:88%;"></div>
+                  <div style="height:8px; background:#EEEEEE; border-radius:2px; width:60%;"></div>
+                </div>
+              </div>
+              <div style="background:#FFFFFF; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font:500 12px 'Inter',sans-serif; color:#444;">Can I upgrade my membership class later?</span>
+                <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA;">▸</span>
+              </div>
+              <div style="background:#FFFFFF; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font:500 12px 'Inter',sans-serif; color:#444;">What documents do I need for Student Membership?</span>
+                <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA;">▸</span>
+              </div>
+              <div style="background:#FFFFFF; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font:500 12px 'Inter',sans-serif; color:#444;">Is there a refund policy if my application is rejected?</span>
+                <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA;">▸</span>
+              </div>
+              <div style="background:#FFFFFF; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font:500 12px 'Inter',sans-serif; color:#444;">How long does application review take?</span>
+                <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA;">▸</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. FINAL CTA BAND -->
+        <div style="background:#1E1E1E; padding:52px 40px; text-align:center; position:relative;">
+          <div style="position:absolute; top:14px; right:14px; display:flex; align-items:center; gap:4px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#777; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">7</div>
+          </div>
+          <div style="font:700 24px 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:8px;">Ready to join Bhopal's photography community?</div>
+          <div style="font:400 12px 'Inter',sans-serif; color:#999; margin-bottom:20px;">Takes less than 2 minutes to get started.</div>
+          <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:14px 0; font:600 13px 'Inter',sans-serif; color:#1a1a1a; background:#F5A82A; display:inline-block; width:280px;">Create Your Free Account</div>
+        </div>
+
+        <!-- FOOTER PLACEHOLDER -->
+        <div style="height:44px; background:#F5F5F5; border-top:1.5px dashed #BBBBBB; display:flex; align-items:center; justify-content:center;">
+          <span style="font:400 10px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">[FOOTER — see Shared Layout Components wireframe]</span>
+        </div>
+
+      </div>
+    </div><!-- end desktop -->
+
+
+    <!-- ════════════════════════ MOBILE 390px ════════════════════════ -->
+    <div style="flex-shrink:0; width:390px;">
+      <div style="text-align:center; font:600 11px 'Inter',sans-serif; color:#777; letter-spacing:0.10em; text-transform:uppercase; padding-bottom:10px; border-bottom:2px solid #BBBBBB; margin-bottom:0;">Mobile · 390px</div>
+      <div style="border:1.5px solid #BBBBBB; overflow:hidden; background:#F2F2F2;">
+
+        <!-- Mobile Nav placeholder -->
+        <div style="height:40px; background:#F5F5F5; border-bottom:1.5px dashed #BBBBBB; display:flex; align-items:center; justify-content:center;">
+          <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">[NAV — see Shared Layout]</span>
+        </div>
+
+        <!-- Mobile Page header -->
+        <div style="background:#1E1E1E; padding:28px 18px; text-align:center;">
+          <div style="font:600 9px 'Inter',sans-serif; letter-spacing:0.12em; text-transform:uppercase; color:#F5A82A; margin-bottom:8px;">MEMBERSHIP</div>
+          <div style="font:700 22px/1.2 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:8px;">Shoot more. Share more. Belong.</div>
+          <div style="font:400 11px 'Inter',sans-serif; color:#999; line-height:1.5;">Start with a free account. Apply for the membership class that fits you.</div>
+        </div>
+
+        <!-- Mobile flow diagram -->
+        <div style="background:#FFFFFF; padding:28px 18px; border-bottom:1px solid #D8D8D8;">
+          <div style="position:relative; padding-left:24px;">
+            <div style="position:absolute; left:15px; top:24px; bottom:24px; width:2px; background:#D8D8D8;"></div>
+
+            <!-- Node 1 -->
+            <div style="display:flex; gap:14px; margin-bottom:24px; position:relative;">
+              <div style="width:32px;height:32px;border-radius:50%;background:#1E1E1E;color:#fff;font:700 12px 'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:-24px;z-index:1;">1</div>
+              <div>
+                <div style="font:700 14px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:4px;">Register Free</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; line-height:1.5;">Create your platform identity — no fee, no commitment</div>
+              </div>
+            </div>
+            <!-- Node 2 -->
+            <div style="display:flex; gap:14px; margin-bottom:24px; position:relative;">
+              <div style="width:32px;height:32px;border-radius:50%;background:#1E1E1E;color:#fff;font:700 12px 'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:-24px;z-index:1;">2</div>
+              <div>
+                <div style="font:700 14px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:4px;">Apply for a Class</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; line-height:1.5;">Choose Basic, Student or Individual and submit your application</div>
+              </div>
+            </div>
+            <!-- Node 3 -->
+            <div style="display:flex; gap:14px; position:relative;">
+              <div style="width:32px;height:32px;border-radius:50%;background:#DDDDDD;color:#999;font:700 12px 'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:-24px;z-index:1;">3</div>
+              <div>
+                <div style="font:700 14px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:4px;">Start Participating</div>
+                <div style="font:400 10px 'Inter',sans-serif; color:#999; line-height:1.5;">Contests, events, galleries and the member directory</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;">
+            <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:13px; font:600 12px 'Inter',sans-serif; color:#1a1a1a; background:#F5A82A; text-align:center; margin-bottom:12px;">Create Your Free Account</div>
+            <div style="font:400 10px 'Inter',sans-serif; color:#888; text-align:center;">Already registered? <span style="color:#C4851F; font-weight:500;">Sign In →</span></div>
+          </div>
+        </div>
+
+        <!-- Mobile class cards -->
+        <div style="background:#F0F0F0; padding:28px 18px; border-bottom:1px solid #D8D8D8; position:relative;">
+          <div style="position:absolute; top:10px; right:10px; display:flex; align-items:center; gap:4px;">
+            <div style="width:18px;height:18px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">4</div>
+          </div>
+          <div style="text-align:center; margin-bottom:20px;">
+            <div style="font:600 9px 'Inter',sans-serif; letter-spacing:0.12em; text-transform:uppercase; color:#F5A82A; margin-bottom:6px;">CHOOSE YOUR CLASS</div>
+            <div style="font:700 18px 'Outfit',sans-serif; color:#1a1a1a;">Three ways to belong</div>
+          </div>
+
+          <!-- Featured first on mobile: Individual -->
+          <div style="border:2px solid #F5A82A; border-radius:8px; background:#FFFFFF; padding:18px; margin-bottom:16px; position:relative; box-shadow:0 4px 16px rgba(245,168,42,0.12);">
+            <div style="position:absolute; top:-11px; right:16px; background:#F5A82A; color:#1a1a1a; font:600 8px 'Inter',sans-serif; padding:3px 10px; border-radius:99px;">Recommended</div>
+            <div style="border:1px solid #3E5A48; border-radius:99px; padding:3px 11px; font:600 8px 'Inter',sans-serif; color:#3E5A48; display:inline-block; margin-bottom:10px;">INDIVIDUAL MEMBER</div>
+            <div style="font:700 17px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:5px;">Individual Member</div>
+            <div style="font:700 12px 'Inter',sans-serif; color:#1a1a1a; margin-bottom:10px;">[₹XXX] / year</div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:85%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:70%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:78%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:60%; margin-top:3px;"></div></div>
+            </div>
+            <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:10px; font:600 11px 'Inter',sans-serif; color:#1a1a1a; background:#F5A82A; text-align:center;">Apply for Individual →</div>
+          </div>
+
+          <!-- Basic -->
+          <div style="border:1.5px solid #D0D0D0; border-radius:8px; background:#FFFFFF; padding:18px; margin-bottom:16px;">
+            <div style="border:1px solid #5C5876; border-radius:99px; padding:3px 11px; font:600 8px 'Inter',sans-serif; color:#5C5876; display:inline-block; margin-bottom:10px;">BASIC MEMBER</div>
+            <div style="font:700 17px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:5px;">Basic Member</div>
+            <div style="font:700 12px 'Inter',sans-serif; color:#1a1a1a; margin-bottom:10px;">[₹XXX] / year</div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:85%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:70%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:78%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:60%; margin-top:3px;"></div></div>
+            </div>
+            <div style="border:1.5px solid #999; border-radius:4px; padding:10px; font:500 11px 'Inter',sans-serif; color:#666; text-align:center;">Apply for Basic →</div>
+          </div>
+
+          <!-- Student -->
+          <div style="border:1.5px solid #D0D0D0; border-radius:8px; background:#FFFFFF; padding:18px;">
+            <div style="border:1px solid #1A9DAE; border-radius:99px; padding:3px 11px; font:600 8px 'Inter',sans-serif; color:#1A9DAE; display:inline-block; margin-bottom:10px;">STUDENT MEMBER</div>
+            <div style="font:700 17px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:5px;">Student Member</div>
+            <div style="font:700 12px 'Inter',sans-serif; color:#1a1a1a; margin-bottom:3px;">[₹XXX] / year</div>
+            <div style="font:400 9px 'Inter',sans-serif; color:#B23A2E; margin-bottom:10px;">Requires student ID verification</div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:85%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:70%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:78%; margin-top:3px;"></div></div>
+              <div style="display:flex; align-items:flex-start; gap:7px;"><span style="color:#999; font-size:10px; flex-shrink:0;">✓</span><div style="height:7px; background:#EEEEEE; border-radius:2px; width:60%; margin-top:3px;"></div></div>
+            </div>
+            <div style="border:1.5px solid #999; border-radius:4px; padding:10px; font:500 11px 'Inter',sans-serif; color:#666; text-align:center;">Apply for Student →</div>
+          </div>
+        </div>
+
+        <!-- Mobile comparison — stacked cards -->
+        <div style="background:#FFFFFF; padding:28px 18px; border-bottom:1px solid #D8D8D8;">
+          <div style="text-align:center; margin-bottom:6px;">
+            <div style="font:600 9px 'Inter',sans-serif; letter-spacing:0.12em; text-transform:uppercase; color:#F5A82A; margin-bottom:6px;">COMPARE</div>
+            <div style="font:700 18px 'Outfit',sans-serif; color:#1a1a1a;">Which class is right for you?</div>
+          </div>
+          <div style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic; text-align:center; margin-bottom:18px;">Table converts to per-class stacked list — same data, no horizontal scroll required.</div>
+
+          <!-- Individual mini-card -->
+          <div style="border:1px solid #D8D8D8; border-radius:8px; overflow:hidden; margin-bottom:14px;">
+            <div style="background:#1E1E1E; padding:10px 14px; display:flex; align-items:center; gap:6px;">
+              <span style="width:8px;height:8px;border:1.5px solid #3E5A48;border-radius:50%;display:inline-block;"></span>
+              <span style="font:600 11px 'Outfit',sans-serif; color:#F2F2F2;">Individual Member</span>
+            </div>
+            <div style="padding:6px 14px;">
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEEEEE; font:400 10px 'Inter',sans-serif;"><span style="color:#777;">Photo upload limit</span><span style="color:#444;">[XX]/mo</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEEEEE; font:400 10px 'Inter',sans-serif;"><span style="color:#777;">Gallery visibility</span><span style="color:#444;">Public</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEEEEE; font:400 10px 'Inter',sans-serif;"><span style="color:#777;">Contest participation</span><span style="color:#5C8A5C; font-weight:600;">✓</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEEEEE; font:400 10px 'Inter',sans-serif;"><span style="color:#777;">Event discount</span><span style="color:#444;">[X]%</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEEEEE; font:400 10px 'Inter',sans-serif;"><span style="color:#777;">Member directory listing</span><span style="color:#5C8A5C; font-weight:600;">✓</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEEEEE; font:400 10px 'Inter',sans-serif;"><span style="color:#777;">Download originals</span><span style="color:#5C8A5C; font-weight:600;">✓</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEEEEE; font:400 10px 'Inter',sans-serif;"><span style="color:#777;">School access level</span><span style="color:#444;">Intermediate</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; font:600 10px 'Inter',sans-serif;"><span style="color:#1a1a1a;">Annual fee</span><span style="color:#1a1a1a;">[₹XXX]</span></div>
+            </div>
+          </div>
+
+          <div style="font:400 9px 'Inter',sans-serif; color:#CCCCCC; font-style:italic; text-align:center;">+ Basic Member and Student Member mini-cards — same 8-row pattern, omitted here for space</div>
+        </div>
+
+        <!-- Mobile FAQ -->
+        <div style="background:#F0F0F0; padding:28px 18px; border-bottom:1px solid #D8D8D8;">
+          <div style="text-align:center; margin-bottom:20px;">
+            <div style="font:600 9px 'Inter',sans-serif; letter-spacing:0.12em; text-transform:uppercase; color:#F5A82A; margin-bottom:6px;">QUESTIONS</div>
+            <div style="font:700 18px 'Outfit',sans-serif; color:#1a1a1a;">Frequently asked</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:1px; background:#D8D8D8; border:1px solid #D8D8D8; border-radius:8px; overflow:hidden;">
+            <div style="background:#FFFFFF; padding:16px;">
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; gap:8px;">
+                <span style="font:600 11px 'Inter',sans-serif; color:#1a1a1a; line-height:1.4;">What's the difference between registering and becoming a member?</span>
+                <span style="font:400 12px 'Inter',sans-serif; color:#F5A82A; flex-shrink:0;">▾</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:7px;">
+                <div style="height:7px; background:#EEEEEE; border-radius:2px; width:95%;"></div>
+                <div style="height:7px; background:#EEEEEE; border-radius:2px; width:85%;"></div>
+                <div style="height:7px; background:#EEEEEE; border-radius:2px; width:55%;"></div>
+              </div>
+            </div>
+            <div style="background:#FFFFFF; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <span style="font:500 11px 'Inter',sans-serif; color:#444; line-height:1.4;">Can I upgrade my membership class later?</span>
+              <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0;">▸</span>
+            </div>
+            <div style="background:#FFFFFF; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <span style="font:500 11px 'Inter',sans-serif; color:#444; line-height:1.4;">What documents do I need for Student Membership?</span>
+              <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0;">▸</span>
+            </div>
+            <div style="background:#FFFFFF; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <span style="font:500 11px 'Inter',sans-serif; color:#444; line-height:1.4;">Is there a refund policy if my application is rejected?</span>
+              <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0;">▸</span>
+            </div>
+            <div style="background:#FFFFFF; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <span style="font:500 11px 'Inter',sans-serif; color:#444; line-height:1.4;">How long does application review take?</span>
+              <span style="font:400 12px 'Inter',sans-serif; color:#AAAAAA; flex-shrink:0;">▸</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile final CTA -->
+        <div style="background:#1E1E1E; padding:36px 18px; text-align:center;">
+          <div style="font:700 19px/1.3 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:8px;">Ready to join Bhopal's photography community?</div>
+          <div style="font:400 11px 'Inter',sans-serif; color:#999; margin-bottom:18px;">Takes less than 2 minutes to get started.</div>
+          <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:13px; font:600 12px 'Inter',sans-serif; color:#1a1a1a; background:#F5A82A;">Create Your Free Account</div>
+        </div>
+
+        <!-- Mobile Footer placeholder -->
+        <div style="height:40px; background:#F5F5F5; border-top:1.5px dashed #BBBBBB; display:flex; align-items:center; justify-content:center;">
+          <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">[FOOTER — see Shared Layout]</span>
+        </div>
+
+      </div>
+    </div><!-- end mobile -->
+
+  </div><!-- end columns -->
+
+
+  <!-- ════════════════════════ ANNOTATIONS ════════════════════════ -->
+  <div style="margin-top:52px; border-top:2px solid #BBBBBB; padding-top:28px;">
+    <div style="font:700 16px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:20px;">Annotation Key</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 48px; max-width:1400px;">
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:rgba(245,168,42,0.06);border:1px solid rgba(245,168,42,0.25);border-radius:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;margin-top:1px;">1</div>
+        <div style="font:400 11px/1.55 'Inter',sans-serif;color:#444;"><strong>Two-step flow diagram</strong> is the primary visual mechanism communicating MEM-006 P1 — identity and membership are separate, sequential steps, never a single "Join Now" button. Step 1 links to /register. Step 2 anchors down to the class cards on this same page. Step 3 is aspirational/informational only — no link.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:rgba(245,168,42,0.06);border:1px solid rgba(245,168,42,0.25);border-radius:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;margin-top:1px;">2</div>
+        <div style="font:400 11px/1.55 'Inter',sans-serif;color:#444;"><strong>Only 3 operational classes exist on this page.</strong> Constitutional/voting classes (Full, Life, Patron, Founding) never appear here — no card, footnote, greyed placeholder, or mention. This is a hard governance rule (MEM-006), not a content decision.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:rgba(245,168,42,0.06);border:1px solid rgba(245,168,42,0.25);border-radius:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;margin-top:1px;">3</div>
+        <div style="font:400 11px/1.55 'Inter',sans-serif;color:#444;"><strong>"Recommended" label is admin-configurable</strong> from the dashboard — any of the 3 classes could carry this label depending on club strategy. Not hardcoded to Individual Member. It is the only card with a filled amber primary CTA; the other two use ghost/outline buttons.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:rgba(245,168,42,0.06);border:1px solid rgba(245,168,42,0.25);border-radius:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;margin-top:1px;">4</div>
+        <div style="font:400 11px/1.55 'Inter',sans-serif;color:#444;"><strong>Mobile card reordering:</strong> the featured/recommended class card is shown first on mobile for visibility. Desktop order follows class hierarchy (Basic → Student → Individual); mobile order follows recommendation priority instead.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:rgba(245,168,42,0.06);border:1px solid rgba(245,168,42,0.25);border-radius:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;margin-top:1px;">5</div>
+        <div style="font:400 11px/1.55 'Inter',sans-serif;color:#444;"><strong>Comparison table values are illustrative placeholders.</strong> Actual entitlement values come from the class_entitlements table (Module 02.10) — configurable per class from the admin panel, not hardcoded in the frontend. Mobile converts the table to 3 stacked per-class mini-cards with the same 8 rows, no horizontal scroll.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:rgba(245,168,42,0.06);border:1px solid rgba(245,168,42,0.25);border-radius:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;margin-top:1px;">6</div>
+        <div style="font:400 11px/1.55 'Inter',sans-serif;color:#444;"><strong>FAQ is CMS-editable</strong> (Module 13.3). The "upgrade my membership class" answer must NOT reference or name constitutional classes even in FAQ copy — phrase it as "additional class options become available inside your Member Hub" without naming Full/Life/Patron/Founding.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:rgba(245,168,42,0.06);border:1px solid rgba(245,168,42,0.25);border-radius:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;margin-top:1px;">7</div>
+        <div style="font:400 11px/1.55 'Inter',sans-serif;color:#444;"><strong>Final CTA band</strong> repeats the same Register-first CTA as the flow diagram in Section 2 — reinforces the identity-first entry point at the bottom of the page for users who scrolled through without converting earlier.</div>
+      </div>
+
+    </div>
+
+    <!-- Legend -->
+    <div style="margin-top:24px; display:flex; gap:24px; align-items:center; font:400 10px 'Inter',sans-serif; color:#AAAAAA; flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:16px;height:10px;background:#CACACA;border:1px solid #BBBBBB;border-radius:1px;"></div> grey fill = image/media placeholder</div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:16px;height:8px;background:#E4E4E4;border-radius:2px;"></div> grey bars = body copy placeholder</div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;border-radius:50%;background:#F5A82A;display:flex;align-items:center;justify-content:center;font:700 8px sans-serif;color:#fff;">N</div> amber circle = annotation callout</div>
+      <div style="display:flex;align-items:center;gap:6px;">[bracketed text] = dynamic/API-driven content, not final copy</div>
+      <div style="display:flex;align-items:center;gap:6px;">badge colours shown as text/outline reference only — not applied as fill in lo-fi</div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+</body>
+</html>

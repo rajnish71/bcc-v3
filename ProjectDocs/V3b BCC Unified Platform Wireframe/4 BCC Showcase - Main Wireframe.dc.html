@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+  <meta name="design_doc_mode" content="canvas">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #E8E6E1; }
+    *, *::before, *::after { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="font-family:'Inter',system-ui,sans-serif; background:#E8E6E1; padding:44px 44px 80px; min-width:1900px;">
+
+  <!-- Doc header -->
+  <div style="margin-bottom:36px;">
+    <div style="font:800 22px/1.1 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:5px;">BCC Unified Platform V3 — Showcase Page <span style="font:400 14px 'Inter',sans-serif; color:#AAAAAA;">/showcase</span></div>
+    <div style="font:400 12px 'Inter',sans-serif; color:#888; letter-spacing:0.02em;">Lo-fidelity wireframe · Desktop 1280px + Mobile 390px · July 2026</div>
+  </div>
+
+  <!-- Annotation legend -->
+  <div style="display:flex; gap:16px; margin-bottom:32px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">1</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Grouped nav — phase-scalable dropdowns</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">2</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Filter bar — sticky below nav, combinable API params</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">3</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Justified grid — aspect ratios preserved, Load More pagination</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #D8D8D8; border-radius:6px; padding:7px 12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">4</div>
+      <span style="font:400 10px 'Inter',sans-serif; color:#555;">Class badges — identification labels only, no application CTA</span>
+    </div>
+  </div>
+
+  <!-- Side-by-side columns -->
+  <div style="display:flex; gap:48px; align-items:flex-start;">
+
+    <!-- ═══════════════════════ DESKTOP 1280px ═══════════════════════ -->
+    <div style="flex-shrink:0; width:1280px;">
+      <div style="text-align:center; font:600 11px 'Inter',sans-serif; color:#777; letter-spacing:0.10em; text-transform:uppercase; padding-bottom:10px; border-bottom:2px solid #BBBBBB; margin-bottom:0;">Desktop · 1280px</div>
+      <div style="border:1.5px solid #BBBBBB; overflow:visible; background:#F2F2F2; position:relative;">
+
+        <!-- ── NAV ── -->
+        <div style="position:relative; height:68px; background:#FFFFFF; border-bottom:1.5px solid #D0D0D0; display:flex; align-items:center; padding:0 40px; gap:0; z-index:20;">
+          <!-- Callout 1 -->
+          <div style="position:absolute; top:6px; right:8px; display:flex; align-items:center; gap:5px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">1</div>
+          </div>
+          <!-- Logo -->
+          <div style="display:flex; align-items:center; gap:10px; flex-shrink:0; margin-right:32px;">
+            <div style="width:34px;height:34px;background:#D8D8D8;border:1px solid #C0C0C0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;font-style:italic;">logo</div>
+            <div style="font:700 13px 'Outfit',sans-serif; color:#333;">Bhopal Camera Club</div>
+          </div>
+          <!-- Centre nav -->
+          <div style="flex:1; display:flex; justify-content:center; gap:6px; align-items:center;">
+            <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; cursor:pointer;">Home</span>
+            <!-- Showcase — ACTIVE with dropdown indicator -->
+            <div style="position:relative;">
+              <div style="font:600 12px 'Inter',sans-serif; color:#1a1a1a; padding:6px 10px; border-bottom:2px solid #F5A82A; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                Showcase
+                <span style="font-size:8px; color:#F5A82A;">▾</span>
+              </div>
+              <!-- Dropdown panel — open state -->
+              <div style="position:absolute; top:calc(100% + 1px); left:0; background:#FFFFFF; border:1.5px solid #D0D0D0; border-radius:6px; min-width:190px; box-shadow:0 4px 12px rgba(0,0,0,0.08); z-index:100; overflow:hidden;">
+                <div style="padding:4px 0;">
+                  <div style="padding:9px 16px; background:rgba(245,168,42,0.08); border-left:3px solid #F5A82A; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font:600 11px 'Inter',sans-serif; color:#1a1a1a;">Showcase (photos)</span>
+                    <span style="font:400 9px 'Inter',sans-serif; color:#F5A82A;">← current</span>
+                  </div>
+                  <div style="padding:9px 16px; padding-left:19px;">
+                    <span style="font:400 11px 'Inter',sans-serif; color:#555;">Photographers</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Activities dropdown -->
+            <div style="position:relative;">
+              <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                Activities <span style="font-size:8px; color:#AAAAAA;">▾</span>
+              </span>
+            </div>
+            <!-- Learn — greyed -->
+            <div style="position:relative;">
+              <span style="font:400 12px 'Inter',sans-serif; color:#BBBBBB; padding:6px 10px; display:flex; align-items:center; gap:4px; cursor:not-allowed;">
+                Learn <span style="font-size:8px;">▾</span>
+                <span style="font:600 8px 'Inter',sans-serif; color:#BBBBBB; border:1px solid #CCCCCC; border-radius:99px; padding:1px 6px; letter-spacing:0.04em;">COMING SOON</span>
+              </span>
+            </div>
+            <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; cursor:pointer;">Membership</span>
+            <span style="font:400 12px 'Inter',sans-serif; color:#555; padding:6px 10px; cursor:pointer;">Journal</span>
+          </div>
+          <!-- Right CTAs -->
+          <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+            <div style="border:1.5px solid #999; border-radius:4px; padding:6px 14px; font:500 11px 'Inter',sans-serif; color:#666;">Sign In</div>
+            <div style="border:1.5px solid #F5A82A; border-radius:4px; padding:6px 14px; font:500 11px 'Inter',sans-serif; color:#fff; background:#F5A82A;">Register</div>
+          </div>
+        </div>
+
+        <!-- Annotation 1 note -->
+        <div style="background:rgba(245,168,42,0.06); border-left:3px solid rgba(245,168,42,0.4); padding:7px 14px; display:flex; gap:8px; align-items:flex-start;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+          <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#777;">Grouped nav is phase-scalable. Activities dropdown gains Contests + Exhibitions when those modules go live. Learn dropdown activates when Photography School (Phase 4) launches. Showcase dropdown shown in open state — "Showcase (photos)" is the current page, highlighted. No nav restructuring needed as modules ship.</div>
+        </div>
+
+        <!-- ── PAGE HEADER ── -->
+        <div style="background:#1E1E1E; padding:0 40px; height:200px; display:flex; align-items:center;">
+          <div style="max-width:1200px; width:100%;">
+            <div style="font:600 10px 'Inter',sans-serif; letter-spacing:0.16em; text-transform:uppercase; color:#F5A82A; margin-bottom:8px;">MEMBER WORK</div>
+            <div style="font:800 42px/1.05 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:10px;">Showcase</div>
+            <div style="font:400 13px 'Inter',sans-serif; color:#888;">[311 photographs from 15 active BCC photographers]</div>
+          </div>
+        </div>
+
+        <!-- ── FILTER + SORT BAR ── -->
+        <div style="position:relative; background:#FAFAFA; border-bottom:1.5px solid #D8D8D8; height:52px; display:flex; align-items:center; padding:0 40px; gap:0;">
+          <!-- Callout 2 -->
+          <div style="position:absolute; top:5px; right:8px; display:flex; align-items:center; gap:5px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">2</div>
+          </div>
+          <!-- Genre pills -->
+          <div style="display:flex; align-items:center; gap:6px; overflow:hidden; flex:1;">
+            <!-- Active pill -->
+            <div style="flex-shrink:0; background:#F5A82A; border:1.5px solid #F5A82A; border-radius:99px; padding:4px 12px; font:600 10px 'Inter',sans-serif; color:#fff; white-space:nowrap;">All</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Wildlife</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Bird</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Street</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Portrait</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Landscape</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Architecture</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Macro</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Night</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Travel</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 12px; font:400 10px 'Inter',sans-serif; color:#666; white-space:nowrap;">Abstract</div>
+            <div style="flex-shrink:0; font:400 9px 'Inter',sans-serif; color:#BBBBBB; font-style:italic; white-space:nowrap;">← scrolls →</div>
+          </div>
+          <!-- Separators + controls -->
+          <div style="width:1px; height:28px; background:#E0E0E0; flex-shrink:0; margin:0 12px;"></div>
+          <div style="flex-shrink:0; border:1.5px solid #D0D0D0; border-radius:4px; padding:5px 10px; font:400 10px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap;">
+            All Events <span style="font-size:8px; color:#AAAAAA;">▾</span>
+          </div>
+          <div style="width:1px; height:28px; background:#E0E0E0; flex-shrink:0; margin:0 12px;"></div>
+          <div style="flex-shrink:0; border:1.5px solid #D0D0D0; border-radius:4px; padding:5px 10px; font:400 10px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap;">
+            Latest <span style="font-size:8px; color:#AAAAAA;">▾</span>
+          </div>
+          <div style="width:1px; height:28px; background:#E0E0E0; flex-shrink:0; margin:0 12px;"></div>
+          <!-- View toggle -->
+          <div style="flex-shrink:0; display:flex; border:1.5px solid #D0D0D0; border-radius:4px; overflow:hidden;">
+            <div style="padding:5px 10px; background:#222; font:500 10px 'Inter',sans-serif; color:#fff; cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap;">⊞ Grid</div>
+            <div style="padding:5px 10px; background:#fff; font:500 10px 'Inter',sans-serif; color:#888; cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; border-left:1px solid #D0D0D0;">☰ List</div>
+          </div>
+        </div>
+
+        <!-- Annotation 2 -->
+        <div style="background:rgba(245,168,42,0.06); border-left:3px solid rgba(245,168,42,0.4); padding:7px 14px; display:flex; gap:8px; align-items:flex-start;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+          <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#777;">Filter bar sticks below the 68px nav on scroll so the grid is always accessible with filters in view. Genre pills scroll horizontally when they exceed viewport. All filters (genre, event, sort) are combinable — API query string builds from the active state of each control. Grid/List toggle switches the layout mode.</div>
+        </div>
+
+        <!-- ── PHOTO GRID ── -->
+        <div style="background:#F0F0F0; padding:32px 40px 40px; position:relative;">
+          <div style="max-width:1200px; margin:0 auto;">
+            <!-- Grid info note -->
+            <div style="display:flex; align-items:flex-start; gap:8px; background:rgba(245,168,42,0.07); border:1px dashed rgba(245,168,42,0.5); border-radius:5px; padding:8px 12px; margin-bottom:16px; position:relative;">
+              <div style="position:absolute; top:-10px; right:8px; display:flex; align-items:center; gap:4px;">
+                <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+                <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">3</div>
+              </div>
+              <div style="width:18px;height:18px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">i</div>
+              <div style="font:400 10px/1.55 'Inter',sans-serif; color:#666;">Justified grid — each photo retains its original aspect ratio. Each row is proportionally scaled so all photos fill the full 1200px content width with 8px gaps. Row height varies by row content. Algorithm: Flickr justified-layout (or equivalent). No CSS object-fit cropping applied. 5 rows shown (22 photos). Load More triggers paginated API fetch — not infinite scroll, to keep footer accessible.</div>
+            </div>
+
+            <!-- ROW 1: 4 photos — H=230px — widths: 357 158 423 238 (sum=1176, +3×8=1200) -->
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <div style="width:357px;height:230px;background:#C8C8C8;border:1px solid #B8B8B8;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">3:2</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:158px;height:230px;background:#C0C0C0;border:1px solid #B0B0B0;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">2:3</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">portrait</span>
+              </div>
+              <!-- HOVER STATE CARD — annotated -->
+              <div style="width:423px;height:230px;background:#B8B8B8;border:1.5px dashed #888;flex-shrink:0;position:relative;overflow:hidden;">
+                <!-- Aspect ratio label -->
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;z-index:1;">
+                  <span style="font:600 10px 'Inter',sans-serif;color:#999;">16:9</span>
+                  <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+                </div>
+                <!-- Dark gradient overlay bottom 40% -->
+                <div style="position:absolute;bottom:0;left:0;right:0;height:92px;background:linear-gradient(to bottom,transparent,rgba(30,30,30,0.80));z-index:2;"></div>
+                <!-- Viewfinder corners — top-left -->
+                <div style="position:absolute;top:10px;left:10px;width:18px;height:18px;border-top:2px solid #FFFFFF;border-left:2px solid #FFFFFF;z-index:3;"></div>
+                <!-- top-right -->
+                <div style="position:absolute;top:10px;right:10px;width:18px;height:18px;border-top:2px solid #FFFFFF;border-right:2px solid #FFFFFF;z-index:3;"></div>
+                <!-- bottom-left -->
+                <div style="position:absolute;bottom:10px;left:10px;width:18px;height:18px;border-bottom:2px solid #FFFFFF;border-left:2px solid #FFFFFF;z-index:3;"></div>
+                <!-- bottom-right -->
+                <div style="position:absolute;bottom:10px;right:10px;width:18px;height:18px;border-bottom:2px solid #FFFFFF;border-right:2px solid #FFFFFF;z-index:3;"></div>
+                <!-- Flag top-right icon -->
+                <div style="position:absolute;top:10px;right:36px;width:20px;height:20px;border:1.5px solid rgba(255,255,255,0.7);border-radius:3px;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:4;">
+                  <span style="font:600 8px 'Inter',sans-serif;color:#fff;">⚑</span>
+                </div>
+                <!-- Bottom overlay content -->
+                <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;z-index:4;">
+                  <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
+                    <div style="width:22px;height:22px;border-radius:50%;background:#D0D0D0;border:1.5px solid rgba(255,255,255,0.6);flex-shrink:0;"></div>
+                    <span style="font:500 10px 'Inter',sans-serif;color:rgba(255,255,255,0.9);">[Photographer Name]</span>
+                  </div>
+                  <div style="font:600 11px 'Outfit',sans-serif;color:#fff;margin-bottom:5px;">[Photo Title]</div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="border:1px solid rgba(180,230,255,0.6);border-radius:99px;padding:2px 8px;font:600 8px 'Inter',sans-serif;color:rgba(200,240,255,0.9);background:rgba(100,180,220,0.18);">Wildlife</div>
+                    <span style="font:400 9px 'Inter',sans-serif;color:rgba(255,255,255,0.65);">♥ 24</span>
+                    <span style="font:400 9px 'Inter',sans-serif;color:rgba(255,255,255,0.55);">👁 312</span>
+                  </div>
+                </div>
+                <!-- Hover state label -->
+                <div style="position:absolute;top:-1px;left:-1px;background:#555;color:#fff;font:600 8px 'Inter',sans-serif;padding:2px 8px;border-radius:0 0 4px 0;z-index:10;letter-spacing:0.04em;">HOVER STATE</div>
+              </div>
+              <div style="width:238px;height:230px;background:#C4C4C4;border:1px solid #B4B4B4;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">1:1</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">square</span>
+              </div>
+            </div>
+
+            <!-- ROW 2: 5 photos — H=195px — widths: 331 124 279 248 186 (sum=1168, +4×8=1200) -->
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <div style="width:331px;height:195px;background:#CACACA;border:1px solid #BABABA;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">16:9</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:124px;height:195px;background:#BEBEBE;border:1px solid #AEAEAE;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">2:3</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">portrait</span>
+              </div>
+              <div style="width:279px;height:195px;background:#C6C6C6;border:1px solid #B6B6B6;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">3:2</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:248px;height:195px;background:#C2C2C2;border:1px solid #B2B2B2;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">4:3</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:186px;height:195px;background:#C0C0C0;border:1px solid #B0B0B0;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">1:1</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">square</span>
+              </div>
+            </div>
+
+            <!-- ROW 3: 4 photos — H=245px — widths: 393 261 348 174 (sum=1176, +3×8=1200) -->
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <div style="width:393px;height:245px;background:#C8C8C8;border:1px solid #B8B8B8;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">3:2</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:261px;height:245px;background:#C4C4C4;border:1px solid #B4B4B4;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">1:1</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">square</span>
+              </div>
+              <div style="width:348px;height:245px;background:#CACACA;border:1px solid #BABABA;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">4:3</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:174px;height:245px;background:#BDBDBD;border:1px solid #ADADAD;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">2:3</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">portrait</span>
+              </div>
+            </div>
+
+            <!-- ROW 4: 5 photos — H=200px — widths: 275 184 327 245 137 (sum=1168, +4×8=1200) -->
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <div style="width:275px;height:200px;background:#C7C7C7;border:1px solid #B7B7B7;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">3:2</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:184px;height:200px;background:#C3C3C3;border:1px solid #B3B3B3;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">1:1</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">square</span>
+              </div>
+              <div style="width:327px;height:200px;background:#CBCBCB;border:1px solid #BBBBBB;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">16:9</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:245px;height:200px;background:#C5C5C5;border:1px solid #B5B5B5;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">4:3</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:137px;height:200px;background:#BEBEBE;border:1px solid #AEAEAE;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">3:4</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">portrait</span>
+              </div>
+            </div>
+
+            <!-- ROW 5: 4 photos — H=225px — widths: 415 176 351 234 (sum=1176, +3×8=1200) -->
+            <div style="display:flex; gap:8px; margin-bottom:28px;">
+              <div style="width:415px;height:225px;background:#CCCCCC;border:1px solid #BCBCBC;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">16:9</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:176px;height:225px;background:#BFBFBF;border:1px solid #AFAFAF;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">3:4</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">portrait</span>
+              </div>
+              <div style="width:351px;height:225px;background:#C9C9C9;border:1px solid #B9B9B9;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">3:2</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">landscape</span>
+              </div>
+              <div style="width:234px;height:225px;background:#C3C3C3;border:1px solid #B3B3B3;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">
+                <span style="font:600 10px 'Inter',sans-serif;color:#999;">1:1</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">square</span>
+              </div>
+            </div>
+
+            <!-- Load More -->
+            <div style="text-align:center; margin-bottom:8px;">
+              <div style="display:inline-block; border:1.5px solid #999; border-radius:4px; padding:10px 36px; font:500 12px 'Inter',sans-serif; color:#555; background:#F0F0F0; cursor:pointer;">[Load More Photos]</div>
+            </div>
+            <div style="text-align:center; font:400 10px 'Inter',sans-serif; color:#AAAAAA;">Showing 22 of 311 photos</div>
+          </div>
+        </div>
+
+        <!-- ── FEATURED PHOTOGRAPHERS STRIP ── -->
+        <div style="background:#FFFFFF; padding:48px 40px; position:relative;">
+          <!-- Callout 4 -->
+          <div style="position:absolute; top:12px; right:10px; display:flex; align-items:center; gap:5px;">
+            <span style="font:400 9px 'Inter',sans-serif; color:#AAAAAA; font-style:italic;">Callout</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#F5A82A;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #C4851F;flex-shrink:0;">4</div>
+          </div>
+          <div style="max-width:1200px; margin:0 auto;">
+            <div style="font:600 10px 'Inter',sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:#F5A82A; margin-bottom:6px;">BEHIND THE LENS</div>
+            <div style="font:700 22px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:4px;">Featured photographers this month</div>
+            <div style="font:400 11px 'Inter',sans-serif; color:#AAAAAA; margin-bottom:28px;">Meet the members whose work fills this showcase</div>
+            <!-- 4 cards -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+              <!-- Card 1: Basic Member -->
+              <div style="border:1px solid #D8D8D8; border-radius:8px; padding:24px 16px 20px; background:#FAFAFA; display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <div style="width:80px;height:80px;border-radius:50%;background:#D4D4D4;border:1px solid #C4C4C4;display:flex;align-items:center;justify-content:center;font:400 9px 'Inter',sans-serif;color:#AAAAAA;font-style:italic;flex-shrink:0;">avatar</div>
+                <div style="border:1.5px solid #AAAAAA;border-radius:99px;padding:3px 12px;font:600 9px 'Inter',sans-serif;color:#777;letter-spacing:0.04em;">Basic Member</div>
+                <div style="font:600 13px 'Outfit',sans-serif;color:#222;text-align:center;">[Photographer Name]</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Wildlife</div>
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Street</div>
+                </div>
+                <div style="font:400 10px 'Inter',sans-serif;color:#AAAAAA;text-align:center;">[XX] photos in showcase</div>
+                <div style="font:400 9px 'Inter',sans-serif;color:#CCCCCC;text-align:center;">Member since [YYYY]</div>
+                <div style="font:500 11px 'Inter',sans-serif;color:#F5A82A;border-bottom:1px solid #F5A82A;cursor:pointer;">View Profile →</div>
+              </div>
+              <!-- Card 2: Individual Member -->
+              <div style="border:1px solid #D8D8D8; border-radius:8px; padding:24px 16px 20px; background:#FAFAFA; display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <div style="width:80px;height:80px;border-radius:50%;background:#D4D4D4;border:1px solid #C4C4C4;display:flex;align-items:center;justify-content:center;font:400 9px 'Inter',sans-serif;color:#AAAAAA;font-style:italic;flex-shrink:0;">avatar</div>
+                <div style="border:1.5px solid #AAAAAA;border-radius:99px;padding:3px 12px;font:600 9px 'Inter',sans-serif;color:#777;letter-spacing:0.04em;">Individual Member</div>
+                <div style="font:600 13px 'Outfit',sans-serif;color:#222;text-align:center;">[Photographer Name]</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Portrait</div>
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Macro</div>
+                </div>
+                <div style="font:400 10px 'Inter',sans-serif;color:#AAAAAA;text-align:center;">[XX] photos in showcase</div>
+                <div style="font:400 9px 'Inter',sans-serif;color:#CCCCCC;text-align:center;">Member since [YYYY]</div>
+                <div style="font:500 11px 'Inter',sans-serif;color:#F5A82A;border-bottom:1px solid #F5A82A;cursor:pointer;">View Profile →</div>
+              </div>
+              <!-- Card 3: Full Member -->
+              <div style="border:1px solid #D8D8D8; border-radius:8px; padding:24px 16px 20px; background:#FAFAFA; display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <div style="width:80px;height:80px;border-radius:50%;background:#D4D4D4;border:1px solid #C4C4C4;display:flex;align-items:center;justify-content:center;font:400 9px 'Inter',sans-serif;color:#AAAAAA;font-style:italic;flex-shrink:0;">avatar</div>
+                <div style="border:1.5px solid #AAAAAA;border-radius:99px;padding:3px 12px;font:600 9px 'Inter',sans-serif;color:#777;letter-spacing:0.04em;">Full Member</div>
+                <div style="font:600 13px 'Outfit',sans-serif;color:#222;text-align:center;">[Photographer Name]</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Landscape</div>
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Travel</div>
+                </div>
+                <div style="font:400 10px 'Inter',sans-serif;color:#AAAAAA;text-align:center;">[XX] photos in showcase</div>
+                <div style="font:400 9px 'Inter',sans-serif;color:#CCCCCC;text-align:center;">Member since [YYYY]</div>
+                <div style="font:500 11px 'Inter',sans-serif;color:#F5A82A;border-bottom:1px solid #F5A82A;cursor:pointer;">View Profile →</div>
+              </div>
+              <!-- Card 4: Life Member -->
+              <div style="border:1px solid #D8D8D8; border-radius:8px; padding:24px 16px 20px; background:#FAFAFA; display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <div style="width:80px;height:80px;border-radius:50%;background:#D4D4D4;border:1px solid #C4C4C4;display:flex;align-items:center;justify-content:center;font:400 9px 'Inter',sans-serif;color:#AAAAAA;font-style:italic;flex-shrink:0;">avatar</div>
+                <div style="border:1.5px solid #AAAAAA;border-radius:99px;padding:3px 12px;font:600 9px 'Inter',sans-serif;color:#777;letter-spacing:0.04em;">Life Member</div>
+                <div style="font:600 13px 'Outfit',sans-serif;color:#222;text-align:center;">[Photographer Name]</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Bird</div>
+                  <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 10px;font:400 9px 'Inter',sans-serif;color:#888;">Documentary</div>
+                </div>
+                <div style="font:400 10px 'Inter',sans-serif;color:#AAAAAA;text-align:center;">[XX] photos in showcase</div>
+                <div style="font:400 9px 'Inter',sans-serif;color:#CCCCCC;text-align:center;">Member since [YYYY]</div>
+                <div style="font:500 11px 'Inter',sans-serif;color:#F5A82A;border-bottom:1px solid #F5A82A;cursor:pointer;">View Profile →</div>
+              </div>
+            </div>
+            <!-- Annotation 4 note -->
+            <div style="display:flex; align-items:flex-start; gap:8px; background:rgba(245,168,42,0.07); border:1px dashed rgba(245,168,42,0.5); border-radius:5px; padding:8px 12px; margin-bottom:20px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#F5A82A;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">4</div>
+              <div style="font:400 9.5px/1.5 'Inter',sans-serif; color:#666;">Badge colours applied in hi-fi per confirmed token set. In this wireframe badges are outline pills with the class label only. <strong>No application link or joining CTA is attached to any badge regardless of membership class</strong> — including constitutional classes (Full, Life, Patron, Founding). Badges are identification labels only.</div>
+            </div>
+            <!-- Explore all button -->
+            <div style="text-align:center;">
+              <div style="display:inline-block; border:1.5px solid #F5A82A; border-radius:4px; padding:10px 32px; font:500 12px 'Inter',sans-serif; color:#F5A82A; background:#fff; cursor:pointer;">[Explore All Photographers →]</div>
+              <div style="font:400 9px 'Inter',sans-serif; color:#CCCCCC; margin-top:6px;">links to /photographers</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── FOOTER ── -->
+        <div style="background:#E8E8E8; padding:40px 40px 0; border-top:1px solid #D4D4D4;">
+          <div style="max-width:1200px; margin:0 auto;">
+            <!-- FIP + Social -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid #D0D0D0;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:44px;height:44px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:4px;display:flex;align-items:center;justify-content:center;font:600 8px 'Inter',sans-serif;color:#999;">FIP</div>
+                <div style="font:400 10px 'Inter',sans-serif;color:#777;line-height:1.5;">Corporate Member · Federation of Indian Photography<br/>CM 1098</div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">IG</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">FB</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">FBG</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">X</div>
+                <div style="width:32px;height:32px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">YT</div>
+              </div>
+            </div>
+            <!-- 4 col footer -->
+            <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:32px; margin-bottom:32px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <div style="width:28px;height:28px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">logo</div>
+                  <div style="font:700 12px 'Outfit',sans-serif;color:#333;">Bhopal Camera Club</div>
+                </div>
+                <div style="font:400 10px/1.6 'Inter',sans-serif;color:#AAAAAA;margin-bottom:10px;">Bhopal's photography community since 2016.</div>
+                <div style="height:9px;background:#E0E0E0;border-radius:2px;width:88%;margin-bottom:4px;"></div>
+                <div style="height:9px;background:#E0E0E0;border-radius:2px;width:72%;"></div>
+              </div>
+              <div>
+                <div style="font:600 10px 'Inter',sans-serif;color:#555;margin-bottom:12px;letter-spacing:0.06em;">NAVIGATE</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Home</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Showcase</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Photographers</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Events</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Membership</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Journal</span>
+                </div>
+              </div>
+              <div>
+                <div style="font:600 10px 'Inter',sans-serif;color:#555;margin-bottom:12px;letter-spacing:0.06em;">MEMBERSHIP</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Register Free</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Apply for Membership</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Member Hub</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Class Tiers</span>
+                </div>
+              </div>
+              <div>
+                <div style="font:600 10px 'Inter',sans-serif;color:#555;margin-bottom:12px;letter-spacing:0.06em;">ABOUT</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">About BCC</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Constitution</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Contact</span>
+                  <span style="font:400 10px 'Inter',sans-serif;color:#888;">Privacy Policy</span>
+                </div>
+              </div>
+            </div>
+            <!-- Copyright bar -->
+            <div style="border-top:1px solid #D0D0D0; padding:14px 0; display:flex; align-items:center; justify-content:space-between;">
+              <div style="font:400 9px 'Inter',sans-serif;color:#BBBBBB;">© 2026 Bhopal Camera Club. All rights reserved.</div>
+              <div style="font:400 9px 'Inter',sans-serif;color:#CCCCCC;">v3bcc.bhopal.info</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /desktop frame -->
+    </div><!-- /desktop col -->
+
+    <!-- ═══════════════════════ MOBILE 390px ═══════════════════════ -->
+    <div style="flex-shrink:0; width:390px;">
+      <div style="text-align:center; font:600 11px 'Inter',sans-serif; color:#777; letter-spacing:0.10em; text-transform:uppercase; padding-bottom:10px; border-bottom:2px solid #BBBBBB; margin-bottom:0;">Mobile · 390px</div>
+      <div style="border:1.5px solid #BBBBBB; overflow:hidden; background:#F2F2F2;">
+
+        <!-- ── MOBILE NAV ── -->
+        <div style="height:60px; background:#FFFFFF; border-bottom:1.5px solid #D0D0D0; display:flex; align-items:center; padding:0 16px; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:28px;height:28px;background:#D8D8D8;border:1px solid #C0C0C0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">logo</div>
+            <div style="font:700 11px 'Outfit',sans-serif; color:#333;">Bhopal Camera Club</div>
+          </div>
+          <!-- Hamburger -->
+          <div style="width:36px;height:36px;border:1.5px solid #D0D0D0;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
+            <div style="width:16px;height:1.5px;background:#555;"></div>
+            <div style="width:16px;height:1.5px;background:#555;"></div>
+            <div style="width:16px;height:1.5px;background:#555;"></div>
+          </div>
+        </div>
+
+        <!-- ── MOBILE HAMBURGER DRAWER (open state) ── -->
+        <div style="background:#FFFFFF; border-bottom:2px solid #D0D0D0;">
+          <div style="background:#F5F5F5; padding:6px 12px; border-bottom:1px solid #E8E8E8; display:flex; align-items:center; justify-content:space-between;">
+            <span style="font:600 9px 'Inter',sans-serif; color:#888; letter-spacing:0.06em; text-transform:uppercase;">Drawer open state ↓</span>
+            <span style="font:400 9px 'Inter',sans-serif; color:#BBBBBB; font-style:italic;">accordion nav</span>
+          </div>
+          <!-- Home -->
+          <div style="padding:13px 16px; border-bottom:1px solid #F0F0F0; font:400 12px 'Inter',sans-serif; color:#444;">Home</div>
+          <!-- Showcase — expanded -->
+          <div style="border-bottom:1px solid #F0F0F0;">
+            <div style="padding:13px 16px; display:flex; align-items:center; justify-content:space-between; background:rgba(245,168,42,0.04); border-left:3px solid #F5A82A;">
+              <span style="font:600 12px 'Inter',sans-serif; color:#1a1a1a;">Showcase</span>
+              <span style="font-size:10px; color:#F5A82A;">▴</span>
+            </div>
+            <div style="background:#FAFAFA; padding:0 0 6px 0;">
+              <div style="padding:9px 16px 9px 28px; background:rgba(245,168,42,0.08); display:flex; align-items:center; gap:8px;">
+                <span style="font:600 11px 'Inter',sans-serif; color:#1a1a1a;">Showcase (photos)</span>
+                <span style="font:400 9px 'Inter',sans-serif; color:#F5A82A;">← current</span>
+              </div>
+              <div style="padding:9px 16px 9px 28px; font:400 11px 'Inter',sans-serif; color:#555;">Photographers</div>
+            </div>
+          </div>
+          <!-- Activities -->
+          <div style="padding:13px 16px; border-bottom:1px solid #F0F0F0; display:flex; align-items:center; justify-content:space-between;">
+            <span style="font:400 12px 'Inter',sans-serif; color:#444;">Activities</span>
+            <span style="font-size:10px; color:#CCCCCC;">▾</span>
+          </div>
+          <!-- Learn — greyed -->
+          <div style="padding:13px 16px; border-bottom:1px solid #F0F0F0; display:flex; align-items:center; justify-content:space-between; opacity:0.55;">
+            <div>
+              <div style="font:400 12px 'Inter',sans-serif; color:#AAAAAA;">Learn</div>
+              <div style="font:400 9px 'Inter',sans-serif; color:#BBBBBB; font-style:italic;">Coming in a future phase</div>
+            </div>
+            <span style="font:600 8px 'Inter',sans-serif; color:#BBBBBB; border:1px solid #CCCCCC; border-radius:99px; padding:1px 6px;">COMING SOON</span>
+          </div>
+          <div style="padding:13px 16px; border-bottom:1px solid #F0F0F0; font:400 12px 'Inter',sans-serif; color:#444;">Membership</div>
+          <div style="padding:13px 16px; border-bottom:1px solid #F0F0F0; font:400 12px 'Inter',sans-serif; color:#444;">Journal</div>
+          <!-- CTAs -->
+          <div style="padding:14px 16px; display:flex; gap:10px;">
+            <div style="flex:1; border:1.5px solid #999; border-radius:4px; padding:9px; font:500 11px 'Inter',sans-serif; color:#666; text-align:center;">Sign In</div>
+            <div style="flex:1; border:1.5px solid #F5A82A; border-radius:4px; padding:9px; font:500 11px 'Inter',sans-serif; color:#fff; background:#F5A82A; text-align:center;">Register</div>
+          </div>
+        </div>
+
+        <!-- ── MOBILE PAGE HEADER ── -->
+        <div style="background:#1E1E1E; padding:24px 16px;">
+          <div style="font:600 9px 'Inter',sans-serif; letter-spacing:0.16em; text-transform:uppercase; color:#F5A82A; margin-bottom:7px;">MEMBER WORK</div>
+          <div style="font:800 28px/1.05 'Outfit',sans-serif; color:#F2F2F2; margin-bottom:8px;">Showcase</div>
+          <div style="font:400 11px 'Inter',sans-serif; color:#888;">[311 photographs · 15 photographers]</div>
+        </div>
+
+        <!-- ── MOBILE FILTER BAR ── -->
+        <div style="background:#FAFAFA; border-bottom:1.5px solid #D8D8D8; padding:8px 12px; display:flex; flex-direction:column; gap:8px;">
+          <!-- Row 1: Genre pills -->
+          <div style="display:flex; gap:6px; overflow:hidden;">
+            <div style="flex-shrink:0; background:#F5A82A; border:1.5px solid #F5A82A; border-radius:99px; padding:4px 11px; font:600 9px 'Inter',sans-serif; color:#fff;">All</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 11px; font:400 9px 'Inter',sans-serif; color:#666;">Wildlife</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 11px; font:400 9px 'Inter',sans-serif; color:#666;">Bird</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 11px; font:400 9px 'Inter',sans-serif; color:#666;">Street</div>
+            <div style="flex-shrink:0; border:1.5px solid #CCCCCC; border-radius:99px; padding:4px 11px; font:400 9px 'Inter',sans-serif; color:#666;">Portrait</div>
+            <div style="flex-shrink:0; font:400 8px 'Inter',sans-serif; color:#CCCCCC; font-style:italic; display:flex; align-items:center;">→</div>
+          </div>
+          <!-- Row 2: Event + Sort + View -->
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:4px; padding:5px 8px; font:400 9px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+              <span>All Events</span><span style="font-size:7px;color:#AAAAAA;">▾</span>
+            </div>
+            <div style="flex:1; border:1.5px solid #D0D0D0; border-radius:4px; padding:5px 8px; font:400 9px 'Inter',sans-serif; color:#666; background:#fff; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+              <span>Latest</span><span style="font-size:7px;color:#AAAAAA;">▾</span>
+            </div>
+            <div style="flex-shrink:0; display:flex; border:1.5px solid #D0D0D0; border-radius:4px; overflow:hidden;">
+              <div style="padding:5px 8px; background:#222; font:500 9px 'Inter',sans-serif; color:#fff;">⊞</div>
+              <div style="padding:5px 8px; background:#fff; font:500 9px 'Inter',sans-serif; color:#888; border-left:1px solid #D0D0D0;">☰</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MOBILE PHOTO GRID (2-col) ── -->
+        <div style="background:#F0F0F0; padding:12px;">
+          <!-- Each column: (390-24-8)/2 = 179px -->
+          <!-- Row 1 -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div style="height:119px;background:#C8C8C8;border:1px solid #B8B8B8;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">3:2</span>
+            </div>
+            <div style="height:269px;background:#C0C0C0;border:1px solid #B0B0B0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">2:3</span>
+            </div>
+          </div>
+          <!-- Row 2 -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div style="height:179px;background:#C4C4C4;border:1px solid #B4B4B4;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">1:1</span>
+            </div>
+            <div style="height:101px;background:#CACACA;border:1px solid #BABABA;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">16:9</span>
+            </div>
+          </div>
+          <!-- Row 3 (tap state card) -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <!-- Tap state -->
+            <div style="height:134px;background:#B8B8B8;border:1.5px dashed #888;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;position:relative;z-index:1;">4:3</span>
+              <div style="position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to bottom,transparent,rgba(30,30,30,0.75));z-index:2;"></div>
+              <div style="position:absolute;top:6px;left:6px;width:10px;height:10px;border-top:1.5px solid #fff;border-left:1.5px solid #fff;z-index:3;"></div>
+              <div style="position:absolute;top:6px;right:6px;width:10px;height:10px;border-top:1.5px solid #fff;border-right:1.5px solid #fff;z-index:3;"></div>
+              <div style="position:absolute;bottom:6px;left:6px;width:10px;height:10px;border-bottom:1.5px solid #fff;border-left:1.5px solid #fff;z-index:3;"></div>
+              <div style="position:absolute;bottom:6px;right:6px;width:10px;height:10px;border-bottom:1.5px solid #fff;border-right:1.5px solid #fff;z-index:3;"></div>
+              <div style="position:absolute;bottom:6px;left:6px;right:6px;z-index:4;">
+                <div style="font:600 8px 'Outfit',sans-serif;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">[Photo Title]</div>
+                <div style="font:400 7px 'Inter',sans-serif;color:rgba(255,255,255,0.7);">[Name] · Wildlife</div>
+              </div>
+              <div style="position:absolute;top:-1px;left:-1px;background:#555;color:#fff;font:600 7px 'Inter',sans-serif;padding:1px 5px;border-radius:0 0 3px 0;z-index:10;">TAP STATE</div>
+            </div>
+            <div style="height:239px;background:#C2C2C2;border:1px solid #B2B2B2;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">3:4</span>
+            </div>
+          </div>
+          <!-- Row 4 -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div style="height:119px;background:#C7C7C7;border:1px solid #B7B7B7;display:flex;align-items:center;justify-content:center;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">3:2</span>
+            </div>
+            <div style="height:179px;background:#C3C3C3;border:1px solid #B3B3B3;display:flex;align-items:center;justify-content:center;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">1:1</span>
+            </div>
+          </div>
+          <!-- Row 5 -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div style="height:101px;background:#CBCBCB;border:1px solid #BBBBBB;display:flex;align-items:center;justify-content:center;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">16:9</span>
+            </div>
+            <div style="height:134px;background:#C5C5C5;border:1px solid #B5B5B5;display:flex;align-items:center;justify-content:center;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">4:3</span>
+            </div>
+          </div>
+          <!-- Row 6 -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div style="height:239px;background:#BFBFBF;border:1px solid #AFAFAF;display:flex;align-items:center;justify-content:center;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">3:4</span>
+            </div>
+            <div style="height:119px;background:#C9C9C9;border:1px solid #B9B9B9;display:flex;align-items:center;justify-content:center;">
+              <span style="font:600 8px 'Inter',sans-serif;color:#999;">3:2</span>
+            </div>
+          </div>
+          <!-- Load more -->
+          <div style="text-align:center; margin-top:12px; margin-bottom:6px;">
+            <div style="display:inline-block; border:1.5px solid #999; border-radius:4px; padding:9px 28px; font:500 10px 'Inter',sans-serif; color:#555; background:#F0F0F0;">[Load More Photos]</div>
+          </div>
+          <div style="text-align:center; font:400 9px 'Inter',sans-serif; color:#AAAAAA; margin-bottom:4px;">Showing 12 of 311 photos</div>
+        </div>
+
+        <!-- ── MOBILE PHOTOGRAPHERS STRIP ── -->
+        <div style="background:#FFFFFF; padding:24px 0 24px 16px;">
+          <div style="font:600 9px 'Inter',sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:#F5A82A; margin-bottom:5px; padding-right:16px;">BEHIND THE LENS</div>
+          <div style="font:700 16px 'Outfit',sans-serif; color:#1a1a1a; margin-bottom:4px; padding-right:16px;">Featured this month</div>
+          <div style="font:400 10px 'Inter',sans-serif; color:#AAAAAA; margin-bottom:16px; padding-right:16px;">Meet the members behind this showcase</div>
+          <!-- Horizontal scroll strip -->
+          <div style="display:flex; gap:10px; overflow:hidden;">
+            <div style="flex-shrink:0; width:260px; border:1px solid #D8D8D8; border-radius:8px; padding:18px 14px 14px; background:#FAFAFA; display:flex; flex-direction:column; align-items:center; gap:8px;">
+              <div style="width:64px;height:64px;border-radius:50%;background:#D4D4D4;border:1px solid #C4C4C4;display:flex;align-items:center;justify-content:center;font:400 8px 'Inter',sans-serif;color:#AAAAAA;">avatar</div>
+              <div style="border:1.5px solid #AAAAAA;border-radius:99px;padding:2px 10px;font:600 8px 'Inter',sans-serif;color:#777;">Basic Member</div>
+              <div style="font:600 11px 'Outfit',sans-serif;color:#222;text-align:center;">[Photographer Name]</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
+                <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 8px;font:400 8px 'Inter',sans-serif;color:#888;">Wildlife</div>
+                <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 8px;font:400 8px 'Inter',sans-serif;color:#888;">Street</div>
+              </div>
+              <div style="font:400 9px 'Inter',sans-serif;color:#AAAAAA;">[XX] photos in showcase</div>
+              <div style="font:400 8px 'Inter',sans-serif;color:#CCCCCC;">Member since [YYYY]</div>
+              <div style="font:500 10px 'Inter',sans-serif;color:#F5A82A;border-bottom:1px solid #F5A82A;">View Profile →</div>
+            </div>
+            <div style="flex-shrink:0; width:260px; border:1px solid #D8D8D8; border-radius:8px; padding:18px 14px 14px; background:#FAFAFA; display:flex; flex-direction:column; align-items:center; gap:8px;">
+              <div style="width:64px;height:64px;border-radius:50%;background:#D4D4D4;border:1px solid #C4C4C4;display:flex;align-items:center;justify-content:center;font:400 8px 'Inter',sans-serif;color:#AAAAAA;">avatar</div>
+              <div style="border:1.5px solid #AAAAAA;border-radius:99px;padding:2px 10px;font:600 8px 'Inter',sans-serif;color:#777;">Individual Member</div>
+              <div style="font:600 11px 'Outfit',sans-serif;color:#222;text-align:center;">[Photographer Name]</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
+                <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 8px;font:400 8px 'Inter',sans-serif;color:#888;">Portrait</div>
+                <div style="border:1px solid #CCCCCC;border-radius:99px;padding:2px 8px;font:400 8px 'Inter',sans-serif;color:#888;">Macro</div>
+              </div>
+              <div style="font:400 9px 'Inter',sans-serif;color:#AAAAAA;">[XX] photos in showcase</div>
+              <div style="font:400 8px 'Inter',sans-serif;color:#CCCCCC;">Member since [YYYY]</div>
+              <div style="font:500 10px 'Inter',sans-serif;color:#F5A82A;border-bottom:1px solid #F5A82A;">View Profile →</div>
+            </div>
+            <div style="flex-shrink:0; width:32px; display:flex; align-items:center; justify-content:center; padding-right:16px;">
+              <span style="font:400 10px 'Inter',sans-serif; color:#CCCCCC;">→</span>
+            </div>
+          </div>
+          <div style="margin-top:18px; text-align:center; padding-right:16px;">
+            <div style="display:inline-block; border:1.5px solid #F5A82A; border-radius:4px; padding:9px 24px; font:500 10px 'Inter',sans-serif; color:#F5A82A;">[Explore All Photographers →]</div>
+          </div>
+        </div>
+
+        <!-- ── MOBILE FOOTER ── -->
+        <div style="background:#E8E8E8; padding:20px 14px 0; border-top:1px solid #D0D0D0;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <div style="width:24px;height:24px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:6px;color:#999;">logo</div>
+            <div style="font:700 11px 'Outfit',sans-serif;color:#333;">Bhopal Camera Club</div>
+          </div>
+          <div style="font:400 9px/1.6 'Inter',sans-serif;color:#AAAAAA;margin-bottom:14px;">Bhopal's photography community since 2016</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #D4D4D4;">
+            <div style="width:36px;height:36px;background:#D0D0D0;border:1px solid #BBBBBB;border-radius:4px;display:flex;align-items:center;justify-content:center;font:600 7px 'Inter',sans-serif;color:#999;">FIP</div>
+            <div style="font:400 9px 'Inter',sans-serif;color:#888;line-height:1.4;">Corporate Member · FIP<br/>CM 1098</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <div style="font:600 9px 'Inter',sans-serif;color:#555;margin-bottom:8px;letter-spacing:0.04em;">NAVIGATE</div>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Home</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Showcase</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Photographers</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Events</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Membership</span>
+              </div>
+            </div>
+            <div>
+              <div style="font:600 9px 'Inter',sans-serif;color:#555;margin-bottom:8px;letter-spacing:0.04em;">MEMBERSHIP</div>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Register Free</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Apply for Membership</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">Member Hub</span>
+                <span style="font:400 9px 'Inter',sans-serif;color:#888;">About BCC</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;margin-bottom:14px;">
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">IG</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">FB</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">FBG</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">X</div>
+            <div style="width:28px;height:28px;background:#D4D4D4;border:1px solid #C4C4C4;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#999;">YT</div>
+          </div>
+          <div style="border-top:1px solid #D0D0D0; padding:12px 0; font:400 8px 'Inter',sans-serif; color:#CCCCCC;">© 2026 Bhopal Camera Club</div>
+        </div>
+
+      </div><!-- /mobile frame -->
+    </div><!-- /mobile col -->
+
+  </div><!-- /columns -->
+</div>
+
+</x-dc>
+</body>
+</html>

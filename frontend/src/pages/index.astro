@@ -830,10 +830,16 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
     if (!list) return;
     try {
       const res = await fetch('/api/v1/events?upcoming=true&limit=3');
-      if (!res.ok) return;
+      if (!res.ok) {
+        list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
+        return;
+      }
       const { data } = await res.json();
       const events = Array.isArray(data) ? data : [];
-      if (!events.length) return;
+      if (!events.length) {
+        list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
+        return;
+      }
 
       list.innerHTML = '';
       events.forEach((ev: any) => {
@@ -858,19 +864,24 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
         `;
         list.appendChild(row);
       });
-    } catch { /* keep skeletons */ }
+    } catch {
+      list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
+    }
   })();
 
   /* ── 4. Journal preview ── */
   (async () => {
     const grid = document.getElementById('journal-grid');
     if (!grid) return;
+    const showEmpty = () => {
+      grid.innerHTML = `<div style="grid-column: 1 / -1; padding: var(--s-8) 0; text-align: center; color: var(--ink-400); font-family: var(--font-body); font-size: var(--text-small); border: 1px dashed var(--hairline-strong); background: var(--surface-0);">No journal articles available yet.</div>`;
+    };
     try {
       const res = await fetch('/api/v1/journal?limit=3');
-      if (!res.ok) return;
+      if (!res.ok) { showEmpty(); return; }
       const { data } = await res.json();
       const posts = Array.isArray(data) ? data : [];
-      if (!posts.length) return;
+      if (!posts.length) { showEmpty(); return; }
 
       grid.innerHTML = '';
       posts.forEach((post: any) => {
@@ -887,6 +898,8 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
         `;
         grid.appendChild(card);
       });
-    } catch { /* keep skeletons */ }
+    } catch {
+      showEmpty();
+    }
   })();
 </script>

@@ -105,6 +105,11 @@ function formatPhoto(row: Record<string, unknown>) {
     confirmed_at:    isoOrNull(row.confirmed_at),
     created_at:      isoOrNull(row.created_at),
     updated_at:      isoOrNull(row.updated_at),
+    // Photographer credit — populated when the query includes a JOIN to users
+    // (getPublicFeed). Undefined on all other callers.
+    photographer:    row.photographer_name != null
+      ? { name: row.photographer_name as string, username: (row.photographer_username as string | null) ?? null }
+      : undefined,
   };
 }
 
@@ -860,11 +865,41 @@ export class GalleryService {
     limit?: number;
     offset?: number;
   }): Promise<{ photos: ReturnType<typeof formatPhoto>[]; total: number }> {
-    return this.listPhotos(null, {
-      genre:  opts.genre,
-      limit:  opts.limit,
-      offset: opts.offset,
-    });
+    // Dedicated JOIN query so every feed item carries photographer credit.
+    // Keeps listPhotos() untouched — other callers are unaffected.
+    const limit  = Math.min(opts.limit  ?? 20, 100);
+    const offset = opts.offset ?? 0;
+
+    let q = db
+      .selectFrom('photos')
+      .leftJoin('users', 'users.id', 'photos.owner_user_id')
+      .selectAll('photos')
+      .select([
+        'users.full_name as photographer_name',
+        'users.username as photographer_username',
+      ] as any)
+      .where('photos.status', '=', 'ACTIVE')
+      .where('photos.visibility', '=', 'PUBLIC');
+
+    if (opts.genre) {
+      q = q.where('photos.genre', '=', opts.genre as any);
+    }
+
+    const [rows, countRow] = await Promise.all([
+      q.orderBy('photos.created_at', 'desc').limit(limit).offset(offset).execute(),
+      db
+        .selectFrom('photos')
+        .select((eb) => eb.fn.countAll<number>().as('count'))
+        .where('status', '=', 'ACTIVE')
+        .where('visibility', '=', 'PUBLIC')
+        .$if(!!opts.genre, (qb) => qb.where('genre', '=', opts.genre as any))
+        .executeTakeFirst(),
+    ]);
+
+    return {
+      photos: rows.map(r => formatPhoto(r as Record<string, unknown>)),
+      total:  Number(countRow?.count ?? 0),
+    };
   }
 
   async getPhotographerGallery(

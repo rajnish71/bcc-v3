@@ -355,3 +355,94 @@ svg { display: block; flex-shrink: 0; }
   .section-lg { padding: var(--s-12) 0; }
   .container  { padding: 0 var(--gutter-mob); }
 }
+
+/* ── Viewfinder Card & Crop Marks ── */
+.vf-card {
+  position: relative;
+}
+.vf-card .vf-tr, .vf-card .vf-tl {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+  z-index: 10;
+  pointer-events: none;
+}
+.vf-card .vf-br, .vf-card .vf-bl {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.4);
+  z-index: 10;
+  pointer-events: none;
+}
+.vf-card .vf-tl { top: var(--s-3); left: var(--s-3); border-left: 1.5px solid rgba(255, 255, 255, 0.4); }
+.vf-card .vf-tr { top: var(--s-3); right: var(--s-3); border-right: 1.5px solid rgba(255, 255, 255, 0.4); }
+.vf-card .vf-bl { bottom: var(--s-3); left: var(--s-3); border-left: 1.5px solid rgba(255, 255, 255, 0.4); }
+.vf-card .vf-br { bottom: var(--s-3); right: var(--s-3); border-right: 1.5px solid rgba(255, 255, 255, 0.4); }
+
+/* ── Photo Card ── */
+.photo-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: var(--r-0);
+  text-decoration: none;
+}
+.photo-card__img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.photo-card:hover .photo-card__img {
+  transform: scale(1.04);
+}
+.photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(20,18,16,0.7) 0%, transparent 60%);
+  opacity: 0;
+  z-index: 5;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.photo-card:hover .photo-overlay {
+  opacity: 1;
+}
+.photo-card__info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  z-index: 8;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+.photo-card:hover .photo-card__info {
+  opacity: 1;
+  transform: translateY(0);
+}
+.photo-card__title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.photo-card__photographer {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+}

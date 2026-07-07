@@ -734,6 +734,40 @@ export interface PhotoTagAssignmentsTable {
   assigned_at: ColumnType<Date, string, string>;
 }
 
+
+// ============================================================================
+// Journal
+// ============================================================================
+
+export type JournalStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+
+export interface JournalPostsTable {
+  id:                   Generated<number>;
+  uuid:                 string;
+  slug:                 string;
+  title:                string;
+  description:          Nullable<string>;
+  body:                 string;
+  excerpt:              Nullable<string>;
+  // category has DB DEFAULT 'Guide' — optional on INSERT
+  category:             Generated<string>;
+  tags:                 Nullable<string>;          // JSON array stored as string
+  hero_image_url:       Nullable<string>;
+  hero_r2_key:          Nullable<string>;
+  // reading_time_minutes has DB DEFAULT 5 — optional on INSERT
+  reading_time_minutes: Generated<number>;
+  author_user_id:       Nullable<number>;          // FK -> users.id ON DELETE SET NULL
+  // author_display_name has DB DEFAULT 'Bhopal Camera Club'
+  author_display_name:  Generated<string>;
+  // status has DB DEFAULT 'DRAFT'
+  status:               Generated<JournalStatus>;
+  published_at:         ColumnType<Date | null, string | null, string | null>;
+  seo_title:            Nullable<string>;
+  seo_description:      Nullable<string>;
+  created_at:           ColumnType<Date, string, string>;
+  updated_at:           ColumnType<Date, string, string>;
+}
+
 // ============================================================================
 // Database interface
 // ============================================================================
@@ -796,6 +830,8 @@ export interface DB {
   photo_album_items: PhotoAlbumItemsTable;
   photo_tags: PhotoTagsTable;
   photo_tag_assignments: PhotoTagAssignmentsTable;
+
+  journal_posts: JournalPostsTable;
 }
 
 const dialect = new MysqlDialect({

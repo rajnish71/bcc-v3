@@ -9,6 +9,7 @@ import { NotificationModule } from './modules/notifications/notification.module'
 import { EventsModule } from './modules/events/events.module';
 import { GalleryModule } from './modules/gallery/gallery.module';
 import { PhotographerProfilesModule } from './modules/photographer-profiles/photographer-profiles.module';
+import { JournalModule } from './modules/journal/journal.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PhotographerProfilesModule } from './modules/photographer-profiles/phot
     EventsModule,
     GalleryModule,
     PhotographerProfilesModule,
+    JournalModule,
   ],
   controllers: [AppController],
 })

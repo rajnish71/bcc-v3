@@ -16,8 +16,9 @@ echo "=== Deploy started: $(date) ==="
 
 cd /var/www/bcc-v3
 
-echo "--- git pull ---"
-git pull origin master
+echo "--- git fetch and reset ---"
+git fetch origin master
+git reset --hard origin/master
 
 echo "--- backend: install + build + restart ---"
 cd /var/www/bcc-v3/backend

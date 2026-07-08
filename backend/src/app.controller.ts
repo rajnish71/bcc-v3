@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { sql } from 'kysely';
 import { db } from './database/db';
 
-@Controller('health')
+@Controller('api/v1/health')
 export class AppController {
   @Get()
   async health() {

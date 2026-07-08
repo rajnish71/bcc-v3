@@ -11,11 +11,12 @@
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeader from '../../components/ui/SectionHeader.astro';
+import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
   let events = [];
   try {
-    const res = await fetch('http://localhost:3000/api/v1/events?limit=100');
+    const res = await fetch(`${BUILD_API_URL}/events?limit=100`);
     if (res.ok) {
       const json = await res.json();
       events = json.data || [];

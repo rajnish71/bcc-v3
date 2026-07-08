@@ -82,7 +82,7 @@ import HubLayout from '../../layouts/HubLayout.astro';
         <div class="welcome-meta" id="hub-meta">
           <span id="hub-class-label"></span>
           <span id="hub-since-text"></span>
-          <a href="/gallery/photographer/" id="hub-portfolio-link" class="welcome-portfolio-link" hidden>
+          <a href="/photographers/" id="hub-portfolio-link" class="welcome-portfolio-link" hidden>
             View public portfolio ↗
           </a>
         </div>
@@ -163,7 +163,7 @@ import HubLayout from '../../layouts/HubLayout.astro';
 
     <!-- Membership card (dark) -->
     <div class="membership-dark-card" id="membership-dark-card" hidden>
-      <img src="/images/BCC White Logo.png" alt="BCC" class="mcard-logo" />
+      <img src="/brand/BCC White Logo.png" alt="BCC" class="mcard-logo" />
       <div class="mcard-name" id="mcard-name">—</div>
       <div class="mcard-class" id="mcard-class">Member</div>
       <div class="mcard-footer">
@@ -1205,14 +1205,15 @@ function eventTypeTag(type: string): string {
 }
 
 /* ── LOAD USER ─────────────────────────────────────────────── */
-async function loadUser(): Promise<{ firstName: string; createdAt: string; userId: number } | null> {
+async function loadUser(): Promise<{ firstName: string; createdAt: string; userId: number; username: string } | null> {
   const res = await apiFetch(`${API}/users/me`);
   if (!res.ok) return null;
-  const u = await res.json() as { fullName?: string; createdAt?: string; id?: number };
+  const u = await res.json() as { fullName?: string; createdAt?: string; id?: number; username?: string };
 
   const firstName = (u.fullName ?? 'there').trim().split(/\s+/)[0];
   const createdAt = u.createdAt ?? '';
   const userId    = u.id ?? 0;
+  const username  = u.username ?? '';
 
   setText('hub-greeting', greeting(firstName));
 
@@ -1221,12 +1222,12 @@ async function loadUser(): Promise<{ firstName: string; createdAt: string; userI
   if (sinceEl) sinceEl.textContent = sinceYear ? `member since ${sinceYear}` : '';
 
   const portfolioLink = document.getElementById('hub-portfolio-link') as HTMLAnchorElement | null;
-  if (portfolioLink) {
-    portfolioLink.href   = `/gallery/photographer/${userId}/`;
+  if (portfolioLink && username) {
+    portfolioLink.href   = `/photographers/${username}/`;
     portfolioLink.hidden = false;
   }
 
-  return { firstName, createdAt, userId };
+  return { firstName, createdAt, userId, username };
 }
 
 /* ── LOAD MEMBERSHIP ───────────────────────────────────────── */

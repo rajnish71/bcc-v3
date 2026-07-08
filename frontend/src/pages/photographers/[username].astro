@@ -1,0 +1,382 @@
+---
+/**
+ * photographers/[username].astro
+ * Dynamic Route: /photographers/[username]/
+ *
+ * Profile data is fetched client-side on page load.
+ * getStaticPaths() builds paths for all active photographers from the API.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+import MemberBadge from '../../components/ui/MemberBadge.astro';
+import { BUILD_API_URL } from '../../lib/api';
+
+export async function getStaticPaths() {
+  let photographers: any[] = [];
+  try {
+    const res = await fetch(`${BUILD_API_URL}/photographers?limit=100`);
+    if (res.ok) {
+      const json = await res.json();
+      photographers = json.data || [];
+    }
+  } catch {
+    // Backend unavailable at build time -- fall through to hardcoded paths below.
+  }
+
+  // Hardcoded safety-net paths using real DB usernames (no hyphens).
+  // These are overridden/extended by the live API list above.
+  const paths: { params: { username: string } }[] = [
+    { params: { username: 'rajnishkhare' } },
+    { params: { username: 'ankittiwari' } },
+    { params: { username: 'rahilkhan' } },
+    { params: { username: 'sauvikacharyya' } },
+    { params: { username: 'kshitijpatle' } },
+    { params: { username: 'anupamkharegupta' } },
+  ];
+
+  // Add every active photographer returned by the API.
+  photographers.forEach((p: any) => {
+    if (p.username && !paths.some(path => path.params.username === p.username)) {
+      paths.push({ params: { username: p.username } });
+    }
+  });
+
+  return paths;
+}
+
+const { username } = Astro.params;
+
+// Minimal fallback shown for the SSG snapshot while the client-side fetch runs.
+const fallbackPhotographers: Record<string, any> = {
+  'ankittiwari': {
+    displayName: 'Ankit Tiwari',
+    memberClass: 'basic',
+    joined: '2020',
+    bio: 'Travel and documentary photographer capturing the quiet landscapes and cultural heritage of Central India.',
+    photoCount: 0,
+    photos: [],
+  },
+  'rahilkhan': {
+    displayName: 'Rahil Khan',
+    memberClass: 'basic',
+    joined: '2016',
+    bio: 'Contemporary street visual artist capturing dynamic urban moments in old Bhopal markets.',
+    photoCount: 0,
+    photos: [],
+  },
+};
+
+const defaultPhotographer = fallbackPhotographers[username] ?? {
+  displayName: 'Club Photographer',
+  memberClass: 'basic',
+  joined: '2026',
+  bio: 'A member photographer of the Bhopal Camera Club.',
+  photoCount: 0,
+  photos: [],
+};
+---
+
+<BaseLayout
+  title={`${defaultPhotographer.displayName} · Profile`}
+  description={`Explore photography portfolios and member details for ${defaultPhotographer.displayName} on Bhopal Camera Club.`}
+>
+  <!-- Profile Header Card (Viewfinder Editorial themed) -->
+  <header class="profile-header surface-white">
+    <div class="container profile-card-layout">
+      <div class="avatar-col">
+        <div class="avatar-ring">
+          <div id="ph-avatar-circle" class="avatar-circle">
+            {(defaultPhotographer.displayName ?? '?').slice(0,2).toUpperCase()}
+          </div>
+        </div>
+      </div>
+
+      <div class="info-col">
+        <div class="title-row">
+          <h1 id="ph-name" class="photographer-name">{defaultPhotographer.displayName}</h1>
+          <div id="ph-badge-wrap">
+            <MemberBadge memberClass={defaultPhotographer.memberClass as any} size="md" />
+          </div>
+        </div>
+
+        <p id="ph-bio" class="photographer-bio">{defaultPhotographer.bio}</p>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <span class="stat-lbl">Member Since</span>
+            <span id="ph-joined" class="stat-val">{defaultPhotographer.joined}</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">Showcase Photos</span>
+            <span id="ph-photos-count" class="stat-val">{defaultPhotographer.photoCount}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hairline"></div>
+  </header>
+
+  <!-- Photographer Photos Grid -->
+  <section class="section portfolio-section" aria-label="Photographer portfolio">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Portfolio"
+        title="Showcase Contributions"
+        align="left"
+      />
+
+      <div id="portfolio-grid" class="portfolio-grid" data-gsap="stagger">
+        <p id="no-photos-msg" class="empty-msg">Loading portfolio…</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.profile-header {
+  padding-top: calc(var(--nav-h) + var(--s-8));
+  padding-bottom: var(--s-8);
+}
+.profile-card-layout {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--s-6);
+  align-items: flex-start;
+}
+.avatar-col {
+  display: flex;
+  justify-content: center;
+}
+.avatar-ring {
+  padding: 4px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-full);
+}
+.avatar-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: var(--r-full);
+  background: var(--forest-gradient);
+  color: var(--surface-0);
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--surface-0);
+  box-shadow: var(--e-1);
+}
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-full);
+  object-fit: cover;
+}
+.info-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+.photographer-name {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.015em;
+}
+.photographer-bio {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-600);
+  max-width: 720px;
+}
+.stats-row {
+  display: flex;
+  gap: var(--s-6);
+  margin-top: var(--s-2);
+}
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-lbl {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat-val {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+/* Portfolio grid */
+.portfolio-section {
+  background: var(--surface-1);
+}
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-4);
+  margin-top: var(--s-6);
+}
+.portfolio-card {
+  position: relative;
+  aspect-ratio: 3/2;
+  overflow: hidden;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  display: block;
+}
+.portfolio-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--m-fast) ease-in-out;
+}
+.portfolio-card:hover .portfolio-img {
+  transform: scale(1.03);
+}
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 60%);
+  display: flex;
+  align-items: flex-end;
+  padding: var(--s-3);
+  opacity: 0;
+  transition: opacity var(--m-fast) ease-in-out;
+  z-index: 5;
+}
+.portfolio-card:hover .card-overlay {
+  opacity: 1;
+}
+.card-title {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+.empty-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--s-12) 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-400);
+  background: var(--surface-0);
+  border: 1px solid var(--hairline-soft);
+}
+
+@media (max-width: 768px) {
+  .profile-card-layout {
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+  }
+  .portfolio-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .portfolio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+  // The last URL segment is the username (e.g. "rajnishkhare").
+  const username = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
+
+  async function loadPhotographerProfile() {
+    if (!username) return;
+    try {
+      // 1. Fetch profile by username
+      const profileRes = await fetch(`/api/v1/photographers/${username}`);
+      if (!profileRes.ok) throw new Error(`HTTP ${profileRes.status}`);
+      const { data: profile } = await profileRes.json();
+      if (!profile) throw new Error('Empty profile response');
+
+      // Update page title
+      document.title = `${profile.displayName} · Profile · Bhopal Camera Club`;
+
+      // Update header fields
+      (document.getElementById('ph-name') as HTMLElement).textContent = profile.displayName;
+      (document.getElementById('ph-bio') as HTMLElement).textContent =
+        profile.bio || 'No bio provided yet.';
+      (document.getElementById('ph-joined') as HTMLElement).textContent =
+        String(profile.memberSince ?? '—');
+      (document.getElementById('ph-photos-count') as HTMLElement).textContent =
+        String(profile.photoCount ?? 0);
+
+      // Avatar
+      const avatarCircle = document.getElementById('ph-avatar-circle') as HTMLElement;
+      if (profile.avatarUrl) {
+        avatarCircle.innerHTML = `<img src="${profile.avatarUrl}" alt="${profile.displayName}" width="110" height="110" />`;
+      } else {
+        avatarCircle.textContent = (profile.displayName ?? '?').slice(0, 2).toUpperCase();
+      }
+
+      // Membership badge
+      const badgeWrap = document.getElementById('ph-badge-wrap') as HTMLElement;
+      badgeWrap.innerHTML = '';
+      const memberClass: string = profile.memberClass ?? 'basic';
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = `tag tag-${memberClass}`;
+      badgeSpan.style.cssText = 'text-transform:uppercase;font-size:9px;font-weight:700;';
+      badgeSpan.textContent = memberClass.replace(/_/g, ' ');
+      badgeWrap.appendChild(badgeSpan);
+
+      // 2. Fetch photos using the numeric user id returned by the profile endpoint
+      const numericId: number | undefined = profile.id;
+      if (!numericId) return;
+
+      const photosRes = await fetch(`/api/v1/gallery/photographer/${numericId}?limit=100`);
+      if (!photosRes.ok) return;
+      const { photos } = await photosRes.json();
+
+      const grid = document.getElementById('portfolio-grid') as HTMLElement;
+      if (!Array.isArray(photos) || photos.length === 0) {
+        grid.innerHTML = `<p class="empty-msg">No photographs uploaded to the showcase yet.</p>`;
+        return;
+      }
+
+      grid.innerHTML = '';
+      photos.forEach((photo: any) => {
+        const imgSrc: string = photo.urls?.medium ?? photo.urls?.original ?? '';
+        const card = document.createElement('a');
+        card.href = `/showcase/${photo.uuid}/`;
+        card.className = 'portfolio-card vf-card';
+        card.innerHTML = `
+          <img src="${imgSrc}" alt="${photo.title ?? ''}" class="portfolio-img" loading="lazy" />
+          <div class="card-overlay">
+            <span class="card-title">${photo.title ?? ''}</span>
+          </div>
+          <span class="vf-br" aria-hidden="true"></span>
+          <span class="vf-bl" aria-hidden="true"></span>
+        `;
+        grid.appendChild(card);
+      });
+
+    } catch {
+      // Keep static fallback content visible
+      const grid = document.getElementById('portfolio-grid') as HTMLElement;
+      grid.innerHTML = `<p class="empty-msg">Unable to load portfolio. Please try again later.</p>`;
+    }
+  }
+
+  loadPhotographerProfile();
+</script>

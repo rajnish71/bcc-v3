@@ -10,11 +10,12 @@
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeader from '../../components/ui/SectionHeader.astro';
+import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
   let photos = [];
   try {
-    const res = await fetch('http://localhost:3001/api/v1/gallery/feed?limit=100');
+    const res = await fetch(`${BUILD_API_URL}/gallery/feed?limit=100`);
     if (res.ok) {
       const json = await res.json();
       // gallery/feed returns { photos: [...], total: N } where id field is 'uuid'
@@ -132,7 +133,7 @@ const defaultPhoto = fallbackPhotos[id] || {
         <span id="photo-category" class="tag tag-exhibition">{defaultPhoto.category}</span>
         <h1 id="photo-title" class="photo-title-text">{defaultPhoto.title}</h1>
         <p class="photo-byline">
-          By <a id="photo-author-link" href={`/gallery/photographer/${defaultPhoto.photographerId}/`} class="photographer-link">{defaultPhoto.photographer}</a>
+          By <a id="photo-author-link" href={`/photographers/${defaultPhoto.photographerId}/`} class="photographer-link">{defaultPhoto.photographer}</a>
           <span class="sep">·</span>
           Published <span id="photo-date">—</span>
         </p>
@@ -374,35 +375,37 @@ const defaultPhoto = fallbackPhotos[id] || {
   async function loadPhotoDetails() {
     if (!photoId) return;
     try {
-      const res = await fetch(`/api/v1/photos/${photoId}`);
+      const res = await fetch(`/api/v1/gallery/photos/${photoId}`);
       if (!res.ok) throw new Error('API Error');
-      const { data } = await res.json();
+      const data = await res.json();
       if (data) {
-        document.getElementById('photo-img')!.setAttribute('src', data.src);
-        document.getElementById('photo-img')!.setAttribute('alt', data.title);
-        document.getElementById('photo-title')!.textContent = data.title;
-        document.getElementById('photo-category')!.textContent = data.category || 'Curated';
-        document.getElementById('photo-description')!.innerHTML = `<p>${data.description}</p>`;
+        const mediumUrl = data.urls?.medium || data.urls?.original || '';
+        document.getElementById('photo-img')!.setAttribute('src', mediumUrl);
+        document.getElementById('photo-img')!.setAttribute('alt', data.title || 'Showcase Photograph');
+        document.getElementById('photo-title')!.textContent = data.title || 'Showcase Photograph';
+        document.getElementById('photo-category')!.textContent = data.genre || 'Curated';
+        document.getElementById('photo-description')!.innerHTML = `<p>${data.caption || ''}</p>`;
 
         const authorLink = document.getElementById('photo-author-link')!;
-        authorLink.textContent = data.photographer;
-        authorLink.setAttribute('href', `/gallery/photographer/${data.photographerId}/`);
+        authorLink.textContent = data.photographer?.name || 'BCC Member';
+        authorLink.setAttribute('href', `/photographers/${data.photographer?.username || 'unknown'}/`);
 
         // Update EXIF
         if (data.exif) {
-          document.getElementById('exif-camera')!.textContent = data.exif.camera || '—';
-          document.getElementById('exif-lens')!.textContent = data.exif.lens || '—';
-          document.getElementById('exif-focal')!.textContent = data.exif.focalLength || '—';
+          document.getElementById('exif-camera')!.textContent = data.exif.camera_model || '—';
+          document.getElementById('exif-lens')!.textContent = data.exif.lens_model || '—';
+          document.getElementById('exif-focal')!.textContent = data.exif.focal_length || '—';
           document.getElementById('exif-aperture')!.textContent = data.exif.aperture || '—';
-          document.getElementById('exif-shutter')!.textContent = data.exif.shutterSpeed || '—';
+          document.getElementById('exif-shutter')!.textContent = data.exif.shutter_speed || '—';
           document.getElementById('exif-iso')!.textContent = data.exif.iso || '—';
         }
 
         // Set download button
-        document.getElementById('download-btn')!.setAttribute('href', data.src);
+        document.getElementById('download-btn')!.setAttribute('href', data.urls?.original || mediumUrl);
 
         // Format date
-        const formattedDate = new Date(data.date).toLocaleDateString('en-IN', {
+        const dateVal = data.created_at || data.confirmed_at || new Date().toISOString();
+        const formattedDate = new Date(dateVal).toLocaleDateString('en-IN', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'

@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 import { db } from '../../../database/db';
 import {
   generateRefreshToken,
@@ -103,17 +104,24 @@ export class AuthService {
       }
     }
 
-    // Verify password. argon2.verify() throws a TypeError if the stored hash
-    // uses an unrecognised format (e.g. a bcrypt hash written by a migration
-    // before the V3 auth system was in place). Catch that case and treat it
-    // as a wrong-password result -- never let a hash format mismatch surface
-    // as a 500 to the client.
+    // Verify password.
     let passwordValid = false;
+    let needsMigration = false;
     try {
-      passwordValid = await argon2.verify(user.password_hash, password);
+      const hash = user.password_hash;
+      const isBcrypt = hash && (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$'));
+
+      if (isBcrypt) {
+        passwordValid = await bcrypt.compare(password, hash);
+        if (passwordValid) {
+          needsMigration = true;
+        }
+      } else {
+        passwordValid = await argon2.verify(hash, password);
+      }
     } catch {
-      // Unrecognised hash format. The user will see "Invalid email or password"
-      // and can use the password-reset flow to obtain a fresh argon2 hash.
+      // Unrecognised or malformed hash format. Never let a hash format mismatch surface
+      // as a 500 to the client.
       passwordValid = false;
     }
 
@@ -121,6 +129,21 @@ export class AuthService {
       await this.registerFailedAttempt(user.id);
       await this.recordLoginAttempt(user.id, identifier, device, 'FAILED');
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Migrate password to Argon2 on successful login if it was verified via bcrypt
+    if (needsMigration) {
+      try {
+        const newArgonHash = await argon2.hash(password);
+        await db
+          .updateTable('users')
+          .set({ password_hash: newArgonHash })
+          .where('id', '=', user.id)
+          .execute();
+      } catch (migrationError) {
+        // Log error but do not block user login — password can be migrated next time
+        console.error(`Failed to migrate password hash to Argon2 for user ${user.id}:`, migrationError);
+      }
     }
 
     if (user.status !== 'ACTIVE') {

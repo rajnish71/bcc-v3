@@ -90,7 +90,7 @@ const NAV_LINKS = [
         </div>
         <span class="nav-name" id="nav-name"></span>
         <NotificationBell />
-        <a id="nav-profile-link" href="/gallery/photographer/" class="nav-profile-link" hidden>My Profile</a>
+        <a id="nav-profile-link" href="/photographers/" class="nav-profile-link" hidden>My Profile</a>
         <button id="nav-signout-btn" type="button" class="nav-profile-link">Sign Out</button>
         <a href="/hub/" class="btn btn-outline-gold btn-md">Member Hub</a>
       </div>
@@ -169,7 +169,7 @@ const NAV_LINKS = [
           <div style="display: flex; flex-direction: column;">
             <div class="nav-name" id="drawer-name" style="font-size:14px;"></div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 2px; line-height: 1;">
-              <a id="drawer-profile-link" href="/gallery/photographer/" style="font-size:12px;color:var(--ink-600);" hidden>My Profile</a>
+              <a id="drawer-profile-link" href="/photographers/" style="font-size:12px;color:var(--ink-600);" hidden>My Profile</a>
               <span id="drawer-profile-sep" style="font-size:10px;color:var(--ink-400);" hidden>·</span>
               <a href="/hub/" style="font-size:12px;color:var(--gold-600);">Member Hub</a>
               <span style="font-size:10px;color:var(--ink-400);">·</span>
@@ -530,12 +530,12 @@ button.nav-profile-link {
         if (user.username) {
           const profileLink = document.getElementById('nav-profile-link');
           if (profileLink) {
-            (profileLink as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
+            (profileLink as HTMLAnchorElement).href = `/photographers/${user.username}/`;
             profileLink.removeAttribute('hidden');
           }
           const drawerProfileLink = document.getElementById('drawer-profile-link');
           if (drawerProfileLink) {
-            (drawerProfileLink as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
+            (drawerProfileLink as HTMLAnchorElement).href = `/photographers/${user.username}/`;
             drawerProfileLink.removeAttribute('hidden');
             const drawerProfileSep = document.getElementById('drawer-profile-sep');
             if (drawerProfileSep) drawerProfileSep.removeAttribute('hidden');

@@ -337,9 +337,14 @@ export class GalleryService {
   ): Promise<ReturnType<typeof formatPhoto>> {
     const photo = await db
       .selectFrom('photos')
-      .where('uuid', '=', photoUuid)
-      .where('status', '!=', 'DELETED')
-      .selectAll()
+      .leftJoin('users', 'users.id', 'photos.owner_user_id')
+      .where('photos.uuid', '=', photoUuid)
+      .where('photos.status', '!=', 'DELETED')
+      .selectAll('photos')
+      .select([
+        'users.full_name as photographer_name',
+        'users.username as photographer_username',
+      ] as any)
       .executeTakeFirst();
 
     if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);

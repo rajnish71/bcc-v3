@@ -7,11 +7,12 @@
  * publish date, reading time, share controls, and dynamic body text.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
   let posts = [];
   try {
-    const res = await fetch('http://localhost:3000/api/v1/journal?limit=100');
+    const res = await fetch(`${BUILD_API_URL}/journal?limit=100`);
     if (res.ok) {
       const json = await res.json();
       posts = json.data || [];

@@ -442,6 +442,26 @@ const CLASSES = [
 
   function token(): string | null { return localStorage.getItem('bcc_token'); }
 
+  async function checkExistingMembership() {
+    const t = token();
+    if (!t) return;
+    try {
+      const res = await fetch(`${API}/membership/mine`, {
+        headers: { Authorization: `Bearer ${t}` }
+      });
+      if (res.ok) {
+        const memberships = await res.json() as any[];
+        const existing = memberships.find(
+          m => m.lifecycle_state === 'ACTIVE' || m.lifecycle_state === 'APPROVED' || m.lifecycle_state === 'PENDING'
+        );
+        if (existing) {
+          window.location.replace('/hub/');
+        }
+      }
+    } catch (e) {}
+  }
+  checkExistingMembership();
+
   function showError(msg: string): void {
     const el = document.getElementById('apply-error');
     if (!el) return;

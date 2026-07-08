@@ -528,11 +528,34 @@ details[open] .faq-q { color: var(--gold-600); }
     });
   });
 
-  /* Authenticated state check to show banner */
+  /* Authenticated state check to show banner and handle redirects */
   try {
-    if (localStorage.getItem('bcc_user')) {
+    const user = localStorage.getItem('bcc_user');
+    const token = localStorage.getItem('bcc_token');
+    if (user) {
       const banner = document.getElementById('authenticated-member-banner');
       if (banner) banner.style.display = 'flex';
+
+      // Explicitly hide elements targeting guests/non-members
+      document.querySelectorAll('.auth-hide').forEach(el => {
+        (el as HTMLElement).style.setProperty('display', 'none', 'important');
+      });
+
+      if (token) {
+        fetch('/api/v1/membership/mine', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => res.ok ? res.json() : [])
+        .then((memberships: any[]) => {
+          const activeOrApproved = memberships.find(
+            m => m.lifecycle_state === 'ACTIVE' || m.lifecycle_state === 'APPROVED'
+          );
+          if (activeOrApproved) {
+            window.location.replace('/hub/');
+          }
+        })
+        .catch(() => {});
+      }
     }
   } catch (e) {}
 </script>

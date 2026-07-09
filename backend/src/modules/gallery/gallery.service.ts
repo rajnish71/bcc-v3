@@ -890,20 +890,52 @@ export class GalleryService {
       q = q.where('photos.genre', '=', opts.genre as any);
     }
 
-    const [rows, countRow] = await Promise.all([
-      q.orderBy('photos.created_at', 'desc').limit(limit).offset(offset).execute(),
-      db
-        .selectFrom('photos')
-        .select((eb) => eb.fn.countAll<number>().as('count'))
-        .where('status', '=', 'ACTIVE')
-        .where('visibility', '=', 'PUBLIC')
-        .$if(!!opts.genre, (qb) => qb.where('genre', '=', opts.genre as any))
-        .executeTakeFirst(),
-    ]);
+    // Retrieve approved public photographs
+    const allRows = await q.execute();
+
+    // Group photographs by photographer (owner_user_id)
+    const groups = new Map<number, typeof allRows>();
+    for (const row of allRows) {
+      const userId = Number(row.owner_user_id);
+      if (!groups.has(userId)) {
+        groups.set(userId, []);
+      }
+      groups.get(userId)!.push(row);
+    }
+
+    const userIds = Array.from(groups.keys());
+
+    // Shuffle helper (Fisher-Yates)
+    const shuffle = <T>(arr: T[]): T[] => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+      }
+      return arr;
+    };
+
+    // Randomly shuffle photographers
+    shuffle(userIds);
+
+    // Select a maximum of `limit` photographers
+    const selectedUserIds = userIds.slice(0, limit);
+
+    // For each selected photographer, randomly select ONE photograph
+    const selectedRows: typeof allRows = [];
+    for (const userId of selectedUserIds) {
+      const userPhotos = groups.get(userId)!;
+      const randomPhoto = userPhotos[Math.floor(Math.random() * userPhotos.length)];
+      selectedRows.push(randomPhoto);
+    }
+
+    // Return those photographs in random photographer order
+    shuffle(selectedRows);
 
     return {
-      photos: rows.map(r => formatPhoto(r as Record<string, unknown>)),
-      total:  Number(countRow?.count ?? 0),
+      photos: selectedRows.map(r => formatPhoto(r as Record<string, unknown>)),
+      total:  userIds.length,
     };
   }
 

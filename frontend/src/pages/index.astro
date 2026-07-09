@@ -509,12 +509,15 @@ const activeContest = {
   position: relative;
   height: 580px;
   overflow: hidden;
-  background: var(--image-backdrop);
+  background: var(--surface-1);
 }
 
 .spotlight-img {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: -60px;
   z-index: 0;
 }
 .spotlight-fallback {
@@ -1956,39 +1959,25 @@ const activeContest = {
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
-  /* ── 1. Spotlight ── */
-  (async () => {
-    try {
-      // Phase 2a: latest gallery feed photo used as spotlight.
-      const res = await fetch('/api/v1/gallery/feed?limit=1');
-      if (!res.ok) return;
-      const { photos: _sp } = await res.json();
-      const sp = Array.isArray(_sp) && _sp.length > 0 ? _sp[0] : null;
-      if (!sp) return;
+  /* ── 1. Spotlight (TEMPORARY EDITORIAL FREEZE) ── */
+  // TODO: Replace this temporary editorial freeze with the Admin-selected Hero Spotlight system.
+  (() => {
+    const imageUrl = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=85';
+    const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
+    if (img) {
+      img.src = imageUrl;
+      img.alt = 'Pushkar Sunset by Dr. Anil Bhati';
+      img.onload = () => img.classList.add('loaded');
+    }
 
-      const imageUrl = sp.urls?.large ?? sp.urls?.original ?? '';
-      if (!imageUrl) return;
+    const title = document.getElementById('spotlight-title');
+    if (title) title.textContent = 'Pushkar Sunset';
 
-      const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
-      if (img) { img.src = imageUrl; img.alt = sp.title ?? ''; img.onload = () => img.classList.add('loaded'); }
+    const credit = document.getElementById('spotlight-credit');
+    if (credit) credit.textContent = 'Dr. Anil Bhati';
 
-      const title = document.getElementById('spotlight-title');
-      if (title && sp.title) title.textContent = sp.title;
-
-      const credit = document.getElementById('spotlight-credit');
-      if (credit) {
-        if (sp.photographer && sp.photographer.name) {
-          credit.textContent = sp.photographer.name;
-        } else {
-          credit.textContent = 'Bhopal Camera Club Member';
-        }
-      }
-
-      const activity = document.getElementById('spotlight-activity');
-      if (activity) {
-        activity.style.display = 'none';
-      }
-    } catch { /* fallback stays */ }
+    const activity = document.getElementById('spotlight-activity');
+    if (activity) activity.style.display = 'none';
   })();
 
   /* ── 2. Gallery wall — justified layout ── */
@@ -2015,7 +2004,9 @@ const activeContest = {
       row.push(p); rowW += iW;
       if (rowW + gap * (row.length - 1) >= containerWidth * 0.88) flush();
     }
-    flush(true);
+    
+    // Discard incomplete final row entirely per editorial rules.
+    // We only return rows that completed naturally inside the loop.
     return rows;
   }
 
@@ -2028,7 +2019,7 @@ const activeContest = {
     try {
       // gallery/feed returns { photos: [...], total: N }.
       // Normalise each item to the shape buildRows() expects.
-      const res = await fetch('/api/v1/gallery/feed?limit=12');
+      const res = await fetch('/api/v1/gallery/feed?limit=20');
       if (res.ok) {
         const { photos: _raw } = await res.json();
         photos = (Array.isArray(_raw) ? _raw : []).map((p: any) => ({

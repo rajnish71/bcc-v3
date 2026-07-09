@@ -10,6 +10,7 @@ import { EventsModule } from './modules/events/events.module';
 import { GalleryModule } from './modules/gallery/gallery.module';
 import { PhotographerProfilesModule } from './modules/photographer-profiles/photographer-profiles.module';
 import { JournalModule } from './modules/journal/journal.module';
+import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { JournalModule } from './modules/journal/journal.module';
     GalleryModule,
     PhotographerProfilesModule,
     JournalModule,
+    ContactModule,
   ],
   controllers: [AppController],
 })

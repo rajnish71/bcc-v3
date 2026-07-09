@@ -26,14 +26,28 @@ export class EmailService {
   private readonly from   = process.env.EMAIL_FROM_ADDRESS
     ?? 'Bhopal Camera Club <onboarding@resend.dev>';
 
-  async send(to: string, subject: string, html: string): Promise<string | null> {
+  async send(
+    to: string,
+    subject: string,
+    html: string,
+    replyTo?: string,
+  ): Promise<string | null> {
     if (!this.apiKey) {
       console.log(
         `[email-stub] RESEND_API_KEY not configured` +
-        ` -- would send "${subject}" to ${to}`,
+        ` -- would send "${subject}" to ${to}` +
+        (replyTo ? ` reply-to ${replyTo}` : ''),
       );
       return null;
     }
+
+    const payload: Record<string, unknown> = {
+      from: this.from,
+      to: [to],
+      subject,
+      html,
+    };
+    if (replyTo) payload['reply_to'] = [replyTo];
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -41,7 +55,7 @@ export class EmailService {
         Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: this.from, to: [to], subject, html }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {

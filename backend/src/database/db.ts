@@ -768,11 +768,25 @@ export interface JournalPostsTable {
   updated_at:           ColumnType<Date, string, string>;
 }
 
+export interface ContactMessagesTable {
+  id:           Generated<number>;
+  name:         string;
+  email:        string;
+  phone:        string | null;
+  subject:      string;
+  message:      string;
+  ip_address:   string | null;
+  user_agent:   string | null;
+  submitted_at: Generated<ColumnType<Date, string | undefined, never>>;
+  status:       Generated<'NEW' | 'READ' | 'RESPONDED' | 'CLOSED' | 'SPAM'>;
+}
+
 // ============================================================================
 // Database interface
 // ============================================================================
 
 export interface DB {
+  contact_messages: ContactMessagesTable;
   users: UsersTable;
   user_avatars: UserAvatarsTable;
   auth_identities: AuthIdentitiesTable;

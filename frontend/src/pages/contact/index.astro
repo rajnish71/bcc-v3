@@ -1,0 +1,624 @@
+---
+/**
+ * contact/index.astro — Contact Us Page
+ * Route: /contact/
+ *
+ * Follows the V6 editorial design language.
+ * Connects to NestJS backend at POST /api/v1/contact.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Contact Us"
+  description="Get in touch with the Bhopal Camera Club. Send us a message or find our correspondence address."
+>
+
+  <!-- Page Hero -->
+  <div class="page-hero surface-white">
+    <div class="container">
+      <span class="eyebrow">Connect</span>
+      <h1 class="policy-title">Contact Us</h1>
+      <p class="policy-meta">
+        Get in touch with the Bhopal Camera Club. Whether you have questions about membership, events, or partnerships, we are here to help.
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Contact Grid Section -->
+  <section class="contact-section" aria-label="Contact information and form">
+    <div class="container">
+      <div class="contact-grid">
+        
+        <!-- Left Column: Info & Hours -->
+        <div class="contact-info-col">
+          <div class="info-block">
+            <h2 class="info-heading">Correspondence Address</h2>
+            <address class="postal-address">
+              <strong>Bhopal Camera Club</strong><br />
+              A-503, Aashima Royal City<br />
+              Near Pebble Bay<br />
+              Bag Mugalia<br />
+              Off Hoshangabad Road<br />
+              Bhopal – 462043<br />
+              Madhya Pradesh<br />
+              India
+            </address>
+          </div>
+
+          <div class="info-block">
+            <h2 class="info-heading">Contact Details</h2>
+            <p class="contact-detail">
+              <span class="detail-label">Phone:</span>
+              <a href="tel:+919238211101" class="contact-link">+91 92382 11101</a>
+            </p>
+            <p class="contact-detail">
+              <span class="detail-label">Email:</span>
+              <a href="mailto:hello@bcc.bhopal.info" class="contact-link">hello@bcc.bhopal.info</a>
+            </p>
+          </div>
+
+          <div class="info-block">
+            <h2 class="info-heading">Office Hours</h2>
+            <table class="hours-table">
+              <tbody>
+                <tr>
+                  <td class="hours-day">Monday–Saturday</td>
+                  <td class="hours-time">10:00 AM–6:00 PM</td>
+                </tr>
+                <tr>
+                  <td class="hours-day">Sunday</td>
+                  <td class="hours-time is-closed">Closed</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right Column: Form -->
+        <div class="contact-form-col">
+          
+          <!-- Success State -->
+          <div id="contact-success" class="contact-card success-card" style="display: none;" role="status">
+            <div class="success-icon-wrapper" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10" stroke="#3E5A48" fill="#E8EFE9"></circle>
+                <path d="M9 12l2 2 4-4" stroke="#3E5A48" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </div>
+            <h2 class="success-heading">Message Sent</h2>
+            <p class="success-message">
+              Thank you for reaching out. Your message has been successfully sent to the Bhopal Camera Club council.
+            </p>
+            <p class="success-submessage">We normally respond within 1–2 working days.</p>
+            <button id="reset-btn" type="button" class="btn btn-outline btn-md reset-btn">
+              Send Another Message
+            </button>
+          </div>
+
+          <!-- Form State -->
+          <form id="contact-form" class="contact-card form-card" novalidate>
+            <h2 class="form-heading">Send a Message</h2>
+            
+            <div id="contact-error" class="auth-banner auth-banner--error" style="display: none;" role="alert"></div>
+
+            <!-- Honeypot spam protection -->
+            <div style="display: none !important;">
+              <label for="website">Leave this field blank</label>
+              <input id="website" type="text" name="website" autocomplete="off" tabindex="-1" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="name">Name <span class="required" aria-hidden="true">*</span></label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                class="field"
+                placeholder="Your full name"
+                required
+                aria-required="true"
+              />
+              <span class="field-error" id="error-name" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address <span class="required" aria-hidden="true">*</span></label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                class="field"
+                placeholder="you@example.com"
+                required
+                aria-required="true"
+              />
+              <span class="field-error" id="error-email" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone Number <span class="optional">(Optional)</span></label>
+              <input
+                id="phone"
+                type="tel"
+                name="phone"
+                class="field"
+                placeholder="+91 XXXXX XXXXX"
+              />
+              <span class="field-error" id="error-phone" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="subject">Subject <span class="required" aria-hidden="true">*</span></label>
+              <input
+                id="subject"
+                type="text"
+                name="subject"
+                class="field"
+                placeholder="What is this regarding?"
+                required
+                aria-required="true"
+              />
+              <span class="field-error" id="error-subject" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="message">Message <span class="required" aria-hidden="true">*</span></label>
+              <textarea
+                id="message"
+                name="message"
+                class="field"
+                rows="5"
+                placeholder="Write your message here..."
+                required
+                aria-required="true"
+              ></textarea>
+              <span class="field-error" id="error-message" style="display: none;"></span>
+            </div>
+
+            <button id="submit-btn" type="submit" class="btn btn-dark btn-lg submit-btn">
+              Send Message
+            </button>
+
+            <p class="form-note">
+              We normally respond within 1–2 working days.
+            </p>
+          </form>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ── Page Hero ── */
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+.policy-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+.policy-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  line-height: 1.65;
+}
+
+/* ── Section Layout ── */
+.contact-section {
+  background: var(--surface-1);
+  padding: var(--s-8) 0 var(--s-12);
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-12);
+  align-items: start;
+}
+
+/* ── Left Column: Info Blocks ── */
+.contact-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.info-block {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: var(--s-4);
+}
+
+.info-heading {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: var(--s-2);
+  letter-spacing: -0.01em;
+}
+
+.postal-address {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.75;
+  font-style: normal;
+}
+.postal-address strong {
+  color: var(--ink-900);
+}
+
+.contact-detail {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  margin-bottom: var(--s-1);
+  color: var(--ink-600);
+}
+.contact-detail:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--ink-900);
+  margin-right: var(--s-1);
+  width: 60px;
+  display: inline-block;
+}
+
+.contact-link {
+  color: var(--gold-600);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--m-fast);
+}
+.contact-link:hover {
+  text-decoration-color: var(--gold-600);
+}
+
+/* ── Office Hours Table ── */
+.hours-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.hours-table td {
+  padding: var(--s-1) 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+}
+.hours-table tr:first-child td {
+  padding-top: 0;
+}
+.hours-table tr:last-child td {
+  padding-bottom: 0;
+}
+.hours-day {
+  font-weight: 500;
+  color: var(--ink-900);
+}
+.hours-time {
+  text-align: right;
+}
+.hours-time.is-closed {
+  color: var(--ink-400);
+  font-weight: 500;
+}
+
+/* ── Right Column: Cards ── */
+.contact-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: var(--s-6);
+  box-shadow: var(--e-1);
+}
+
+.form-heading,
+.success-heading {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: var(--s-4);
+  letter-spacing: -0.01em;
+}
+
+/* ── Form Controls ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--s-3);
+}
+
+.form-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-600);
+}
+
+.required {
+  color: #B91C1C;
+}
+
+.optional {
+  color: var(--ink-400);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.field-error {
+  color: #B91C1C;
+  font-size: 12px;
+  margin-top: 4px;
+  font-family: var(--font-body);
+}
+
+.submit-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--s-2);
+}
+
+.form-note {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-400);
+  text-align: center;
+  margin-top: var(--s-3);
+  margin-bottom: 0;
+}
+
+/* ── Success State Card ── */
+.success-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-8) var(--s-6);
+}
+
+.success-icon-wrapper {
+  margin-bottom: var(--s-3);
+}
+
+.success-heading {
+  margin-bottom: var(--s-2);
+}
+
+.success-message {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.75;
+  margin-bottom: var(--s-1);
+}
+
+.success-submessage {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-400);
+  margin-bottom: var(--s-4);
+}
+
+.reset-btn {
+  width: auto;
+}
+
+/* ── Error Banner ── */
+.auth-banner {
+  padding: 10px 14px;
+  border-radius: var(--r-2);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: var(--s-3);
+}
+.auth-banner--error {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
+  }
+  .contact-section {
+    padding: var(--s-6) 0 var(--s-8);
+  }
+  .contact-card {
+    padding: var(--s-4);
+  }
+}
+</style>
+
+<script>
+  const API_URL = '/api/v1/contact';
+
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const successState = document.getElementById('contact-success') as HTMLElement;
+  const errorBanner = document.getElementById('contact-error') as HTMLElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
+
+  // Form Inputs
+  const nameInput = document.getElementById('name') as HTMLInputElement;
+  const emailInput = document.getElementById('email') as HTMLInputElement;
+  const phoneInput = document.getElementById('phone') as HTMLInputElement;
+  const subjectInput = document.getElementById('subject') as HTMLInputElement;
+  const messageInput = document.getElementById('message') as HTMLTextAreaElement;
+  const websiteInput = document.getElementById('website') as HTMLInputElement;
+
+  function clearErrors() {
+    errorBanner.style.display = 'none';
+    errorBanner.textContent = '';
+    
+    // Clear individual field errors
+    const errorSpans = document.querySelectorAll('.field-error');
+    errorSpans.forEach(span => {
+      (span as HTMLElement).style.display = 'none';
+      (span as HTMLElement).textContent = '';
+    });
+    
+    const inputs = document.querySelectorAll('.field');
+    inputs.forEach(input => {
+      (input as HTMLElement).style.borderColor = '';
+    });
+  }
+
+  function showGeneralError(msg: string) {
+    errorBanner.textContent = msg;
+    errorBanner.style.display = 'block';
+    errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function showFieldError(fieldId: string, msg: string) {
+    const errorSpan = document.getElementById(`error-${fieldId}`) as HTMLElement;
+    const inputEl = document.getElementById(fieldId) as HTMLElement;
+    if (errorSpan && inputEl) {
+      errorSpan.textContent = msg;
+      errorSpan.style.display = 'block';
+      inputEl.style.borderColor = '#B91C1C';
+    }
+  }
+
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    clearErrors();
+
+    // Client-side quick checks
+    let hasError = false;
+    
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const subject = subjectInput.value.trim();
+    const message = messageInput.value.trim();
+
+    if (!name) {
+      showFieldError('name', 'Name is required.');
+      hasError = true;
+    } else if (name.length < 2) {
+      showFieldError('name', 'Name must be at least 2 characters.');
+      hasError = true;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      showFieldError('email', 'Email Address is required.');
+      hasError = true;
+    } else if (!emailRegex.test(email)) {
+      showFieldError('email', 'Please enter a valid email address.');
+      hasError = true;
+    }
+
+    if (!subject) {
+      showFieldError('subject', 'Subject is required.');
+      hasError = true;
+    }
+
+    if (!message) {
+      showFieldError('message', 'Message is required.');
+      hasError = true;
+    } else if (message.length < 20) {
+      showFieldError('message', 'Message must be at least 20 characters.');
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    const website = websiteInput?.value || '';
+
+    // Set Loading State
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phone || undefined,
+          subject,
+          message,
+          website: website || undefined,
+        }),
+      });
+
+      if (response.ok) {
+        // Success
+        form.style.display = 'none';
+        successState.style.display = 'flex';
+        form.reset();
+      } else {
+        // Handle server-side errors
+        const data = await response.json();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+
+        if (response.status === 400 && data.message) {
+          // If message is an array (NestJS ValidationPipe output)
+          if (Array.isArray(data.message)) {
+            data.message.forEach((msg: string) => {
+              const lowerMsg = msg.toLowerCase();
+              if (lowerMsg.includes('name')) {
+                showFieldError('name', msg);
+              } else if (lowerMsg.includes('email')) {
+                showFieldError('email', msg);
+              } else if (lowerMsg.includes('phone')) {
+                showFieldError('phone', msg);
+              } else if (lowerMsg.includes('subject')) {
+                showFieldError('subject', msg);
+              } else if (lowerMsg.includes('message')) {
+                showFieldError('message', msg);
+              } else {
+                showGeneralError(msg);
+              }
+            });
+          } else {
+            showGeneralError(data.message);
+          }
+        } else {
+          showGeneralError(data.message || 'An unexpected error occurred. Please try again.');
+        }
+      }
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Message';
+      showGeneralError('A network error occurred. Please check your internet connection.');
+    }
+  }
+
+  form?.addEventListener('submit', handleSubmit);
+
+  resetBtn?.addEventListener('click', () => {
+    successState.style.display = 'none';
+    form.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Message';
+    clearErrors();
+  });
+</script>

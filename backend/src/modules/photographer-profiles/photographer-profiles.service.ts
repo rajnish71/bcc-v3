@@ -92,11 +92,12 @@ export class PhotographerProfilesService {
     offset: number;
     sort:   'name' | 'photos' | 'joined';
     genre?: string;
+    hasApprovedPhotos?: boolean;
   }) {
     // ------------------------------------------------------------------
     // Total count
     // ------------------------------------------------------------------
-    const countRow = await db
+    let countQuery = db
       .selectFrom('users as u')
       .innerJoin('memberships as m', 'm.user_id', 'u.id')
       .where('u.status', '=', 'ACTIVE')
@@ -104,7 +105,21 @@ export class PhotographerProfilesService {
       .where('u.profile_visibility', '=', 'PUBLIC')
       .where('u.username', 'is not', null)
       .where('m.lifecycle_state', '=', 'ACTIVE')
-      .where('m.membership_class_id', 'is not', null)
+      .where('m.membership_class_id', 'is not', null);
+
+    if (opts.hasApprovedPhotos) {
+      countQuery = countQuery.where((eb) =>
+        eb.exists(
+          eb.selectFrom('photos')
+            .whereRef('photos.owner_user_id', '=', 'u.id')
+            .where('photos.status', '=', 'ACTIVE')
+            .where('photos.visibility', '=', 'PUBLIC')
+            .select('photos.id')
+        )
+      );
+    }
+
+    const countRow = await countQuery
       .select(eb => eb.fn.count<number>('u.id').as('total'))
       .executeTakeFirst();
 
@@ -121,7 +136,7 @@ export class PhotographerProfilesService {
     const dbLimit   = photoSort ? 1000 : opts.limit;
     const dbOffset  = photoSort ? 0    : opts.offset;
 
-    const rows = await db
+    let rowsQuery = db
       .selectFrom('users as u')
       .innerJoin('memberships as m', 'm.user_id', 'u.id')
       .innerJoin('membership_classes as mc', 'mc.id', 'm.membership_class_id')
@@ -135,7 +150,21 @@ export class PhotographerProfilesService {
       .where('u.profile_visibility', '=', 'PUBLIC')
       .where('u.username', 'is not', null)
       .where('m.lifecycle_state', '=', 'ACTIVE')
-      .where('m.membership_class_id', 'is not', null)
+      .where('m.membership_class_id', 'is not', null);
+
+    if (opts.hasApprovedPhotos) {
+      rowsQuery = rowsQuery.where((eb) =>
+        eb.exists(
+          eb.selectFrom('photos')
+            .whereRef('photos.owner_user_id', '=', 'u.id')
+            .where('photos.status', '=', 'ACTIVE')
+            .where('photos.visibility', '=', 'PUBLIC')
+            .select('photos.id')
+        )
+      );
+    }
+
+    const rows = await rowsQuery
       .select([
         'u.id',
         'u.username',

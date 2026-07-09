@@ -60,18 +60,39 @@ const NAV_LINKS = [
     <nav class="nav-links" aria-label="Main navigation">
       <a href="/" class:list={['nav-link', isActive('/') && 'nav-link--active']} aria-current={isActive('/') ? 'page' : undefined}>Home</a>
       <a href="/about/" class:list={['nav-link', isActive('/about/') && 'nav-link--active']} aria-current={isActive('/about/') ? 'page' : undefined}>About</a>
-      <a href="/showcase/" class:list={['nav-link', isActive('/showcase/') && 'nav-link--active']} aria-current={isActive('/showcase/') ? 'page' : undefined}>Showcase</a>
+
+      <!-- Showcase Dropdown -->
+      <div class="nav-dropdown" id="nav-dropdown-showcase">
+        <a
+          href="/showcase/"
+          class:list={['nav-link', 'nav-dropdown-trigger', isActive('/showcase/') && 'nav-link--active']}
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          Showcase <span class="nav-caret">▾</span>
+        </a>
+        <div class="nav-dropdown-panel" hidden>
+          <div class="nav-dropdown-group">
+            <a href="/showcase/" class="nav-dropdown-item">
+              <span class="nav-dropdown-arrow">→</span>Showcase
+            </a>
+            <a href="/photographers/" class="nav-dropdown-item">
+              <span class="nav-dropdown-arrow">→</span>Photographers
+            </a>
+          </div>
+        </div>
+      </div>
 
       <!-- Activities Dropdown -->
       <div class="nav-dropdown" id="nav-dropdown-activities">
-        <button
-          type="button"
+        <a
+          href="/activities/"
           class:list={['nav-link', 'nav-dropdown-trigger', isActive('/activities/') && 'nav-link--active']}
           aria-haspopup="true"
           aria-expanded="false"
         >
           Activities <span class="nav-caret">▾</span>
-        </button>
+        </a>
         <div class="nav-dropdown-panel" hidden>
           <div class="nav-dropdown-group">
             <a href="/activities/?type=photowalk" class="nav-dropdown-item">
@@ -856,6 +877,17 @@ const NAV_LINKS = [
 .nav-dropdown-panel[hidden] {
   display: none !important;
 }
+@media (min-width: 901px) {
+  .nav-dropdown:hover .nav-dropdown-panel {
+    display: block !important;
+  }
+  .nav-dropdown:hover .nav-dropdown-trigger {
+    color: var(--ink-900);
+  }
+  .nav--condensed .nav-dropdown:hover .nav-dropdown-trigger {
+    color: #FFFFFF;
+  }
+}
 .nav-dropdown-group {
   padding: 8px 0;
 }
@@ -1519,10 +1551,24 @@ const NAV_LINKS = [
   }
 
   /* -- Dropdowns toggle -- */
+  const showcaseTrigger   = document.querySelector('#nav-dropdown-showcase .nav-dropdown-trigger');
+  const showcasePanel     = document.querySelector('#nav-dropdown-showcase .nav-dropdown-panel');
   const activitiesTrigger = document.querySelector('#nav-dropdown-activities .nav-dropdown-trigger');
   const activitiesPanel   = document.querySelector('#nav-dropdown-activities .nav-dropdown-panel');
   const learnTrigger      = document.querySelector('#nav-dropdown-learn .nav-dropdown-trigger');
   const learnPanel        = document.querySelector('#nav-dropdown-learn .nav-dropdown-panel');
+
+  const toggleShowcase = (open?: boolean) => {
+    if (!showcaseTrigger || !showcasePanel) return;
+    const show = open ?? showcasePanel.hasAttribute('hidden');
+    if (show) {
+      showcasePanel.removeAttribute('hidden');
+      showcaseTrigger.setAttribute('aria-expanded', 'true');
+    } else {
+      showcasePanel.setAttribute('hidden', '');
+      showcaseTrigger.setAttribute('aria-expanded', 'false');
+    }
+  };
 
   const toggleActivities = (open?: boolean) => {
     if (!activitiesTrigger || !activitiesPanel) return;
@@ -1564,9 +1610,20 @@ const NAV_LINKS = [
     }
   };
 
+  if (showcaseTrigger && showcasePanel) {
+    showcaseTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleActivities(false);
+      toggleLearn(false);
+      toggleAvatarMenu(false);
+      toggleShowcase();
+    });
+  }
+
   if (activitiesTrigger && activitiesPanel) {
     activitiesTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
+      toggleShowcase(false);
       toggleLearn(false);
       toggleAvatarMenu(false);
       toggleActivities();
@@ -1576,6 +1633,7 @@ const NAV_LINKS = [
   if (learnTrigger && learnPanel) {
     learnTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
+      toggleShowcase(false);
       toggleActivities(false);
       toggleAvatarMenu(false);
       toggleLearn();
@@ -1585,6 +1643,7 @@ const NAV_LINKS = [
   if (avatarTrigger && avatarPanel) {
     avatarTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
+      toggleShowcase(false);
       toggleActivities(false);
       toggleLearn(false);
       toggleAvatarMenu();
@@ -1599,6 +1658,7 @@ const NAV_LINKS = [
 
   // Close on outside click
   document.addEventListener('click', () => {
+    toggleShowcase(false);
     toggleActivities(false);
     toggleLearn(false);
     toggleAvatarMenu(false);
@@ -1607,6 +1667,7 @@ const NAV_LINKS = [
   // Close on Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      toggleShowcase(false);
       toggleActivities(false);
       toggleLearn(false);
       toggleAvatarMenu(false);

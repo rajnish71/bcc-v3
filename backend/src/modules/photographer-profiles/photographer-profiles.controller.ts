@@ -38,14 +38,16 @@ export class PhotographerProfilesController {
     @Query('offset') offsetStr?: string,
     @Query('sort')   sortRaw?: string,
     @Query('genre')  genre?: string,
+    @Query('hasApprovedPhotos') hasApprovedPhotosStr?: string,
   ) {
     const limit  = Math.min(parseInt(limitStr  ?? '40', 10) || 40, 100);
     const offset = Math.max(parseInt(offsetStr ?? '0',  10) || 0,  0);
     const sort: SortParam = VALID_SORTS.includes(sortRaw as SortParam)
       ? (sortRaw as SortParam)
       : 'name';
+    const hasApprovedPhotos = hasApprovedPhotosStr === 'true';
 
-    return this.svc.listPhotographers({ limit, offset, sort, genre });
+    return this.svc.listPhotographers({ limit, offset, sort, genre, hasApprovedPhotos });
   }
 
   /**

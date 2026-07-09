@@ -869,6 +869,7 @@ export class GalleryService {
     genre?: string;
     limit?: number;
     offset?: number;
+    shuffle?: boolean;
   }): Promise<{ photos: ReturnType<typeof formatPhoto>[]; total: number }> {
     // Dedicated JOIN query so every feed item carries photographer credit.
     // Keeps listPhotos() untouched — other callers are unaffected.
@@ -916,22 +917,41 @@ export class GalleryService {
       return arr;
     };
 
-    // Randomly shuffle photographers
-    shuffle(userIds);
+    if (opts.shuffle === false) {
+      // Deterministic sort: sort photographers by the ID of their most recent photo in descending order
+      const maxPhotoIdMap = new Map<number, number>();
+      for (const [userId, photos] of groups.entries()) {
+        const maxId = Math.max(...photos.map(p => Number(p.id)));
+        maxPhotoIdMap.set(userId, maxId);
+      }
+      userIds.sort((a, b) => maxPhotoIdMap.get(b)! - maxPhotoIdMap.get(a)!);
+    } else {
+      // Randomly shuffle photographers
+      shuffle(userIds);
+    }
 
-    // Select a maximum of `limit` photographers
-    const selectedUserIds = userIds.slice(0, limit);
+    // Select a maximum of `limit` photographers from the `offset` position
+    const selectedUserIds = userIds.slice(offset, offset + limit);
 
-    // For each selected photographer, randomly select ONE photograph
+    // For each selected photographer, select ONE representative photograph
     const selectedRows: typeof allRows = [];
     for (const userId of selectedUserIds) {
       const userPhotos = groups.get(userId)!;
-      const randomPhoto = userPhotos[Math.floor(Math.random() * userPhotos.length)];
-      selectedRows.push(randomPhoto);
+      if (opts.shuffle === false) {
+        // Pick the latest photo (highest ID) deterministically
+        userPhotos.sort((a, b) => Number(b.id) - Number(a.id));
+        selectedRows.push(userPhotos[0]);
+      } else {
+        // Randomly select ONE photograph
+        const randomPhoto = userPhotos[Math.floor(Math.random() * userPhotos.length)];
+        selectedRows.push(randomPhoto);
+      }
     }
 
-    // Return those photographs in random photographer order
-    shuffle(selectedRows);
+    if (opts.shuffle !== false) {
+      // Return those photographs in random photographer order
+      shuffle(selectedRows);
+    }
 
     return {
       photos: selectedRows.map(r => formatPhoto(r as Record<string, unknown>)),

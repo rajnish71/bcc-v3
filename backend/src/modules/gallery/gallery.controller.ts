@@ -62,11 +62,13 @@ export class GalleryController {
     @Query('genre')  genre?: string,
     @Query('limit')  limit?: string,
     @Query('offset') offset?: string,
+    @Query('shuffle') shuffle?: string,
   ) {
     return this.gallery.getPublicFeed({
       genre,
-      limit:  limit  ? parseInt(limit, 10)  : 20,
-      offset: offset ? parseInt(offset, 10) : 0,
+      limit:   limit   ? parseInt(limit, 10)  : 20,
+      offset:  offset  ? parseInt(offset, 10) : 0,
+      shuffle: shuffle !== 'false',
     });
   }
 

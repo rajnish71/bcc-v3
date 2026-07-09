@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#FAF8F4;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+::selection{background:#EFE3C8}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+input,select{font-family:inherit;outline:none}
+img{display:block}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#FAF8F4;" data-screen-label="Showcase">
+
+<!-- ═══ HEADER — approved, Showcase active (5 items + CTA; Join folds into the gold CTA) ═══ -->
+<nav style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.96);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid #E7E1D6;height:96px;display:flex;align-items:center;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:32px;">
+    <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:56px;width:auto;justify-self:start;"/>
+    <div style="display:flex;align-items:center;gap:36px;font-size:14px;font-weight:500;color:#57514B;">
+      <span>Home</span><span>About</span><span>Activities</span>
+      <span style="color:#141210;border-bottom:2px solid #C9A961;padding-bottom:4px;">Showcase</span>
+      <span>Journal</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px;justify-self:end;">
+      <span style="font-size:13px;color:#57514B;cursor:pointer;">Sign In</span>
+      <span style="font-size:12px;font-weight:600;letter-spacing:0.05em;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:14px 30px;border-radius:2px;box-shadow:0 2px 10px rgba(168,132,60,0.3),inset 0 1px 0 rgba(255,255,255,0.25);cursor:pointer;">Become a Member</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section style="padding:200px 0 72px;background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border-bottom:1px solid #E7E1D6;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+    <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:24px;display:flex;align-items:center;gap:14px;"><span style="display:block;width:28px;height:1px;background:#C9A961;"></span>Member Photography</div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(48px,6vw,80px);font-weight:700;letter-spacing:-0.035em;line-height:0.95;margin-bottom:24px;">Showcase</h1>
+    <p style="font-size:17px;line-height:1.75;color:#57514B;max-width:520px;font-weight:300;">The work of the club — portfolios, genres, exhibitions and collections from the photographers of Bhopal Camera Club.</p>
+  </div>
+</section>
+
+<!-- ═══ 1 · FEATURED WORK ═══ -->
+<section style="padding:96px 0;background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
+      <div><div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Featured Work</div><h2 style="font-family:'Outfit',sans-serif;font-size:clamp(30px,3vw,42px);font-weight:700;letter-spacing:-0.025em;">Selected by the committee</h2></div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">featuredPhotos[] · rotates with BCC Spotlight cadence</span>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
+      <div style="position:relative;overflow:hidden;background:#2A2622;box-shadow:0 24px 64px rgba(20,18,16,0.14);min-height:520px;cursor:pointer;">
+        <img src="https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=1600&q=80" alt="Featured member photograph" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"/>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:24px 28px;background:linear-gradient(transparent,rgba(20,18,16,0.7));display:flex;justify-content:space-between;align-items:flex-end;">
+          <div><div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:6px;">Wildlife</div><div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:600;color:#FFFFFF;margin-bottom:3px;">The Stare</div><div style="font-size:13px;color:rgba(255,255,255,0.78);">Member Name (example) ↗</div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <div style="position:relative;overflow:hidden;background:#2A2622;flex:1;min-height:248px;cursor:pointer;">
+          <img src="https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&q=80" alt="Featured heritage photograph" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"/>
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,rgba(20,18,16,0.7));"><div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:4px;">Heritage</div><div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#FFFFFF;">Symmetry at Dawn</div><div style="font-size:12px;color:rgba(255,255,255,0.75);">Member Name (example) ↗</div></div>
+        </div>
+        <div style="position:relative;overflow:hidden;background:#2A2622;flex:1;min-height:248px;cursor:pointer;">
+          <img src="https://images.unsplash.com/photo-1444464666168-49d633b86797?w=800&q=80" alt="Featured bird photograph" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"/>
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,rgba(20,18,16,0.7));"><div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:4px;">Birds</div><div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#FFFFFF;">Morning Chirp</div><div style="font-size:12px;color:rgba(255,255,255,0.75);">Member Name (example) ↗</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 2 · BROWSE BY GENRE (filter entry points) ═══ -->
+<section style="padding:96px 0;background:#FFFFFF;border-bottom:1px solid #E7E1D6;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
+      <div><div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Genres</div><h2 style="font-family:'Outfit',sans-serif;font-size:clamp(30px,3vw,42px);font-weight:700;letter-spacing:-0.025em;">Browse by genre</h2></div>
+      <span style="font-size:13px;color:#8B8378;">Selecting a genre filters the directory below</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:#141210;border:1px solid #141210;">
+      <sc-for list="{{ genrePlates }}" as="g" hint-placeholder-count="8">
+        <button onClick="{{ g.select }}" style="position:relative;aspect-ratio:16/10;overflow:hidden;background:#2A2622;padding:0;display:block;width:100%;">
+          <img src="{{ g.img }}" alt="{{ g.label }}" style="width:100%;height:100%;object-fit:cover;opacity:{{ g.imgOpacity }};transition:opacity 0.3s;"/>
+          <div style="position:absolute;inset:0;display:flex;align-items:flex-end;padding:14px 16px;background:linear-gradient(transparent 50%,rgba(20,18,16,0.66));">
+            <div style="display:flex;justify-content:space-between;width:100%;align-items:baseline;">
+              <span style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;color:#FFFFFF;letter-spacing:-0.01em;">{{ g.label }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:{{ g.countColor }};">{{ g.count }}</span>
+            </div>
+          </div>
+          <sc-if value="{{ g.active }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#C9A961,#A8843C);"></div></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <div style="margin-top:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">categories[] · counts computed from photos collection</span></div>
+  </div>
+</section>
+
+<!-- ═══ 3 · PHOTOGRAPHER DIRECTORY ═══ -->
+<section style="padding:96px 0;background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+    <div style="margin-bottom:36px;"><div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Directory</div><h2 style="font-family:'Outfit',sans-serif;font-size:clamp(30px,3vw,42px);font-weight:700;letter-spacing:-0.025em;">The photographers</h2></div>
+
+    <!-- Toolbar: hybrid — filters lead, search assists -->
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+      <input type="text" value="{{ query }}" onChange="{{ setQuery }}" placeholder="Search by name or specialty…" style="flex:1;min-width:280px;padding:15px 20px;border:1px solid #E7E1D6;border-radius:8px;background:#FFFFFF;font-size:15px;color:#141210;transition:border-color 0.2s;" style-focus="border-color:#C9A961"/>
+      <select onChange="{{ setSort }}" style="padding:15px 18px;border:1px solid #E7E1D6;border-radius:8px;background:#FFFFFF;font-size:14px;color:#57514B;cursor:pointer;">
+        <option value="name">Sort: Name A–Z</option>
+        <option value="count">Sort: Most photographs</option>
+        <option value="featured">Sort: Featured first</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px;">
+      <sc-for list="{{ genreChips }}" as="ch" hint-placeholder-count="5">
+        <button onClick="{{ ch.select }}" style="font-size:12px;font-weight:600;letter-spacing:0.04em;padding:9px 20px;border-radius:999px;border:1px solid {{ ch.border }};background:{{ ch.bg }};color:{{ ch.color }};transition:all 0.2s;">{{ ch.label }}</button>
+      </sc-for>
+    </div>
+
+    <!-- Result meta -->
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px;">
+      <span style="font-size:13px;color:#8B8378;">{{ resultLabel }}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">photographers[] · paginated 24/page in production · names are placeholder</span>
+    </div>
+
+    <!-- Cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+      <sc-for list="{{ filteredPhotographers }}" as="p" hint-placeholder-count="6">
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;border-radius:2px;overflow:hidden;cursor:pointer;box-shadow:0 1px 2px rgba(20,18,16,0.04);transition:all 0.25s;" style-hover="transform:translateY(-3px);box-shadow:0 8px 32px rgba(20,18,16,0.09)">
+          <div style="position:relative;aspect-ratio:3/2;overflow:hidden;background:#2A2622;">
+            <img src="{{ p.coverPhoto }}" alt="{{ p.coverAlt }}" style="width:100%;height:100%;object-fit:cover;"/>
+            <sc-if value="{{ p.featured }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:12px;left:12px;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:4px 12px;">Featured</div></sc-if>
+            <div style="position:absolute;left:20px;bottom:-22px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#FFFFFF;border:3px solid #FFFFFF;box-shadow:0 1px 2px rgba(20,18,16,0.1);">{{ p.initials }}</div>
+          </div>
+          <div style="padding:32px 20px 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <h3 style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:600;color:#141210;letter-spacing:-0.01em;">{{ p.name }} <span style="font-size:11px;color:#A8843C;">↗</span></h3>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;white-space:nowrap;">{{ p.portfolioCount }} photos</span>
+            </div>
+            <div style="font-size:12px;color:#8B8378;margin-bottom:12px;">{{ p.location }} · Member since {{ p.since }}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <sc-for list="{{ p.specialties }}" as="sp" hint-placeholder-count="2">
+                <span style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#57514B;background:#F4F0E8;border:1px solid #EDE7DB;padding:4px 10px;">{{ sp }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- Empty state (live contract demo) -->
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px dashed #D8D2C6;padding:72px 40px;text-align:center;background:#FFFFFF;">
+        <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;color:#141210;margin-bottom:8px;">No photographers match</div>
+        <div style="font-size:14px;color:#8B8378;margin-bottom:24px;">Try a different name or genre — or clear the filters.</div>
+        <button onClick="{{ clearFilters }}" style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#A8843C;border:1px solid #C9A961;padding:12px 28px;border-radius:2px;" style-hover="background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF">Clear Filters</button>
+      </div>
+    </sc-if>
+  </div>
+</section>
+
+<!-- ═══ 4 · EXHIBITIONS & COLLECTIONS ═══ -->
+<section style="padding:96px 0;background:#FFFFFF;border-bottom:1px solid #E7E1D6;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div style="position:relative;overflow:hidden;background:#2A2622;min-height:320px;cursor:pointer;">
+        <img src="https://images.unsplash.com/photo-1577720580479-7d839d829c73?w=1200&q=80" alt="Exhibition collection" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0.92;"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(20,18,16,0.72));"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:28px 32px;"><div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:8px;">Exhibitions</div><div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;color:#FFFFFF;letter-spacing:-0.015em;margin-bottom:6px;">From the exhibition halls</div><div style="font-size:13px;color:rgba(255,255,255,0.78);">Work shown at Bharat Bhavan, IGNCA and beyond → exhibitions[]</div></div>
+      </div>
+      <div style="position:relative;overflow:hidden;background:#2A2622;min-height:320px;cursor:pointer;">
+        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80" alt="Curated collections" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0.92;"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(20,18,16,0.72));"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:28px 32px;"><div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:8px;">Collections</div><div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;color:#FFFFFF;letter-spacing:-0.015em;margin-bottom:6px;">Curated series &amp; walks</div><div style="font-size:13px;color:rgba(255,255,255,0.78);">Monsoon Lakes, Heritage Walks, Birding mornings → collections[]</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BLUEPRINT / HANDOFF BAND ═══ -->
+<section style="padding:96px 0 120px;background:#FAF8F4;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+    <div style="background:#141210;padding:48px 56px;">
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:24px;">Showcase — Astro Blueprint</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:48px;">
+        <div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#FAF8F4;margin-bottom:12px;">/showcase</div>
+          <pre style="font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.9;color:#B8B0A4;white-space:pre-wrap;">BaseLayout
+  SiteHeader {session}
+  PageHero {title, intro}
+  FeaturedWork {featuredPhotos[]}
+  GenrePlates {categories[]}
+  PhotographerDirectory
+    DirectoryToolbar {query, genre, sort}
+    PhotographerCard grid
+    EmptyState | Pagination
+  ShowcaseBands {exhibitions[], collections[]}
+  SiteFooter</pre>
+        </div>
+        <div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#FAF8F4;margin-bottom:12px;">/gallery/photographer/[slug]</div>
+          <pre style="font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.9;color:#B8B0A4;white-space:pre-wrap;">BaseLayout
+  SiteHeader
+  PortfolioHero {photographer}
+    name · initials plate · specialties
+    location · since · counts
+  GalleryGrid {photos[], byPhotographer}
+    genre filter tabs
+    lightbox: contain, never crop
+  RelatedPhotographers {sameGenres[]}
+  SiteFooter</pre>
+        </div>
+        <div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#FAF8F4;margin-bottom:12px;">photographers[] contract</div>
+          <pre style="font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.9;color:#B8B0A4;white-space:pre-wrap;">name, slug, initials
+coverPhoto (4:5/3:2 cover)
+specialties[] (≤3 shown)
+location, since
+portfolioCount (computed)
+featuredFlag
+— profilePhoto optional;
+  fallback: initials plate</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { query: "", genre: "All", sort: "name" };
+
+  renderVals() {
+    const { query, genre, sort } = this.state;
+    const U = (id, w) => "https://images.unsplash.com/photo-" + id + "?w=" + w + "&q=80";
+
+    const photographers = [
+      { name: "Member 01 — Example", initials: "M1", coverPhoto: U("1561731216-c3a4d99437d5", 700), coverAlt: "wildlife cover", specialties: ["Wildlife", "Birds"], location: "Bhopal", since: "2016", portfolioCount: 84, featured: true },
+      { name: "Member 02 — Example", initials: "M2", coverPhoto: U("1564507592333-c60657eea523", 700), coverAlt: "heritage cover", specialties: ["Heritage", "Architecture"], location: "Bhopal", since: "2017", portfolioCount: 62, featured: false },
+      { name: "Member 03 — Example", initials: "M3", coverPhoto: U("1449824913935-59a10b8d2000", 700), coverAlt: "street cover", specialties: ["Street", "Documentary"], location: "Bhopal", since: "2019", portfolioCount: 47, featured: true },
+      { name: "Member 04 — Example", initials: "M4", coverPhoto: U("1444464666168-49d633b86797", 700), coverAlt: "birds cover", specialties: ["Birds", "Nature"], location: "Sehore", since: "2018", portfolioCount: 39, featured: false },
+      { name: "Member 05 — Example", initials: "M5", coverPhoto: U("1506905925346-21bda4d32df4", 700), coverAlt: "nature cover", specialties: ["Nature", "Travel"], location: "Bhopal", since: "2020", portfolioCount: 31, featured: false },
+      { name: "Member 06 — Example", initials: "M6", coverPhoto: U("1587474260584-136574528ed5", 700), coverAlt: "travel cover", specialties: ["Travel", "Heritage"], location: "Indore", since: "2021", portfolioCount: 26, featured: false },
+      { name: "Member 07 — Example", initials: "M7", coverPhoto: U("1493863641943-9b68992a8d07", 700), coverAlt: "documentary cover", specialties: ["Documentary", "Street"], location: "Bhopal", since: "2022", portfolioCount: 22, featured: false },
+      { name: "Member 08 — Example", initials: "M8", coverPhoto: U("1524492412937-b28074a5d7da", 700), coverAlt: "architecture cover", specialties: ["Architecture", "Heritage"], location: "Bhopal", since: "2023", portfolioCount: 18, featured: false },
+      { name: "Member 09 — Example", initials: "M9", coverPhoto: U("1470071459604-3b5ec3a7fe05", 700), coverAlt: "landscape cover", specialties: ["Nature", "Macro"], location: "Vidisha", since: "2024", portfolioCount: 12, featured: false },
+    ];
+
+    const genres = ["All", "Wildlife", "Birds", "Heritage", "Street", "Nature", "Travel", "Architecture", "Documentary", "Macro"];
+
+    const q = query.trim().toLowerCase();
+    let filtered = photographers.filter((p) => {
+      const matchGenre = genre === "All" || p.specialties.indexOf(genre) > -1;
+      const matchQuery = !q || p.name.toLowerCase().indexOf(q) > -1 || p.specialties.join(" ").toLowerCase().indexOf(q) > -1;
+      return matchGenre && matchQuery;
+    });
+    if (sort === "count") filtered = filtered.slice().sort((a, b) => b.portfolioCount - a.portfolioCount);
+    else if (sort === "featured") filtered = filtered.slice().sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+    else filtered = filtered.slice().sort((a, b) => a.name.localeCompare(b.name));
+
+    const genreChips = genres.map((g) => {
+      const active = genre === g;
+      return {
+        label: g,
+        select: () => this.setState({ genre: g }),
+        bg: active ? "#141210" : "#FFFFFF",
+        color: active ? "#FAF8F4" : "#57514B",
+        border: active ? "#141210" : "#D8D2C6",
+      };
+    });
+
+    const plateImgs = {
+      Wildlife: U("1561731216-c3a4d99437d5", 600), Birds: U("1444464666168-49d633b86797", 600),
+      Heritage: U("1564507592333-c60657eea523", 600), Street: U("1449824913935-59a10b8d2000", 600),
+      Nature: U("1506905925346-21bda4d32df4", 600), Travel: U("1587474260584-136574528ed5", 600),
+      Architecture: U("1524492412937-b28074a5d7da", 600), Documentary: U("1493863641943-9b68992a8d07", 600),
+    };
+    const genrePlates = Object.keys(plateImgs).map((g) => {
+      const count = photographers.filter((p) => p.specialties.indexOf(g) > -1).length;
+      const active = genre === g;
+      return {
+        label: g, img: plateImgs[g],
+        count: count + " photographers",
+        countColor: active ? "#C9A961" : "rgba(255,255,255,0.65)",
+        imgOpacity: active ? "1" : "0.88",
+        active,
+        select: () => this.setState({ genre: active ? "All" : g }),
+      };
+    });
+
+    return {
+      query,
+      setQuery: (e) => this.setState({ query: e.target.value }),
+      setSort: (e) => this.setState({ sort: e.target.value }),
+      clearFilters: () => this.setState({ query: "", genre: "All" }),
+      genreChips, genrePlates,
+      filteredPhotographers: filtered,
+      noResults: filtered.length === 0,
+      resultLabel: filtered.length + " of " + photographers.length + " photographers" + (genre !== "All" ? " · " + genre : "") + (q ? " · \u201C" + query + "\u201D" : ""),
+    };
+  }
+}
+</script>
+</body>
+</html>

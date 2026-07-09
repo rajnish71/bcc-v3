@@ -25,7 +25,7 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 >
 
   <!-- ══════════════════════════════════════════════════
-       1. BCC SPOTLIGHT HERO
+       1. HERO SPOTLIGHT
        Full-bleed member photo + museum label plate.
        Committee-curated — no fixed cadence.
        ══════════════════════════════════════════════════ -->
@@ -118,7 +118,7 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
        "Our members, on the wall."
        Max one frame per photographer. Flickr algorithm.
        ══════════════════════════════════════════════════ -->
-  <section class="section gallery-wall" aria-label="Member gallery wall">
+  <section class="section gallery-wall" id="gallery-wall" aria-label="Member gallery wall">
     <div class="container">
 
       <div class="gallery-wall-header">
@@ -152,9 +152,27 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 
 
   <!-- ══════════════════════════════════════════════════
-       4. UPCOMING EVENTS — 3 rows from API
+       4. THE CLUB
        ══════════════════════════════════════════════════ -->
-  <section class="section section-sm surface-alt events-section" aria-label="Upcoming events">
+  <section class="section the-club" id="the-club" aria-label="The Club">
+    <div class="container">
+      <!-- The Club content scaffold -->
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════
+       5. FEATURED ACTIVITY (Conditional)
+       ══════════════════════════════════════════════════ -->
+  <section class="featured-activity" id="featured-activity" aria-label="Featured Activity">
+    <!-- Featured Activity content scaffold -->
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════
+       6. UPCOMING ACTIVITIES
+       ══════════════════════════════════════════════════ -->
+  <section class="section section-sm surface-alt events-section" id="upcoming-activities" aria-label="Upcoming activities">
     <div class="container">
 
       <div class="events-header">
@@ -184,22 +202,22 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 
 
   <!-- ══════════════════════════════════════════════════
-       5. FULL-BLEED PHOTO BAND
+       7. PHOTO SERIES
        Heritage series, soft parallax, dark surface.
        ══════════════════════════════════════════════════ -->
-  <div class="photo-band surface-deep" aria-hidden="true" id="photo-band">
+  <section class="photo-band surface-deep" id="photo-series" aria-label="Photo Series">
     <div class="photo-band-img" data-gsap="parallax-soft" id="photo-band-img">
       <!-- Loaded from API /api/v1/photos/band; fallback is dark surface -->
     </div>
     <div class="photo-band-overlay"></div>
-  </div>
+  </section>
 
 
   <!-- ══════════════════════════════════════════════════
-       6. MEMBERSHIP TIERS
+       8. MEMBERSHIP
        3 public classes only (MEM-006 public domain policy)
        ══════════════════════════════════════════════════ -->
-  <section class="section membership-section" aria-label="Membership tiers">
+  <section class="section membership-section" id="membership" aria-label="Membership tiers">
     <div class="container">
 
       <SectionHeader
@@ -300,9 +318,19 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 
 
   <!-- ══════════════════════════════════════════════════
-       7. JOURNAL PREVIEW
+       9. OPEN CONTEST (Conditional)
        ══════════════════════════════════════════════════ -->
-  <section class="section section-sm surface-alt journal-section" aria-label="From the journal">
+  <section class="section surface-alt open-contest" id="open-contest" aria-label="Open Contest">
+    <div class="container">
+      <!-- Open Contest content scaffold -->
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════
+       10. JOURNAL
+       ══════════════════════════════════════════════════ -->
+  <section class="section section-sm surface-alt journal-section" id="journal" aria-label="From the journal">
     <div class="container">
 
       <div class="journal-header">

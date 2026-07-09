@@ -1,0 +1,235 @@
+---
+/**
+ * membership-rules/index.astro — Membership Rules & Fees
+ * Route: /membership-rules/
+ *
+ * Content migrated verbatim from legacy site:
+ * https://bcc.bhopal.info/membership-rules/
+ * Last updated on legacy site: June 12, 2026.
+ *
+ * Migration rules followed:
+ * - Content imported exactly — no rewrites, no omissions, no additions.
+ * - BaseLayout used (provides SiteHeader + SiteFooter).
+ * - V3 typography and spacing tokens applied.
+ * - No shared components modified.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Membership Rules & Fees"
+  description="Official society regulations, membership tiers, fee structures, and cancellation rules of BCC."
+>
+
+  <!-- Page Hero -->
+  <div class="page-hero surface-white">
+    <div class="container">
+      <span class="eyebrow">Legal</span>
+      <h1 class="policy-title">Membership Rules &amp; Fees</h1>
+      <p class="policy-meta">
+        Official society regulations, membership tiers, fee structures, and cancellation rules of BCC.<br />
+        <span class="policy-date">Last updated: June 12, 2026</span>
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Body -->
+  <section class="policy-section" aria-label="Membership Rules & Fees">
+    <div class="container">
+      <div class="policy-document">
+
+        <div class="policy-block">
+          <h2 id="section-1">1. Introduction &amp; Society Registration</h2>
+          <p>Bhopal Camera Club is a formally registered society under the Madhya Pradesh Society Registrikaran Adhiniyam 1973. All operations, memberships, and fees are governed strictly by the club's Article of Association and Memorandum.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-2">2. Membership Tiers &amp; Fee Structure</h2>
+          <p>According to our latest bylaws, the club recognizes the following public and administrative tiers:</p>
+          <ul>
+            <li>
+              <strong>Free Tier - Annual Membership:</strong>
+              <ul>
+                <li>Annual Fee: ₹0 / year (Maps to database GUEST tier).</li>
+                <li>Rights: Basic guest profile page, public gallery viewing, ability to attend open club meets.</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Annual Membership:</strong>
+              <ul>
+                <li>Annual Fee: ₹1,200 / year (Maps to database ANNUAL tier).</li>
+                <li>Rights: Unlimited monthly photowalks, priority workshop registrations, physical exhibition wall space, and contest submissions.</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Corporate Membership (Annual):</strong>
+              <ul>
+                <li>Annual Fee: ₹5,000 / year (Maps to database CORPORATE tier).</li>
+                <li>Rights: Ideal for brands, local camera shops, and boards. Includes visual collaboration, logo feature on platform, ability to host sponsored workshops, and partner directory listing.</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Honorary Tiers (PREMIUM, MENTOR, PATRON):</strong>
+              <ul>
+                <li>Fee: Waived / Honorary.</li>
+                <li>Rights: Awarded strictly by the core council in recognition of expertise and dedication. These levels are hidden from public registrations.</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-3">3. Application &amp; Approvals</h2>
+          <p>To obtain or upgrade to paying memberships:</p>
+          <ul>
+            <li>Applications must be submitted through our registration pages.</li>
+            <li>The council reviews and approves submissions (verifying identity and professional compliance).</li>
+            <li>Upon approval, invoices are generated and the member can complete their registration payment.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-4">4. Cancellation &amp; Refund Policy</h2>
+          <p>As a registered non-profit educational society:</p>
+          <ul>
+            <li>All membership fees (₹1,200 and ₹5,000) are non-refundable once paid and processed.</li>
+            <li>Members may cancel their auto-renewal or request profile removal at any time by contacting the coordinator team. No partial refunds are issued for cancellations mid-cycle.</li>
+          </ul>
+          <p>All members must abide by the rules of field safety and code of ethics. Actions that bring disrepute to the society or violate conservation rules (such as animal harassment during wildlife walks) will result in immediate suspension without refund.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ── Page Hero ── */
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+.policy-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+.policy-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  line-height: 1.65;
+}
+.policy-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-400);
+  letter-spacing: 0.04em;
+}
+
+/* ── Policy Section ── */
+.policy-section {
+  background: var(--surface-1);
+  padding: var(--s-8) 0 var(--s-12);
+}
+
+/* ── Policy Document ── */
+.policy-document {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+/* ── Policy Block ── */
+.policy-block {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-4);
+}
+.policy-block h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--s-2);
+}
+.policy-block p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.75;
+  margin-bottom: var(--s-2);
+}
+.policy-block p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Top-level list ── */
+.policy-block > ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-1) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.policy-block > ul > li {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.65;
+  padding-left: var(--s-3);
+  position: relative;
+}
+.policy-block > ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 5px;
+  height: 1px;
+  background: var(--gold-500);
+}
+
+/* ── Nested sub-list ── */
+.policy-block ul ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-1) 0 0 var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.policy-block ul ul li {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  line-height: 1.65;
+  padding-left: var(--s-2);
+  position: relative;
+}
+.policy-block ul ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 4px;
+  height: 1px;
+  background: var(--hairline-strong);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .policy-section {
+    padding: var(--s-6) 0 var(--s-8);
+  }
+}
+</style>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#FAF8F4;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#EFE3C8}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+input,select,textarea{font-family:inherit;outline:none}
+img{display:block}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#FAF8F4;">
+
+<!-- ═══ HEADER — Guest state, Refined Editorial Luxury ═══ -->
+<nav style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.96);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid #E7E1D6;box-shadow:{{ hdrShadow }};height:{{ hdrH }};display:flex;align-items:center;transition:all 0.35s cubic-bezier(0.4,0,0.2,1);">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:32px;">
+    <button onClick="{{ goHome }}" style="padding:0;line-height:0;justify-self:start;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:{{ logoH }};width:auto;display:block;transition:height 0.35s cubic-bezier(0.4,0,0.2,1);"/>
+    </button>
+    <div style="display:flex;align-items:center;gap:36px;">
+      <button onClick="{{ goHome }}" style="font-size:14px;font-weight:500;color:{{ navHome }};letter-spacing:0.01em;transition:color 0.2s;padding:4px 0;border-bottom:2px solid {{ navHomeLine }};" style-hover="color:#141210">Home</button>
+      <button onClick="{{ goAbout }}" style="font-size:14px;font-weight:500;color:{{ navAbout }};letter-spacing:0.01em;transition:color 0.2s;padding:4px 0;border-bottom:2px solid {{ navAboutLine }};" style-hover="color:#141210">About</button>
+      <button onClick="{{ goActivities }}" style="font-size:14px;font-weight:500;color:{{ navActivities }};letter-spacing:0.01em;transition:color 0.2s;padding:4px 0;border-bottom:2px solid {{ navActivitiesLine }};" style-hover="color:#141210">Activities</button>
+      <button onClick="{{ goJoin }}" style="font-size:14px;font-weight:500;color:{{ navJoin }};letter-spacing:0.01em;transition:color 0.2s;padding:4px 0;border-bottom:2px solid {{ navJoinLine }};" style-hover="color:#141210">Join</button>
+      <button onClick="{{ goJournal }}" style="font-size:14px;font-weight:500;color:{{ navJournal }};letter-spacing:0.01em;transition:color 0.2s;padding:4px 0;border-bottom:2px solid {{ navJournalLine }};" style-hover="color:#141210">Journal</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px;justify-self:end;">
+      <button style="font-size:13px;color:#57514B;transition:color 0.2s;" style-hover="color:#141210">Sign In</button>
+      <button onClick="{{ goJoin }}" style="font-size:12px;font-weight:600;letter-spacing:0.05em;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:14px 30px;border-radius:2px;box-shadow:0 2px 10px rgba(168,132,60,0.3),inset 0 1px 0 rgba(255,255,255,0.25);transition:all 0.25s;" style-hover="box-shadow:0 4px 18px rgba(168,132,60,0.45),inset 0 1px 0 rgba(255,255,255,0.25)">Become a Member</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HOME ═══════════════════ -->
+<sc-if value="{{ showHome }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Home">
+
+  <!-- HERO — One Frame · BCC Spotlight (approved) -->
+  <section style="padding-top:96px;background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+    <div style="position:relative;height:660px;overflow:hidden;background:#1A1816;">
+      <img src="https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=2000&q=80" alt="BCC Spotlight — member wildlife photograph" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"/>
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,16,0.16) 0%,rgba(20,18,16,0) 35%,rgba(20,18,16,0.28) 100%);"></div>
+      <div style="position:absolute;left:64px;bottom:56px;background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;box-shadow:0 24px 64px rgba(20,18,16,0.22);padding:36px 40px;max-width:480px;">
+        <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:12px;"><span style="display:block;width:22px;height:1px;background:#C9A961;"></span>BCC Spotlight</div>
+        <h1 style="font-family:'Outfit',sans-serif;font-size:36px;font-weight:700;letter-spacing:-0.025em;line-height:1.05;color:#141210;margin-bottom:10px;">The Stare</h1>
+        <div style="font-size:14px;color:#57514B;margin-bottom:4px;">Member Name <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;">(example)</span></div>
+        <div style="font-size:12px;color:#8B8378;margin-bottom:24px;">Wildlife Trip · Satpura National Park</div>
+        <div style="width:36px;height:2px;background:linear-gradient(90deg,#C9A961,#A8843C);margin-bottom:24px;"></div>
+        <p style="font-size:14px;line-height:1.75;color:#57514B;margin-bottom:28px;">India's premier photography community — a decade of photowalks, workshops and exhibitions, celebrating Bhopal through the eyes of its photographers.</p>
+        <div style="display:flex;gap:12px;">
+          <button onClick="{{ goJoin }}" style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:14px 28px;border-radius:2px;box-shadow:0 2px 10px rgba(168,132,60,0.32),inset 0 1px 0 rgba(255,255,255,0.25);transition:all 0.25s;" style-hover="box-shadow:0 6px 22px rgba(168,132,60,0.45),inset 0 1px 0 rgba(255,255,255,0.25)">Become a Member</button>
+          <button onClick="{{ goActivities }}" style="font-size:12px;font-weight:500;color:#141210;border:1px solid #D8D2C6;padding:13px 28px;border-radius:2px;transition:all 0.2s;" style-hover="border-color:#141210">Explore Activities</button>
+        </div>
+      </div>
+      <div style="position:absolute;right:24px;bottom:24px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.06em;">EXAMPLE — spotlightPhoto · CMS · committee-curated, no fixed cadence</div>
+    </div>
+    <!-- StatBand (approved component, unchanged contract) -->
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:flex;gap:72px;padding:32px 0;align-items:center;">
+        <div><div style="font-family:'Outfit',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.03em;color:#141210;line-height:1;">340+</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;margin-top:6px;">Members</div></div>
+        <div style="width:1px;height:40px;background:#E7E1D6;"></div>
+        <div><div style="font-family:'Outfit',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.03em;color:#141210;line-height:1;">87</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;margin-top:6px;">Photowalks</div></div>
+        <div style="width:1px;height:40px;background:#E7E1D6;"></div>
+        <div><div style="font-family:'Outfit',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.03em;color:#A8843C;line-height:1;">10<span style="font-size:20px;">th</span></div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;margin-top:6px;">Year · 2026</div></div>
+        <div style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">clubStats[] · StatBand</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY — contact sheet -->
+  <section style="padding:112px 0;background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;">
+        <div>
+          <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Member Work</div>
+          <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(34px,3.4vw,46px);font-weight:700;letter-spacing:-0.025em;line-height:1.05;">Our members, on the wall.</h2>
+        </div>
+        <button style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A8843C;border-bottom:1px solid #C9A961;padding-bottom:3px;transition:opacity 0.2s;" style-hover="opacity:0.65">View Full Gallery →</button>
+      </div>
+      <div style="background:#F4F0E8;border:1px solid #E7E1D6;padding:40px;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;">
+        <sc-for list="{{ galleryPhotos }}" as="ph" hint-placeholder-count="8">
+          <div style="background:#FFFFFF;padding:12px 12px 10px;border:1px solid #E7E1D6;box-shadow:0 1px 2px rgba(20,18,16,0.04);cursor:pointer;transition:box-shadow 0.25s,transform 0.25s;" style-hover="box-shadow:0 8px 32px rgba(20,18,16,0.09);transform:translateY(-2px)">
+            <div style="position:relative;aspect-ratio:4/5;overflow:hidden;background:#2A2622;">
+              <img src="{{ ph.src }}" alt="{{ ph.title }}" style="width:100%;height:100%;object-fit:cover;"/>
+            </div>
+            <div style="padding:12px 4px 2px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+              <div><div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:#141210;display:flex;align-items:baseline;gap:6px;">{{ ph.photographer }} <span style="font-size:10px;color:#A8843C;">↗</span></div><div style="font-size:11px;color:#8B8378;margin-top:2px;">{{ ph.title }}</div></div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#A8843C;text-transform:uppercase;white-space:nowrap;">{{ ph.category }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:14px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">recentPhotos[] · 12 in production, rotating · max 1 per member · card → /gallery/photographer/[slug] · (8 shown — placeholder pool)</span>
+        <button onClick="{{ goJoin }}" style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#A8843C;border-bottom:1px solid #C9A961;padding-bottom:2px;transition:opacity 0.2s;" style-hover="opacity:0.65">Your frame could hang here — Become a Member</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section style="padding:112px 0;background:#FFFFFF;border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;">
+        <div>
+          <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Upcoming</div>
+          <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(34px,3.4vw,46px);font-weight:700;letter-spacing:-0.025em;line-height:1.05;">What's happening</h2>
+        </div>
+        <button onClick="{{ goActivities }}" style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A8843C;border-bottom:1px solid #C9A961;padding-bottom:3px;" style-hover="opacity:0.65">All Activities →</button>
+      </div>
+      <div style="border-top:1px solid #E7E1D6;">
+        <sc-for list="{{ homeEvents }}" as="ev" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:96px 220px 1fr auto;align-items:center;gap:40px;padding:30px 0;border-bottom:1px solid #E7E1D6;transition:background 0.2s;" style-hover="background:#FAF8F4">
+            <div><div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;line-height:1;letter-spacing:-0.04em;color:#141210;">{{ ev.day }}</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;margin-top:4px;">{{ ev.month }}</div></div>
+            <div style="position:relative;aspect-ratio:3/2;overflow:hidden;background:#2A2622;"><img src="{{ ev.img }}" alt="{{ ev.title }}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"/></div>
+            <div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"><span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:{{ ev.tagColor }};background:{{ ev.tagBg }};padding:3px 10px;">{{ ev.type }}</span><span style="font-size:12px;color:#8B8378;">{{ ev.time }}</span></div>
+              <h3 style="font-family:'Outfit',sans-serif;font-size:23px;font-weight:600;color:#141210;margin-bottom:5px;letter-spacing:-0.01em;">{{ ev.title }}</h3>
+              <span style="font-size:13px;color:#8B8378;">{{ ev.venue }}</span>
+            </div>
+            <button onClick="{{ goJoin }}" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#A8843C;border:1px solid #C9A961;padding:13px 26px;border-radius:2px;white-space:nowrap;background:linear-gradient(180deg,rgba(201,169,97,0.05),rgba(201,169,97,0.12));transition:all 0.2s;" style-hover="background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF">Register →</button>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">EXAMPLE CONTENT — upcomingEvents[] · EventRow variant</span></div>
+    </div>
+  </section>
+
+  <!-- FULL-BLEED PHOTO BAND -->
+  <section style="position:relative;height:480px;overflow:hidden;background:#1A1816;">
+    <img src="https://images.unsplash.com/photo-1564507592333-c60657eea523?w=2000&q=80" alt="Heritage architecture" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0.92;"/>
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,18,16,0.55) 0%,rgba(20,18,16,0.1) 60%);"></div>
+    <div style="position:relative;max-width:1360px;margin:0 auto;padding:0 48px;height:100%;display:flex;flex-direction:column;justify-content:center;">
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:20px;">Heritage Series</div>
+      <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(36px,4vw,56px);font-weight:700;letter-spacing:-0.025em;color:#FFFFFF;line-height:1.05;max-width:560px;margin-bottom:24px;">The city is our muse.</h2>
+      <p style="font-size:16px;line-height:1.7;color:rgba(255,255,255,0.85);max-width:440px;font-weight:300;">Lakes, forts, mosques and markets — our members document the extraordinary visual richness of Bhopal and beyond.</p>
+      <div style="position:absolute;bottom:20px;right:48px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.6);">EXAMPLE — featureBand.image · parallax-soft</div>
+    </div>
+  </section>
+
+  <!-- MEMBERSHIP -->
+  <section style="padding:112px 0;background:linear-gradient(180deg,#FAF8F4,#F4F0E8);border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="text-align:center;margin-bottom:56px;">
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Open Membership</div>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(34px,3.4vw,46px);font-weight:700;letter-spacing:-0.025em;line-height:1.05;margin-bottom:16px;">Ready to shoot with us?</h2>
+        <p style="font-size:16px;color:#57514B;max-width:480px;margin:0 auto;line-height:1.7;">Three memberships, one community. Photowalks, mentorship and exhibition opportunities all year.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1080px;margin:0 auto;">
+        <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="3">
+          <div style="background:{{ t.bg }};border:1px solid {{ t.border }};border-radius:2px;padding:40px 36px;position:relative;box-shadow:{{ t.shadow }};transition:transform 0.25s,box-shadow 0.25s;" style-hover="transform:translateY(-4px)">
+            <sc-if value="{{ t.featured }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:5px 16px;border-radius:0 0 2px 2px;">Most Popular</div>
+            </sc-if>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:#8B8378;margin-bottom:14px;margin-top:8px;">{{ t.name }}</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.03em;color:#141210;line-height:1;margin-bottom:6px;">{{ t.price }}<span style="font-size:15px;font-weight:400;color:#8B8378;"> /year</span></div>
+            <div style="font-size:13px;color:#8B8378;margin-bottom:28px;">{{ t.note }}</div>
+            <div style="border-top:1px solid #EDE7DB;padding-top:22px;font-size:14px;line-height:2.2;color:#57514B;">{{ t.f1 }}<br/>{{ t.f2 }}<br/>{{ t.f3 }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="text-align:center;margin-top:44px;">
+        <button onClick="{{ goJoin }}" style="font-size:13px;font-weight:600;letter-spacing:0.04em;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:17px 44px;border-radius:2px;box-shadow:0 2px 12px rgba(168,132,60,0.32),inset 0 1px 0 rgba(255,255,255,0.25);" style-hover="box-shadow:0 6px 22px rgba(168,132,60,0.45)">Apply for Membership</button>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;margin-top:18px;">EXAMPLE CONTENT — membershipPlans[] · tier names/prices from CMS</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNAL PREVIEW -->
+  <section style="padding:112px 0;background:#FFFFFF;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;">
+        <div>
+          <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Field Notes</div>
+          <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(34px,3.4vw,46px);font-weight:700;letter-spacing:-0.025em;line-height:1.05;">From the journal</h2>
+        </div>
+        <button onClick="{{ goJournal }}" style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A8843C;border-bottom:1px solid #C9A961;padding-bottom:3px;" style-hover="opacity:0.65">All Stories →</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;">
+        <sc-for list="{{ homePosts }}" as="po" hint-placeholder-count="3">
+          <div style="cursor:pointer;" onClick="{{ goJournal }}">
+            <div style="position:relative;aspect-ratio:3/2;overflow:hidden;background:#2A2622;margin-bottom:20px;"><img src="{{ po.img }}" alt="{{ po.title }}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.6s;" style-hover="transform:scale(1.03)"/></div>
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:#A8843C;margin-bottom:10px;">{{ po.category }}</div>
+            <h3 style="font-family:'Outfit',sans-serif;font-size:21px;font-weight:600;color:#141210;letter-spacing:-0.01em;line-height:1.25;margin-bottom:10px;">{{ po.title }}</h3>
+            <div style="font-size:12px;color:#8B8378;">{{ po.meta }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">EXAMPLE CONTENT — recentPosts[] · JournalCard standard variant</span></div>
+    </div>
+  </section>
+
+</div>
+</sc-if>
+
+<!-- ═══════════════════ ABOUT ═══════════════════ -->
+<sc-if value="{{ showAbout }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="About">
+
+  <section style="padding:200px 0 96px;background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:28px;display:flex;align-items:center;gap:14px;"><span style="display:block;width:28px;height:1px;background:#C9A961;"></span>Our Mission</div>
+      <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(40px,4.6vw,64px);font-weight:700;line-height:1.06;letter-spacing:-0.03em;color:#141210;max-width:920px;">To cultivate Bhopal's visual storytellers — one frame, one walk, one workshop at a time.</h1>
+    </div>
+  </section>
+
+  <!-- Photo + story split -->
+  <section style="background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:96px 48px;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;">
+      <div style="position:relative;aspect-ratio:4/5;overflow:hidden;box-shadow:0 24px 64px rgba(20,18,16,0.14);background:#2A2622;">
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80" alt="Club workshop gathering" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"/>
+        <div style="position:absolute;bottom:14px;left:16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.7);">EXAMPLE — aboutPage.communityPhoto</div>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:18px;">Since 2016</div>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(30px,3vw,40px);font-weight:700;letter-spacing:-0.02em;line-height:1.1;margin-bottom:24px;">A community before<br/>a camera club.</h2>
+        <p style="font-size:16px;line-height:1.85;color:#57514B;margin-bottom:20px;">What began as a handful of enthusiasts meeting by Bhopal's lakes has grown into one of India's most active photography societies — formally registered, FIP-affiliated, and proudly amateur-friendly.</p>
+        <p style="font-size:16px;line-height:1.85;color:#57514B;margin-bottom:36px;">Beginners find mentors here. Professionals find fresh eyes. The city finds its chroniclers.</p>
+        <div style="display:flex;gap:0;border:1px solid #E7E1D6;background:#FFFFFF;">
+          <div style="flex:1;padding:20px 24px;border-right:1px solid #E7E1D6;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Registered</div><div style="font-size:14px;font-weight:500;color:#141210;">MP Society Act 1973</div></div>
+          <div style="flex:1;padding:20px 24px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">FIP Member</div><div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#A8843C;">CM 1098</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pillars -->
+  <section style="padding:112px 0;background:#FFFFFF;border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid #E7E1D6;">
+        <sc-for list="{{ pillars }}" as="pl" hint-placeholder-count="3">
+          <div style="padding:52px 44px;border-right:1px solid #E7E1D6;background:#FFFFFF;transition:background 0.25s;" style-hover="background:#FAF8F4">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#C9A961;margin-bottom:20px;">{{ pl.num }}</div>
+            <h3 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:600;color:#141210;margin-bottom:14px;letter-spacing:-0.01em;">{{ pl.title }}</h3>
+            <p style="font-size:14px;line-height:1.8;color:#57514B;">{{ pl.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section style="padding:112px 0;background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="margin-bottom:56px;">
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Our Story</div>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(34px,3.4vw,46px);font-weight:700;letter-spacing:-0.025em;">A legacy of light</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:2px solid #141210;">
+        <sc-for list="{{ milestones }}" as="ms" hint-placeholder-count="5">
+          <div style="padding:32px 28px 0 0;position:relative;">
+            <div style="position:absolute;top:-6px;left:0;width:10px;height:10px;border-radius:50%;background:{{ ms.dot }};"></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;margin-bottom:12px;">{{ ms.year }}</div>
+            <h4 style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;color:#141210;margin-bottom:10px;line-height:1.3;">{{ ms.title }}</h4>
+            <p style="font-size:13px;line-height:1.7;color:#57514B;padding-right:8px;">{{ ms.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:24px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">EXAMPLE CONTENT — milestones[] · Timeline component</span></div>
+    </div>
+  </section>
+
+  <!-- Leadership -->
+  <section style="padding:112px 0;background:#FFFFFF;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;">
+        <div>
+          <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Leadership</div>
+          <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(34px,3.4vw,46px);font-weight:700;letter-spacing:-0.025em;">The minds behind the club</h2>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">EXAMPLE CONTENT — committee[] · names are placeholder</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:#E7E1D6;border:1px solid #E7E1D6;">
+        <sc-for list="{{ leaders }}" as="ld" hint-placeholder-count="6">
+          <div style="background:#FFFFFF;padding:36px 32px;display:flex;align-items:flex-start;gap:20px;transition:background 0.2s;" style-hover="background:#FAF8F4">
+            <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#FFFFFF;flex-shrink:0;border:2px solid #FFFFFF;box-shadow:0 0 0 1px #E7E1D6;">{{ ld.initials }}</div>
+            <div>
+              <h4 style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:600;color:#141210;margin-bottom:3px;">{{ ld.name }}</h4>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#A8843C;margin-bottom:8px;font-weight:600;">{{ ld.role }}</div>
+              <p style="font-size:13px;line-height:1.65;color:#57514B;">{{ ld.bio }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+</div>
+</sc-if>
+
+<!-- ═══════════════════ ACTIVITIES ═══════════════════ -->
+<sc-if value="{{ showActivities }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Activities">
+
+  <section style="padding:200px 0 0;background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:24px;display:flex;align-items:center;gap:14px;"><span style="display:block;width:28px;height:1px;background:#C9A961;"></span>Club Programme</div>
+      <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(48px,6vw,80px);font-weight:700;letter-spacing:-0.035em;color:#141210;line-height:0.95;margin-bottom:48px;">Activities</h1>
+      <div style="display:flex;gap:8px;padding-bottom:24px;">
+        <button onClick="{{ fAll }}" style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:11px 26px;border-radius:2px;border:1px solid {{ fAllBorder }};background:{{ fAllBg }};color:{{ fAllColor }};transition:all 0.2s;">All</button>
+        <button onClick="{{ fWalk }}" style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:11px 26px;border-radius:2px;border:1px solid {{ fWalkBorder }};background:{{ fWalkBg }};color:{{ fWalkColor }};transition:all 0.2s;">Photowalks</button>
+        <button onClick="{{ fShop }}" style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:11px 26px;border-radius:2px;border:1px solid {{ fShopBorder }};background:{{ fShopBg }};color:{{ fShopColor }};transition:all 0.2s;">Workshops</button>
+        <button onClick="{{ fExpo }}" style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:11px 26px;border-radius:2px;border:1px solid {{ fExpoBorder }};background:{{ fExpoBg }};color:{{ fExpoColor }};transition:all 0.2s;">Exhibitions</button>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:64px 0 112px;background:#FAF8F4;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;">
+        <sc-for list="{{ activities }}" as="act" hint-placeholder-count="6">
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;border-radius:2px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(20,18,16,0.04);transition:all 0.25s;" style-hover="transform:translateY(-4px);box-shadow:0 8px 32px rgba(20,18,16,0.07)">
+            <div style="position:relative;aspect-ratio:3/2;overflow:hidden;background:#2A2622;flex-shrink:0;">
+              <img src="{{ act.img }}" alt="{{ act.title }}" style="width:100%;height:100%;object-fit:cover;"/>
+              <div style="position:absolute;top:12px;left:12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:{{ act.tagColor }};background:{{ act.tagBg }};padding:4px 12px;">{{ act.type }}</div>
+            </div>
+            <div style="padding:26px 28px;flex:1;display:flex;flex-direction:column;">
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">{{ act.date }}</span>
+                <span style="color:#D8D2C6;">·</span>
+                <span style="font-size:12px;color:#8B8378;">{{ act.time }}</span>
+              </div>
+              <h3 style="font-family:'Outfit',sans-serif;font-size:21px;font-weight:600;color:#141210;margin-bottom:10px;letter-spacing:-0.01em;line-height:1.2;">{{ act.title }}</h3>
+              <p style="font-size:13.5px;line-height:1.7;color:#57514B;margin-bottom:20px;flex:1;">{{ act.desc }}</p>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid #F0EBE0;">
+                <span style="font-size:12px;color:#8B8378;">{{ act.venue }}</span>
+                <button onClick="{{ goJoin }}" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#A8843C;border-bottom:1px solid #C9A961;padding-bottom:2px;" style-hover="opacity:0.65">Register →</button>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:20px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">EXAMPLE CONTENT — events[] · EventCard variant · 3:2 cover images</span></div>
+    </div>
+  </section>
+
+</div>
+</sc-if>
+
+<!-- ═══════════════════ JOIN ═══════════════════ -->
+<sc-if value="{{ showJoin }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Join">
+
+  <section style="padding:200px 0 80px;background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;">
+      <div>
+        <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:24px;display:flex;align-items:center;gap:14px;"><span style="display:block;width:28px;height:1px;background:#C9A961;"></span>Open Membership</div>
+        <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(44px,5vw,68px);font-weight:700;letter-spacing:-0.035em;color:#141210;line-height:0.98;margin-bottom:24px;">Join the club.</h1>
+        <p style="font-size:17px;line-height:1.75;color:#57514B;max-width:440px;font-weight:300;">Become part of Bhopal's most active photography community. Choose the membership that fits your practice.</p>
+      </div>
+      <div style="position:relative;aspect-ratio:16/10;overflow:hidden;box-shadow:0 24px 64px rgba(20,18,16,0.14);background:#2A2622;">
+        <img src="https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=1400&q=80" alt="Photographers on a walk" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"/>
+        <div style="position:absolute;bottom:14px;left:16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.7);">EXAMPLE — joinPage.heroPhoto</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tiers -->
+  <section style="padding:96px 0;background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1080px;margin:0 auto;">
+        <sc-for list="{{ joinTiers }}" as="jt" hint-placeholder-count="3">
+          <div onClick="{{ jt.select }}" style="background:#FFFFFF;border:1px solid {{ jt.border }};border-radius:2px;padding:40px 36px;position:relative;cursor:pointer;box-shadow:{{ jt.shadow }};transition:all 0.25s;">
+            <sc-if value="{{ jt.featured }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:5px 16px;border-radius:0 0 2px 2px;">Most Popular</div>
+            </sc-if>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;margin-top:8px;">
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:#8B8378;">{{ jt.name }}</span>
+              <span style="width:18px;height:18px;border-radius:50%;border:2px solid {{ jt.radioBorder }};background:{{ jt.radioBg }};display:inline-block;box-shadow:{{ jt.radioShadow }};transition:all 0.2s;"></span>
+            </div>
+            <div style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.03em;color:#141210;line-height:1;margin-bottom:6px;">{{ jt.price }}<span style="font-size:15px;font-weight:400;color:#8B8378;"> /year</span></div>
+            <div style="font-size:13px;color:#8B8378;margin-bottom:28px;">{{ jt.note }}</div>
+            <div style="border-top:1px solid #EDE7DB;padding-top:22px;font-size:14px;line-height:2.2;color:#57514B;">{{ jt.f1 }}<br/>{{ jt.f2 }}<br/>{{ jt.f3 }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="text-align:center;margin-top:20px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">EXAMPLE CONTENT — membershipPlans[] · selection state interactive</span></div>
+    </div>
+  </section>
+
+  <!-- Application form -->
+  <section style="padding:96px 0 112px;background:#FFFFFF;">
+    <div style="max-width:720px;margin:0 auto;padding:0 48px;">
+      <div style="text-align:center;margin-bottom:48px;">
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:14px;">Application</div>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(30px,3vw,40px);font-weight:700;letter-spacing:-0.02em;">Tell us about yourself</h2>
+      </div>
+      <!-- Step indicator -->
+      <div style="display:flex;align-items:center;margin-bottom:48px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;"><span style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(168,132,60,0.3);">1</span><span style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#141210;font-weight:600;">Details</span></div>
+        <div style="flex:1;height:1px;background:#E7E1D6;margin:0 12px 24px;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;"><span style="width:34px;height:34px;border-radius:50%;background:#F4F0E8;color:#8B8378;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;border:1px solid #E7E1D6;">2</span><span style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;">Photography</span></div>
+        <div style="flex:1;height:1px;background:#E7E1D6;margin:0 12px 24px;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;"><span style="width:34px;height:34px;border-radius:50%;background:#F4F0E8;color:#8B8378;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;border:1px solid #E7E1D6;">3</span><span style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;">Confirm</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;display:block;margin-bottom:9px;font-weight:600;">First Name</label><input type="text" placeholder="Your first name" style="width:100%;padding:14px 18px;border:1px solid #E7E1D6;border-radius:8px;background:#FAF8F4;font-size:15px;color:#141210;transition:all 0.2s;" style-focus="border-color:#C9A961;background:#FFFFFF"/></div>
+          <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;display:block;margin-bottom:9px;font-weight:600;">Surname</label><input type="text" placeholder="Your surname" style="width:100%;padding:14px 18px;border:1px solid #E7E1D6;border-radius:8px;background:#FAF8F4;font-size:15px;color:#141210;transition:all 0.2s;" style-focus="border-color:#C9A961;background:#FFFFFF"/></div>
+        </div>
+        <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;display:block;margin-bottom:9px;font-weight:600;">Email Address</label><input type="email" placeholder="you@example.com" style="width:100%;padding:14px 18px;border:1px solid #E7E1D6;border-radius:8px;background:#FAF8F4;font-size:15px;color:#141210;transition:all 0.2s;" style-focus="border-color:#C9A961;background:#FFFFFF"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;display:block;margin-bottom:9px;font-weight:600;">Phone</label><input type="tel" placeholder="+91 ..." style="width:100%;padding:14px 18px;border:1px solid #E7E1D6;border-radius:8px;background:#FAF8F4;font-size:15px;color:#141210;transition:all 0.2s;" style-focus="border-color:#C9A961;background:#FFFFFF"/></div>
+          <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;display:block;margin-bottom:9px;font-weight:600;">City</label><input type="text" placeholder="Bhopal" style="width:100%;padding:14px 18px;border:1px solid #E7E1D6;border-radius:8px;background:#FAF8F4;font-size:15px;color:#141210;transition:all 0.2s;" style-focus="border-color:#C9A961;background:#FFFFFF"/></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button style="font-size:13px;font-weight:600;letter-spacing:0.04em;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:16px 40px;border-radius:2px;box-shadow:0 2px 12px rgba(168,132,60,0.32),inset 0 1px 0 rgba(255,255,255,0.25);" style-hover="box-shadow:0 6px 22px rgba(168,132,60,0.45)">Continue →</button>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:32px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">MOCKUP — ApplicationForm step 1 of 3 · formSchema from CMS</span></div>
+    </div>
+  </section>
+
+</div>
+</sc-if>
+
+<!-- ═══════════════════ JOURNAL ═══════════════════ -->
+<sc-if value="{{ showJournal }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Journal">
+
+  <section style="padding:200px 0 80px;background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:24px;display:flex;align-items:center;gap:14px;"><span style="display:block;width:28px;height:1px;background:#C9A961;"></span>Field Notes</div>
+      <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(48px,6vw,80px);font-weight:700;letter-spacing:-0.035em;color:#141210;line-height:0.95;">Journal</h1>
+    </div>
+  </section>
+
+  <!-- Featured -->
+  <section style="padding:96px 0;background:#FAF8F4;border-bottom:1px solid #E7E1D6;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:58fr 42fr;gap:64px;align-items:center;">
+      <div style="position:relative;aspect-ratio:16/10;overflow:hidden;box-shadow:0 24px 64px rgba(20,18,16,0.14);background:#2A2622;cursor:pointer;">
+        <img src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&q=80" alt="Heritage dawn feature" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform 0.7s;" style-hover="transform:scale(1.02)"/>
+        <div style="position:absolute;bottom:14px;left:16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.7);">EXAMPLE — featuredPost.heroImage</div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:4px 12px;">Featured</span>
+          <span style="font-size:12px;color:#8B8378;">Heritage Walk · 6 min read</span>
+        </div>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(28px,2.8vw,38px);font-weight:700;letter-spacing:-0.02em;color:#141210;line-height:1.12;margin-bottom:20px;">Notes from a heritage walk: Taj-ul-Masajid at dawn</h2>
+        <p style="font-size:16px;line-height:1.8;color:#57514B;margin-bottom:28px;">The mosque at dawn is a different creature entirely. Eight photographers, two hundred frames, and light that changed every fifteen minutes.</p>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:32px;">
+          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#FFFFFF;">AB</div>
+          <div><div style="font-size:14px;font-weight:500;color:#141210;">Author Name <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">(example)</span></div><div style="font-size:12px;color:#8B8378;">June 5, 2026</div></div>
+        </div>
+        <button style="font-size:13px;font-weight:600;letter-spacing:0.04em;color:#141210;border:1px solid #C9A961;padding:15px 36px;border-radius:2px;background:linear-gradient(180deg,rgba(201,169,97,0.06),rgba(201,169,97,0.14));transition:all 0.25s;" style-hover="background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF">Read Story →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grid -->
+  <section style="padding:96px 0 112px;background:#FFFFFF;">
+    <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;">
+        <sc-for list="{{ posts }}" as="po" hint-placeholder-count="6">
+          <div style="cursor:pointer;">
+            <div style="position:relative;aspect-ratio:3/2;overflow:hidden;background:#2A2622;margin-bottom:20px;"><img src="{{ po.img }}" alt="{{ po.title }}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.6s;" style-hover="transform:scale(1.03)"/></div>
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:#A8843C;margin-bottom:10px;">{{ po.category }}</div>
+            <h3 style="font-family:'Outfit',sans-serif;font-size:21px;font-weight:600;color:#141210;letter-spacing:-0.01em;line-height:1.25;margin-bottom:10px;">{{ po.title }}</h3>
+            <div style="font-size:12px;color:#8B8378;">{{ po.meta }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:24px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;">EXAMPLE CONTENT — posts[] · JournalCard grid · 3:2 cover</span></div>
+    </div>
+  </section>
+
+</div>
+</sc-if>
+
+<!-- ═══ FOOTER ═══ -->
+<footer style="background:linear-gradient(180deg,#F4F0E8,#EFEAE0);border-top:1px solid #E7E1D6;padding:88px 0 44px;">
+  <div style="max-width:1360px;margin:0 auto;padding:0 48px;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:64px;margin-bottom:64px;">
+      <div>
+        <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:48px;width:auto;margin-bottom:24px;"/>
+        <p style="font-size:14px;line-height:1.8;color:#57514B;max-width:300px;margin-bottom:28px;font-weight:300;">India's premier photography community — exploring the city through lenses, one frame at a time, since 2016.</p>
+        <div style="display:flex;gap:10px;">
+          <a href="https://www.instagram.com/bhopalcameraclub/" target="_blank" style="width:38px;height:38px;border:1px solid #D8D2C6;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#57514B;background:rgba(255,255,255,0.5);transition:all 0.2s;" style-hover="border-color:#A8843C;color:#A8843C">In</a>
+          <a href="https://www.facebook.com/BhopalCameraClub/" target="_blank" style="width:38px;height:38px;border:1px solid #D8D2C6;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#57514B;background:rgba(255,255,255,0.5);transition:all 0.2s;" style-hover="border-color:#A8843C;color:#A8843C">Fb</a>
+          <a href="https://x.com/bccbhopal" target="_blank" style="width:38px;height:38px;border:1px solid #D8D2C6;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#57514B;background:rgba(255,255,255,0.5);transition:all 0.2s;" style-hover="border-color:#A8843C;color:#A8843C">X</a>
+          <a href="https://www.youtube.com/@BhopalCameraClub" target="_blank" style="width:38px;height:38px;border:1px solid #D8D2C6;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#57514B;background:rgba(255,255,255,0.5);transition:all 0.2s;" style-hover="border-color:#A8843C;color:#A8843C">Yt</a>
+        </div>
+      </div>
+      <div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:#8B8378;margin-bottom:20px;font-weight:600;">Navigate</div><div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start;"><button onClick="{{ goHome }}" style="font-size:14px;color:#57514B;transition:color 0.2s;" style-hover="color:#141210">Home</button><button onClick="{{ goAbout }}" style="font-size:14px;color:#57514B;transition:color 0.2s;" style-hover="color:#141210">About</button><button onClick="{{ goActivities }}" style="font-size:14px;color:#57514B;transition:color 0.2s;" style-hover="color:#141210">Activities</button><button onClick="{{ goJoin }}" style="font-size:14px;color:#57514B;transition:color 0.2s;" style-hover="color:#141210">Join</button><button onClick="{{ goJournal }}" style="font-size:14px;color:#57514B;transition:color 0.2s;" style-hover="color:#141210">Journal</button></div></div>
+      <div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:#8B8378;margin-bottom:20px;font-weight:600;">Explore</div><div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start;"><button onClick="{{ goActivities }}" style="font-size:14px;color:#57514B;" style-hover="color:#141210">Gallery</button><button onClick="{{ goActivities }}" style="font-size:14px;color:#57514B;" style-hover="color:#141210">Photowalks</button><button onClick="{{ goActivities }}" style="font-size:14px;color:#57514B;" style-hover="color:#141210">Workshops</button><button onClick="{{ goActivities }}" style="font-size:14px;color:#57514B;" style-hover="color:#141210">Exhibitions</button></div></div>
+      <div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:#8B8378;margin-bottom:20px;font-weight:600;">Membership</div><div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start;"><button onClick="{{ goJoin }}" style="font-size:14px;color:#57514B;" style-hover="color:#141210">Become a Member</button><button style="font-size:14px;color:#57514B;" style-hover="color:#141210">Sign In</button><button onClick="{{ goAbout }}" style="font-size:14px;color:#57514B;" style-hover="color:#141210">FIP Affiliation</button></div></div>
+    </div>
+    <div style="border-top:1px solid #E0DACE;padding-top:28px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;color:#8B8378;">© 2026 Bhopal Camera Club. All rights reserved.</span>
+      <span style="font-size:13px;color:#8B8378;">Corporate Member of FIP · CM 1098</span>
+    </div>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { page: "home", filter: "All", tier: "amateur", scrolled: false };
+
+  componentDidMount() {
+    this._onScroll = () => this.setState({ scrolled: window.scrollY > 80 });
+    window.addEventListener("scroll", this._onScroll, { passive: true });
+  }
+  componentWillUnmount() {
+    window.removeEventListener("scroll", this._onScroll);
+  }
+
+  go(page) { this.setState({ page }); window.scrollTo(0, 0); }
+
+  renderVals() {
+    const { page, filter, tier, scrolled } = this.state;
+
+    const U = (id, w) => "https://images.unsplash.com/photo-" + id + "?w=" + w + "&q=80";
+
+    const galleryPhotos = [
+      { src: U("1564507592333-c60657eea523", 600), category: "Heritage", title: "Symmetry at Dawn", photographer: "Member Name (example)" },
+      { src: U("1577720580479-7d839d829c73", 600), category: "Exhibition", title: "Opening Night", photographer: "Member Name (example)" },
+      { src: U("1449824913935-59a10b8d2000", 600), category: "Street", title: "Crossing Lines", photographer: "Member Name (example)" },
+      { src: U("1444464666168-49d633b86797", 600), category: "Birds", title: "Morning Chirp", photographer: "Member Name (example)" },
+      { src: U("1587474260584-136574528ed5", 600), category: "Travel", title: "Gates of the City", photographer: "Member Name (example)" },
+      { src: U("1524492412937-b28074a5d7da", 600), category: "Architecture", title: "Taj Study II", photographer: "Member Name (example)" },
+      { src: U("1506905925346-21bda4d32df4", 600), category: "Nature", title: "Lake Mist", photographer: "Member Name (example)" },
+      { src: U("1493863641943-9b68992a8d07", 600), category: "Documentary", title: "In the Field", photographer: "Member Name (example)" },
+    ];
+
+    const tagStyles = { Photowalk: { bg: "#E8EFE9", color: "#3E5A48" }, Workshop: { bg: "#F5EDD8", color: "#8C6830" }, Exhibition: { bg: "#141210", color: "#FAF8F4" } };
+
+    const homeEvents = [
+      { day: "22", month: "Jun 2026", type: "Photowalk", time: "6:00 AM", title: "Old City Heritage Walk", venue: "Chowk Bazaar, Bhopal", img: U("1587474260584-136574528ed5", 500) },
+      { day: "5", month: "Jul 2026", type: "Workshop", time: "4:00 PM", title: "Golden Hour Masterclass", venue: "BCC Studio, MP Nagar", img: U("1470071459604-3b5ec3a7fe05", 500) },
+      { day: "20", month: "Jul 2026", type: "Exhibition", time: "11:00 AM", title: "Monsoon Frames 2026", venue: "Bharat Bhavan, Bhopal", img: U("1577720580479-7d839d829c73", 500) },
+    ].map((e) => ({ ...e, tagBg: tagStyles[e.type].bg, tagColor: tagStyles[e.type].color }));
+
+    const activitiesAll = [
+      { type: "Photowalk", date: "JUN 22", time: "6:00 AM", title: "Old City Heritage Walk", venue: "Chowk Bazaar", desc: "Architectural details and the rhythm of daily life in the historic quarter.", img: U("1587474260584-136574528ed5", 700) },
+      { type: "Workshop", date: "JUL 05", time: "4:00 PM", title: "Golden Hour Masterclass", venue: "BCC Studio", desc: "Outdoor practice and guided critique in the city's best evening light.", img: U("1470071459604-3b5ec3a7fe05", 700) },
+      { type: "Exhibition", date: "JUL 20", time: "11:00 AM", title: "Monsoon Frames 2026", venue: "Bharat Bhavan", desc: "The annual monsoon exhibition of members' seasonal work.", img: U("1577720580479-7d839d829c73", 700) },
+      { type: "Photowalk", date: "JUL 08", time: "6:30 AM", title: "Monsoon Lake Series", venue: "Upper Lake", desc: "The lakes at their most dramatic — mist, reflections and rain.", img: U("1506905925346-21bda4d32df4", 700) },
+      { type: "Workshop", date: "JUL 28", time: "3:00 PM", title: "Portrait Lighting", venue: "BCC Studio", desc: "Studio lighting fundamentals for expressive portraiture.", img: U("1493863641943-9b68992a8d07", 700) },
+      { type: "Photowalk", date: "AUG 03", time: "7:00 AM", title: "Fort Trail", venue: "Raisen Fort", desc: "Medieval architecture and sweeping Central Indian landscapes.", img: U("1564507592333-c60657eea523", 700) },
+      { type: "Workshop", date: "AUG 15", time: "10:00 AM", title: "Composition and Framing", venue: "BCC Studio", desc: "Advanced compositional technique for intentional frames.", img: U("1449824913935-59a10b8d2000", 700) },
+      { type: "Exhibition", date: "SEP 12", time: "11:00 AM", title: "Heritage Bhopal 2026", venue: "IGNCA", desc: "A visual documentation of the city's living heritage.", img: U("1524492412937-b28074a5d7da", 700) },
+      { type: "Photowalk", date: "SEP 27", time: "6:00 AM", title: "Birding at Van Vihar", venue: "Van Vihar NP", desc: "Long-lens morning with the park's resident and migratory birds.", img: U("1444464666168-49d633b86797", 700) },
+    ];
+    const activities = (filter === "All" ? activitiesAll : activitiesAll.filter((a) => a.type === filter))
+      .map((a) => ({ ...a, tagBg: tagStyles[a.type].bg, tagColor: tagStyles[a.type].color }));
+
+    const homePosts = [
+      { img: U("1524492412937-b28074a5d7da", 700), category: "Heritage Walk", title: "Notes from a heritage walk: Taj-ul-Masajid at dawn", meta: "Author Name (example) · Jun 5, 2026 · 6 min" },
+      { img: U("1561731216-c3a4d99437d5", 700), category: "Member Spotlight", title: "Tracking the tiger: a member's wildlife series", meta: "Author Name (example) · May 18, 2026 · 8 min" },
+      { img: U("1506905925346-21bda4d32df4", 700), category: "Technique", title: "Shooting monsoon light: windows of opportunity", meta: "Author Name (example) · Apr 20, 2026 · 5 min" },
+    ];
+    const posts = homePosts.concat([
+      { img: U("1493863641943-9b68992a8d07", 700), category: "Education", title: "Composition fundamentals: the triangle principle", meta: "Author Name (example) · Apr 2, 2026 · 7 min" },
+      { img: U("1577720580479-7d839d829c73", 700), category: "Exhibitions", title: "Behind the walls: curating Monsoon Frames", meta: "Author Name (example) · Mar 15, 2026 · 4 min" },
+      { img: U("1452587925148-ce544e77e70d", 700), category: "Travel", title: "Packing light: a photowalker's field kit", meta: "Author Name (example) · Feb 28, 2026 · 6 min" },
+    ]);
+
+    const tiers = [
+      { name: "Student", price: "\u20B9500", note: "Valid student ID required", featured: false, bg: "#FFFFFF", border: "#E7E1D6", shadow: "0 1px 2px rgba(20,18,16,0.04)", f1: "\u2713 Monthly photowalks", f2: "\u2713 Basic workshop access", f3: "\u2713 Online critique sessions" },
+      { name: "Amateur", price: "\u20B91,200", note: "Most popular membership", featured: true, bg: "#FFFFFF", border: "#C9A961", shadow: "0 8px 32px rgba(168,132,60,0.14)", f1: "\u2713 All events, unlimited", f2: "\u2713 Mentorship programme", f3: "\u2713 Voting rights" },
+      { name: "Professional", price: "\u20B92,500", note: "For working photographers", featured: false, bg: "#FFFFFF", border: "#E7E1D6", shadow: "0 1px 2px rgba(20,18,16,0.04)", f1: "\u2713 Everything in Amateur", f2: "\u2713 Studio access 8 hrs/mo", f3: "\u2713 Annual portfolio review" },
+    ];
+
+    const mkTier = (t, id) => ({
+      ...t,
+      select: () => this.setState({ tier: id }),
+      border: tier === id ? "#C9A961" : "#E7E1D6",
+      shadow: tier === id ? "0 8px 32px rgba(168,132,60,0.16)" : "0 1px 2px rgba(20,18,16,0.04)",
+      radioBorder: tier === id ? "#A8843C" : "#D8D2C6",
+      radioBg: tier === id ? "linear-gradient(135deg,#C9A961,#A8843C)" : "#FFFFFF",
+      radioShadow: tier === id ? "0 1px 6px rgba(168,132,60,0.4)" : "none",
+    });
+    const joinTiers = [mkTier(tiers[0], "student"), mkTier(tiers[1], "amateur"), mkTier(tiers[2], "professional")];
+
+    const pillars = [
+      { num: "01", title: "Community", body: "Photography is most powerful when shared. Beginners find mentors here; masters find inspiration in every gathering." },
+      { num: "02", title: "Craft", body: "Structured programmes across genres — from street and heritage to wildlife and astrophotography." },
+      { num: "03", title: "City", body: "Bhopal is our muse: its lakes, heritage, wildlife and people. We document its extraordinary visual richness." },
+    ];
+
+    const milestones = [
+      { year: "2015", title: "First gatherings", body: "Local enthusiasts begin meeting informally to shoot and critique together.", dot: "#C9A961" },
+      { year: "2016", title: "First photowalk", body: "Heritage Day walk at Taj-ul-Masajid establishes the club's signature format.", dot: "#C9A961" },
+      { year: "2016", title: "Community founded", body: "The official community launches on June 8th and grows quickly.", dot: "#C9A961" },
+      { year: "2019", title: "Society registration", body: "Formally registered under the MP Society Registrikaran Adhiniyam 1973.", dot: "#C9A961" },
+      { year: "2026", title: "Tenth year", body: "New digital platform launches ahead of the 10th anniversary celebrations.", dot: "#3E5A48" },
+    ];
+
+    const leaders = [
+      { initials: "AA", name: "Member Name", role: "Core Coordinator", bio: "Lead travel and street photographer managing club operations." },
+      { initials: "BB", name: "Member Name", role: "Core Coordinator", bio: "Travel storyteller documenting remote places and trails." },
+      { initials: "CC", name: "Member Name", role: "Core Coordinator", bio: "Contemporary street artist capturing dynamic urban moments." },
+      { initials: "DD", name: "Member Name", role: "Core Coordinator", bio: "Street documentarian of everyday life and candid frames." },
+      { initials: "EE", name: "Member Name", role: "Core Coordinator", bio: "Travel photographer assisting in educational activities." },
+      { initials: "FF", name: "Member Name", role: "Core Coordinator", bio: "Wildlife photographer documenting natural reserves." },
+    ];
+
+    const fSeg = (active) => ({
+      bg: active ? "#141210" : "#FFFFFF",
+      color: active ? "#FAF8F4" : "#57514B",
+      border: active ? "#141210" : "#D8D2C6",
+    });
+    const sA = fSeg(filter === "All"), sW = fSeg(filter === "Photowalk"), sS = fSeg(filter === "Workshop"), sE = fSeg(filter === "Exhibition");
+
+    const navC = (p) => (page === p ? "#141210" : "#57514B");
+    const navL = (p) => (page === p ? "#C9A961" : "transparent");
+
+    return {
+      hdrH: scrolled ? "64px" : "96px",
+      logoH: scrolled ? "44px" : "56px",
+      hdrShadow: scrolled ? "0 8px 32px rgba(20,18,16,0.07)" : "none",
+      navHome: navC("home"), navHomeLine: navL("home"),
+      navAbout: navC("about"), navAboutLine: navL("about"),
+      navActivities: navC("activities"), navActivitiesLine: navL("activities"),
+      navJoin: navC("join"), navJoinLine: navL("join"),
+      navJournal: navC("journal"), navJournalLine: navL("journal"),
+      showHome: page === "home",
+      showAbout: page === "about",
+      showActivities: page === "activities",
+      showJoin: page === "join",
+      showJournal: page === "journal",
+      goHome: () => this.go("home"),
+      goAbout: () => this.go("about"),
+      goActivities: () => this.go("activities"),
+      goJoin: () => this.go("join"),
+      goJournal: () => this.go("journal"),
+      galleryPhotos, homeEvents, activities, homePosts, posts, tiers, joinTiers, pillars, milestones, leaders,
+      fAll: () => this.setState({ filter: "All" }),
+      fWalk: () => this.setState({ filter: "Photowalk" }),
+      fShop: () => this.setState({ filter: "Workshop" }),
+      fExpo: () => this.setState({ filter: "Exhibition" }),
+      fAllBg: sA.bg, fAllColor: sA.color, fAllBorder: sA.border,
+      fWalkBg: sW.bg, fWalkColor: sW.color, fWalkBorder: sW.border,
+      fShopBg: sS.bg, fShopColor: sS.color, fShopBorder: sS.border,
+      fExpoBg: sE.bg, fExpoColor: sE.color, fExpoBorder: sE.border,
+    };
+  }
+}
+</script>
+</body>
+</html>

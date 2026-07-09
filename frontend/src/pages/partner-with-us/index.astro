@@ -1,0 +1,182 @@
+---
+/**
+ * partner-with-us/index.astro — Partner with Us & Sponsorships
+ * Route: /partner-with-us/
+ *
+ * Content migrated verbatim from legacy site:
+ * https://bcc.bhopal.info/partner-with-us/
+ *
+ * Migration rules followed:
+ * - Content imported exactly — no rewrites, no omissions, no additions.
+ * - BaseLayout used (provides SiteHeader + SiteFooter).
+ * - V3 typography and spacing tokens applied.
+ * - No shared components modified.
+ *
+ * Internal link updated:
+ * - Legacy: https://bcc.bhopal.info/contact → V3: /contact/
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Partner with Us & Sponsorships"
+  description="Collaborate with Central India's most active photography society. Reach a niche creative community and build high-quality visual assets."
+>
+
+  <!-- Page Hero -->
+  <div class="page-hero surface-white">
+    <div class="container">
+      <span class="eyebrow">Partnerships</span>
+      <h1 class="policy-title">Partner with Us &amp; Sponsorships</h1>
+      <p class="policy-meta">
+        Collaborate with Central India's most active photography society. Reach a niche creative community and build high-quality visual assets.
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Body -->
+  <section class="policy-section" aria-label="Partner with Us & Sponsorships">
+    <div class="container">
+      <div class="policy-document">
+
+        <div class="policy-block">
+          <h2 id="sponsorship-collaborations">Sponsorship &amp; Collaborations</h2>
+          <p>Bhopal Camera Club provides a unique, highly targeted platform for corporate sponsors, global camera brands, local businesses, and government tourism boards to connect with creators and visual enthusiasts.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="what-the-club-offers">What the Club Offers</h2>
+          <p>Connect directly with over 340+ registered photographers, ranging from eager amateurs and students to veteran professionals and conservationists in Central India.</p>
+          <p>Collaborate to host product testing workshops, photowalk excursions, gear swap days, or technical seminars. Ideal for camera manufacturers looking to place test gear in creators' hands.</p>
+          <p>Our members document heritage, street culture, tourism assets, and wildlife. We partner with tourism boards and heritage trusts to create visual archives and premium promotional assets.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="partnership-avenues">Partnership Avenues</h2>
+          <ul>
+            <li><strong>Corporate Membership (₹5,000/year):</strong> Access visual collaborations, place your logo on our platform partner board, and host sponsored workshops. See our membership options page for details.</li>
+            <li><strong>Brand Gear Spotlights:</strong> Sponsor specific outdoor photowalks or provide demo units (lenses, bodies, accessories) for members during community field testing sessions.</li>
+            <li><strong>Tourism Board Excursions:</strong> Coordinate visual documentation tours to state parks, monuments, and rural tourism sectors with curated publishing outcomes.</li>
+            <li><strong>Annual Salon Sponsorship:</strong> Become a primary sponsor of the Monsoon Frames Exhibition, securing branding, catalog credits, and print display blocks.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="get-in-touch">Get in Touch</h2>
+          <p>Ready to collaborate? Let's discuss a custom partnership package that aligns with your brand objectives and supports the visual arts community.</p>
+          <p><a href="/contact/" class="policy-link">Contact Partnership Council →</a></p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ── Page Hero ── */
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+.policy-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+.policy-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  line-height: 1.65;
+}
+
+/* ── Policy Section ── */
+.policy-section {
+  background: var(--surface-1);
+  padding: var(--s-8) 0 var(--s-12);
+}
+
+/* ── Policy Document ── */
+.policy-document {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+/* ── Policy Block ── */
+.policy-block {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-4);
+}
+.policy-block h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--s-2);
+}
+.policy-block p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.75;
+  margin-bottom: var(--s-2);
+}
+.policy-block p:last-child {
+  margin-bottom: 0;
+}
+.policy-block ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-1) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.policy-block ul li {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.65;
+  padding-left: var(--s-3);
+  position: relative;
+}
+.policy-block ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 5px;
+  height: 1px;
+  background: var(--gold-500);
+}
+
+/* ── Policy link ── */
+.policy-link {
+  color: var(--gold-600);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--m-fast);
+}
+.policy-link:hover {
+  text-decoration-color: var(--gold-600);
+  color: var(--gold-600);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .policy-section {
+    padding: var(--s-6) 0 var(--s-8);
+  }
+}
+</style>

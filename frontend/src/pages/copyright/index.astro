@@ -1,0 +1,201 @@
+---
+/**
+ * copyright/index.astro — Editorial & Copyright Policy
+ * Route: /copyright/
+ *
+ * Content migrated verbatim from legacy site:
+ * https://bcc.bhopal.info/editorial-policy/
+ * Last updated on legacy site: June 12, 2026.
+ *
+ * V3 footer link: /copyright/  (legacy path was /editorial-policy/)
+ *
+ * Migration rules followed:
+ * - Content imported exactly — no rewrites, no omissions, no additions.
+ * - BaseLayout used (provides SiteHeader + SiteFooter).
+ * - V3 typography and spacing tokens applied.
+ * - No shared components modified.
+ * - Cloudflare-obfuscated email restored to hello@bcc.bhopal.info (approved pattern).
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Editorial & Copyright Policy"
+  description="Ensuring 100% creator ownership and transparent attribution guidelines for all visual assets."
+>
+
+  <!-- Page Hero -->
+  <div class="page-hero surface-white">
+    <div class="container">
+      <span class="eyebrow">Legal</span>
+      <h1 class="policy-title">Editorial &amp; Copyright Policy</h1>
+      <p class="policy-meta">
+        Ensuring 100% creator ownership and transparent attribution guidelines for all visual assets.<br />
+        <span class="policy-date">Last updated: June 12, 2026</span>
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Body -->
+  <section class="policy-section" aria-label="Editorial & Copyright Policy">
+    <div class="container">
+      <div class="policy-document">
+
+        <div class="policy-block">
+          <h2 id="section-1">1. Copyright Ownership</h2>
+          <p>Bhopal Camera Club strongly believes in creator rights. All photographers who upload images to the BCC platform retain 100% intellectual property ownership and copyright of their work.</p>
+          <p>We do not claim, borrow, or appropriate ownership rights over your visual creations. You are free to license, print, sell, or display your photos outside the club without any restriction or credit to BCC.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-2">2. Licensing Granted to the Club</h2>
+          <p>When you upload a photograph to your portfolio gallery or submit an entry to a contest:</p>
+          <ul>
+            <li>You grant Bhopal Camera Club a limited, non-exclusive, royalty-free, worldwide license to host and display the image on bcc.bhopal.info solely to showcase your work (e.g., in your member gallery, on the home page rotating grid, or in contest galleries).</li>
+            <li>BCC may use selected photos in social media spotlights or club newsletters to promote you and the club's activities.</li>
+            <li>This license can be revoked at any time. Removing the photograph from your member portal will automatically delete it from our servers, immediately ending the promotional display license.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-3">3. Attribution Guidelines</h2>
+          <p>We guarantee prominent creator attribution:</p>
+          <ul>
+            <li>Any image displayed on the home page, public galleries, or social spotlights must clearly feature the photographer's name (e.g. Photo by Ankit Tiwari) linking back to their public portfolio.</li>
+            <li>We will never display an image anonymously or modify the metadata without the photographer's consent.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-4">4. Plagiarism &amp; Infringements</h2>
+          <p>Plagiarism is a serious offense. Members must only upload original photographs captured by themselves:</p>
+          <ul>
+            <li>Uploading stock photos, other creators' work, AI-generated images masquerading as camera captures, or heavily manipulated composites that violate contest guidelines is strictly prohibited.</li>
+            <li>If an infringement is reported, we will temporarily hide the image and initiate a review panel. Proven copyright violations will lead to permanent membership termination.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-5">5. Submitting Copyright Claims</h2>
+          <p>If you believe an image hosted on our platform infringes upon your copyright, please report the link to <a href="mailto:hello@bcc.bhopal.info" class="policy-link">hello@bcc.bhopal.info</a> along with proof of original capture. We will act swiftly to review and remove the asset if a violation is found.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ── Page Hero ── */
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+.policy-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+.policy-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  line-height: 1.65;
+}
+.policy-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-400);
+  letter-spacing: 0.04em;
+}
+
+/* ── Policy Section ── */
+.policy-section {
+  background: var(--surface-1);
+  padding: var(--s-8) 0 var(--s-12);
+}
+
+/* ── Policy Document ── */
+.policy-document {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+/* ── Policy Block ── */
+.policy-block {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-4);
+}
+.policy-block h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--s-2);
+}
+.policy-block p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.75;
+  margin-bottom: var(--s-2);
+}
+.policy-block p:last-child {
+  margin-bottom: 0;
+}
+.policy-block ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-1) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.policy-block ul li {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.65;
+  padding-left: var(--s-3);
+  position: relative;
+}
+.policy-block ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 5px;
+  height: 1px;
+  background: var(--gold-500);
+}
+
+/* ── Policy link ── */
+.policy-link {
+  color: var(--gold-600);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--m-fast);
+}
+.policy-link:hover {
+  text-decoration-color: var(--gold-600);
+  color: var(--gold-600);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .policy-section {
+    padding: var(--s-6) 0 var(--s-8);
+  }
+}
+</style>

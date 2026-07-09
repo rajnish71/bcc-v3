@@ -1,243 +1,644 @@
 ---
 /**
  * Footer.astro — Canonical site footer
- * Surface: --surface-2 (recessed warm cream plate)
- * Structure: FIP badge + social strip → 4-column grid → copyright bar
+ * Surface: --surface-deep (#141210) / --image-backdrop (#1A1816)
  *
- * MEM-006 public domain: only Basic, Student, Individual appear in Membership link copy.
+ * Reconciled to V6 92 SiteFooter Design Authority.
  */
 
-const year = new Date().getFullYear();
-
-const navigate = [
-  { label: 'Home',        href: '/' },
-  { label: 'About',       href: '/about/' },
-  { label: 'Activities',  href: '/activities/' },
-  { label: 'Showcase',    href: '/showcase/' },
-  { label: 'Journal',     href: '/journal/' },
-];
-
-const explore = [
-  { label: 'Photowalks',         href: '/activities/?type=photowalk' },
-  { label: 'Workshops',          href: '/activities/?type=workshop' },
-  { label: 'Exhibitions',        href: '/activities/?type=exhibition' },
-  { label: 'Photography School', href: '#', disabled: true },
-  { label: 'Photo Contests',     href: '#', disabled: true },
-];
-
-const guidelines = [
-  { label: 'Privacy Policy',    href: '/privacy/' },
-  { label: 'Terms of Use',      href: '/terms/' },
-  { label: 'Code of Conduct',   href: '/conduct/' },
-  { label: 'Membership',        href: '/join/' },
-  { label: 'Contact Us',        href: '/contact/' },
-];
-
-type SocialIcon = 'ig' | 'fb' | 'fbg' | 'x' | 'yt';
-
-const socials: Array<{ label: string; href: string; icon: SocialIcon }> = [
-  { label: 'Instagram',      href: 'https://instagram.com/bhopalcameraclub', icon: 'ig'  },
-  { label: 'Facebook Page',  href: 'https://facebook.com/bhopalcameraclub',  icon: 'fb'  },
-  { label: 'Facebook Group', href: '#',                                       icon: 'fbg' },
-  { label: 'X (Twitter)',    href: 'https://x.com/bhopalcameraclub',          icon: 'x'   },
-  { label: 'YouTube',        href: '#',                                       icon: 'yt'  },
-];
+const currentYear = new Date().getFullYear();
 ---
 
-<footer class="footer" aria-label="Site footer">
-  <div class="container">
+<footer
+    role="contentinfo"
+    aria-label="Site footer">
 
-    <!-- ── FIP strip + social ── -->
-    <div class="footer-strip">
+    <div class="footer-container">
 
-      <div class="fip-badge" aria-label="Federation of Indian Photography, Corporate Member CM 1098">
-        <!-- FIP logo placeholder — replace with official badge image when available -->
-        <div class="fip-logo" aria-hidden="true">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="2" fill="var(--surface-0)" stroke="var(--hairline)" stroke-width="1"/>
-            <text x="20" y="14" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" font-weight="700" fill="var(--gold-600)">FIP</text>
-            <text x="20" y="23" text-anchor="middle" font-family="Inter,sans-serif" font-size="5.5" fill="var(--ink-900)">INDIA</text>
-            <text x="20" y="33" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="5" fill="var(--ink-900)">CM 1098</text>
-          </svg>
-        </div>
-        <div class="fip-text">
-          <div class="fip-title">Corporate Member</div>
-          <div class="fip-sub">Federation of Indian Photography · CM 1098</div>
-        </div>
-      </div>
+        <!-- ── Row 1: Trust & Community ── -->
+        <section class="footer-row footer-row-1">
+            <div class="footer-row-1-inner">
+                <div class="footer-row-1-content">
+                    <!-- FIP Trust Badge -->
+                    <div class="fip-trust-badge" role="figure" aria-label="Affiliated with Federation of Indian Photography">
+                        <div class="fip-monogram-box" aria-hidden="true">
+                            <span class="fip-monogram-text">FIP</span>
+                        </div>
+                        <div class="fip-details">
+                            <span class="fip-details-title">Federation of Indian Photography</span>
+                            <span class="fip-details-subtitle">Affiliated Member Organisation</span>
+                        </div>
+                    </div>
 
-      <div class="social-row" aria-label="Social media links">
-        {socials.map((s) => (
-          <a href={s.href} class="social-btn" aria-label={s.label} target="_blank" rel="noopener noreferrer">
-            {s.icon === 'ig' && (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="currentColor"/>
-              </svg>
-            )}
-            {s.icon === 'fb' && (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
-              </svg>
-            )}
-            {s.icon === 'fbg' && (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-              </svg>
-            )}
-            {s.icon === 'x' && (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-            )}
-            {s.icon === 'yt' && (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z"/>
-                <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/>
-              </svg>
-            )}
-          </a>
-        ))}
-      </div>
+                    <!-- Social Strip -->
+                    <div class="social-strip-container">
+                        <span class="social-follow-label">Follow</span>
+                        <div class="social-strip" aria-label="Social media links">
+                            <a href="https://instagram.com/bhopalcameraclub" class="social-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+                            </a>
+                            <a href="https://facebook.com/bhopalcameraclub" class="social-link" aria-label="Facebook Page" target="_blank" rel="noopener noreferrer">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+                            </a>
+                            <a href="#" class="social-link" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/></svg>
+                            </a>
+                            <a href="#" class="social-link" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                            </a>
+                            <a href="https://x.com/bhopalcameraclub" class="social-link" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editorial separator -->
+                <div class="footer-separator"></div>
+            </div>
+        </section>
+
+        <!-- ── Row 2: Four-Column Navigation ── -->
+        <section class="footer-row footer-row-2" id="footer-nav">
+            <div class="footer-row-2-inner">
+                <div class="footer-grid">
+                    <!-- Col 1: Brand -->
+                    <div class="footer-col footer-col-brand">
+                        <a href="/" class="footer-logo-link" aria-label="Bhopal Camera Club — Home">
+                            <img src="/brand/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" class="footer-brand-logo" width="135" height="44" />
+                        </a>
+                        <p class="footer-brand-desc">
+                            A photography community dedicated to the craft, culture, and community of image-making in Bhopal.
+                        </p>
+                        <div class="footer-society-badge">
+                            <span class="footer-society-dot"></span>
+                            <span class="footer-society-text">Registered Society · M.P.</span>
+                        </div>
+                    </div>
+
+                    <!-- Col 2: Navigate -->
+                    <nav class="footer-col footer-col-navigate" aria-label="Navigate">
+                        <h3 class="footer-col-title">Navigate</h3>
+                        <ul class="footer-col-links">
+                            <li><a href="/" class="footer-link">Home</a></li>
+                            <li><a href="/about/" class="footer-link">About</a></li>
+                            <li><a href="/showcase/" class="footer-link">Showcase</a></li>
+                            <li><a href="/activities/" class="footer-link">Activities</a></li>
+                            <li><a href="/journal/" class="footer-link">Journal</a></li>
+                            <li><a href="/join/" class="footer-link">Membership</a></li>
+                        </ul>
+                    </nav>
+
+                    <!-- Col 3: Explore -->
+                    <nav class="footer-col footer-col-explore" aria-label="Explore">
+                        <h3 class="footer-col-title">Explore</h3>
+                        <ul class="footer-col-links">
+                            <li><a href="/photographers/" class="footer-link">Photographers</a></li>
+                            <li><a href="/showcase/" class="footer-link">Featured Work</a></li>
+                            <li><a href="/activities/" class="footer-link">Events</a></li>
+                            <li><a href="/activities/" class="footer-link">Workshops</a></li>
+                            <li><a href="/activities/" class="footer-link">Photo Walks</a></li>
+                            <li class="footer-link-soon-wrapper">
+                                <a href="#" class="footer-link footer-link-disabled" aria-disabled="true" tabindex="-1">Contact</a>
+                                <span class="soon-badge" aria-hidden="true">SOON</span>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <!-- Col 4: Guidelines -->
+                    <nav class="footer-col footer-col-guidelines" aria-label="Guidelines">
+                        <h3 class="footer-col-title">Guidelines</h3>
+                        <ul class="footer-col-links">
+                            <li><a href="/join/" class="footer-link">Membership</a></li>
+                            <li><a href="/privacy/" class="footer-link">Privacy Policy</a></li>
+                            <li><a href="/terms/" class="footer-link">Terms</a></li>
+                            <li><a href="/conduct/" class="footer-link">Code of Conduct</a></li>
+                            <li><a href="/copyright/" class="footer-link">Copyright</a></li>
+                            <li><a href="/contact/" class="footer-link">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Row 3: Copyright Bar ── -->
+        <section class="footer-row footer-row-3">
+            <div class="footer-row-3-inner">
+                <div class="footer-row-3-content">
+                    <div class="footer-row-3-left">
+                        <span class="copyright-text">© {currentYear} Bhopal Camera Club. All rights reserved.</span>
+                        <span class="copyright-separator"></span>
+                        <div class="fip-member-row">
+                            <span class="fip-member-desc fip-member-desc--desktop">Corporate Member of Federation of Indian Photography</span>
+                            <span class="fip-member-desc fip-member-desc--mobile">Corporate Member of FIP</span>
+                            <span class="fip-member-number">CM1098</span>
+                        </div>
+                    </div>
+                    <div class="footer-row-3-right">
+                        <div class="brand-close-line"></div>
+                        <span class="brand-close-text">Bhopal Camera Club</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </div>
-
-    <!-- ── 4-column grid ── -->
-    <div class="footer-grid">
-
-      <!-- Brand column -->
-      <div class="footer-col footer-col--brand">
-        <img src="/images/bcc-logo-default.png" alt="Bhopal Camera Club" class="footer-logo" width="160" height="42" loading="lazy" />
-        <p class="footer-tagline">
-          Bhopal's photography community — bringing together photographers to learn, shoot, and exhibit since June 2016.
-        </p>
-        <div class="footer-established">Est. June 2016 · FIP CM 1098</div>
-      </div>
-
-      <!-- Navigate -->
-      <div class="footer-col">
-        <div class="footer-col-title">Navigate</div>
-        <ul class="footer-links">
-          {navigate.map(l => <li><a href={l.href} class="footer-link">{l.label}</a></li>)}
-        </ul>
-      </div>
-
-      <!-- Explore -->
-      <div class="footer-col">
-        <div class="footer-col-title">Explore</div>
-        <ul class="footer-links">
-          {explore.map(l => (
-            <li>
-              {l.disabled
-                ? <span class="footer-link footer-link--dim">{l.label}</span>
-                : <a href={l.href} class="footer-link">{l.label}</a>
-              }
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <!-- Guidelines -->
-      <div class="footer-col">
-        <div class="footer-col-title">Guidelines</div>
-        <ul class="footer-links">
-          {guidelines.map(l => <li><a href={l.href} class="footer-link">{l.label}</a></li>)}
-        </ul>
-      </div>
-
-    </div>
-
-    <!-- ── Copyright bar ── -->
-    <div class="footer-bar">
-      <span>&copy; {year} Bhopal Camera Club. All rights reserved.</span>
-      <span class="footer-mono">v3bcc.bhopal.info</span>
-    </div>
-
-  </div>
 </footer>
 
 <style>
-.footer {
-  background: var(--surface-2);
-  border-top: 1px solid var(--hairline);
-  margin-top: auto;
+/* ── Common Block Layout ── */
+.footer-container {
+  display: block;
+  width: 100%;
+}
+.footer-container a:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 3px;
+  border-radius: 0;
+}
+.footer-row {
+  display: block;
 }
 
-/* ── Strip ── */
-.footer-strip {
+/* ── Row 1: Trust & Community ── */
+.footer-row-1 {
+  background: var(--surface-deep);
+}
+.footer-row-1-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 40px 0;
+  transition: padding var(--m-fast);
+}
+.footer-row-1-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--s-3) 0;
-  border-bottom: 1px solid var(--hairline);
-  gap: var(--s-4);
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-bottom: 28px;
 }
-.fip-badge { display: flex; align-items: center; gap: var(--s-2); }
-.fip-logo { flex-shrink: 0; }
-.fip-title { font-size: var(--text-label); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-600); margin-bottom: 2px; }
-.fip-sub   { font-size: 10px; color: var(--ink-600); font-family: var(--font-mono); letter-spacing: 0.04em; }
 
-.social-row { display: flex; align-items: center; gap: var(--s-1); }
-.social-btn {
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-1);
-  color: var(--ink-600);
-  text-decoration: none;
-  transition: color var(--m-fast), border-color var(--m-fast);
+/* FIP Trust Badge */
+.fip-trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(201, 169, 97, 0.4);
+  padding: 10px 18px;
+  cursor: default;
+  pointer-events: none;
 }
-.social-btn:hover { color: var(--ink-900); border-color: var(--hairline-strong); }
-
-/* ── Grid ── */
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: var(--s-8);
-  padding: var(--s-8) 0;
-  border-bottom: 1px solid var(--hairline);
+.fip-monogram-box {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--gold-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-.footer-logo { height: 38px; width: auto; object-fit: contain; margin-bottom: var(--s-3); }
-.footer-tagline { font-size: 13px; color: var(--ink-600); line-height: 1.7; margin-bottom: var(--s-2); }
-.footer-established { font-family: var(--font-mono); font-size: 10px; color: var(--ink-600); letter-spacing: 0.06em; margin-bottom: var(--s-2); }
-
-.brand-dots { display: flex; gap: 6px; margin-top: var(--s-2); }
-.brand-dot { width: 10px; height: 10px; border-radius: var(--r-full); }
-
-.footer-col-title {
-  font-size: var(--text-label);
+.fip-monogram-text {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--gold-500);
+  text-align: center;
+  line-height: 1.2;
+}
+.fip-details {
+  display: flex;
+  flex-direction: column;
+}
+.fip-details-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-500);
   font-weight: 600;
+  line-height: 1;
+}
+.fip-details-subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+  margin-top: 2px;
+  line-height: 1;
+}
+
+/* Social Strip */
+.social-strip-container {
+  display: flex;
+  align-items: center;
+}
+.social-follow-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-600);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-900);
-  margin-bottom: var(--s-3);
+  margin-right: 12px;
 }
-.footer-links { list-style: none; display: flex; flex-direction: column; gap: var(--s-1); }
-.footer-link  { font-size: 13px; color: var(--ink-600); text-decoration: none; transition: color var(--m-fast); }
-.footer-link:hover { color: var(--ink-900); }
-.footer-link--dim { color: var(--ink-400); opacity: 0.45; cursor: not-allowed; }
+.social-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.social-link {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #C4BDB3;
+  transition: all 0.2s ease;
+}
+.social-link:hover {
+  border-color: rgba(201, 169, 97, 0.45);
+  background: rgba(201, 169, 97, 0.07);
+  color: #FFFFFF;
+}
 
-/* ── Bar ── */
-.footer-bar {
+/* Editorial Separator Line */
+.footer-separator {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(168, 132, 60, 0.5) 0%, rgba(168, 132, 60, 0.15) 60%, transparent 100%);
+}
+
+/* ── Row 2: Four-Column Navigation ── */
+.footer-row-2 {
+  background: var(--image-backdrop);
+}
+.footer-row-2-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 56px 40px;
+  transition: padding var(--m-fast);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 34fr 22fr 22fr 22fr;
+  gap: 0;
+}
+
+/* Col 1: Brand block */
+.footer-col-brand {
+  padding-right: 48px;
+  border-right: 1px solid #2C2820;
+}
+.footer-logo-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  transition: opacity var(--m-fast);
+}
+.footer-logo-link:hover {
+  opacity: 0.75;
+}
+.footer-brand-logo {
+  height: 44px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+  display: block;
+  transition: height var(--m-fast);
+}
+.footer-brand-desc {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-400);
+  font-weight: 300;
+  margin-bottom: 20px;
+  max-width: 280px;
+}
+.footer-society-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(168, 132, 60, 0.3);
+  padding: 8px 14px;
+  cursor: default;
+  pointer-events: none;
+}
+.footer-society-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-600);
+  flex-shrink: 0;
+}
+.footer-society-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+/* Navigation columns structure */
+.footer-col-title {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-500);
+  margin-bottom: 20px;
+}
+.footer-col-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+.footer-link {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #C4BDB3;
+  transition: color var(--m-fast);
+  text-decoration: none;
+}
+.footer-link:hover {
+  color: #FFFFFF;
+}
+
+/* Specific columns paddings & borders */
+.footer-col-navigate {
+  padding: 0 32px;
+  border-right: 1px solid #2C2820;
+}
+.footer-col-explore {
+  padding: 0 32px;
+  border-right: 1px solid #2C2820;
+}
+.footer-col-guidelines {
+  padding: 0 0 0 32px;
+}
+
+/* Explore: Contact disabled & soon badge */
+.footer-link-soon-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--s-3) 0;
-  font-size: 11px;
+}
+.footer-link-disabled {
   color: var(--ink-600);
-  gap: var(--s-4);
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
 }
-.footer-mono { font-family: var(--font-mono); letter-spacing: 0.04em; }
+.soon-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  background: #1E1C1A;
+  border: 1px solid #2C2820;
+  color: var(--ink-600);
+  padding: 2px 7px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
 
-/* ── Responsive ── */
-@media (max-width: 900px) {
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: var(--s-6); }
-  .footer-col--brand { grid-column: 1 / -1; }
+/* ── Row 3: Copyright Bar ── */
+.footer-row-3 {
+  background: var(--surface-deep);
+  border-top: 1px solid #2C2820;
 }
-@media (max-width: 600px) {
-  .footer-grid { grid-template-columns: 1fr; }
-  .footer-strip { flex-direction: column; align-items: flex-start; }
-  .footer-bar { flex-direction: column; text-align: center; gap: var(--s-2); }
+.footer-row-3-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 40px;
+  transition: padding var(--m-fast);
+}
+.footer-row-3-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-row-3-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.copyright-text {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-600);
+}
+.copyright-separator {
+  width: 1px;
+  height: 12px;
+  background: #2C2820;
+  flex-shrink: 0;
+}
+.fip-member-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.fip-member-desc {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-600);
+  letter-spacing: 0.08em;
+}
+.fip-member-desc--mobile {
+  display: none;
+}
+.fip-member-number {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-600);
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+/* Row 3 Right: Colophon mark */
+.footer-row-3-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-close-line {
+  width: 18px;
+  height: 1px;
+  background: var(--gold-600);
+  opacity: 0.4;
+}
+.brand-close-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-600);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Responsive breakpoints ── */
+
+/* Laptop: 1024px */
+@media (max-width: 1024px) {
+  .footer-row-1-inner {
+    padding: 32px 32px 0;
+  }
+  .footer-row-2-inner {
+    padding: 56px 32px;
+  }
+  .footer-row-3-inner {
+    padding: 18px 32px;
+  }
+  .footer-brand-logo {
+    height: 40px;
+  }
+}
+
+/* Tablet: 768px */
+@media (max-width: 768px) {
+  .footer-row-1-inner {
+    padding: 32px 24px 0;
+  }
+  .footer-row-1-content {
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 20px;
+  }
+  .social-follow-label {
+    display: none;
+  }
+  .social-strip {
+    justify-content: center;
+    gap: 8px;
+  }
+  .social-link {
+    width: 40px;
+    height: 40px;
+  }
+  .fip-trust-badge {
+    border-color: rgba(201, 169, 97, 0.35);
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .fip-monogram-box {
+    width: 28px;
+    height: 28px;
+  }
+  .fip-monogram-text {
+    font-size: 7px;
+  }
+  .fip-details-title {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+  .fip-details-subtitle {
+    font-size: 10px;
+  }
+
+  /* Row 2 */
+  .footer-row-2-inner {
+    padding: 32px 24px;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px 24px;
+  }
+  .footer-col-brand {
+    grid-column: 1 / -1;
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px solid #2C2820;
+    padding-bottom: 28px;
+    margin-bottom: 32px;
+  }
+  .footer-brand-logo {
+    height: 36px;
+  }
+  .footer-col-navigate {
+    grid-column: 1;
+    border-right: none;
+    padding: 0;
+  }
+  .footer-col-explore {
+    grid-column: 2;
+    border-right: none;
+    padding: 0;
+  }
+  .footer-col-guidelines {
+    grid-column: 1 / -1;
+    border-top: 1px solid #2C2820;
+    margin-top: 28px;
+    padding: 24px 0 0;
+  }
+  .footer-col-guidelines .footer-col-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+  }
+
+  /* Row 3 */
+  .footer-row-3-inner {
+    padding: 16px 24px;
+  }
+  .footer-row-3-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+  }
+  .copyright-text {
+    font-size: 11px;
+  }
+  .copyright-separator {
+    display: none;
+  }
+  .fip-member-row {
+    gap: 8px;
+  }
+  .fip-member-desc--desktop {
+    display: none;
+  }
+  .fip-member-desc--mobile {
+    display: inline;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+  .fip-member-number {
+    font-size: 9px;
+  }
+  .footer-row-3-right {
+    display: none;
+  }
+}
+
+/* Mobile: 480px / 390px */
+@media (max-width: 480px) {
+  .footer-row-1-inner {
+    padding: 24px 20px 0;
+  }
+  .footer-row-2-inner {
+    padding: 32px 20px;
+  }
+  .footer-row-3-inner {
+    padding: 16px 20px max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Reduced motion defaults ── */
+@media (prefers-reduced-motion: reduce) {
+  .social-link,
+  .footer-link,
+  .footer-logo-link {
+    transition: none !important;
+  }
+  .social-link:hover {
+    background: none !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    opacity: 0.75;
+  }
 }
 </style>

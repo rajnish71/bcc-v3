@@ -490,7 +490,9 @@ const activeContest = {
             </div>
             <div class="journal-card__body">
               <div class="skel" style="width:35%;height:9px;background:#F0EBE0;margin-bottom:10px;border-radius:0;"></div>
-              <div class="skel" style="width:80%;height:14px;background:#F0EBE0;margin-bottom:8px;border-radius:0;"></div>
+              <div class="skel" style="width:80%;height:14px;background:#F0EBE0;margin-bottom:12px;border-radius:0;"></div>
+              <div class="skel" style="width:90%;height:10px;background:#F0EBE0;margin-bottom:6px;border-radius:0;"></div>
+              <div class="skel" style="width:75%;height:10px;background:#F0EBE0;margin-bottom:16px;border-radius:0;"></div>
               <div class="skel" style="width:60%;height:10px;background:#F0EBE0;border-radius:0;margin-top:auto;"></div>
             </div>
           </div>
@@ -1721,6 +1723,17 @@ const activeContest = {
 .journal-card:hover .journal-card__title {
   text-decoration: underline;
 }
+.journal-card__excerpt {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #57514B;
+  margin: 0 0 14px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 300;
+}
 .journal-card__meta {
   font-size: 12px;
   color: #8B8378;
@@ -1962,16 +1975,16 @@ const activeContest = {
   /* ── 1. Spotlight (TEMPORARY EDITORIAL FREEZE) ── */
   // TODO: Replace this temporary editorial freeze with the Admin-selected Hero Spotlight system.
   (() => {
-    const imageUrl = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=85';
+    const imageUrl = 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1920&q=85';
     const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
     if (img) {
       img.src = imageUrl;
-      img.alt = 'Pushkar Sunset by Dr. Anil Bhati';
+      img.alt = 'Twilight Hours by Dr. Anil Bhati';
       img.onload = () => img.classList.add('loaded');
     }
 
     const title = document.getElementById('spotlight-title');
-    if (title) title.textContent = 'Pushkar Sunset';
+    if (title) title.textContent = 'Twilight Hours';
 
     const credit = document.getElementById('spotlight-credit');
     if (credit) credit.textContent = 'Dr. Anil Bhati';
@@ -2184,15 +2197,24 @@ const activeContest = {
         const card = document.createElement('a');
         card.href = `/journal/${post.slug ?? post.id}/`;
         card.className = 'journal-card';
+
+        const imageUrl = post.heroImage;
+        const category = post.category ?? 'Journal';
+        const title = post.title ?? '';
+        const excerpt = post.excerpt ?? post.description ?? '';
+        const authorName = post.author?.name ?? 'Bhopal Camera Club';
+        const readTime = post.readingTime ?? '5 min';
+
         card.innerHTML = `
           <div class="journal-card__img">
             <div class="journal-card__img-gradient"></div>
-            ${post.imageUrl ? `<img src="${post.imageUrl}" alt="${post.title ?? ''}" loading="lazy" onload="this.classList.add('loaded')" />` : ''}
+            ${imageUrl ? `<img src="${imageUrl}" alt="${title}" loading="lazy" onload="this.classList.add('loaded')" />` : ''}
           </div>
           <div class="journal-card__body">
-            <div class="journal-card__tag">${post.category ?? 'Journal'}</div>
-            <div class="journal-card__title">${post.title ?? ''}</div>
-            <div class="journal-card__meta">${[post.author, post.readTime].filter(Boolean).join(' · ')}</div>
+            <div class="journal-card__tag">${category}</div>
+            <div class="journal-card__title">${title}</div>
+            ${excerpt ? `<p class="journal-card__excerpt">${excerpt}</p>` : ''}
+            <div class="journal-card__meta">${[authorName, readTime].filter(Boolean).join(' · ')}</div>
           </div>
         `;
         grid.appendChild(card);

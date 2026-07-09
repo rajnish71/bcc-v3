@@ -1,0 +1,225 @@
+---
+/**
+ * privacy/index.astro — Privacy Policy
+ * Route: /privacy/
+ *
+ * Content migrated verbatim from legacy site: https://bcc.bhopal.info/privacy-policy/
+ * Last updated on legacy site: June 12, 2026.
+ *
+ * Migration rules followed:
+ * - Content imported exactly — no rewrites, no omissions, no additions.
+ * - BaseLayout used (provides SiteHeader + SiteFooter).
+ * - V3 typography and spacing tokens applied.
+ * - Internal links updated to V3 routes. External links preserved.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Privacy Policy"
+  description="How Bhopal Camera Club collects, uses, and safeguards your personal and gallery data."
+>
+
+  <!-- Page Hero -->
+  <div class="page-hero surface-white">
+    <div class="container">
+      <span class="eyebrow">Legal</span>
+      <h1 class="policy-title">Privacy Policy</h1>
+      <p class="policy-meta">
+        How Bhopal Camera Club collects, uses, and safeguards your personal and gallery data.<br />
+        <span class="policy-date">Last updated: June 12, 2026</span>
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Policy Body -->
+  <section class="policy-section" aria-label="Privacy Policy">
+    <div class="container">
+      <div class="policy-document">
+
+        <div class="policy-block">
+          <h2 id="section-1">1. Introduction</h2>
+          <p>Bhopal Camera Club ("we", "our", "BCC") is committed to protecting your privacy. This Privacy Policy explains our practices regarding the collection, use, and disclosure of information that you provide to us through our website (bcc.bhopal.info) and during our offline club operations.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-2">2. Information We Collect</h2>
+          <p>We collect personal data that you voluntarily provide to us when you apply for membership, register for events, or update your profile:</p>
+          <ul>
+            <li>Personal Identity Details: First name, surname, gender, blood group, emergency contact name, relationship, and phone number.</li>
+            <li>Contact Information: Email address, phone number, and physical mailing address (autofilled via PIN code mapping).</li>
+            <li>Professional &amp; Creative Info: Portfolio photos, image metadata (EXIF details), specialties, gear details, experience level, biography, and social media profile handles.</li>
+            <li>Payment &amp; Billing Data: Transaction values, timestamps, and gateway records (stored strictly for accounting ledger compliance). We do not directly store credit/debit card numbers.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-3">3. How We Use Your Data</h2>
+          <p>We utilize the collected information for the following society operations:</p>
+          <ul>
+            <li>Administering your membership status, applications, and portal access.</li>
+            <li>Rendering your public photographer portfolio profile and displaying rotating homepage features.</li>
+            <li>Coordinating registrations and safety procedures (using blood group and emergency contact) for outdoor photowalks and excursions.</li>
+            <li>Generating accounting reports, audit trials, and ledger records to comply with society bylaws.</li>
+            <li>Communicating important notices, newsletter digests, and event notifications.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-4">4. Data Storage &amp; Portability</h2>
+          <p>Your personal profile and photographic assets are stored on secure database systems. Under standard data regulations, you retain complete rights to access, edit, or request the permanent deletion of your profile and photos at any time.</p>
+          <p>Photos uploaded to the public directory remain the intellectual property of their respective photographers, as outlined in our Editorial Policy.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-5">5. Cookie Usage &amp; Tracking</h2>
+          <p>We use temporary session cookies (e.g. <code>bcc_logged_in</code>) solely to authenticate user logins, control access to the private member dashboard, and prevent cross-site request forgery. We do not run intrusive ad-tracking scripts or sell user data to third-party brokers.</p>
+          <pre class="cookie-code"><code>bcc_logged_in</code></pre>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-6">6. Contact Us</h2>
+          <p>If you have any questions or concern regarding this policy, please email us at <a href="mailto:hello@bcc.bhopal.info" class="policy-link">hello@bcc.bhopal.info</a> or write to our club headquarters in MP Nagar, Bhopal.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ── Page Hero ── */
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+.policy-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+.policy-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  line-height: 1.65;
+}
+.policy-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-400);
+  letter-spacing: 0.04em;
+}
+
+/* ── Policy Section ── */
+.policy-section {
+  background: var(--surface-1);
+  padding: var(--s-8) 0 var(--s-12);
+}
+
+/* ── Policy Document ── */
+.policy-document {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+/* ── Policy Block ── */
+.policy-block {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-4);
+}
+.policy-block h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--s-2);
+}
+.policy-block p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.75;
+  margin-bottom: var(--s-2);
+}
+.policy-block p:last-child {
+  margin-bottom: 0;
+}
+.policy-block ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-1) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.policy-block ul li {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.65;
+  padding-left: var(--s-3);
+  position: relative;
+}
+.policy-block ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 5px;
+  height: 1px;
+  background: var(--gold-500);
+}
+
+/* ── Inline code ── */
+.policy-block code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  padding: 1px 6px;
+  color: var(--ink-900);
+}
+
+/* ── Standalone code block (bcc_logged_in) ── */
+.cookie-code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  padding: var(--s-2) var(--s-3);
+  color: var(--ink-900);
+  margin-top: var(--s-2);
+  overflow-x: auto;
+}
+
+/* ── Policy link ── */
+.policy-link {
+  color: var(--gold-600);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--m-fast);
+}
+.policy-link:hover {
+  text-decoration-color: var(--gold-600);
+  color: var(--gold-600);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .policy-section {
+    padding: var(--s-6) 0 var(--s-8);
+  }
+}
+</style>

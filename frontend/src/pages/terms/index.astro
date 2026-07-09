@@ -1,0 +1,205 @@
+---
+/**
+ * terms/index.astro — Terms of Use
+ * Route: /terms/
+ *
+ * Content migrated verbatim from legacy site: https://bcc.bhopal.info/terms-of-use/
+ * Last updated on legacy site: June 12, 2026.
+ *
+ * Migration rules followed:
+ * - Content imported exactly — no rewrites, no omissions, no additions.
+ * - BaseLayout used (provides SiteHeader + SiteFooter).
+ * - V3 typography and spacing tokens applied.
+ * - Internal links updated to V3 routes. External links preserved.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Terms of Use"
+  description="Rules, regulations, and disclaimers governing the use of the BCC website and digital services."
+>
+
+  <!-- Page Hero -->
+  <div class="page-hero surface-white">
+    <div class="container">
+      <span class="eyebrow">Legal</span>
+      <h1 class="policy-title">Terms of Use</h1>
+      <p class="policy-meta">
+        Rules, regulations, and disclaimers governing the use of the BCC website and digital services.<br />
+        <span class="policy-date">Last updated: June 12, 2026</span>
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+
+  <!-- Terms Body -->
+  <section class="policy-section" aria-label="Terms of Use">
+    <div class="container">
+      <div class="policy-document">
+
+        <div class="policy-block">
+          <h2 id="section-1">1. Acceptance of Terms</h2>
+          <p>By accessing or using the Bhopal Camera Club website (bcc.bhopal.info), you agree to comply with and be bound by these Terms of Use and all applicable laws and regulations of India. If you do not agree, you are prohibited from using this site.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-2">2. Account Security &amp; Conduct</h2>
+          <p>To access certain features, such as uploading portfolios or applying for membership level upgrades, you must register for a member account:</p>
+          <ul>
+            <li>You are responsible for maintaining the confidentiality of your account credentials and password.</li>
+            <li>You agree to provide true, accurate, and current information during registration.</li>
+            <li>You agree not to impersonate any other individual or business entity.</li>
+            <li>Accounts found uploading offensive content, violating copyrights, or engaging in spamming will be permanently terminated without notice.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-3">3. User-Generated Content &amp; Gallery Submissions</h2>
+          <p>As a member, you may upload photos, EXIF metadata, descriptions, and comments. You retain 100% intellectual property ownership of your work:</p>
+          <ul>
+            <li>You warrant that you own the copyright of all photos uploaded to the site, or have obtained explicit permissions.</li>
+            <li>You agree not to upload any image that violates trademark, copyright, privacy rights, or local cultural sensibilities.</li>
+            <li>You grant Bhopal Camera Club a limited, non-exclusive, royalty-free license to host, resize, and display your uploaded photos on the club platform (including homepage sliders, member galleries, and promotional spotlights) with clear creator attribution.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-4">4. Prohibited Content</h2>
+          <p>Users are strictly prohibited from uploading, posting, or linking to content that:</p>
+          <ul>
+            <li>Infringes on the intellectual property of any third party.</li>
+            <li>Depicts extreme violence, nudity, or offensive and harassing behavior.</li>
+            <li>Features wildlife captured via unethical means (e.g. nest baiting, harassment of nesting birds, animal confinement) as detailed in our Code of Conduct.</li>
+          </ul>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-5">5. Disclaimers &amp; Limitation of Liability</h2>
+          <p>The services, website content, and database listings are provided on an "as is" and "as available" basis. Bhopal Camera Club makes no warranties, expressed or implied, regarding site uptime, database syncs, or mock transaction gateways.</p>
+          <p>We shall not be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use this platform, including hardware damage, photowalk injuries, or data loss.</p>
+        </div>
+
+        <div class="policy-block">
+          <h2 id="section-6">6. Governing Law</h2>
+          <p>These terms are governed by and construed in accordance with the laws of Madhya Pradesh, India, and any disputes shall be subject to the exclusive jurisdiction of the courts in Bhopal.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ── Page Hero ── */
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+.policy-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+.policy-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+  line-height: 1.65;
+}
+.policy-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-400);
+  letter-spacing: 0.04em;
+}
+
+/* ── Policy Section ── */
+.policy-section {
+  background: var(--surface-1);
+  padding: var(--s-8) 0 var(--s-12);
+}
+
+/* ── Policy Document ── */
+.policy-document {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+/* ── Policy Block ── */
+.policy-block {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-4);
+}
+.policy-block h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--s-2);
+}
+.policy-block p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.75;
+  margin-bottom: var(--s-2);
+}
+.policy-block p:last-child {
+  margin-bottom: 0;
+}
+.policy-block ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-1) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.policy-block ul li {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-600);
+  line-height: 1.65;
+  padding-left: var(--s-3);
+  position: relative;
+}
+.policy-block ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 5px;
+  height: 1px;
+  background: var(--gold-500);
+}
+
+/* ── Policy link ── */
+.policy-link {
+  color: var(--gold-600);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--m-fast);
+}
+.policy-link:hover {
+  text-decoration-color: var(--gold-600);
+  color: var(--gold-600);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .policy-section {
+    padding: var(--s-6) 0 var(--s-8);
+  }
+}
+</style>

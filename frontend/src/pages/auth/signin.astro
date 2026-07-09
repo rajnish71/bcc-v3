@@ -304,11 +304,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     btn.textContent = loading ? 'Signing in...' : 'Sign In';
   }
 
-  function storeSession(token: string, refresh: string, fullName: string, username = ''): void {
+  function storeSession(token: string, refresh: string, fullName: string, username = '', ui?: { portalState: string }): void {
     const initials = fullName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
     localStorage.setItem('bcc_token', token);
     localStorage.setItem('bcc_refresh', refresh);
-    localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials, username }));
+    localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials, username, ui }));
   }
 
   function getRedirectTarget(): string {
@@ -360,16 +360,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       // Step 2: fetch display name + username
       let fullName = 'Member';
       let username = '';
+      let ui: { portalState: string } | undefined = undefined;
       const meRes = await fetch(`${API}/users/me`, {
         headers: { Authorization: `Bearer ${tokens.accessToken}` },
       });
       if (meRes.ok) {
-        const me = await meRes.json() as { fullName?: string; username?: string };
+        const me = await meRes.json() as { fullName?: string; username?: string; ui?: { portalState: string } };
         if (me.fullName) fullName = me.fullName;
         if (me.username) username = me.username;
+        if (me.ui) ui = me.ui;
       }
 
-      storeSession(tokens.accessToken, tokens.refreshToken, fullName, username);
+      storeSession(tokens.accessToken, tokens.refreshToken, fullName, username, ui);
       window.location.replace(getRedirectTarget());
 
     } catch {

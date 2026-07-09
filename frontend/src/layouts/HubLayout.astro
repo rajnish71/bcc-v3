@@ -130,10 +130,15 @@ const { title, description, bodyClass = '' } = Astro.props;
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        const user = await res.json() as { fullName?: string };
+        const user = await res.json() as { fullName?: string; username?: string; ui?: { portalState: string } };
         if (user.fullName) {
           const initials = user.fullName.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-          localStorage.setItem('bcc_user', JSON.stringify({ displayName: user.fullName, initials }));
+          localStorage.setItem('bcc_user', JSON.stringify({
+            displayName: user.fullName,
+            initials,
+            username: user.username || '',
+            ui: user.ui,
+          }));
         }
       }
     } catch { /* non-critical */ }

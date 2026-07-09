@@ -152,11 +152,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         headers: { Authorization: `Bearer ${decodeURIComponent(at)}` },
       });
       if (res.ok) {
-        const user = await res.json() as { fullName?: string; username?: string };
+        const user = await res.json() as { fullName?: string; username?: string; ui?: { portalState: string } };
         const fullName = user.fullName || 'Member';
         const username = user.username || '';
         const initials = fullName.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-        localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials, username }));
+        localStorage.setItem('bcc_user', JSON.stringify({
+          displayName: fullName,
+          initials,
+          username,
+          ui: user.ui,
+        }));
       }
     } catch { /* non-critical -- nav will show fallback */ }
 

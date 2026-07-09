@@ -9,6 +9,7 @@ import { db } from '../../../database/db';
 import { AccessTokenGuard } from '../auth/access-token.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AccessTokenPayload } from '../auth/token.util';
+import { resolvePortalState } from './session-mapper';
 
 @Controller('api/v1/users')
 export class UsersController {
@@ -33,6 +34,8 @@ export class UsersController {
       .where('id', '=', user.sub)
       .executeTakeFirstOrThrow();
 
+    const portalState = await resolvePortalState(user.sub);
+
     return {
       id: row.id,
       uuid: row.uuid,
@@ -44,6 +47,9 @@ export class UsersController {
       phoneVerified: !!row.phone_verified_at,
       forcePasswordReset: !!row.force_password_reset,
       registrationMethod: row.registration_method,
+      ui: {
+        portalState,
+      },
     };
   }
 }

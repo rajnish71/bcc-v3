@@ -46,11 +46,11 @@ const NAV_LINKS = [
     <!-- Logo -->
     <a href="/" class="nav-brand" aria-label="Bhopal Camera Club — Home">
       <img
-        src="/images/bcc-logo-default.png"
+        src="/brand/BCC New Logo Full Black Text.png"
         alt="Bhopal Camera Club"
         class="nav-logo"
-        width="180"
-        height="48"
+        width="172"
+        height="56"
         loading="eager"
         decoding="async"
       />
@@ -58,57 +58,188 @@ const NAV_LINKS = [
 
     <!-- Desktop nav links -->
     <nav class="nav-links" aria-label="Main navigation">
-      {NAV_LINKS.map(({ label, href }) => (
-        <a
-          href={href}
-          class:list={['nav-link', isActive(href) && 'nav-link--active']}
-          aria-current={isActive(href) ? 'page' : undefined}
+      <a href="/" class:list={['nav-link', isActive('/') && 'nav-link--active']} aria-current={isActive('/') ? 'page' : undefined}>Home</a>
+      <a href="/about/" class:list={['nav-link', isActive('/about/') && 'nav-link--active']} aria-current={isActive('/about/') ? 'page' : undefined}>About</a>
+      <a href="/showcase/" class:list={['nav-link', isActive('/showcase/') && 'nav-link--active']} aria-current={isActive('/showcase/') ? 'page' : undefined}>Showcase</a>
+
+      <!-- Activities Dropdown -->
+      <div class="nav-dropdown" id="nav-dropdown-activities">
+        <button
+          type="button"
+          class:list={['nav-link', 'nav-dropdown-trigger', isActive('/activities/') && 'nav-link--active']}
+          aria-haspopup="true"
+          aria-expanded="false"
         >
-          {label}
-        </a>
-      ))}
+          Activities <span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-dropdown-panel" hidden>
+          <div class="nav-dropdown-group">
+            <a href="/activities/?type=photowalk" class="nav-dropdown-item">
+              <span class="nav-dropdown-arrow">→</span>Photowalks
+            </a>
+            <a href="/activities/?type=workshop" class="nav-dropdown-item">
+              <span class="nav-dropdown-arrow">→</span>Workshops
+            </a>
+            <a href="/activities/?type=meetup" class="nav-dropdown-item">
+              <span class="nav-dropdown-arrow">→</span>Meetups
+            </a>
+            <div class="nav-dropdown-divider"></div>
+            <div class="nav-dropdown-item nav-dropdown-item--disabled">
+              <span>Contests</span>
+              <span class="nav-dropdown-badge">COMING SOON</span>
+            </div>
+            <div class="nav-dropdown-item nav-dropdown-item--disabled">
+              <span>Exhibitions</span>
+              <span class="nav-dropdown-badge">COMING SOON</span>
+            </div>
+          </div>
+          <div class="nav-dropdown-footer">
+            Coming Soon items: opacity 0.45 · cursor:default · never hidden
+          </div>
+        </div>
+      </div>
+
+      <!-- Learn Dropdown -->
+      <div class="nav-dropdown" id="nav-dropdown-learn">
+        <button
+          type="button"
+          class="nav-link nav-dropdown-trigger nav-dropdown-trigger--disabled"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          Learn <span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-dropdown-panel" hidden>
+          <div class="nav-dropdown-group">
+            <div class="nav-dropdown-item nav-dropdown-item--disabled">
+              <span>Photography School</span>
+              <span class="nav-dropdown-badge">COMING SOON</span>
+            </div>
+          </div>
+          <div class="nav-dropdown-footer">
+            Phase 4 · Entire Learn section Coming Soon · Greyed, non-interactive · Visible for awareness only
+          </div>
+        </div>
+      </div>
+
+      <a href="/journal/" class:list={['nav-link', isActive('/journal/') && 'nav-link--active']} aria-current={isActive('/journal/') ? 'page' : undefined} id="nav-link-journal">Journal</a>
+      <a href="/hub/" class="nav-link nav-admin-link" id="nav-link-admin" hidden><span class="nav-admin-dot"></span>Admin</a>
     </nav>
 
-    <!-- Right rail: auth CTAs -->
-    <!--
-      Default: Guest state (server-rendered).
-      Client script swaps to Member state when bcc_user is found in localStorage.
-      Primary gold CTA ("Become a Member") is the ONE gold CTA on this view.
-    -->
-    <div class="nav-auth" id="nav-auth">
+    <!-- Zone 3: Right Rail -->
+    <div class="nav-right">
+      <!-- Right rail: auth CTAs -->
+      <!--
+        Default: Guest state (server-rendered).
+        Client script swaps to Member state when bcc_user is found in localStorage.
+        Primary gold CTA ("Become a Member") is the ONE gold CTA on this view.
+      -->
+      <div class="nav-auth" id="nav-auth">
 
-      <!-- Guest state (default, server-rendered) -->
-      <div id="nav-guest" class="nav-auth__guest">
-        <a href="/auth/signin/" class="nav-signin">Sign In</a>
-        <a href="/join/" class="btn btn-gold btn-md">Become a Member</a>
-      </div>
-
-      <!-- Member state (hidden until client confirms JWT) -->
-      <div id="nav-member" class="nav-auth__member" hidden>
-        <div class="nav-avatar avatar avatar-forest" id="nav-avatar" aria-label="Your profile">
-          <span id="nav-initials">?</span>
+        <!-- Guest state (default, server-rendered) -->
+        <div id="nav-guest" class="nav-auth__guest">
+          <a href="/auth/signin/" class="nav-signin">Sign In</a>
+          <a href="/join/" class="btn btn-gold btn-md">Become a Member</a>
         </div>
-        <span class="nav-name" id="nav-name"></span>
-        <NotificationBell />
-        <a id="nav-profile-link" href="/photographers/" class="nav-profile-link" hidden>My Profile</a>
-        <button id="nav-signout-btn" type="button" class="nav-profile-link">Sign Out</button>
-        <a href="/hub/" class="btn btn-outline-gold btn-md">Member Hub</a>
+
+        <!-- Member state (hidden until client confirms JWT) -->
+        <div id="nav-member" class="nav-auth__member" hidden>
+          <div class="nav-avatar-container" id="nav-avatar-dropdown">
+            <button
+              type="button"
+              class="nav-avatar-trigger"
+              id="nav-avatar-trigger"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="User menu"
+            >
+              <div class="nav-avatar avatar avatar-forest" id="nav-avatar">
+                <span id="nav-initials">?</span>
+              </div>
+              <span class="nav-avatar-caret">▾</span>
+            </button>
+            <div class="nav-avatar-panel" id="nav-avatar-panel" hidden>
+              <!-- Identity header -->
+              <div class="nav-avatar-panel__head">
+                <div class="nav-avatar avatar avatar-forest" id="nav-avatar-menu">
+                  <span id="nav-initials-menu">?</span>
+                </div>
+                <div class="nav-avatar-panel__info">
+                  <div class="nav-avatar-panel__name" id="nav-name-menu"></div>
+                  <div class="nav-avatar-panel__role" id="nav-role-menu"></div>
+                </div>
+              </div>
+              <!-- Menu items -->
+              <div class="nav-avatar-panel__body">
+                <!-- Admin Console -->
+                <a href="/hub/" class="nav-avatar-panel__item nav-avatar-panel__item--admin" id="nav-menu-admin-console">
+                  <span class="nav-avatar-panel__bullet">◆</span>Admin Console
+                </a>
+                <!-- Member Hub -->
+                <a href="/hub/" class="nav-avatar-panel__item" id="nav-menu-member-hub">Member Hub</a>
+                <!-- Profile -->
+                <a href="/photographers/" class="nav-avatar-panel__item" id="nav-menu-profile">Profile</a>
+                <!-- My Gallery -->
+                <a href="/gallery/photographer/" class="nav-avatar-panel__item" id="nav-menu-gallery">My Gallery</a>
+                <!-- Journal CMS -->
+                <a href="/hub/" class="nav-avatar-panel__item nav-avatar-panel__item--editor" id="nav-menu-journal-cms">
+                  <span class="nav-avatar-panel__bullet">✎</span>Journal CMS
+                </a>
+                <!-- Moderation Queue -->
+                <a href="/hub/" class="nav-avatar-panel__item nav-avatar-panel__item--moderator" id="nav-menu-moderation-queue">
+                  <span>Moderation Queue</span>
+                  <span class="nav-avatar-panel__dot"></span>
+                </a>
+                <!-- Account Settings -->
+                <a href="/hub/" class="nav-avatar-panel__item nav-avatar-panel__item--user" id="nav-menu-account-settings">Account Settings</a>
+                <!-- Renewals -->
+                <a href="/hub/membership/" class="nav-avatar-panel__item" id="nav-menu-renewals">Renewals</a>
+              </div>
+              <div class="nav-avatar-panel__divider"></div>
+              <div class="nav-avatar-panel__footer">
+                <button type="button" class="nav-avatar-panel__signout" id="nav-menu-signout">Sign Out</button>
+              </div>
+            </div>
+          </div>
+
+          <span class="nav-name" id="nav-name"></span>
+          <NotificationBell />
+          <a id="nav-profile-link" href="/photographers/" class="nav-profile-link" hidden>My Profile</a>
+          <button id="nav-signout-btn" type="button" class="nav-profile-link">Sign Out</button>
+          <a href="/hub/" class="btn btn-outline-gold btn-md" id="nav-hub-btn">Member Hub</a>
+          <a href="/hub/membership/apply/" class="btn btn-outline-neutral btn-md" id="nav-apply-btn" hidden>Apply for Membership</a>
+          <a href="/hub/" class="btn btn-dark btn-md" id="nav-admin-btn" hidden>Admin Console</a>
+        </div>
+
+        <!-- Mobile Right Rail Auth Elements (visible only on mobile breakpoint) -->
+        <div class="nav-mobile-auth" id="nav-mobile-auth">
+          <!-- Mobile Guest: Join Chip -->
+          <a href="/join/" class="mobile-join-chip" id="mobile-join-chip" hidden>Join</a>
+
+          <!-- Mobile Admin: Console Chip -->
+          <span class="mobile-console-chip" id="mobile-console-chip" hidden>Console</span>
+
+          <!-- Mobile Authenticated: Avatar -->
+          <div class="nav-avatar avatar avatar-forest" id="nav-mobile-avatar" style="width:32px;height:32px;font-size:10px;" hidden>
+            <span id="nav-mobile-initials">?</span>
+          </div>
+        </div>
+
       </div>
 
+      <!-- Hamburger (mobile) -->
+      <button
+        class="nav-hamburger"
+        id="nav-hamburger"
+        aria-label="Open navigation"
+        aria-expanded="false"
+        aria-controls="nav-drawer"
+      >
+        <span class="ham-bar"></span>
+        <span class="ham-bar"></span>
+        <span class="ham-bar"></span>
+      </button>
     </div>
-
-    <!-- Hamburger (mobile) -->
-    <button
-      class="nav-hamburger"
-      id="nav-hamburger"
-      aria-label="Open navigation"
-      aria-expanded="false"
-      aria-controls="nav-drawer"
-    >
-      <span class="ham-bar"></span>
-      <span class="ham-bar"></span>
-      <span class="ham-bar"></span>
-    </button>
 
   </div><!-- /nav-inner -->
 </header>
@@ -130,7 +261,7 @@ const NAV_LINKS = [
 
     <div class="drawer__head">
       <a href="/" class="nav-brand">
-        <img src="/images/bcc-logo-default.png" alt="Bhopal Camera Club" class="nav-logo nav-logo--sm" width="140" height="38" loading="lazy" />
+        <img src="/brand/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" class="nav-logo nav-logo--sm" width="105" height="34" loading="lazy" />
       </a>
       <button class="drawer__close" id="drawer-close" aria-label="Close navigation">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -149,6 +280,9 @@ const NAV_LINKS = [
           {label}
         </a>
       ))}
+      <a href="/hub/" class="drawer__link drawer-admin-link" id="drawer-link-admin" hidden>
+        <span class="drawer-admin-dot"></span>Admin
+      </a>
     </nav>
 
     <div class="drawer__hairline" aria-hidden="true"></div>
@@ -158,25 +292,39 @@ const NAV_LINKS = [
 
       <div id="drawer-guest" class="drawer__auth-guest">
         <a href="/auth/signin/" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;">Sign In</a>
-        <a href="/join/" class="btn btn-gold btn-lg" style="width:100%;justify-content:center;">Become a Member</a>
+        <a href="/join/" class="btn btn-gold btn-lg" style="width:100%;justify-content:center;margin-top:8px;">Become a Member</a>
       </div>
 
       <div id="drawer-member" class="drawer__auth-member" hidden>
-        <div class="drawer__member-row">
-          <div class="nav-avatar avatar avatar-forest" style="width:40px;height:40px;font-size:15px;">
+        <!-- Identity strip -->
+        <div class="drawer__identity" id="drawer-identity">
+          <div class="nav-avatar avatar" id="drawer-avatar" style="width:36px;height:36px;font-size:11px;flex-shrink:0;">
             <span id="drawer-initials">?</span>
           </div>
-          <div style="display: flex; flex-direction: column;">
-            <div class="nav-name" id="drawer-name" style="font-size:14px;"></div>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 2px; line-height: 1;">
-              <a id="drawer-profile-link" href="/photographers/" style="font-size:12px;color:var(--ink-600);" hidden>My Profile</a>
-              <span id="drawer-profile-sep" style="font-size:10px;color:var(--ink-400);" hidden>·</span>
-              <a href="/hub/" style="font-size:12px;color:var(--gold-600);">Member Hub</a>
-              <span style="font-size:10px;color:var(--ink-400);">·</span>
-              <button id="drawer-signout-btn" type="button" style="font-size:12px;color:var(--ink-600);background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);line-height:1;">Sign Out</button>
-            </div>
+          <div class="drawer__identity-info">
+            <div class="drawer__identity-name" id="drawer-name"></div>
+            <div class="drawer__identity-role" id="drawer-role"></div>
           </div>
         </div>
+
+        <!-- Role Actions -->
+        <div class="drawer__actions" id="drawer-actions">
+          <a href="/photographers/" class="drawer__action-item" id="drawer-act-profile">Profile</a>
+          <a href="/gallery/photographer/" class="drawer__action-item" id="drawer-act-gallery">My Gallery</a>
+          <a href="/hub/" class="drawer__action-item" id="drawer-act-settings">Account Settings</a>
+          <a href="/hub/membership/" class="drawer__action-item" id="drawer-act-renewals">Renewals</a>
+        </div>
+
+        <!-- CTA Buttons Area -->
+        <div class="drawer__cta-area">
+          <a href="/hub/" class="drawer__cta-btn" id="drawer-btn-hub">Member Hub</a>
+          <a href="/hub/membership/apply/" class="drawer__cta-btn drawer__cta-btn--outline" id="drawer-btn-apply">Apply for Membership</a>
+          <a href="/hub/" class="drawer__cta-btn drawer__cta-btn--admin" id="drawer-btn-admin">
+            <span class="drawer__bullet">◆</span>Admin Console
+          </a>
+          <button id="drawer-signout-btn" type="button" class="drawer__signout-btn">Sign Out</button>
+        </div>
+
         <!-- Notifications link in mobile drawer -->
         <a href="/hub/#notifications" class="drawer__notif-link" id="drawer-notif-link">
           <svg width="14" height="14" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -200,34 +348,53 @@ const NAV_LINKS = [
   position: fixed;
   top: 0; left: 0; right: 0;
   height: var(--nav-h);
-  background: var(--surface-0);
+  background: rgba(255, 255, 255, 0.97);
   border-bottom: 1px solid var(--hairline);
   z-index: 900;
-  transition: height var(--m-med), box-shadow var(--m-med);
+  transition: height var(--m-med), background-color var(--m-med), border-color var(--m-med), box-shadow var(--m-med), backdrop-filter var(--m-med);
   will-change: height;
+  backdrop-filter: none;
 }
 .nav--condensed {
   height: var(--nav-h-min);
-  box-shadow: var(--e-2);
+  background-color: rgba(20, 18, 16, 0.92);
+  border-bottom-color: transparent;
+  box-shadow: 0 8px 32px rgba(20, 18, 16, 0.22);
+  backdrop-filter: blur(14px) saturate(180%);
 }
 
 .nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
   height: 100%;
   display: flex;
   align-items: center;
-  gap: var(--s-4);
+  justify-content: space-between;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
 }
 
 /* Logo */
 .nav-brand { display: flex; align-items: center; flex-shrink: 0; text-decoration: none; }
 .nav-logo {
-  height: 44px;
+  height: 56px;
   width: auto;
   object-fit: contain;
-  transition: height var(--m-med);
+  transition: height var(--m-med), filter var(--m-med);
 }
-.nav--condensed .nav-logo { height: 36px; }
-.nav-logo--sm { height: 36px; }
+.nav--condensed .nav-logo {
+  height: 44px;
+  filter: brightness(0) invert(1);
+}
+.nav-logo--sm {
+  height: 34px;
+}
 
 /* Desktop nav links */
 .nav-links {
@@ -235,15 +402,15 @@ const NAV_LINKS = [
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 24px;
 }
 
 .nav-link {
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 6px 0;
   font-family: var(--font-body);
-  font-size: var(--text-small);
+  font-size: 13px;
   font-weight: 500;
   color: var(--ink-600);
   text-decoration: none;
@@ -254,7 +421,16 @@ const NAV_LINKS = [
 .nav-link:hover { color: var(--ink-900); }
 .nav-link--active {
   color: var(--ink-900);
-  border-bottom-color: var(--gold-500);
+  border-bottom-color: #A8843C;
+}
+.nav--condensed .nav-link {
+  color: #C8C0B8;
+}
+.nav--condensed .nav-link:hover {
+  color: #FFFFFF;
+}
+.nav--condensed .nav-link--active {
+  color: #FFFFFF;
 }
 
 /* Auth area */
@@ -263,23 +439,7 @@ const NAV_LINKS = [
 .nav-auth__member { display: flex; align-items: center; gap: var(--s-2); }
 
 .nav-profile-link {
-  font-family: var(--font-body);
-  font-size: var(--text-small);
-  font-weight: 500;
-  color: var(--ink-600);
-  text-decoration: none;
-  border-bottom: 1px solid var(--hairline-strong);
-  padding-bottom: 1px;
-  transition: color var(--m-fast), border-color var(--m-fast);
-}
-.nav-profile-link:hover { color: var(--gold-600); border-color: var(--gold-500); }
-button.nav-profile-link {
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  padding: 0 0 1px 0;
-  line-height: inherit;
+  display: none !important;
 }
 
 .nav-signin {
@@ -299,6 +459,216 @@ button.nav-profile-link {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+.avatar-grey {
+  background: #6B6460 !important;
+  color: #FFFFFF !important;
+}
+.avatar-teal {
+  background: #2A5A7A !important;
+  color: #FFFFFF !important;
+}
+.avatar-amber {
+  background: #8B5A2B !important;
+  color: #FFFFFF !important;
+}
+.btn-outline-neutral {
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-600);
+  background: transparent;
+  padding: 11px 18px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-outline-neutral:hover {
+  border-color: var(--ink-600);
+  color: var(--ink-900);
+}
+/* Avatar Dropdown Panel CSS */
+.nav-avatar-container {
+  position: relative;
+}
+.nav-avatar-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.nav-avatar-caret {
+  font-size: 10px;
+  color: var(--ink-600);
+  opacity: 0.6;
+}
+.nav--condensed .nav-avatar-caret {
+  color: #C8C0B8 !important;
+}
+.nav--condensed .nav-avatar-trigger:hover .nav-avatar-caret {
+  color: #FFFFFF !important;
+}
+.nav-avatar-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  box-shadow: 0 8px 32px rgba(20,18,16,0.14);
+  min-width: 210px;
+  z-index: 300;
+  text-align: left;
+}
+.nav-avatar-panel[hidden] {
+  display: none !important;
+}
+.nav-avatar-panel__head {
+  padding: 14px 18px;
+  border-bottom: 1px solid #F0EBE0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #FAF8F4;
+}
+.nav-avatar-panel__info {
+  display: flex;
+  flex-direction: column;
+}
+.nav-avatar-panel__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #141210;
+  line-height: 1.3;
+  font-family: var(--font-body);
+}
+.nav-avatar-panel__role {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #8B8378;
+  text-transform: capitalize;
+}
+.nav-avatar-panel__body {
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+}
+.nav-avatar-panel__item {
+  padding: 11px 18px;
+  font-size: 13px;
+  color: #141210;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-body);
+  transition: background-color var(--m-fast), color var(--m-fast);
+  display: block;
+  text-align: left;
+}
+.nav-avatar-panel__item:hover {
+  background-color: var(--surface-1);
+  color: var(--gold-600);
+}
+.nav-avatar-panel__item--admin {
+  font-weight: 600;
+  color: #C9A961;
+  background: #141210;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-avatar-panel__item--admin:hover {
+  background: #2E2A24;
+  color: #FFFFFF;
+}
+.nav-avatar-panel__item--editor {
+  color: #2A5A7A;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-avatar-panel__item--moderator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-avatar-panel__bullet {
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+.nav-avatar-panel__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  background: #C9A961;
+  display: inline-block;
+}
+.nav-avatar-panel__divider {
+  height: 1px;
+  background: #F0EBE0;
+}
+.nav-avatar-panel__footer {
+  padding: 6px 0;
+}
+.nav-avatar-panel__signout {
+  width: 100%;
+  padding: 11px 18px;
+  font-size: 13px;
+  color: #8B8378;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--m-fast), color var(--m-fast);
+  font-family: var(--font-body);
+  border: none;
+  background: transparent;
+  display: block;
+}
+.nav-avatar-panel__signout:hover {
+  background-color: var(--surface-1);
+  color: var(--ink-900);
+}
+.avatar-admin {
+  background: #141210 !important;
+  color: #C9A961 !important;
+}
+.btn-dark {
+  background: #141210;
+  color: #C9A961;
+  border: 1px solid #141210;
+  padding: 11px 18px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--m-fast), color var(--m-fast);
+}
+.btn-dark:hover {
+  background: #2E2A24;
+  color: #FFFFFF;
+}
+.nav-admin-link {
+  color: #C9A961 !important;
+  font-weight: 600 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-admin-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: #C9A961;
+  display: inline-block;
 }
 .nav-name {
   font-size: 13px;
@@ -449,11 +819,266 @@ button.nav-profile-link {
   margin-left: auto;
 }
 
+/* Navigation Dropdowns */
+.nav-dropdown {
+  position: relative;
+}
+.nav-dropdown-trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-caret {
+  font-size: 10px;
+  opacity: 0.65;
+}
+.nav-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 0;
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  box-shadow: 0 8px 32px rgba(20,18,16,0.13);
+  min-width: 230px;
+  z-index: 300;
+}
+.nav-dropdown-panel[hidden] {
+  display: none !important;
+}
+.nav-dropdown-group {
+  padding: 8px 0;
+}
+.nav-dropdown-item {
+  padding: 12px 20px;
+  font-size: 13px;
+  color: #141210;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color var(--m-fast), color var(--m-fast);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.nav-dropdown-item:not(.nav-dropdown-item--disabled):hover {
+  background-color: var(--surface-1);
+  color: var(--gold-600);
+}
+.nav-dropdown-arrow {
+  font-size: 10px;
+  color: #A8843C;
+  font-family: var(--font-mono);
+}
+.nav-dropdown-divider {
+  height: 1px;
+  background: #F0EBE0;
+  margin: 4px 0;
+}
+.nav-dropdown-item--disabled {
+  opacity: 0.45;
+  cursor: default;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.nav-dropdown-trigger--disabled {
+  opacity: 0.45;
+}
+.nav-dropdown-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  background: #F4F0E8;
+  padding: 2px 7px;
+  color: #8B8378;
+  letter-spacing: 0.08em;
+}
+.nav-dropdown-footer {
+  padding: 10px 20px;
+  border-top: 1px solid #F0EBE0;
+  background: #FAF8F4;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #8B8378;
+  line-height: 1.5;
+}
+.nav-mobile-auth {
+  display: none;
+}
+.mobile-join-chip {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #C9A961, #A8843C);
+  color: #FFFFFF;
+  padding: 7px 11px;
+  border-radius: 2px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.mobile-console-chip {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #141210;
+  color: #C9A961;
+  padding: 7px 11px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* Mobile Drawer Styles */
+.drawer__identity {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--hairline);
+  background: #FAF8F4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--gutter-mob));
+}
+.drawer__identity--admin {
+  background: #141210 !important;
+  border-bottom: 1.5px solid #2A2620 !important;
+  color: #FAF8F4 !important;
+}
+.drawer__identity-info {
+  display: flex;
+  flex-direction: column;
+}
+.drawer__identity-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+}
+.drawer__identity-role {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #8B8378;
+}
+.drawer__identity--admin .drawer__identity-role {
+  color: #C9A961 !important;
+}
+.drawer__actions {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hairline);
+  margin: 0 calc(-1 * var(--gutter-mob));
+  display: flex;
+  flex-direction: column;
+}
+.drawer__action-item {
+  padding: 12px 20px;
+  font-size: 13px;
+  color: var(--ink-900);
+  text-decoration: none;
+  font-family: var(--font-body);
+  text-align: left;
+  transition: color var(--m-fast);
+  display: block;
+}
+.drawer__action-item:hover {
+  color: var(--gold-600);
+}
+.drawer__cta-area {
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.drawer__cta-btn {
+  border: 1px solid #C9A961;
+  color: #141210;
+  padding: 13px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 2px;
+  background: rgba(201,169,97,0.08);
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  font-family: var(--font-body);
+  transition: background var(--m-fast);
+}
+.drawer__cta-btn:hover {
+  background: rgba(201,169,97,0.15);
+}
+.drawer__cta-btn--outline {
+  border: 1px solid var(--hairline-strong);
+  background: transparent;
+  color: var(--ink-900);
+}
+.drawer__cta-btn--outline:hover {
+  background: var(--surface-1);
+}
+.drawer__cta-btn--admin {
+  background: #141210;
+  color: #C9A961;
+  border: 1px solid #141210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.drawer__cta-btn--admin:hover {
+  background: #2E2A24;
+  color: #FFFFFF;
+}
+.drawer__bullet {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.drawer__signout-btn {
+  text-align: center;
+  font-size: 13px;
+  color: #8B8378;
+  padding: 10px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  transition: color var(--m-fast);
+  width: 100%;
+  display: block;
+}
+.drawer__signout-btn:hover {
+  color: var(--ink-900);
+}
+.drawer-admin-link {
+  color: #C9A961 !important;
+  font-weight: 600 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.drawer-admin-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: #C9A961;
+  display: inline-block;
+}
+
 /* Mobile breakpoint */
 @media (max-width: 900px) {
   .nav-links, .nav-auth { display: none; }
   .nav-hamburger { display: flex; }
   .drawer { display: block; }
+  .nav-logo {
+    height: 34px;
+  }
+  .nav-inner {
+    padding: 0 14px;
+  }
+  .nav-mobile-auth {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 }
 </style>
 
@@ -475,9 +1100,9 @@ button.nav-profile-link {
   const nav = document.getElementById('site-nav');
   if (nav) {
     ScrollTrigger.create({
-      start: 'top -80px',
+      start: 'top -60px',
       onUpdate: (self) => {
-        nav.classList.toggle('nav--condensed', self.scroll() > 80);
+        nav.classList.toggle('nav--condensed', self.scroll() > 60);
       },
     });
   }
@@ -512,9 +1137,15 @@ button.nav-profile-link {
   try {
     const raw = localStorage.getItem('bcc_user');
     if (raw) {
-      const user = JSON.parse(raw) as { displayName?: string; initials?: string; username?: string };
+      const user = JSON.parse(raw) as {
+        displayName?: string;
+        initials?: string;
+        username?: string;
+        ui?: { portalState: string };
+      };
       if (user?.displayName) {
         const initials = user.initials || user.displayName.slice(0, 2).toUpperCase();
+        const portalState = user.ui?.portalState || 'MEMBER';
 
         // Desktop
         const guest  = document.getElementById('nav-guest');
@@ -526,6 +1157,212 @@ button.nav-profile-link {
         const nn = document.getElementById('nav-name');
         if (nn) nn.textContent = user.displayName;
 
+        const avatarEl = document.getElementById('nav-avatar');
+        const hubBtn   = document.getElementById('nav-hub-btn');
+        const applyBtn = document.getElementById('nav-apply-btn');
+        const adminBtn = document.getElementById('nav-admin-btn');
+
+        const journalLink = document.getElementById('nav-link-journal');
+        const adminLink   = document.getElementById('nav-link-admin');
+
+        // Avatar menu items
+        const avatarMenuEl = document.getElementById('nav-avatar-menu');
+        const niMenu       = document.getElementById('nav-initials-menu');
+        const nnMenu       = document.getElementById('nav-name-menu');
+        const nrMenu       = document.getElementById('nav-role-menu');
+
+        const menuAdminConsole   = document.getElementById('nav-menu-admin-console');
+        const menuMemberHub      = document.getElementById('nav-menu-member-hub');
+        const menuProfile        = document.getElementById('nav-menu-profile');
+        const menuGallery        = document.getElementById('nav-menu-gallery');
+        const menuJournalCms     = document.getElementById('nav-menu-journal-cms');
+        const menuModeration     = document.getElementById('nav-menu-moderation-queue');
+        const menuAccountSettings = document.getElementById('nav-menu-account-settings');
+        const menuRenewals       = document.getElementById('nav-menu-renewals');
+
+        if (niMenu) niMenu.textContent = initials;
+        if (nnMenu) nnMenu.textContent = user.displayName;
+
+        if (avatarMenuEl) {
+          avatarMenuEl.className = 'nav-avatar avatar';
+          if (portalState === 'USER') {
+            avatarMenuEl.classList.add('avatar-grey');
+          } else if (portalState === 'EDITOR') {
+            avatarMenuEl.classList.add('avatar-teal');
+          } else if (portalState === 'MODERATOR') {
+            avatarMenuEl.classList.add('avatar-amber');
+          } else if (portalState === 'ADMIN') {
+            avatarMenuEl.classList.add('avatar-admin');
+          } else {
+            avatarMenuEl.classList.add('avatar-forest');
+          }
+        }
+
+        if (user.username) {
+          if (menuProfile) (menuProfile as HTMLAnchorElement).href = `/photographers/${user.username}/`;
+          if (menuGallery) (menuGallery as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
+        }
+
+        if (portalState === 'USER') {
+          // Configure Right Rail for USER state
+          if (avatarEl) {
+            avatarEl.classList.remove('avatar-forest', 'avatar-teal', 'avatar-amber', 'avatar-admin');
+            avatarEl.classList.add('avatar-grey');
+          }
+          if (hubBtn)   hubBtn.setAttribute('hidden', '');
+          if (applyBtn) applyBtn.removeAttribute('hidden');
+          if (adminBtn) adminBtn.setAttribute('hidden', '');
+          if (journalLink) journalLink.textContent = 'Journal';
+          if (adminLink)   adminLink.setAttribute('hidden', '');
+
+          if (nrMenu) nrMenu.textContent = 'User';
+          if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
+          if (menuMemberHub)       menuMemberHub.style.display = 'none';
+          if (menuProfile)         menuProfile.style.display = 'block';
+          if (menuGallery)         menuGallery.style.display = 'none';
+          if (menuJournalCms)      menuJournalCms.style.display = 'none';
+          if (menuModeration)      menuModeration.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'block';
+          if (menuRenewals)        menuRenewals.style.display = 'none';
+        } else if (portalState === 'EDITOR') {
+          // Configure Right Rail for EDITOR state
+          if (avatarEl) {
+            avatarEl.classList.remove('avatar-forest', 'avatar-grey', 'avatar-amber', 'avatar-admin');
+            avatarEl.classList.add('avatar-teal');
+          }
+          if (hubBtn)   hubBtn.removeAttribute('hidden');
+          if (applyBtn) applyBtn.setAttribute('hidden', '');
+          if (adminBtn) adminBtn.setAttribute('hidden', '');
+          if (journalLink) journalLink.textContent = 'Journal ✎';
+          if (adminLink)   adminLink.setAttribute('hidden', '');
+
+          if (nrMenu) nrMenu.textContent = 'Content Editor';
+          if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
+          if (menuMemberHub)       menuMemberHub.style.display = 'block';
+          if (menuProfile)         menuProfile.style.display = 'block';
+          if (menuGallery)         menuGallery.style.display = 'block';
+          if (menuJournalCms)      menuJournalCms.style.display = 'flex';
+          if (menuModeration)      menuModeration.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuRenewals)        menuRenewals.style.display = 'block';
+        } else if (portalState === 'MODERATOR') {
+          // Configure Right Rail for MODERATOR state
+          if (avatarEl) {
+            avatarEl.classList.remove('avatar-forest', 'avatar-grey', 'avatar-teal', 'avatar-admin');
+            avatarEl.classList.add('avatar-amber');
+          }
+          if (hubBtn)   hubBtn.removeAttribute('hidden');
+          if (applyBtn) applyBtn.setAttribute('hidden', '');
+          if (adminBtn) adminBtn.setAttribute('hidden', '');
+          if (journalLink) journalLink.textContent = 'Journal';
+          if (adminLink)   adminLink.setAttribute('hidden', '');
+
+          if (nrMenu) nrMenu.textContent = 'Moderator';
+          if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
+          if (menuMemberHub)       menuMemberHub.style.display = 'block';
+          if (menuProfile)         menuProfile.style.display = 'block';
+          if (menuGallery)         menuGallery.style.display = 'block';
+          if (menuJournalCms)      menuJournalCms.style.display = 'none';
+          if (menuModeration)      menuModeration.style.display = 'flex';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuRenewals)        menuRenewals.style.display = 'block';
+        } else if (portalState === 'ADMIN') {
+          // Configure Right Rail for ADMIN state
+          if (avatarEl) {
+            avatarEl.classList.remove('avatar-forest', 'avatar-grey', 'avatar-teal', 'avatar-amber');
+            avatarEl.classList.add('avatar-admin');
+          }
+          if (hubBtn)   hubBtn.setAttribute('hidden', '');
+          if (applyBtn) applyBtn.setAttribute('hidden', '');
+          if (adminBtn) adminBtn.removeAttribute('hidden');
+          if (journalLink) journalLink.textContent = 'Journal';
+          if (adminLink)   adminLink.removeAttribute('hidden');
+
+          if (nrMenu) nrMenu.textContent = 'Admin';
+          if (menuAdminConsole)    menuAdminConsole.style.display = 'flex';
+          if (menuMemberHub)       menuMemberHub.style.display = 'block';
+          if (menuProfile)         menuProfile.style.display = 'block';
+          if (menuGallery)         menuGallery.style.display = 'block';
+          if (menuJournalCms)      menuJournalCms.style.display = 'none';
+          if (menuModeration)      menuModeration.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuRenewals)        menuRenewals.style.display = 'block';
+        } else if (portalState === 'MEMBER') {
+          // Configure Right Rail for MEMBER state
+          if (avatarEl) {
+            avatarEl.classList.remove('avatar-grey', 'avatar-teal', 'avatar-amber', 'avatar-admin');
+            avatarEl.classList.add('avatar-forest');
+          }
+          if (hubBtn)   hubBtn.removeAttribute('hidden');
+          if (applyBtn) applyBtn.setAttribute('hidden', '');
+          if (adminBtn) adminBtn.setAttribute('hidden', '');
+          if (journalLink) journalLink.textContent = 'Journal';
+          if (adminLink)   adminLink.setAttribute('hidden', '');
+
+          if (nrMenu) nrMenu.textContent = 'Member';
+          if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
+          if (menuMemberHub)       menuMemberHub.style.display = 'block';
+          if (menuProfile)         menuProfile.style.display = 'block';
+          if (menuGallery)         menuGallery.style.display = 'block';
+          if (menuJournalCms)      menuJournalCms.style.display = 'none';
+          if (menuModeration)      menuModeration.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuRenewals)        menuRenewals.style.display = 'block';
+        } else {
+          // Configure Right Rail for default V3 state (behaving as MEMBER)
+          if (avatarEl) {
+            avatarEl.classList.remove('avatar-grey', 'avatar-teal', 'avatar-amber', 'avatar-admin');
+            avatarEl.classList.add('avatar-forest');
+          }
+          if (hubBtn)   hubBtn.removeAttribute('hidden');
+          if (applyBtn) applyBtn.setAttribute('hidden', '');
+          if (adminBtn) adminBtn.setAttribute('hidden', '');
+          if (journalLink) journalLink.textContent = 'Journal';
+          if (adminLink)   adminLink.setAttribute('hidden', '');
+
+          if (nrMenu) nrMenu.textContent = 'Member';
+          if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
+          if (menuMemberHub)       menuMemberHub.style.display = 'block';
+          if (menuProfile)         menuProfile.style.display = 'block';
+          if (menuGallery)         menuGallery.style.display = 'block';
+          if (menuJournalCms)      menuJournalCms.style.display = 'none';
+          if (menuModeration)      menuModeration.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuRenewals)        menuRenewals.style.display = 'block';
+        }
+
+        // Mobile Header Auth State Synchronization
+        const mobileAvatar = document.getElementById('nav-mobile-avatar');
+        const mobileInitials = document.getElementById('nav-mobile-initials');
+        const mobileConsole = document.getElementById('mobile-console-chip');
+        const mobileJoin = document.getElementById('mobile-join-chip');
+
+        if (mobileJoin) mobileJoin.setAttribute('hidden', '');
+        if (mobileAvatar) {
+          mobileAvatar.removeAttribute('hidden');
+          mobileAvatar.className = 'nav-avatar avatar';
+          
+          if (portalState === 'USER') {
+            mobileAvatar.classList.add('avatar-grey');
+          } else if (portalState === 'EDITOR') {
+            mobileAvatar.classList.add('avatar-teal');
+          } else if (portalState === 'MODERATOR') {
+            mobileAvatar.classList.add('avatar-amber');
+          } else if (portalState === 'ADMIN') {
+            mobileAvatar.classList.add('avatar-admin');
+          } else {
+            mobileAvatar.classList.add('avatar-forest');
+          }
+        }
+        if (mobileInitials) mobileInitials.textContent = initials;
+        if (mobileConsole) {
+          if (portalState === 'ADMIN') {
+            mobileConsole.removeAttribute('hidden');
+          } else {
+            mobileConsole.setAttribute('hidden', '');
+          }
+        }
+
         // Inject "My Profile" link if username is known
         if (user.username) {
           const profileLink = document.getElementById('nav-profile-link');
@@ -533,27 +1370,122 @@ button.nav-profile-link {
             (profileLink as HTMLAnchorElement).href = `/photographers/${user.username}/`;
             profileLink.removeAttribute('hidden');
           }
-          const drawerProfileLink = document.getElementById('drawer-profile-link');
-          if (drawerProfileLink) {
-            (drawerProfileLink as HTMLAnchorElement).href = `/photographers/${user.username}/`;
-            drawerProfileLink.removeAttribute('hidden');
-            const drawerProfileSep = document.getElementById('drawer-profile-sep');
-            if (drawerProfileSep) drawerProfileSep.removeAttribute('hidden');
-          }
         }
-
-        // Mobile
+        // Mobile Drawer Role state mapping
         const dg = document.getElementById('drawer-guest');
         const dm = document.getElementById('drawer-member');
         if (dg) dg.hidden = true;
         if (dm) dm.hidden = false;
-        const di = document.getElementById('drawer-initials');
-        if (di) di.textContent = initials;
-        const dn = document.getElementById('drawer-name');
-        if (dn) dn.textContent = user.displayName;
+
+        const drawerIdentity = document.getElementById('drawer-identity');
+        const drawerAvatar = document.getElementById('drawer-avatar');
+        const drawerInitials = document.getElementById('drawer-initials');
+        const drawerName = document.getElementById('drawer-name');
+        const drawerRole = document.getElementById('drawer-role');
+        const drawerLinkAdmin = document.getElementById('drawer-link-admin');
+
+        // Action menu links
+        const actProfile = document.getElementById('drawer-act-profile');
+        const actGallery = document.getElementById('drawer-act-gallery');
+        const actSettings = document.getElementById('drawer-act-settings');
+        const actRenewals = document.getElementById('drawer-act-renewals');
+
+        // CTA buttons
+        const btnHub = document.getElementById('drawer-btn-hub');
+        const btnApply = document.getElementById('drawer-btn-apply');
+        const btnAdmin = document.getElementById('drawer-btn-admin');
+
+        if (drawerInitials) drawerInitials.textContent = initials;
+        if (drawerName) drawerName.textContent = user.displayName;
+
+        if (user.username) {
+          if (actProfile) (actProfile as HTMLAnchorElement).href = `/photographers/${user.username}/`;
+          if (actGallery) (actGallery as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
+        }
+
+        // Reset styling classes
+        if (drawerIdentity) {
+          drawerIdentity.className = 'drawer__identity';
+        }
+        if (drawerAvatar) {
+          drawerAvatar.className = 'nav-avatar avatar';
+        }
+
+        if (portalState === 'USER') {
+          if (drawerAvatar) drawerAvatar.classList.add('avatar-grey');
+          if (drawerRole) drawerRole.textContent = 'User';
+
+          if (actProfile)  actProfile.style.display = 'block';
+          if (actGallery)  actGallery.style.display = 'none';
+          if (actSettings) actSettings.style.display = 'block';
+          if (actRenewals) actRenewals.style.display = 'none';
+
+          if (btnHub)   btnHub.style.display = 'none';
+          if (btnApply) btnApply.style.display = 'block';
+          if (btnAdmin) btnAdmin.style.display = 'none';
+
+          if (drawerLinkAdmin) drawerLinkAdmin.setAttribute('hidden', '');
+        } else if (portalState === 'EDITOR') {
+          if (drawerAvatar) drawerAvatar.classList.add('avatar-teal');
+          if (drawerRole) drawerRole.textContent = 'Content Editor';
+
+          if (actProfile)  actProfile.style.display = 'block';
+          if (actGallery)  actGallery.style.display = 'block';
+          if (actSettings) actSettings.style.display = 'none';
+          if (actRenewals) actRenewals.style.display = 'block';
+
+          if (btnHub)   btnHub.style.display = 'block';
+          if (btnApply) btnApply.style.display = 'none';
+          if (btnAdmin) btnAdmin.style.display = 'none';
+
+          if (drawerLinkAdmin) drawerLinkAdmin.setAttribute('hidden', '');
+        } else if (portalState === 'MODERATOR') {
+          if (drawerAvatar) drawerAvatar.classList.add('avatar-amber');
+          if (drawerRole) drawerRole.textContent = 'Moderator';
+
+          if (actProfile)  actProfile.style.display = 'block';
+          if (actGallery)  actGallery.style.display = 'block';
+          if (actSettings) actSettings.style.display = 'none';
+          if (actRenewals) actRenewals.style.display = 'block';
+
+          if (btnHub)   btnHub.style.display = 'block';
+          if (btnApply) btnApply.style.display = 'none';
+          if (btnAdmin) btnAdmin.style.display = 'none';
+
+          if (drawerLinkAdmin) drawerLinkAdmin.setAttribute('hidden', '');
+        } else if (portalState === 'ADMIN') {
+          if (drawerIdentity) drawerIdentity.classList.add('drawer__identity--admin');
+          if (drawerAvatar) drawerAvatar.classList.add('avatar-admin');
+          if (drawerRole) drawerRole.textContent = 'admin';
+
+          if (actProfile)  actProfile.style.display = 'none';
+          if (actGallery)  actGallery.style.display = 'none';
+          if (actSettings) actSettings.style.display = 'none';
+          if (actRenewals) actRenewals.style.display = 'none';
+
+          if (btnHub)   btnHub.style.display = 'none';
+          if (btnApply) btnApply.style.display = 'none';
+          if (btnAdmin) btnAdmin.style.display = 'flex';
+
+          if (drawerLinkAdmin) drawerLinkAdmin.removeAttribute('hidden');
+        } else {
+          // Default MEMBER state
+          if (drawerAvatar) drawerAvatar.classList.add('avatar-forest');
+          if (drawerRole) drawerRole.textContent = 'Active Member';
+
+          if (actProfile)  actProfile.style.display = 'block';
+          if (actGallery)  actGallery.style.display = 'block';
+          if (actSettings) actSettings.style.display = 'none';
+          if (actRenewals) actRenewals.style.display = 'block';
+
+          if (btnHub)   btnHub.style.display = 'block';
+          if (btnApply) btnApply.style.display = 'none';
+          if (btnAdmin) btnAdmin.style.display = 'none';
+
+          if (drawerLinkAdmin) drawerLinkAdmin.setAttribute('hidden', '');
+        }
 
         // Mirror unread badge to mobile drawer (populated by NotificationBell script)
-        // NotificationBell sets #bell-badge; we read its count and mirror to drawer badge.
         const bellBadge   = document.getElementById('bell-badge');
         const drawerBadge = document.getElementById('drawer-notif-badge');
         if (bellBadge && drawerBadge) {
@@ -562,15 +1494,133 @@ button.nav-profile-link {
             drawerBadge.hidden = hidden;
             if (!hidden) drawerBadge.textContent = bellBadge.textContent;
           };
-          // Poll every 2s for badge sync (cheap DOM read -- no network calls)
           mirrorBadge();
           setInterval(mirrorBadge, 2000);
         }
+      } else {
+        showMobileGuest();
       }
+    } else {
+      showMobileGuest();
     }
-  } catch { /* Stay in guest state */ }
+  } catch {
+    showMobileGuest();
+  }
+
+  function showMobileGuest() {
+    const mobileJoin = document.getElementById('mobile-join-chip');
+    const mobileAvatar = document.getElementById('nav-mobile-avatar');
+    const mobileConsole = document.getElementById('mobile-console-chip');
+    if (mobileJoin) mobileJoin.removeAttribute('hidden');
+    if (mobileAvatar) mobileAvatar.setAttribute('hidden', '');
+    if (mobileConsole) mobileConsole.setAttribute('hidden', '');
+
+    const dg = document.getElementById('drawer-guest');
+    const dm = document.getElementById('drawer-member');
+    if (dg) dg.hidden = false;
+    if (dm) dm.hidden = true;
+
+    const drawerLinkAdmin = document.getElementById('drawer-link-admin');
+    if (drawerLinkAdmin) drawerLinkAdmin.setAttribute('hidden', '');
+  }
+
+  /* -- Dropdowns toggle -- */
+  const activitiesTrigger = document.querySelector('#nav-dropdown-activities .nav-dropdown-trigger');
+  const activitiesPanel   = document.querySelector('#nav-dropdown-activities .nav-dropdown-panel');
+  const learnTrigger      = document.querySelector('#nav-dropdown-learn .nav-dropdown-trigger');
+  const learnPanel        = document.querySelector('#nav-dropdown-learn .nav-dropdown-panel');
+
+  const toggleActivities = (open?: boolean) => {
+    if (!activitiesTrigger || !activitiesPanel) return;
+    const show = open ?? activitiesPanel.hasAttribute('hidden');
+    if (show) {
+      activitiesPanel.removeAttribute('hidden');
+      activitiesTrigger.setAttribute('aria-expanded', 'true');
+    } else {
+      activitiesPanel.setAttribute('hidden', '');
+      activitiesTrigger.setAttribute('aria-expanded', 'false');
+    }
+  };
+
+  const toggleLearn = (open?: boolean) => {
+    if (!learnTrigger || !learnPanel) return;
+    const show = open ?? learnPanel.hasAttribute('hidden');
+    if (show) {
+      learnPanel.removeAttribute('hidden');
+      learnTrigger.setAttribute('aria-expanded', 'true');
+    } else {
+      learnPanel.setAttribute('hidden', '');
+      learnTrigger.setAttribute('aria-expanded', 'false');
+    }
+  };
+
+  /* Avatar Dropdown panel toggle */
+  const avatarTrigger = document.getElementById('nav-avatar-trigger');
+  const avatarPanel   = document.getElementById('nav-avatar-panel');
+
+  const toggleAvatarMenu = (open?: boolean) => {
+    if (!avatarTrigger || !avatarPanel) return;
+    const show = open ?? avatarPanel.hasAttribute('hidden');
+    if (show) {
+      avatarPanel.removeAttribute('hidden');
+      avatarTrigger.setAttribute('aria-expanded', 'true');
+    } else {
+      avatarPanel.setAttribute('hidden', '');
+      avatarTrigger.setAttribute('aria-expanded', 'false');
+    }
+  };
+
+  if (activitiesTrigger && activitiesPanel) {
+    activitiesTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleLearn(false);
+      toggleAvatarMenu(false);
+      toggleActivities();
+    });
+  }
+
+  if (learnTrigger && learnPanel) {
+    learnTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleActivities(false);
+      toggleAvatarMenu(false);
+      toggleLearn();
+    });
+  }
+
+  if (avatarTrigger && avatarPanel) {
+    avatarTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleActivities(false);
+      toggleLearn(false);
+      toggleAvatarMenu();
+    });
+
+    avatarPanel.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).tagName === 'A') {
+        toggleAvatarMenu(false);
+      }
+    });
+  }
+
+  // Close on outside click
+  document.addEventListener('click', () => {
+    toggleActivities(false);
+    toggleLearn(false);
+    toggleAvatarMenu(false);
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      toggleActivities(false);
+      toggleLearn(false);
+      toggleAvatarMenu(false);
+    }
+  });
 
   /* -- Sign out handlers -- */
   document.getElementById('nav-signout-btn')?.addEventListener('click', logout);
   document.getElementById('drawer-signout-btn')?.addEventListener('click', logout);
+  document.getElementById('nav-menu-signout')?.addEventListener('click', logout);
 </script>

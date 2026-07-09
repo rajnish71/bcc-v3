@@ -341,7 +341,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const initials = fullName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
     localStorage.setItem('bcc_token', token);
     localStorage.setItem('bcc_refresh', refresh);
-    localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials }));
+    localStorage.setItem('bcc_user', JSON.stringify({ displayName: fullName, initials, ui: { portalState: 'USER' } }));
   }
 
   /* -- Email + password registration ------------------------------------ */

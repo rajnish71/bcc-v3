@@ -203,7 +203,7 @@ const NAV_LINKS = [
           </div>
 
           <span class="nav-name" id="nav-name"></span>
-          <NotificationBell />
+          <div id="bell-root"><NotificationBell /></div>
           <a id="nav-profile-link" href="/photographers/" class="nav-profile-link" hidden>My Profile</a>
           <button id="nav-signout-btn" type="button" class="nav-profile-link">Sign Out</button>
           <a href="/hub/" class="btn btn-outline-gold btn-md" id="nav-hub-btn">Member Hub</a>
@@ -437,8 +437,13 @@ const NAV_LINKS = [
 .nav-auth__guest { display: flex; align-items: center; gap: var(--s-2); }
 .nav-auth__member { display: flex; align-items: center; gap: var(--s-2); }
 .nav-auth__guest[hidden],
-.nav-auth__member[hidden] {
-  display: none;
+.nav-auth__member[hidden],
+#nav-hub-btn[hidden],
+#nav-apply-btn[hidden],
+#nav-admin-btn[hidden],
+#nav-link-admin[hidden],
+#bell-root[hidden] {
+  display: none !important;
 }
 
 .nav-profile-link {
@@ -1206,17 +1211,21 @@ const NAV_LINKS = [
           if (menuGallery) (menuGallery as HTMLAnchorElement).href = `/gallery/photographer/${user.username}/`;
         }
 
+        // 1. Reset everything to hidden/default first
+        const bellRoot = document.getElementById('bell-root');
+        if (hubBtn)   hubBtn.setAttribute('hidden', '');
+        if (applyBtn) applyBtn.setAttribute('hidden', '');
+        if (adminBtn) adminBtn.setAttribute('hidden', '');
+        if (adminLink) adminLink.setAttribute('hidden', '');
+        if (bellRoot)  bellRoot.setAttribute('hidden', '');
+        if (journalLink) journalLink.textContent = 'Journal';
+
         if (portalState === 'USER') {
           // Configure Right Rail for USER state
           if (avatarEl) {
-            avatarEl.classList.remove('avatar-forest', 'avatar-teal', 'avatar-amber', 'avatar-admin');
-            avatarEl.classList.add('avatar-grey');
+            avatarEl.className = 'nav-avatar avatar avatar-grey';
           }
-          if (hubBtn)   hubBtn.setAttribute('hidden', '');
           if (applyBtn) applyBtn.removeAttribute('hidden');
-          if (adminBtn) adminBtn.setAttribute('hidden', '');
-          if (journalLink) journalLink.textContent = 'Journal';
-          if (adminLink)   adminLink.setAttribute('hidden', '');
 
           if (nrMenu) nrMenu.textContent = 'User';
           if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
@@ -1230,14 +1239,11 @@ const NAV_LINKS = [
         } else if (portalState === 'EDITOR') {
           // Configure Right Rail for EDITOR state
           if (avatarEl) {
-            avatarEl.classList.remove('avatar-forest', 'avatar-grey', 'avatar-amber', 'avatar-admin');
-            avatarEl.classList.add('avatar-teal');
+            avatarEl.className = 'nav-avatar avatar avatar-teal';
           }
-          if (hubBtn)   hubBtn.removeAttribute('hidden');
-          if (applyBtn) applyBtn.setAttribute('hidden', '');
-          if (adminBtn) adminBtn.setAttribute('hidden', '');
+          if (hubBtn)      hubBtn.removeAttribute('hidden');
+          if (bellRoot)    bellRoot.removeAttribute('hidden');
           if (journalLink) journalLink.textContent = 'Journal ✎';
-          if (adminLink)   adminLink.setAttribute('hidden', '');
 
           if (nrMenu) nrMenu.textContent = 'Content Editor';
           if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
@@ -1251,14 +1257,10 @@ const NAV_LINKS = [
         } else if (portalState === 'MODERATOR') {
           // Configure Right Rail for MODERATOR state
           if (avatarEl) {
-            avatarEl.classList.remove('avatar-forest', 'avatar-grey', 'avatar-teal', 'avatar-admin');
-            avatarEl.classList.add('avatar-amber');
+            avatarEl.className = 'nav-avatar avatar avatar-amber';
           }
           if (hubBtn)   hubBtn.removeAttribute('hidden');
-          if (applyBtn) applyBtn.setAttribute('hidden', '');
-          if (adminBtn) adminBtn.setAttribute('hidden', '');
-          if (journalLink) journalLink.textContent = 'Journal';
-          if (adminLink)   adminLink.setAttribute('hidden', '');
+          if (bellRoot) bellRoot.removeAttribute('hidden');
 
           if (nrMenu) nrMenu.textContent = 'Moderator';
           if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
@@ -1272,14 +1274,11 @@ const NAV_LINKS = [
         } else if (portalState === 'ADMIN') {
           // Configure Right Rail for ADMIN state
           if (avatarEl) {
-            avatarEl.classList.remove('avatar-forest', 'avatar-grey', 'avatar-teal', 'avatar-amber');
-            avatarEl.classList.add('avatar-admin');
+            avatarEl.className = 'nav-avatar avatar avatar-admin';
           }
-          if (hubBtn)   hubBtn.setAttribute('hidden', '');
-          if (applyBtn) applyBtn.setAttribute('hidden', '');
-          if (adminBtn) adminBtn.removeAttribute('hidden');
-          if (journalLink) journalLink.textContent = 'Journal';
-          if (adminLink)   adminLink.removeAttribute('hidden');
+          if (adminBtn)  adminBtn.removeAttribute('hidden');
+          if (adminLink) adminLink.removeAttribute('hidden');
+          if (bellRoot)  bellRoot.removeAttribute('hidden');
 
           if (nrMenu) nrMenu.textContent = 'Admin';
           if (menuAdminConsole)    menuAdminConsole.style.display = 'flex';
@@ -1293,14 +1292,10 @@ const NAV_LINKS = [
         } else if (portalState === 'MEMBER') {
           // Configure Right Rail for MEMBER state
           if (avatarEl) {
-            avatarEl.classList.remove('avatar-grey', 'avatar-teal', 'avatar-amber', 'avatar-admin');
-            avatarEl.classList.add('avatar-forest');
+            avatarEl.className = 'nav-avatar avatar avatar-forest';
           }
           if (hubBtn)   hubBtn.removeAttribute('hidden');
-          if (applyBtn) applyBtn.setAttribute('hidden', '');
-          if (adminBtn) adminBtn.setAttribute('hidden', '');
-          if (journalLink) journalLink.textContent = 'Journal';
-          if (adminLink)   adminLink.setAttribute('hidden', '');
+          if (bellRoot) bellRoot.removeAttribute('hidden');
 
           if (nrMenu) nrMenu.textContent = 'Member';
           if (menuAdminConsole)    menuAdminConsole.style.display = 'none';
@@ -1314,14 +1309,10 @@ const NAV_LINKS = [
         } else {
           // Configure Right Rail for default V3 state (behaving as MEMBER)
           if (avatarEl) {
-            avatarEl.classList.remove('avatar-grey', 'avatar-teal', 'avatar-amber', 'avatar-admin');
-            avatarEl.classList.add('avatar-forest');
+            avatarEl.className = 'nav-avatar avatar avatar-forest';
           }
           if (hubBtn)   hubBtn.removeAttribute('hidden');
-          if (applyBtn) applyBtn.setAttribute('hidden', '');
-          if (adminBtn) adminBtn.setAttribute('hidden', '');
-          if (journalLink) journalLink.textContent = 'Journal';
-          if (adminLink)   adminLink.setAttribute('hidden', '');
+          if (bellRoot) bellRoot.removeAttribute('hidden');
 
           if (nrMenu) nrMenu.textContent = 'Member';
           if (menuAdminConsole)    menuAdminConsole.style.display = 'none';

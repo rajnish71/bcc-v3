@@ -433,10 +433,13 @@ const NAV_LINKS = [
   color: #FFFFFF;
 }
 
-/* Auth area */
 .nav-auth { flex-shrink: 0; }
 .nav-auth__guest { display: flex; align-items: center; gap: var(--s-2); }
 .nav-auth__member { display: flex; align-items: center; gap: var(--s-2); }
+.nav-auth__guest[hidden],
+.nav-auth__member[hidden] {
+  display: none;
+}
 
 .nav-profile-link {
   display: none !important;

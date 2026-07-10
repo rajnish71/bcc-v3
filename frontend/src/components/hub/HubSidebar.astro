@@ -161,8 +161,10 @@ const mobileActive = {
     02 TABLET HUB TABS (641–1199px)
     ══════════════════════════════════════════════════════
   -->
-  <div class="hub-tabs-bar" role="tablist" aria-label="Hub sections" id="hub-tabs-bar">
+  <div class="hub-tabs-bar" id="hub-tabs-bar">
 
+    <!-- Scrollable tab row -->
+    <div class="hub-tabs-scroll" role="tablist" aria-label="Hub sections">
     {primaryTabItems.map(item => {
       const active = isActive(item.href);
       return item.soon ? (
@@ -180,8 +182,9 @@ const mobileActive = {
         </a>
       );
     })}
+    </div>
 
-    <!-- More chip -->
+    <!-- More chip — outside scroll area so it never scrolls out of view -->
     <div class="hub-tabs-more" id="hub-tabs-more">
       <button
         type="button"
@@ -363,7 +366,7 @@ const mobileActive = {
   align-items: center;
   gap: 10px;
   margin-bottom: 28px;
-  padding: 0 24px 0 0;
+  padding: 0 24px;
 }
 .hub-rail__mark {
   height: 26px;
@@ -388,7 +391,7 @@ const mobileActive = {
   text-transform: uppercase;
   color: #8B8378;
   margin: 20px 0 6px;
-  padding-right: 24px;
+  padding: 0 24px;
   font-family: 'Inter', sans-serif;
 }
 .hub-rail__group:first-of-type .hub-rail__group-label { margin-top: 0; }
@@ -403,12 +406,12 @@ const mobileActive = {
   color: #57514B;
   text-decoration: none;
   gap: 10px;
-  padding-right: 24px;
-  transition: color 0.15s;
+  padding: 0 24px;
+  transition: color 0.15s, background 0.15s;
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
 }
-.hub-rail__item:hover { color: #141210; }
+.hub-rail__item:hover { color: #141210; background: #FAF8F4; }
 
 /* Active item */
 .hub-rail__item--active { color: #141210; }
@@ -440,7 +443,7 @@ const mobileActive = {
   color: #B8B0A4;
   cursor: default;
   gap: 10px;
-  padding-right: 24px;
+  padding: 0 24px;
   font-family: 'Inter', sans-serif;
 }
 .hub-rail__soon {
@@ -461,8 +464,7 @@ const mobileActive = {
 .hub-rail__footer {
   margin-top: auto;
   border-top: 1px solid #E7E1D6;
-  padding-top: 20px;
-  padding-right: 24px;
+  padding: 20px 24px 0;
 }
 .hub-rail__signout {
   font-size: 14px;
@@ -481,20 +483,28 @@ const mobileActive = {
 ────────────────────────────────────────────────────── */
 .hub-tabs-bar {
   display: none;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 24px 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  align-items: flex-end;
   border-bottom: 1px solid #E7E1D6;
   background: #FAF8F4;
 }
-.hub-tabs-bar::-webkit-scrollbar { display: none; }
 
 @media (min-width: 641px) and (max-width: 1199px) {
   .hub-tabs-bar { display: flex; }
 }
+
+/* Scrollable pill row — More chip sits outside this, so it never scrolls */
+.hub-tabs-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0 0 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+}
+.hub-tabs-scroll::-webkit-scrollbar { display: none; }
 
 .hub-tab {
   flex-shrink: 0;
@@ -532,11 +542,11 @@ const mobileActive = {
   font-weight: 600;
 }
 
-/* More chip */
+/* More chip — fixed at right of tab bar, never scrolls */
 .hub-tabs-more {
   position: relative;
   flex-shrink: 0;
-  margin-bottom: 16px;
+  padding: 16px 24px 0 8px;
 }
 .hub-tab--more {
   font-weight: 600;
@@ -545,6 +555,7 @@ const mobileActive = {
   display: flex;
   align-items: center;
   gap: 5px;
+  margin-bottom: 16px;
 }
 .hub-tabs-more__caret { font-size: 9px; }
 .hub-tabs-dropdown {
@@ -554,7 +565,7 @@ const mobileActive = {
   background: #FFFFFF;
   border: 1px solid #D8D2C6;
   box-shadow: 0 8px 32px rgba(20,18,16,0.10);
-  min-width: 220px;
+  min-width: 260px;
   z-index: 200;
   padding: 8px 0;
 }
@@ -604,7 +615,7 @@ const mobileActive = {
   padding: 4px 10px;
   color: #8B8378;
   text-decoration: none;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   font-family: 'Inter', sans-serif;
   letter-spacing: 0.02em;
@@ -691,7 +702,7 @@ const mobileActive = {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 44px;
+  height: 38px;
   font-size: 14px;
   color: #57514B;
   text-decoration: none;
@@ -725,6 +736,34 @@ const mobileActive = {
    Elevated group items (injected by JS, shared styles)
 ────────────────────────────────────────────────────── */
 [data-elevated-dropdown] { padding: 0; }
+
+/* ──────────────────────────────────────────────────────
+   FOCUS-VISIBLE — keyboard navigation
+────────────────────────────────────────────────────── */
+.hub-rail__item:focus-visible,
+.hub-rail__signout:focus-visible {
+  outline: 2px solid #C9A961;
+  outline-offset: -2px;
+  background: #FAF8F4;
+}
+.hub-tab:focus-visible {
+  outline: 2px solid #C9A961;
+  outline-offset: 2px;
+}
+.hub-tabs-dropdown__item:focus-visible {
+  outline: 2px solid #C9A961;
+  outline-offset: -2px;
+  background: #FAF8F4;
+}
+.hub-bar-item:focus-visible {
+  outline: 2px solid #C9A961;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.hub-sheet__item:focus-visible {
+  outline: 2px solid #C9A961;
+  outline-offset: -2px;
+}
 </style>
 
 <script>
@@ -780,7 +819,13 @@ document.getElementById('hub-bar-club-btn')?.addEventListener('click', () =>
 document.getElementById('hub-bar-more-btn')?.addEventListener('click', () =>
   openSheet('hub-more-sheet', 'hub-bar-more-btn'));
 backdrop?.addEventListener('click', closeAllSheets);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllSheets(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAllSheets();
+    dropdown?.setAttribute('hidden', '');
+    moreBtn?.setAttribute('aria-expanded', 'false');
+  }
+});
 
 /* ── Role elevation ────────────────────────────────────────── */
 // HubLayout writes data-hub-role on #hub-frame once the JWT is decoded.
@@ -808,6 +853,12 @@ const ELEVATED_CONFIG: Record<string, {
   },
 };
 
+function isRouteActive(href: string): boolean {
+  const path = window.location.pathname;
+  if (href === '/hub/') return path === '/hub/' || path === '/hub';
+  return path.startsWith(href);
+}
+
 function applyElevation(role: string) {
   const cfg = ELEVATED_CONFIG[role];
   if (!cfg) return;
@@ -818,11 +869,12 @@ function applyElevation(role: string) {
   const itemsEl = document.querySelector<HTMLElement>('[data-elevated-items]');
   if (group && labelEl && itemsEl) {
     labelEl.textContent = cfg.label;
-    itemsEl.innerHTML = cfg.items.map(item =>
-      `<a href="${item.href}" class="hub-rail__item">
-        <span class="hub-rail__dot"></span>${item.name}
-       </a>`
-    ).join('');
+    itemsEl.innerHTML = cfg.items.map(item => {
+      const active = isRouteActive(item.href);
+      return `<a href="${item.href}" class="hub-rail__item${active ? ' hub-rail__item--active' : ''}" ${active ? 'aria-current="page"' : ''}>
+        <span class="hub-rail__dot${active ? ' hub-rail__dot--active' : ''}"></span>${item.name}
+      </a>`;
+    }).join('');
     group.removeAttribute('hidden');
   }
 

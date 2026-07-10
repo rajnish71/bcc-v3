@@ -13,44 +13,6 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
 <HubLayout title="Batch Upload" description="Upload multiple photographs to your Bhopal Camera Club portfolio.">
 
-<div class="hub-shell-wrap">
-
-  <!-- ── LEFT RAIL ──────────────────────────────────────────────────── -->
-  <nav class="hub-rail" aria-label="Hub navigation">
-    <div class="rail-section">
-      <div class="rail-label">Studio</div>
-      <a href="/hub/" class="rail-item">Home</a>
-      <a href="/hub/portfolio/" class="rail-item">Portfolio</a>
-      <a href="/hub/upload/" class="rail-item">Upload</a>
-      <a href="/hub/upload/batch/" class="rail-item rail-item--active">
-        <span class="rail-dot"></span>Batch Upload
-      </a>
-    </div>
-    <div class="rail-section">
-      <div class="rail-label">Grow</div>
-      <span class="rail-item rail-item--soon">Academy <span class="rail-soon">SOON</span></span>
-      <span class="rail-item rail-item--soon">Contests <span class="rail-soon">SOON</span></span>
-    </div>
-    <div class="rail-section">
-      <div class="rail-label">Account</div>
-      <a href="/hub/profile/" class="rail-item">My Profile</a>
-      <a href="/hub/membership/" class="rail-item">Membership &amp; Billing</a>
-    </div>
-    <div class="rail-footer">
-      <button id="rail-signout" type="button" class="rail-signout">Sign Out</button>
-    </div>
-  </nav>
-
-  <!-- ── HUB TABS (641–1199px) ─────────────────────────────────────── -->
-  <div class="hub-tabs-bar" role="tablist" aria-label="Hub sections">
-    <a href="/hub/"           class="hub-tab" role="tab">Home</a>
-    <a href="/hub/portfolio/" class="hub-tab" role="tab">Portfolio</a>
-    <a href="/hub/upload/"    class="hub-tab" role="tab">Upload</a>
-    <a href="/hub/upload/batch/" class="hub-tab hub-tab--active" role="tab" aria-selected="true">Batch</a>
-    <a href="/hub/profile/"   class="hub-tab" role="tab">Account</a>
-  </div>
-
-  <!-- ── MAIN ──────────────────────────────────────────────────────── -->
   <main class="hub-main">
 
     <div class="upload-header">
@@ -111,56 +73,10 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
   </main>
 
-</div>
-
-<!-- Mobile bar -->
-<nav class="hub-mobile-bar" aria-label="Hub quick navigation">
-  <a href="/hub/" class="mobile-bar-item">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 8.5L10 2l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V8.5z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>Home</span>
-  </a>
-  <a href="/hub/portfolio/" class="mobile-bar-item">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2" y="2" width="16" height="16" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="7" r="1.5" stroke="currentColor" stroke-width="1"/><polyline points="18 13 13 8 5 18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>Portfolio</span>
-  </a>
-  <a href="/hub/upload/" class="mobile-bar-item mobile-bar-item--upload">
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="10" stroke="currentColor" stroke-width="1.4"/><line x1="11" y1="7" x2="11" y2="15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><polyline points="7 11 11 7 15 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>Upload</span>
-  </a>
-  <a href="/hub/profile/" class="mobile-bar-item">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 18c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-    <span>Account</span>
-  </a>
-</nav>
-
 </HubLayout>
 
 <style>
-:root { --hub-rail-w: 240px; --hub-gap: 40px; --hub-pad: 48px; }
-
-.hub-shell-wrap { max-width: 1360px; margin: 0 auto; padding: 0 var(--hub-pad); display: grid; grid-template-columns: var(--hub-rail-w) 1fr; gap: 0 var(--hub-gap); align-items: start; }
-
-.hub-rail { grid-column: 1; border-right: 1px solid #E7E1D6; padding: 40px 24px 32px 0; display: flex; flex-direction: column; min-height: calc(100vh - 96px); position: sticky; top: 96px; }
-.rail-section { margin-bottom: 8px; }
-.rail-label { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #8B8378; margin: 20px 0 4px; font-family: var(--font-body); }
-.rail-section:first-child .rail-label { margin-top: 0; }
-.rail-item { display: flex; align-items: center; height: 44px; font-size: 15px; font-weight: 500; color: #57514B; padding-left: 16px; text-decoration: none; transition: color 0.15s; }
-.rail-item:hover { color: #141210; }
-.rail-item--active { color: #141210; padding-left: 0; gap: 10px; }
-.rail-item--soon { color: #8B8378; cursor: default; justify-content: space-between; padding-right: 0; }
-.rail-dot { width: 6px; height: 6px; border-radius: 999px; background: linear-gradient(135deg, #C9A961, #A8843C); flex-shrink: 0; }
-.rail-soon { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: #8B8378; background: #F0EBE0; padding: 2px 6px; }
-.rail-footer { margin-top: auto; border-top: 1px solid #E7E1D6; padding-top: 20px; }
-.rail-signout { font-size: 14px; color: #8B8378; background: none; border: none; cursor: pointer; padding: 0; font-family: var(--font-body); transition: color 0.15s; }
-.rail-signout:hover { color: #141210; }
-
-.hub-tabs-bar { display: none; grid-column: 1 / -1; gap: 8px; padding: 20px 0 0; overflow-x: auto; scrollbar-width: none; }
-.hub-tabs-bar::-webkit-scrollbar { display: none; }
-.hub-tab { flex-shrink: 0; font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 999px; border: 1px solid #D8D2C6; background: #FAF8F4; color: #57514B; text-decoration: none; white-space: nowrap; transition: background 0.15s; }
-.hub-tab:hover { border-color: #C9A961; color: #141210; }
-.hub-tab--active { background: #141210; border-color: #141210; color: #FAF8F4; }
-
-.hub-main { grid-column: 2; padding-top: 40px; min-width: 0; }
+.hub-main { padding-top: 40px; min-width: 0; }
 
 .upload-header { padding-bottom: 24px; border-bottom: 1px solid #E7E1D6; margin-bottom: 28px; }
 .upload-header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -217,21 +133,10 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .batch-done-actions { display: flex; align-items: center; justify-content: center; gap: 16px; }
 .btn-gold-link { display: inline-block; font-size: 14px; font-weight: 600; color: #FFFFFF; background: linear-gradient(135deg, #C9A961, #A8843C); padding: 11px 24px; border-radius: 2px; text-decoration: none; font-family: var(--font-body); box-shadow: 0 2px 8px rgba(168,132,60,0.25); }
 
-/* Mobile bar */
-.hub-mobile-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.97); border-top: 1px solid #E7E1D6; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 100; justify-content: space-around; align-items: flex-start; }
-@media (max-width: 640px) { .hub-mobile-bar { display: flex; } }
-.mobile-bar-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 12px; color: #8B8378; text-decoration: none; font-size: 10px; font-weight: 500; transition: color 0.15s; font-family: var(--font-body); }
-.mobile-bar-item:hover, .mobile-bar-item--active { color: #141210; }
-.mobile-bar-item--upload { color: #A8843C; }
-
-@media (min-width: 1200px) { .hub-rail { display: flex; } .hub-tabs-bar { display: none; } }
-@media (min-width: 641px) and (max-width: 1199px) { .hub-tabs-bar { display: flex; } .hub-rail { display: none !important; } .hub-shell-wrap { grid-template-columns: 1fr; padding: 0 24px; } .hub-main { grid-column: 1; } }
-@media (max-width: 640px) { .hub-tabs-bar { display: none; } .hub-rail { display: none !important; } .hub-shell-wrap { grid-template-columns: 1fr; padding: 0 16px; padding-bottom: 80px; } .hub-main { grid-column: 1; } .queue-item { grid-template-columns: 40px 1fr auto; gap: 10px; } }
+@media (max-width: 640px) { .queue-item { grid-template-columns: 40px 1fr auto; gap: 10px; } }
 </style>
 
 <script>
-import { logout } from '../../../lib/auth';
-
 const API = '/api/v1';
 const MAX_FILES = 20;
 const MAX_BYTES = 150 * 1024 * 1024;
@@ -411,5 +316,4 @@ fileInput?.addEventListener('change', () => { if (fileInput.files) addFiles(file
 document.getElementById('start-upload-btn')?.addEventListener('click', () => startUploads().catch(() => {}));
 document.getElementById('clear-queue-btn')?.addEventListener('click', () => { if (!uploading) { queue = []; renderQueue(); document.getElementById('batch-done')!.hidden = true; } });
 document.getElementById('batch-reset-btn')?.addEventListener('click', () => { queue = []; renderQueue(); document.getElementById('batch-done')!.hidden = true; });
-document.getElementById('rail-signout')?.addEventListener('click', logout);
 </script>

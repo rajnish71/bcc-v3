@@ -1,17 +1,36 @@
 ---
 /**
- * HubLayout.astro -- Auth-gated layout for /hub/* pages.
+ * HubLayout.astro — Authenticated application shell for /hub/* pages.
+ * Authority: HUB-ARCH-001 Hub Component Architecture Freeze v1.0
  *
- * Behaviour:
- *   - Renders the full page server-side (SSG).
- *   - Client script checks for bcc_token in localStorage.
- *   - If absent or expired: attempts silent token refresh using bcc_refresh.
- *   - If refresh fails: redirects to /auth/signin/?next=<current-path>.
- *   - If valid: shows hub content and populates greeting from /api/v1/users/me.
+ * Composition:
+ *   BaseLayout (HTML shell · SiteHeader · SiteFooter · fonts · CSS)
+ *   └── hub-loading  (shown during JWT resolution)
+ *   └── hub-frame    (hidden until auth confirmed)
+ *       ├── HubSidebar  (navigation — all three responsive modes)
+ *       └── hub-workspace
+ *           ├── slot[page-header]  (optional HubPageHeader — named slot)
+ *           └── slot               (default — workspace content)
  *
- * Slot: page content (rendered inside hub-shell, hidden until auth confirmed).
+ * Auth behaviour (FD-001, FD-002):
+ *   - Token absent or invalid → redirect to /auth/signin/?next=<current path>
+ *   - Token valid → decode role, write data-hub-role on #hub-frame, reveal shell
+ *
+ * HUB-ARCH-001 Principle 1 — Single Authentication Owner: only this layout reads JWT.
+ * HUB-ARCH-001 Principle 7 — RBAC: role attr written here; HubSidebar reads it.
+ *
+ * Slots:
+ *   page-header  Optional. Expected occupant: HubPageHeader.
+ *                Renders nothing when omitted (no fallback).
+ *   [default]    Required. Workspace content provided by each Hub page.
+ *
+ * Props:
+ *   title        — page <title> (appended with " | Bhopal Camera Club")
+ *   description  — meta description (optional)
+ *   bodyClass    — extra body class (optional)
  */
 import BaseLayout from './BaseLayout.astro';
+import HubSidebar from '../components/hub/HubSidebar.astro';
 
 interface Props {
   title: string;
@@ -20,43 +39,62 @@ interface Props {
 }
 
 const { title, description, bodyClass = '' } = Astro.props;
+const activeRoute = Astro.url.pathname;
 ---
 
 <BaseLayout title={title} description={description} bodyClass={`hub-page ${bodyClass}`}>
 
-  <!-- Hidden until client confirms auth -->
-  <div id="hub-shell" class="hub-shell" style="display:none">
-    <slot />
+  <!-- Auth loading state (FD-013: owned by HubLayout) -->
+  <div id="hub-loading" class="hub-loading" aria-live="polite" aria-label="Authenticating">
+    <span class="hub-loading__dot"></span>
+    <span class="hub-loading__dot"></span>
+    <span class="hub-loading__dot"></span>
   </div>
 
-  <!-- Shown while checking auth -->
-  <div id="hub-loading" class="hub-loading" aria-live="polite">
-    <span class="hub-loading__dot"></span>
-    <span class="hub-loading__dot"></span>
-    <span class="hub-loading__dot"></span>
+  <!-- Hub frame — hidden until auth resolves -->
+  <div id="hub-frame" class="hub-frame" style="display:none" data-hub-role="member">
+
+    <div class="hub-grid">
+
+      <!-- Navigation shell — single owner (HUB-ARCH-001 Principle 2) -->
+      <HubSidebar activeRoute={activeRoute} />
+
+      <!-- Workspace -->
+      <div class="hub-workspace" id="hub-workspace">
+
+        <!-- page-header slot: optional, occupied by HubPageHeader injected by pages -->
+        <slot name="page-header" />
+
+        <!-- Default slot: workspace content provided by each page -->
+        <slot />
+
+      </div>
+
+    </div>
+
   </div>
 
 </BaseLayout>
 
 <style>
-/* Hub page overrides */
-.hub-shell { min-height: 60vh; }
-
-/* Auth-check loading dots */
+/* ──────────────────────────────────────────────────────
+   AUTH LOADING STATE
+────────────────────────────────────────────────────── */
 .hub-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 40vh;
-  padding: var(--s-12) 0;
+  min-height: 50vh;
+  padding: var(--s-12, 48px) 0;
 }
-.hub-loading[hidden] { display: none; }
+.hub-loading[hidden] { display: none !important; }
 
 .hub-loading__dot {
-  width: 8px; height: 8px;
-  background: var(--hairline-strong);
-  border-radius: var(--r-full);
+  width: 8px;
+  height: 8px;
+  background: #D8D2C6;
+  border-radius: 999px;
   animation: hub-pulse 1.2s ease-in-out infinite both;
 }
 .hub-loading__dot:nth-child(2) { animation-delay: 0.2s; }
@@ -64,29 +102,76 @@ const { title, description, bodyClass = '' } = Astro.props;
 
 @keyframes hub-pulse {
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40%           { transform: scale(1);   opacity: 1;   }
+  40%            { transform: scale(1);   opacity: 1; }
+}
+
+/* ──────────────────────────────────────────────────────
+   HUB FRAME & GRID
+────────────────────────────────────────────────────── */
+.hub-frame { min-height: calc(100vh - 96px); }
+
+/*
+  Desktop ≥ 1200px: two-column grid
+    left  = HubSidebar (240px fixed rail)
+    right = hub-workspace (fluid)
+
+  Tablet 641–1199px: single column — HubSidebar (tab bar) above workspace
+  Mobile ≤ 640px:    single column — HubMobileBar is fixed (outside grid flow)
+*/
+.hub-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  align-items: start;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  .hub-grid {
+    grid-template-columns: 1fr;
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hub-grid {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+    /* Extra bottom padding for fixed mobile bar */
+    padding-bottom: 80px;
+  }
+}
+
+/* ──────────────────────────────────────────────────────
+   HUB WORKSPACE
+────────────────────────────────────────────────────── */
+.hub-workspace {
+  min-width: 0;
+  padding-top: 0;
 }
 </style>
 
 <script>
   const API = '/api/v1';
 
+  /* ── Token helpers ─────────────────────────────────────────── */
   async function getValidToken(): Promise<string | null> {
     const token = localStorage.getItem('bcc_token');
     if (!token) return null;
 
-    // Decode JWT payload (base64url -- no signature verification here,
-    // the server validates on every request)
     try {
-      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
       const expiresAt = (payload.exp as number) * 1000;
 
-      // Still valid for >60 s: use it as-is
+      // Token still valid for > 60 seconds
       if (Date.now() < expiresAt - 60_000) return token;
 
-      // Expired (or expiring soon): try refresh
+      // Expired or about to — try silent refresh
       const refresh = localStorage.getItem('bcc_refresh');
-      if (!refresh) return null;
+      if (!refresh) { clearAuth(); return null; }
 
       const res = await fetch(`${API}/auth/refresh`, {
         method: 'POST',
@@ -110,33 +195,58 @@ const { title, description, bodyClass = '' } = Astro.props;
     localStorage.removeItem('bcc_user');
   }
 
+  /* ── Role extraction from JWT ──────────────────────────────── */
+  function getRoleFromToken(token: string): string {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return (payload.role as string | undefined) ?? 'member';
+    } catch {
+      return 'member';
+    }
+  }
+
+  /* ── Bootstrap auth guard ──────────────────────────────────── */
   async function initHub(): Promise<void> {
     const token = await getValidToken();
+
     if (!token) {
       const next = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.replace(`/auth/signin/?next=${next}`);
       return;
     }
 
-    // Show hub content
-    const shell = document.getElementById('hub-shell');
-    const loading = document.getElementById('hub-loading');
-    if (shell)   shell.style.display = '';
-    if (loading) loading.hidden = true;
+    // Resolve role and write to hub-frame (HubSidebar observes this)
+    const role = getRoleFromToken(token);
+    const frame = document.getElementById('hub-frame');
+    if (frame) frame.setAttribute('data-hub-role', role);
 
-    // Refresh bcc_user in localStorage (in case display name changed)
+    // Reveal the hub shell
+    const loading = document.getElementById('hub-loading');
+    if (loading) loading.hidden = true;
+    if (frame) frame.style.display = '';
+
+    // Refresh bcc_user in localStorage (non-critical)
     try {
       const res = await fetch(`${API}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        const user = await res.json() as { fullName?: string; username?: string; ui?: { portalState: string } };
+        const user = await res.json() as {
+          fullName?: string;
+          username?: string;
+          ui?: { portalState: string };
+        };
         if (user.fullName) {
-          const initials = user.fullName.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+          const initials = user.fullName.trim()
+            .split(/\s+/)
+            .map((w: string) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
           localStorage.setItem('bcc_user', JSON.stringify({
             displayName: user.fullName,
             initials,
-            username: user.username || '',
+            username: user.username ?? '',
             ui: user.ui,
           }));
         }

@@ -1,0 +1,865 @@
+---
+/**
+ * HubSidebar.astro — Shared Member Hub navigation component.
+ * Authority: V6 12 Members Hub Navigation (design) · HUB-ARCH-001 (architecture)
+ *
+ * Renders one of three surfaces depending on viewport:
+ *   ≥ 1200px  — .hub-rail        (fixed 240px left column, Desktop)
+ *   641–1199px — .hub-tabs-bar   (horizontal-scroll pill row beneath SiteHeader, Tablet)
+ *   ≤ 640px   — .hub-mobile-bar  (fixed bottom bar, 5 slots, Mobile)
+ *
+ * Props:
+ *   activeRoute — current page pathname, used to determine the active item
+ *
+ * Role elevation (Editor / Moderator / Admin) is resolved client-side:
+ *   HubLayout writes data-hub-role on #hub-frame; this component's script
+ *   reads that attribute and reveals the appropriate elevated group.
+ *
+ * HUB-ARCH-001 FD-003: This component is named HubSidebar. FD-004: frozen.
+ * HUB-ARCH-001 Principle 2: HubSidebar is the sole owner of navigation rendering.
+ */
+
+interface Props {
+  activeRoute: string;
+}
+
+const { activeRoute } = Astro.props;
+
+type NavItem = {
+  name: string;
+  href: string;
+  soon?: boolean;
+};
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
+function isActive(href: string): boolean {
+  if (href === '/hub/') return activeRoute === '/hub/' || activeRoute === '/hub';
+  // Query-string items (CLUB activities) — match the base path
+  if (href.includes('?')) return activeRoute === href.split('?')[0];
+  return activeRoute.startsWith(href);
+}
+
+const groups: NavGroup[] = [
+  {
+    label: 'STUDIO',
+    items: [
+      { name: 'Home',          href: '/hub/' },
+      { name: 'Portfolio',     href: '/hub/portfolio/' },
+      { name: 'Upload Studio', href: '/hub/upload/' },
+    ],
+  },
+  {
+    label: 'GROW',
+    items: [
+      { name: 'Photography School', href: '/hub/academy/',  soon: true },
+      { name: 'Contests',           href: '/hub/contests/', soon: true },
+    ],
+  },
+  {
+    label: 'CLUB',
+    items: [
+      { name: 'Tours',       href: '/activities/?type=tour' },
+      { name: 'Workshops',   href: '/activities/?type=workshop' },
+      { name: 'Photo Walks', href: '/activities/?type=photo_walk' },
+      { name: 'Meetups',     href: '/activities/?type=meetup' },
+    ],
+  },
+  {
+    label: 'ACCOUNT',
+    items: [
+      { name: 'My Profile',          href: '/hub/profile/' },
+      { name: 'Membership & Billing', href: '/hub/membership/' },
+    ],
+  },
+];
+
+// Primary tabs for tablet (items visible before "More")
+const primaryTabItems: NavItem[] = [
+  { name: 'Home',               href: '/hub/' },
+  { name: 'Portfolio',          href: '/hub/portfolio/' },
+  { name: 'Upload Studio',      href: '/hub/upload/' },
+  { name: 'Photography School', href: '/hub/academy/',  soon: true },
+  { name: 'Contests',           href: '/hub/contests/', soon: true },
+  { name: 'Tours',              href: '/activities/?type=tour' },
+  { name: 'Workshops',          href: '/activities/?type=workshop' },
+];
+
+// Items that overflow into the tablet "More" dropdown
+const moreTabItems: NavItem[] = [
+  { name: 'Photo Walks',          href: '/activities/?type=photo_walk' },
+  { name: 'Meetups',              href: '/activities/?type=meetup' },
+  { name: 'My Profile',           href: '/hub/profile/' },
+  { name: 'Membership & Billing', href: '/hub/membership/' },
+];
+
+const mobileActive = {
+  home:      isActive('/hub/'),
+  portfolio: isActive('/hub/portfolio/'),
+  upload:    isActive('/hub/upload/'),
+};
+---
+
+<!--
+  ══════════════════════════════════════════════════════
+  01 DESKTOP LEFT RAIL (≥ 1200px)
+  ══════════════════════════════════════════════════════
+-->
+<aside class="hub-sidebar" aria-label="Hub navigation" id="hub-sidebar">
+
+  <nav class="hub-rail" aria-label="Member Hub">
+
+    <!-- Logo lockup -->
+    <div class="hub-rail__logo">
+      <img src="/brand/BCC Default.png" alt="BCC" class="hub-rail__mark" />
+      <span class="hub-rail__wordmark">Member Hub</span>
+    </div>
+
+    <!-- Base nav groups (all roles) -->
+    {groups.map(group => (
+      <div class="hub-rail__group">
+        <div class="hub-rail__group-label">{group.label}</div>
+        {group.items.map(item => {
+          const active = isActive(item.href);
+          return item.soon ? (
+            <span class="hub-rail__item hub-rail__item--soon">
+              <span class="hub-rail__dot-placeholder"></span>
+              {item.name}
+              <span class="hub-rail__soon">SOON</span>
+            </span>
+          ) : (
+            <a
+              href={item.href}
+              class={`hub-rail__item${active ? ' hub-rail__item--active' : ''}`}
+              aria-current={active ? 'page' : undefined}
+            >
+              <span class={`hub-rail__dot${active ? ' hub-rail__dot--active' : ''}`}></span>
+              {item.name}
+            </a>
+          );
+        })}
+      </div>
+    ))}
+
+    <!-- Elevated group (hidden; revealed by JS per role) -->
+    <div class="hub-rail__group hub-rail__elevated" data-elevated-group hidden>
+      <div class="hub-rail__group-label" data-elevated-label></div>
+      <div data-elevated-items></div>
+    </div>
+
+    <!-- Sign Out -->
+    <div class="hub-rail__footer">
+      <button type="button" class="hub-rail__signout" id="hub-signout">Sign Out</button>
+    </div>
+
+  </nav>
+
+  <!--
+    ══════════════════════════════════════════════════════
+    02 TABLET HUB TABS (641–1199px)
+    ══════════════════════════════════════════════════════
+  -->
+  <div class="hub-tabs-bar" role="tablist" aria-label="Hub sections" id="hub-tabs-bar">
+
+    {primaryTabItems.map(item => {
+      const active = isActive(item.href);
+      return item.soon ? (
+        <span class="hub-tab hub-tab--soon" role="tab" aria-disabled="true">
+          {item.name}&nbsp;<span class="hub-tab__soon">SOON</span>
+        </span>
+      ) : (
+        <a
+          href={item.href}
+          class={`hub-tab${active ? ' hub-tab--active' : ''}`}
+          role="tab"
+          aria-selected={active ? 'true' : 'false'}
+        >
+          {item.name}
+        </a>
+      );
+    })}
+
+    <!-- More chip -->
+    <div class="hub-tabs-more" id="hub-tabs-more">
+      <button
+        type="button"
+        class="hub-tab hub-tab--more"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-controls="hub-tabs-dropdown"
+        id="hub-tabs-more-btn"
+      >
+        More <span class="hub-tabs-more__caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="hub-tabs-dropdown" id="hub-tabs-dropdown" hidden>
+        {moreTabItems.map((item, i) => {
+          // Divider before ACCOUNT items (index 2)
+          const divider = i === 2;
+          return (
+            <>
+              {divider && <div class="hub-tabs-dropdown__divider" role="separator"></div>}
+              <a href={item.href} class="hub-tabs-dropdown__item">{item.name}</a>
+            </>
+          );
+        })}
+        <!-- Elevated items injected here by JS -->
+        <div data-elevated-dropdown hidden></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!--
+    ══════════════════════════════════════════════════════
+    03 MOBILE HUB BAR (≤ 640px)
+    ══════════════════════════════════════════════════════
+  -->
+  <nav class="hub-mobile-bar" aria-label="Hub quick navigation" id="hub-mobile-bar">
+
+    <!-- 1: Home -->
+    <a
+      href="/hub/"
+      class={`hub-bar-item${mobileActive.home ? ' hub-bar-item--active' : ''}`}
+      aria-current={mobileActive.home ? 'page' : undefined}
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M3 8.5L10 2l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V8.5z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Home</span>
+      {mobileActive.home && <span class="hub-bar-item__indicator" aria-hidden="true"></span>}
+    </a>
+
+    <!-- 2: Portfolio -->
+    <a
+      href="/hub/portfolio/"
+      class={`hub-bar-item${mobileActive.portfolio ? ' hub-bar-item--active' : ''}`}
+      aria-current={mobileActive.portfolio ? 'page' : undefined}
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="16" height="16" stroke="currentColor" stroke-width="1.4"/>
+        <circle cx="7" cy="7" r="1.5" stroke="currentColor" stroke-width="1"/>
+        <polyline points="18 13 13 8 5 18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Portfolio</span>
+      {mobileActive.portfolio && <span class="hub-bar-item__indicator" aria-hidden="true"></span>}
+    </a>
+
+    <!-- 3: Upload (raised gold CTA — slot 3) -->
+    <a
+      href="/hub/upload/"
+      class="hub-bar-item hub-bar-item--upload"
+      aria-label="Upload a photograph"
+    >
+      <span class="hub-bar-upload-btn" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <line x1="11" y1="6" x2="11" y2="16" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          <polyline points="7 10 11 6 15 10" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span>Upload</span>
+    </a>
+
+    <!-- 4: Club (opens bottom sheet) -->
+    <button
+      type="button"
+      class="hub-bar-item hub-bar-item--btn"
+      id="hub-bar-club-btn"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-controls="hub-club-sheet"
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <rect x="2" y="3" width="16" height="15" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+        <line x1="14" y1="1" x2="14" y2="5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="6"  y1="1" x2="6"  y2="5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="2"  y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.4"/>
+      </svg>
+      <span>Club</span>
+    </button>
+
+    <!-- 5: More (opens bottom sheet) -->
+    <button
+      type="button"
+      class="hub-bar-item hub-bar-item--btn"
+      id="hub-bar-more-btn"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-controls="hub-more-sheet"
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="4"  cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="16" cy="10" r="1.5" fill="currentColor"/>
+      </svg>
+      <span>More</span>
+    </button>
+
+  </nav>
+
+  <!-- Club bottom sheet -->
+  <div class="hub-sheet" id="hub-club-sheet" hidden role="dialog" aria-modal="true" aria-label="Club activities">
+    <div class="hub-sheet__handle" aria-hidden="true"></div>
+    <div class="hub-sheet__content">
+      <div class="hub-sheet__group-label">Club</div>
+      <a href="/activities/?type=tour"        class="hub-sheet__item">Tours</a>
+      <a href="/activities/?type=workshop"    class="hub-sheet__item">Workshops</a>
+      <a href="/activities/?type=photo_walk"  class="hub-sheet__item">Photo Walks</a>
+      <a href="/activities/?type=meetup"      class="hub-sheet__item">Meetups</a>
+    </div>
+  </div>
+
+  <!-- More bottom sheet -->
+  <div class="hub-sheet" id="hub-more-sheet" hidden role="dialog" aria-modal="true" aria-label="More navigation">
+    <div class="hub-sheet__handle" aria-hidden="true"></div>
+    <div class="hub-sheet__content">
+      <div class="hub-sheet__group-label">Grow</div>
+      <div class="hub-sheet__item hub-sheet__item--soon">
+        Photography School <span class="hub-sheet__soon">SOON</span>
+      </div>
+      <div class="hub-sheet__item hub-sheet__item--soon">
+        Contests <span class="hub-sheet__soon">SOON</span>
+      </div>
+      <div class="hub-sheet__group-label">Account</div>
+      <a href="/hub/profile/"     class="hub-sheet__item">My Profile</a>
+      <a href="/hub/membership/"  class="hub-sheet__item">Membership &amp; Billing</a>
+      <!-- Elevated items injected here by JS -->
+      <div data-elevated-sheet hidden></div>
+    </div>
+  </div>
+
+  <!-- Sheet backdrop -->
+  <div class="hub-sheet-backdrop" id="hub-sheet-backdrop" hidden aria-hidden="true"></div>
+
+</aside>
+
+<style>
+/* ──────────────────────────────────────────────────────
+   DESKTOP LEFT RAIL (≥ 1200px)
+────────────────────────────────────────────────────── */
+.hub-rail {
+  display: none;
+  flex-direction: column;
+  width: 240px;
+  min-height: calc(100vh - 96px);
+  padding: 32px 0 32px 0;
+  border-right: 1px solid #E7E1D6;
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.hub-rail::-webkit-scrollbar { display: none; }
+
+@media (min-width: 1200px) {
+  .hub-rail { display: flex; }
+}
+
+/* Logo lockup */
+.hub-rail__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 0 24px 0 0;
+}
+.hub-rail__mark {
+  height: 26px;
+  width: auto;
+  display: block;
+}
+.hub-rail__wordmark {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: #141210;
+}
+
+/* Group */
+.hub-rail__group { margin-bottom: 4px; }
+
+.hub-rail__group-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8B8378;
+  margin: 20px 0 6px;
+  padding-right: 24px;
+  font-family: 'Inter', sans-serif;
+}
+.hub-rail__group:first-of-type .hub-rail__group-label { margin-top: 0; }
+
+/* Nav item */
+.hub-rail__item {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #57514B;
+  text-decoration: none;
+  gap: 10px;
+  padding-right: 24px;
+  transition: color 0.15s;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+.hub-rail__item:hover { color: #141210; }
+
+/* Active item */
+.hub-rail__item--active { color: #141210; }
+
+/* Dot */
+.hub-rail__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: transparent;
+  flex-shrink: 0;
+}
+.hub-rail__dot--active {
+  background: linear-gradient(135deg, #C9A961, #A8843C);
+}
+.hub-rail__dot-placeholder {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+}
+
+/* Soon item */
+.hub-rail__item--soon {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #B8B0A4;
+  cursor: default;
+  gap: 10px;
+  padding-right: 24px;
+  font-family: 'Inter', sans-serif;
+}
+.hub-rail__soon {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #8B8378;
+  background: #F0EBE0;
+  padding: 2px 6px;
+  margin-left: auto;
+}
+
+/* Elevated group (shown by JS) */
+.hub-rail__elevated { border-top: 1px solid #E7E1D6; padding-top: 8px; margin-top: 8px; }
+
+/* Footer: Sign Out */
+.hub-rail__footer {
+  margin-top: auto;
+  border-top: 1px solid #E7E1D6;
+  padding-top: 20px;
+  padding-right: 24px;
+}
+.hub-rail__signout {
+  font-size: 14px;
+  color: #8B8378;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.15s;
+}
+.hub-rail__signout:hover { color: #141210; }
+
+/* ──────────────────────────────────────────────────────
+   TABLET HUB TABS (641–1199px)
+────────────────────────────────────────────────────── */
+.hub-tabs-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-bottom: 1px solid #E7E1D6;
+  background: #FAF8F4;
+}
+.hub-tabs-bar::-webkit-scrollbar { display: none; }
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  .hub-tabs-bar { display: flex; }
+}
+
+.hub-tab {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid #D8D2C6;
+  background: #FFFFFF;
+  color: #57514B;
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  margin-bottom: 16px;
+}
+.hub-tab:hover { border-color: #A8843C; color: #141210; }
+
+.hub-tab--active {
+  background: #141210;
+  border-color: #141210;
+  color: #FAF8F4;
+}
+.hub-tab--active:hover { border-color: #141210; color: #FAF8F4; }
+
+.hub-tab--soon {
+  border-color: #F0EBE0;
+  color: #B8B0A4;
+  cursor: default;
+}
+.hub-tab--soon:hover { border-color: #F0EBE0; color: #B8B0A4; }
+.hub-tab__soon {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* More chip */
+.hub-tabs-more {
+  position: relative;
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+.hub-tab--more {
+  font-weight: 600;
+  background: #F4F0E8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.hub-tabs-more__caret { font-size: 9px; }
+.hub-tabs-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid #D8D2C6;
+  box-shadow: 0 8px 32px rgba(20,18,16,0.10);
+  min-width: 220px;
+  z-index: 200;
+  padding: 8px 0;
+}
+.hub-tabs-dropdown__item {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 20px;
+  font-size: 14px;
+  color: #57514B;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.1s;
+}
+.hub-tabs-dropdown__item:hover { background: #FAF8F4; color: #141210; }
+.hub-tabs-dropdown__divider {
+  height: 1px;
+  background: #F0EBE0;
+  margin: 6px 0;
+}
+
+/* ──────────────────────────────────────────────────────
+   MOBILE HUB BAR (≤ 640px) — fixed bottom
+────────────────────────────────────────────────────── */
+.hub-mobile-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.97);
+  border-top: 1px solid #E7E1D6;
+  z-index: 150;
+  justify-content: space-around;
+  align-items: flex-end;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+@media (max-width: 640px) { .hub-mobile-bar { display: flex; } }
+
+.hub-bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 10px;
+  color: #8B8378;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.02em;
+  position: relative;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.hub-bar-item:hover,
+.hub-bar-item--active { color: #141210; }
+
+.hub-bar-item--btn { font-family: 'Inter', sans-serif; }
+
+/* Active underline indicator */
+.hub-bar-item__indicator {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 2px;
+  background: #C9A961;
+}
+
+/* Upload: raised gold circle (slot 3) */
+.hub-bar-item--upload { color: #57514B; padding-bottom: 4px; }
+.hub-bar-upload-btn {
+  width: 52px;
+  height: 52px;
+  margin-top: -32px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #C9A961, #A8843C);
+  box-shadow: 0 2px 10px rgba(168,132,60,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s;
+}
+.hub-bar-item--upload:hover .hub-bar-upload-btn {
+  box-shadow: 0 4px 16px rgba(168,132,60,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+/* ──────────────────────────────────────────────────────
+   BOTTOM SHEETS (mobile)
+────────────────────────────────────────────────────── */
+.hub-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid #D8D2C6;
+  box-shadow: 0 -8px 32px rgba(20,18,16,0.12);
+  z-index: 200;
+  border-radius: 12px 12px 0 0;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.hub-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: #D8D2C6;
+  margin: 10px auto 0;
+}
+
+.hub-sheet__content {
+  padding: 8px 22px 20px;
+}
+
+.hub-sheet__group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8B8378;
+  margin: 14px 0 6px;
+  font-family: 'Inter', sans-serif;
+}
+.hub-sheet__group-label:first-child { margin-top: 10px; }
+
+.hub-sheet__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  font-size: 14px;
+  color: #57514B;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  border-bottom: 1px solid #F4F0E8;
+  transition: color 0.15s;
+}
+.hub-sheet__item:last-child { border-bottom: none; }
+.hub-sheet__item:hover { color: #141210; }
+
+.hub-sheet__item--soon { color: #B8B0A4; cursor: default; }
+.hub-sheet__item--soon:hover { color: #B8B0A4; }
+.hub-sheet__soon {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 600;
+  background: #F4F0E8;
+  padding: 2px 5px;
+  color: #8B8378;
+}
+
+/* Sheet backdrop */
+.hub-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,18,16,0.35);
+  z-index: 190;
+}
+
+/* ──────────────────────────────────────────────────────
+   Elevated group items (injected by JS, shared styles)
+────────────────────────────────────────────────────── */
+[data-elevated-dropdown] { padding: 0; }
+</style>
+
+<script>
+import { logout } from '../../lib/auth';
+
+/* ── Sign Out ──────────────────────────────────────────────── */
+document.getElementById('hub-signout')?.addEventListener('click', logout);
+
+/* ── Tablet "More" dropdown toggle ───────────────────────── */
+const moreBtn = document.getElementById('hub-tabs-more-btn');
+const dropdown = document.getElementById('hub-tabs-dropdown');
+
+moreBtn?.addEventListener('click', () => {
+  const open = dropdown?.hasAttribute('hidden') === false;
+  if (open) {
+    dropdown?.setAttribute('hidden', '');
+    moreBtn.setAttribute('aria-expanded', 'false');
+  } else {
+    dropdown?.removeAttribute('hidden');
+    moreBtn.setAttribute('aria-expanded', 'true');
+  }
+});
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('hub-tabs-more')?.contains(e.target as Node)) {
+    dropdown?.setAttribute('hidden', '');
+    moreBtn?.setAttribute('aria-expanded', 'false');
+  }
+});
+
+/* ── Mobile bottom sheets ─────────────────────────────────── */
+const backdrop = document.getElementById('hub-sheet-backdrop');
+
+function openSheet(sheetId: string, btnId: string) {
+  const sheet = document.getElementById(sheetId);
+  const btn = document.getElementById(btnId);
+  if (!sheet || !backdrop) return;
+  sheet.removeAttribute('hidden');
+  backdrop.removeAttribute('hidden');
+  btn?.setAttribute('aria-expanded', 'true');
+}
+
+function closeAllSheets() {
+  document.querySelectorAll<HTMLElement>('.hub-sheet').forEach(s => s.setAttribute('hidden', ''));
+  backdrop?.setAttribute('hidden', '');
+  document.getElementById('hub-bar-club-btn')?.setAttribute('aria-expanded', 'false');
+  document.getElementById('hub-bar-more-btn')?.setAttribute('aria-expanded', 'false');
+}
+
+document.getElementById('hub-bar-club-btn')?.addEventListener('click', () =>
+  openSheet('hub-club-sheet', 'hub-bar-club-btn'));
+document.getElementById('hub-bar-more-btn')?.addEventListener('click', () =>
+  openSheet('hub-more-sheet', 'hub-bar-more-btn'));
+backdrop?.addEventListener('click', closeAllSheets);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllSheets(); });
+
+/* ── Role elevation ────────────────────────────────────────── */
+// HubLayout writes data-hub-role on #hub-frame once the JWT is decoded.
+// This observer reveals the appropriate elevated group.
+
+const ELEVATED_CONFIG: Record<string, {
+  label: string;
+  items: Array<{ name: string; href: string }>;
+}> = {
+  editor: {
+    label: 'EDITOR TOOLS',
+    items: [{ name: 'Journal CMS', href: '/hub/cms/' }],
+  },
+  moderator: {
+    label: 'MODERATION',
+    items: [{ name: 'Moderation Queue', href: '/hub/moderation/' }],
+  },
+  admin: {
+    label: 'ADMINISTRATION',
+    items: [
+      { name: 'Admin Console',      href: '/hub/admin/' },
+      { name: 'Moderation Queue',   href: '/hub/moderation/' },
+      { name: 'Journal CMS',        href: '/hub/cms/' },
+    ],
+  },
+};
+
+function applyElevation(role: string) {
+  const cfg = ELEVATED_CONFIG[role];
+  if (!cfg) return;
+
+  // Rail
+  const group = document.querySelector<HTMLElement>('[data-elevated-group]');
+  const labelEl = document.querySelector<HTMLElement>('[data-elevated-label]');
+  const itemsEl = document.querySelector<HTMLElement>('[data-elevated-items]');
+  if (group && labelEl && itemsEl) {
+    labelEl.textContent = cfg.label;
+    itemsEl.innerHTML = cfg.items.map(item =>
+      `<a href="${item.href}" class="hub-rail__item">
+        <span class="hub-rail__dot"></span>${item.name}
+       </a>`
+    ).join('');
+    group.removeAttribute('hidden');
+  }
+
+  // Tablet dropdown
+  const dropdownEl = document.querySelector<HTMLElement>('[data-elevated-dropdown]');
+  if (dropdownEl) {
+    dropdownEl.innerHTML =
+      `<div class="hub-tabs-dropdown__divider" role="separator"></div>` +
+      `<div style="padding:4px 20px 2px;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;">${cfg.label}</div>` +
+      cfg.items.map(item =>
+        `<a href="${item.href}" class="hub-tabs-dropdown__item">${item.name}</a>`
+      ).join('');
+    dropdownEl.removeAttribute('hidden');
+  }
+
+  // Mobile More sheet
+  const sheetEl = document.querySelector<HTMLElement>('[data-elevated-sheet]');
+  if (sheetEl) {
+    sheetEl.innerHTML =
+      `<div class="hub-sheet__group-label">${cfg.label}</div>` +
+      cfg.items.map(item =>
+        `<a href="${item.href}" class="hub-sheet__item">${item.name}</a>`
+      ).join('');
+    sheetEl.removeAttribute('hidden');
+  }
+}
+
+// Observe data-hub-role changes on #hub-frame
+const frame = document.getElementById('hub-frame');
+if (frame) {
+  const role = frame.getAttribute('data-hub-role');
+  if (role && role !== 'member') applyElevation(role);
+
+  const observer = new MutationObserver(() => {
+    const r = frame.getAttribute('data-hub-role');
+    if (r && r !== 'member') applyElevation(r);
+  });
+  observer.observe(frame, { attributes: true, attributeFilter: ['data-hub-role'] });
+}
+</script>

@@ -15,7 +15,8 @@ is ambiguous, STOP and say so before proceeding.
 2. **MEM-007** `ProjectDocs/MEM-007\_MEMBERSHIP\_NUMBERING\_CONSTITUTION\_v1.0.md`
 3. **TECH-STACK-FREEZE** `ProjectDocs/TECH-STACK-FREEZE.md`
 4. **PHASE\_ROADMAP** `ProjectDocs/PHASE\_ROADMAP.md`
-5. **This file** — operational rules for Claude Code
+5. **HUB-ARCH-001** `ProjectDocs/Architecture/HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md` — authenticated Member Hub frontend composition
+6. **This file** — operational rules for Claude Code
 
 \---
 
@@ -329,6 +330,8 @@ No glassmorphism. No hardcoded content — all values from API.
 * Expose constitutional class names on public-facing pages
 * Write `PartialType(CreateDto)` in update DTOs
 * Use port 3000 for backend calls
+* Implement `frontend/src/layouts/HubLayout.astro` or `frontend/src/pages/hub/*` without reading HUB-ARCH-001 first
+* Violate the component architecture defined in HUB-ARCH-001
 
 \---
 

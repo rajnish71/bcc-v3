@@ -1,570 +1,1141 @@
 ---
-/**
- * hub/upload/index.astro — Single-Photo Upload Centre (V6 Phase 1)
- * Route: /hub/upload/
- *
- * Flow:
- *   1. Drag-and-drop OR file picker selects a file
- *   2. Client-side EXIF extraction (using DataView on ArrayBuffer)
- *   3. Pre-publish form: Title, Description, Visibility, EXIF review
- *   4. POST /api/v1/gallery/photos/presign → {photo_uuid, r2_key, presign_url}
- *   5. PUT file binary to presign_url (direct to R2)
- *   6. POST /api/v1/gallery/photos/:uuid/confirm → photo activated
- *
- * No external EXIF libraries — uses plain DataView JPEG EXIF parsing
- * for the most common tags (Camera, Lens, ISO, Aperture, Shutter, Focal Length).
- */
 import HubLayout from '../../../layouts/HubLayout.astro';
 ---
 
-<HubLayout title="Upload" description="Upload a photograph to your Bhopal Camera Club portfolio.">
+<HubLayout title="Upload" description="Upload photographs to your Bhopal Camera Club portfolio.">
 
-  <main class="hub-main" id="hub-main">
+  <input type="file" id="file-input" multiple
+    accept="image/jpeg,.jpg,.jpeg,.tiff,.tif,image/tiff,.nef,.cr3,.arw,.dng,image/x-nikon-nef,image/x-canon-cr3,image/x-sony-arw,image/x-adobe-dng"
+    class="sr-only" aria-label="Select photographs" />
 
-    <!-- Page header -->
-    <div class="upload-header">
-      <div class="section-kicker"><span class="kicker-rule"></span>Studio</div>
-      <div class="upload-header-row">
-        <h1 class="upload-title">Upload a Photograph</h1>
-        <a href="/hub/upload/batch/" class="btn-ghost">Batch upload &#8594;</a>
-      </div>
-    </div>
+  <div class="hub-main" id="hub-main">
 
-    <!-- ── STEP 1: DROP ZONE ───────────────────────────────────────── -->
-    <div id="step-drop" class="step step--active">
-      <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Drop photograph here or click to browse">
-        <div class="drop-icon">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <rect x="4" y="4" width="40" height="40" stroke="#C9A961" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <line x1="24" y1="16" x2="24" y2="32" stroke="#C9A961" stroke-width="1.5" stroke-linecap="round"/>
-            <polyline points="16 22 24 14 32 22" stroke="#C9A961" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="14" y="32" width="20" height="2" fill="#C9A961" opacity="0.3"/>
+    <!-- Page Header -->
+    <header class="page-header">
+      <div class="section-kicker"><span class="kicker-rule"></span>MEMBER HUB — STUDIO</div>
+      <h1 class="page-title">Upload</h1>
+      <p class="page-subtitle" id="page-subtitle">Photographs are processed in the order added · nothing publishes until you finish in Metadata</p>
+    </header>
+
+    <!-- ── PHASE: EMPTY ──────────────────────────────────────────── -->
+    <section id="phase-empty">
+      <div class="drop-zone" id="drop-zone" role="button" tabindex="0"
+        aria-label="Drop photographs here, or press Enter to choose files">
+        <div class="drop-icon-ring">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+            <path d="M11 15V3M11 3L6 8M11 3l5 5" stroke="#A8843C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 15v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="#A8843C" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
         </div>
-        <div class="drop-headline">Drop your photograph here</div>
-        <div class="drop-sub">or <label for="file-input" class="drop-browse">browse files</label></div>
-        <div class="drop-formats">JPG · PNG · TIFF · HEIC · WebP · RAW (NEF, CR2, CR3, ARW, DNG) · max 150 MB</div>
-        <input type="file" id="file-input" accept="image/jpeg,image/jpg,image/png,image/tiff,image/heic,image/heif,image/webp,image/x-nikon-nef,image/x-canon-cr2,image/x-canon-cr3,image/x-sony-arw,image/x-olympus-orf,image/x-adobe-dng,.nef,.cr2,.cr3,.arw,.orf,.dng" class="sr-only" />
+        <h2 class="drop-headline">Drag photographs here</h2>
+        <p class="drop-sub">Or choose files from your memory card, drive, or camera roll. Uploads continue in the background — you can navigate away and come back.</p>
+        <button class="btn-gold" id="btn-choose" type="button">Choose Photographs</button>
+        <div class="drop-hints-wrap">
+          <span class="mono-hint">JPEG · TIFF · RAW (.CR3 .NEF .ARW)</span>
+          <span class="mono-hint">Up to 50MB per file</span>
+          <span class="mono-hint" id="card-hint" hidden>Insert a memory card — BCC detects it automatically</span>
+        </div>
       </div>
+    </section>
+
+    <!-- ── PHASE: UPLOADING ──────────────────────────────────────── -->
+    <section id="phase-uploading" hidden>
+      <div class="queue-toolbar">
+        <span class="queue-count-text" id="queue-count-text">0 photographs · uploads continue in the background</span>
+        <button class="btn-outline btn-sm" id="btn-cancel" type="button">Cancel remaining</button>
+      </div>
+      <div class="queue-grid" id="queue-grid" role="list" aria-label="Upload queue"></div>
+    </section>
+
+    <!-- ── PHASE: METADATA ───────────────────────────────────────── -->
+    <section id="phase-metadata" hidden>
+      <div class="selection-bar" id="selection-bar" hidden role="status" aria-live="polite">
+        <div class="sel-left">
+          <span class="sel-badge" id="sel-badge">0</span>
+          <span class="sel-label">selected</span>
+          <span class="sel-sep" aria-hidden="true"></span>
+          <button class="sel-clear" id="btn-clear-sel" type="button">Clear</button>
+        </div>
+        <span class="sel-hint" id="sel-hint">Editing 0 photographs together — fields left blank stay untouched</span>
+      </div>
+      <div class="photo-wall" id="photo-wall" role="list" aria-label="Uploaded photographs"></div>
+    </section>
+
+    <!-- ── PHASE: COMPLETE ───────────────────────────────────────── -->
+    <section id="phase-complete" hidden>
+      <div class="complete-wrap">
+        <div class="complete-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 10.5l4 4 8-9" stroke="#3E5A48" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="complete-headline" id="complete-headline">Photographs uploaded.</h2>
+        <p class="complete-sub" id="complete-sub">Published photographs now appear on your portfolio, pending the committee's usual review. Drafts stay private in Portfolio until you publish them — nothing is deleted or lost.</p>
+        <div class="complete-actions">
+          <button class="btn-outline" id="btn-upload-more" type="button">Upload More</button>
+          <a href="/hub/portfolio/" class="btn-gold">View Portfolio</a>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /hub-main -->
+
+  <!-- ── UPLOAD INSPECTOR (fixed right overlay) ────────────────── -->
+  <aside class="upload-inspector" id="upload-inspector" aria-label="Photo metadata inspector" aria-hidden="true">
+    <div class="insp-head">
+      <span class="insp-title" id="insp-title">Inspector</span>
+      <button class="insp-close" id="btn-close-insp" type="button" aria-label="Close inspector">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M1 1l12 12M13 1L1 13" stroke="#8B8378" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
 
-    <!-- ── STEP 2: FORM ────────────────────────────────────────────── -->
-    <div id="step-form" class="step" hidden>
-      <div class="form-grid">
-
-        <!-- Preview column -->
-        <div class="form-preview-col">
-          <div class="form-preview-frame">
-            <img id="preview-img" src="" alt="Preview" class="preview-img" />
-          </div>
-          <div class="preview-filename" id="preview-filename"></div>
-          <div class="preview-filesize" id="preview-filesize"></div>
-          <button class="btn-ghost btn-change" id="btn-change-file">Change file</button>
-        </div>
-
-        <!-- Fields column -->
-        <div class="form-fields-col">
-          <form id="upload-form" novalidate>
-
-            <div class="form-section-title">Photograph Details</div>
-
-            <div class="form-group">
-              <label class="form-label" for="f-title">Title <span class="form-required">*</span></label>
-              <input class="form-input" type="text" id="f-title" name="title"
-                maxlength="200" required placeholder="A descriptive title for this photograph" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="f-desc">Description</label>
-              <textarea class="form-textarea" id="f-desc" name="description" rows="3"
-                maxlength="2000" placeholder="Story, context, or creative notes…"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="f-visibility">Visibility</label>
-              <select class="form-select" id="f-visibility" name="visibility">
-                <option value="PUBLIC">Public — visible to everyone</option>
-                <option value="MEMBERS_ONLY">Members Only — logged-in members</option>
-                <option value="PRIVATE">Private (Draft) — only me</option>
-              </select>
-            </div>
-
-            <!-- EXIF panel (populated from parsing) -->
-            <div class="exif-panel" id="exif-panel" hidden>
-              <div class="exif-panel-title">Auto-detected from file</div>
-              <div class="exif-grid" id="exif-grid">
-                <!-- Rows injected by JS -->
-              </div>
-              <div class="exif-note">EXIF metadata is stored as uploaded. You can correct it after publishing.</div>
-            </div>
-
-            <div class="upload-error" id="upload-error" hidden></div>
-            <div class="upload-success" id="upload-success" hidden></div>
-
-            <!-- Progress -->
-            <div class="progress-wrap" id="progress-wrap" hidden>
-              <div class="progress-label" id="progress-label">Uploading…</div>
-              <div class="progress-track">
-                <div class="progress-bar" id="progress-bar"></div>
-              </div>
-              <div class="progress-pct" id="progress-pct">0%</div>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn-gold" id="upload-btn">
-                &#8593; Publish photograph
-              </button>
-              <a href="/hub/portfolio/" class="btn-cancel">Cancel</a>
-            </div>
-
-          </form>
-        </div>
-
+    <div class="insp-scroll">
+      <div class="insp-field">
+        <label class="insp-label" for="meta-title">Title</label>
+        <input class="insp-input" type="text" id="meta-title" maxlength="200" autocomplete="off" />
       </div>
-    </div><!-- /step-form -->
 
-  </main>
+      <div class="insp-field">
+        <div class="insp-label">Genre</div>
+        <div class="pill-group" id="genre-pills" role="group" aria-label="Genre">
+          <button class="pill" data-value="Street" type="button">Street</button>
+          <button class="pill" data-value="Landscape" type="button">Landscape</button>
+          <button class="pill" data-value="Portrait" type="button">Portrait</button>
+          <button class="pill" data-value="Wildlife" type="button">Wildlife</button>
+          <button class="pill" data-value="Architecture" type="button">Architecture</button>
+          <button class="pill" data-value="Abstract" type="button">Abstract</button>
+        </div>
+      </div>
+
+      <div class="insp-field">
+        <label class="insp-label" for="meta-location">Location</label>
+        <input class="insp-input" type="text" id="meta-location" maxlength="200" autocomplete="off" />
+      </div>
+
+      <div class="insp-field">
+        <div class="insp-label-row">
+          <div class="insp-label">Origin Activity</div>
+          <span class="insp-optional">optional</span>
+        </div>
+        <div class="pill-group" id="activity-pills" role="group" aria-label="Origin activity">
+          <button class="pill" data-value="Photowalk" type="button">Photowalk</button>
+          <button class="pill" data-value="Workshop" type="button">Workshop</button>
+          <button class="pill" data-value="Tour" type="button">Tour</button>
+          <button class="pill" data-value="Exhibition" type="button">Exhibition</button>
+          <button class="pill" data-value="Contest" type="button">Contest</button>
+          <button class="pill" data-value="Assignment" type="button">Assignment</button>
+          <button class="pill pill--dashed" data-value="Independent" type="button">Independent</button>
+        </div>
+        <p class="insp-hint">Applies to all photographs in this upload — powers Showcase filtering, event galleries, and photographer statistics.</p>
+      </div>
+
+      <div class="insp-field">
+        <div class="insp-label">Keywords</div>
+        <div class="keyword-wrap" id="keyword-wrap"></div>
+      </div>
+
+      <div class="insp-field">
+        <label class="insp-label" for="meta-copyright">Copyright</label>
+        <input class="insp-input insp-input--mono" type="text" id="meta-copyright" maxlength="200" autocomplete="off" />
+      </div>
+
+      <div class="insp-field">
+        <div class="insp-label">Visibility</div>
+        <select class="insp-select" id="meta-visibility">
+          <option value="PUBLIC">Public, on approval</option>
+          <option value="MEMBERS_ONLY">Members Only</option>
+          <option value="PRIVATE">Private (Draft)</option>
+        </select>
+        <p class="insp-hint">Defaulted from Member Profile — override anytime</p>
+      </div>
+
+      <div class="insp-field" id="exif-section" hidden>
+        <div class="insp-label-row">
+          <div class="insp-label" id="exif-heading">EXIF</div>
+          <span class="exif-auto">auto-extracted</span>
+        </div>
+        <div class="exif-chips" id="exif-chips"></div>
+        <p class="insp-hint">Extracted on upload. Missing fields never block publishing.</p>
+      </div>
+    </div><!-- /insp-scroll -->
+
+    <div class="pub-control">
+      <button class="pub-draft" id="btn-draft" type="button">Save as Draft</button>
+      <button class="btn-gold pub-publish" id="btn-publish" type="button">Publish Now</button>
+    </div>
+    <p class="pub-note">Draft photographs stay private until published — same Inspector, no separate draft screen</p>
+  </aside>
+
+  <!-- ── SOURCE PICKER SHEET (mobile ≤640px) ───────────────────── -->
+  <div class="sheet-backdrop" id="sheet-backdrop" aria-hidden="true" hidden></div>
+  <div class="source-picker-sheet" id="source-picker" role="dialog" aria-modal="true"
+    aria-label="Choose photographs" hidden>
+    <div class="sheet-pill" aria-hidden="true"></div>
+    <h2 class="source-title">Choose Photographs</h2>
+    <div class="source-options">
+      <button class="source-opt" id="src-camera" type="button">
+        <span class="source-opt-icon" aria-hidden="true">▦</span><span>Camera Roll</span>
+      </button>
+      <button class="source-opt" id="src-files" type="button">
+        <span class="source-opt-icon" aria-hidden="true">◧</span><span>Files</span>
+      </button>
+      <button class="source-opt" id="src-card" type="button" hidden>
+        <span class="source-opt-icon" aria-hidden="true">⚬</span><span>Memory Card (detected)</span>
+      </button>
+    </div>
+  </div>
 
 </HubLayout>
 
 <style>
-/* Main */
-.hub-main { padding-top: 40px; min-width: 0; }
+/* ── Shared ──────────────────────────────────────────────────────── */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.hub-main{padding-top:40px;min-width:0;transition:padding-right .25s ease}
+.hub-main.insp-open{padding-right:460px}
 
-/* Header */
-.upload-header { padding-bottom: 24px; border-bottom: 1px solid #E7E1D6; margin-bottom: 32px; }
-.upload-header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.section-kicker { display: flex; align-items: center; gap: 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #A8843C; margin-bottom: 14px; font-family: var(--font-body); }
-.kicker-rule { display: inline-block; width: 28px; height: 1px; background: #C9A961; flex-shrink: 0; }
-.upload-title { font-family: var(--font-display); font-size: clamp(28px, 3vw, 38px); font-weight: 700; letter-spacing: -0.02em; color: #141210; margin: 0; }
+/* ── Page header ─────────────────────────────────────────────────── */
+.page-header{padding-bottom:24px;border-bottom:1px solid #E7E1D6;margin-bottom:48px}
+.section-kicker{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#A8843C;margin-bottom:14px}
+.kicker-rule{display:inline-block;width:28px;height:1px;background:#C9A961;flex-shrink:0}
+.page-title{font-family:var(--font-display);font-size:clamp(32px,3.5vw,40px);font-weight:700;letter-spacing:-.025em;line-height:1.05;color:#141210;margin:0}
+.page-subtitle{font-size:14px;color:#8B8378;margin-top:10px;line-height:1.6}
 
-/* ── DROP ZONE ─────────────────────────────────────────────────────── */
-.drop-zone {
-  border: 1px dashed #C9A961; padding: 64px 40px;
-  text-align: center; cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  outline: none;
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn-gold{display:inline-block;font-size:15px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);border:none;padding:13px 26px;border-radius:2px;cursor:pointer;font-family:var(--font-body);box-shadow:0 2px 10px rgba(168,132,60,.3),inset 0 1px 0 rgba(255,255,255,.25);text-decoration:none;transition:box-shadow .2s}
+.btn-gold:hover{box-shadow:0 4px 16px rgba(168,132,60,.4),inset 0 1px 0 rgba(255,255,255,.25)}
+.btn-gold:disabled{opacity:.6;cursor:not-allowed}
+.btn-outline{display:inline-block;font-size:13px;font-weight:600;color:#57514B;border:1px solid #D8D2C6;padding:9px 16px;border-radius:2px;background:none;cursor:pointer;font-family:var(--font-body);transition:border-color .15s}
+.btn-outline:hover{border-color:#C9A961;color:#A8843C}
+.btn-outline:disabled{opacity:.5;cursor:default}
+.btn-sm{font-size:12px;padding:8px 14px}
+
+/* ── Drop zone ───────────────────────────────────────────────────── */
+.drop-zone{border:1px dashed #C9A961;background:rgba(201,169,97,.03);padding:96px 48px;text-align:center;cursor:pointer;outline:none;transition:background .15s,border-color .15s}
+.drop-zone:hover,.drop-zone--over{background:rgba(201,169,97,.06);border-color:#A8843C}
+.drop-zone:focus-visible{box-shadow:0 0 0 3px rgba(201,169,97,.25)}
+.drop-icon-ring{width:52px;height:52px;border-radius:999px;background:rgba(201,169,97,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 28px}
+.drop-headline{font-family:var(--font-display);font-size:26px;font-weight:600;letter-spacing:-.01em;color:#141210;margin:0 0 10px}
+.drop-sub{font-size:14px;color:#8B8378;max-width:440px;margin:0 auto 32px;line-height:1.7}
+.drop-hints-wrap{margin-top:32px;padding-top:24px;border-top:1px solid rgba(201,169,97,.2);display:flex;gap:32px;justify-content:center;flex-wrap:wrap}
+.mono-hint{font-family:var(--font-mono);font-size:11px;color:#8B8378;letter-spacing:.06em}
+
+/* ── Queue toolbar ───────────────────────────────────────────────── */
+.queue-toolbar{display:flex;align-items:center;height:44px;gap:14px;margin-bottom:24px}
+.queue-count-text{font-size:13px;color:#57514B}
+
+/* ── Queue / wall grid ───────────────────────────────────────────── */
+.queue-grid,.photo-wall{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+@media(max-width:1199px){.queue-grid,.photo-wall{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.queue-grid,.photo-wall{grid-template-columns:repeat(2,1fr);gap:10px}}
+
+/* ── Queue tile ──────────────────────────────────────────────────── */
+.q-tile{background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 1px 2px rgba(20,18,16,.04);padding:8px;position:relative}
+.q-tile--queued{opacity:.55}
+.q-tile--failed{border-color:#E7C6BE}
+.q-tile--duplicate{border-color:#D8C4A0}
+.q-tile--selected{box-shadow:0 0 0 2px #C9A961 inset,0 1px 2px rgba(20,18,16,.04);border-color:transparent}
+.tile-thumb{aspect-ratio:4/5;background:#1A1816;position:relative;overflow:hidden}
+.tile-thumb--blur{filter:blur(1.5px)}
+.tile-thumb--failed{background:#F7EDEA;display:flex;align-items:center;justify-content:center}
+.tile-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.tile-img{width:100%;height:100%;object-fit:cover;display:block}
+.tile-overlay{position:absolute;inset:0;background:rgba(20,18,16,.55);display:flex;align-items:center;justify-content:center}
+.tile-foot{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:8px}
+.tile-name{font-family:var(--font-mono);font-size:10px;color:#57514B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.tile-chip{font-size:9px;font-weight:600;letter-spacing:.06em;padding:2px 5px;flex-shrink:0}
+.tile-chip--queued{background:#F4F0E8;color:#8B8378}
+.tile-chip--pct{background:#FBF0E8;color:#8C6830}
+.tile-chip--processing{background:#F4F0E8;border:1px solid #D8D2C6;color:#57514B}
+.tile-chip--done{background:#E8EFE9;color:#3E5A48}
+.tile-failed-reason{font-size:10px;color:#A3493B;margin-top:2px}
+.tile-failed-actions{display:flex;gap:6px;margin-top:8px}
+.tile-btn{font-size:10px;font-weight:600;color:#141210;border:1px solid #D8D2C6;padding:5px 10px;border-radius:2px;background:none;cursor:pointer;flex:1;text-align:center}
+.tile-btn--muted{border:none;color:#8B8378;flex:0}
+.tile-dup-info{font-size:10px;color:#8C6830;margin-top:2px}
+.tile-dup-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tile-dup-btn{font-size:9px;font-weight:600;color:#141210;border:1px solid #D8D2C6;padding:4px 7px;border-radius:2px;background:none;cursor:pointer}
+.tile-dup-btn--muted{border:none;color:#8B8378}
+/* Selected check badge */
+.tile-check{position:absolute;top:8px;left:8px;z-index:1;width:22px;height:22px;border-radius:999px;background:linear-gradient(135deg,#C9A961,#A8843C);display:flex;align-items:center;justify-content:center;color:#FFFFFF;font-size:11px;pointer-events:none}
+
+/* Progress ring */
+.progress-ring{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.ring-track{stroke:rgba(250,248,244,.2);stroke-width:2.5;fill:none}
+.ring-arc{stroke:#C9A961;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-dasharray:94.25;stroke-dashoffset:94.25;transform-origin:center;transform:rotate(-90deg);transition:stroke-dashoffset .3s ease}
+
+/* ── Selection bar ───────────────────────────────────────────────── */
+.selection-bar{background:#141210;color:#FAF8F4;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 8px 24px rgba(20,18,16,.18);margin-bottom:20px}
+.sel-left{display:flex;align-items:center;gap:14px}
+.sel-badge{width:22px;height:22px;border-radius:999px;background:linear-gradient(135deg,#C9A961,#A8843C);display:flex;align-items:center;justify-content:center;font-size:11px;color:#141210;font-weight:700;flex-shrink:0}
+.sel-label{font-size:13px;font-weight:500}
+.sel-sep{display:block;width:1px;height:16px;background:rgba(250,248,244,.15)}
+.sel-clear{background:none;border:none;font-size:12px;color:#8B8378;cursor:pointer;font-family:var(--font-body);padding:0}
+.sel-clear:hover{color:#FAF8F4}
+.sel-hint{font-size:12px;color:#8B8378}
+
+/* ── Upload inspector ────────────────────────────────────────────── */
+.upload-inspector{
+  position:fixed;top:96px;right:0;bottom:0;width:440px;
+  background:#FFFFFF;box-shadow:-8px 0 40px rgba(20,18,16,.14);
+  border-left:1px solid #E7E1D6;
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .25s ease;
+  z-index:200;
 }
-.drop-zone:hover, .drop-zone--over { background: rgba(201,169,97,0.04); border-color: #A8843C; }
-.drop-zone:focus-visible { box-shadow: 0 0 0 3px rgba(201,169,97,0.25); }
+.upload-inspector.is-open{transform:translateX(0)}
+.insp-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 16px;border-bottom:1px solid #E7E1D6;flex-shrink:0}
+.insp-title{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#A8843C}
+.insp-close{background:none;border:none;cursor:pointer;font-size:16px;color:#8B8378;padding:4px;line-height:1;display:flex;align-items:center;justify-content:center}
+.insp-scroll{flex:1;overflow-y:auto;padding:20px 28px}
+.insp-field{margin-bottom:16px}
+.insp-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8B8378;margin-bottom:6px}
+.insp-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.insp-optional{font-family:var(--font-mono);font-size:9px;color:#8B8378}
+.insp-input{width:100%;border:1px solid #D8D2C6;padding:10px 12px;font-size:13px;color:#141210;background:#FFFFFF;font-family:var(--font-body);box-sizing:border-box;outline:none;transition:border-color .15s}
+.insp-input:focus{border-color:#C9A961;box-shadow:0 0 0 3px rgba(201,169,97,.1)}
+.insp-input--mono{font-family:var(--font-mono)}
+.insp-input--mixed{color:#8B8378;font-style:italic}
+.insp-select{width:100%;border:1px solid #D8D2C6;padding:10px 12px;font-size:13px;color:#141210;background:#FFFFFF;font-family:var(--font-body);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B8378' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;outline:none}
+.insp-select:focus{border-color:#C9A961}
+.insp-hint{font-size:11px;color:#8B8378;line-height:1.6;margin-top:6px}
 
-.drop-icon { margin-bottom: 16px; }
-.drop-headline { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: #141210; margin-bottom: 8px; }
-.drop-sub { font-size: 14px; color: #8B8378; font-family: var(--font-body); margin-bottom: 12px; }
-.drop-browse { color: #A8843C; cursor: pointer; border-bottom: 1px solid rgba(168,132,60,0.4); }
-.drop-browse:hover { border-color: #A8843C; }
-.drop-formats { font-family: var(--font-mono); font-size: 10px; color: #8B8378; letter-spacing: 0.04em; }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+/* Pills */
+.pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0}
+.pill{font-size:12px;font-weight:500;padding:8px 14px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;background:none;cursor:pointer;font-family:var(--font-body);transition:all .15s;white-space:nowrap}
+.pill:hover{border-color:#C9A961;color:#A8843C}
+.pill--active{background:#141210;color:#FAF8F4;border-color:#141210}
+.pill--active:hover{background:#2A2826;border-color:#2A2826;color:#FAF8F4}
+.pill--dashed{border-style:dashed;color:#8B8378}
 
-/* ── FORM GRID ─────────────────────────────────────────────────────── */
-.form-grid { display: grid; grid-template-columns: 220px 1fr; gap: 32px; }
+/* Keywords */
+.keyword-wrap{display:flex;flex-wrap:wrap;gap:6px}
+.kw-chip{font-family:var(--font-mono);font-size:10px;background:#F4F0E8;padding:4px 8px;color:#57514B;display:flex;align-items:center;gap:4px}
+.kw-remove{background:none;border:none;cursor:pointer;color:#8B8378;font-size:11px;padding:0;line-height:1}
+.kw-add-btn{font-family:var(--font-mono);font-size:10px;border:1px dashed #D8D2C6;padding:4px 8px;color:#8B8378;background:none;cursor:pointer}
+.kw-input{font-family:var(--font-mono);font-size:10px;border:1px solid #C9A961;padding:4px 8px;color:#141210;background:#FFFFFF;outline:none;width:120px}
 
-.form-preview-frame { background: #1A1816; aspect-ratio: 4/5; overflow: hidden; margin-bottom: 10px; }
-.preview-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.preview-filename { font-family: var(--font-mono); font-size: 11px; color: #57514B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.preview-filesize { font-family: var(--font-mono); font-size: 10px; color: #8B8378; margin-top: 2px; }
-.btn-change { margin-top: 12px; width: 100%; text-align: center; font-size: 12px; padding: 8px 12px; }
+/* EXIF */
+.exif-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:0}
+.exif-chip{font-family:var(--font-mono);font-size:10px;background:#F4F0E8;padding:4px 8px;color:#57514B}
+.exif-chip--missing{color:#8B8378;font-style:italic}
+.exif-auto{font-family:var(--font-mono);font-size:9px;color:#3E5A48}
 
-/* Fields */
-.form-section-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: #141210; margin: 0 0 18px; }
-.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-.form-label { font-size: 12px; font-weight: 600; color: #57514B; letter-spacing: 0.04em; font-family: var(--font-body); }
-.form-required { color: #A8843C; }
-.form-input, .form-textarea, .form-select {
-  font-family: var(--font-body); font-size: 14px; color: #141210;
-  border: 1px solid #D8D2C6; padding: 10px 14px; border-radius: 2px;
-  background: #FFFFFF; width: 100%; box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+/* Publication control */
+.pub-control{display:flex;gap:10px;padding:16px 28px 0;flex-shrink:0}
+.pub-draft{flex:1;text-align:center;font-size:13px;font-weight:600;color:#57514B;border:1px solid #D8D2C6;padding:13px;background:none;cursor:pointer;font-family:var(--font-body);transition:border-color .15s}
+.pub-draft:hover{border-color:#C9A961;color:#A8843C}
+.pub-draft:disabled{opacity:.5;cursor:default}
+.pub-publish{flex:1.4;font-size:14px;padding:13px}
+.pub-publish:disabled{opacity:.5;cursor:default}
+.pub-note{font-size:10px;color:#8B8378;text-align:center;padding:8px 28px 20px;flex-shrink:0;line-height:1.5}
+
+/* ── Complete state ───────────────────────────────────────────────── */
+.complete-wrap{max-width:560px;text-align:center;margin:96px auto 0}
+.complete-icon{width:52px;height:52px;border-radius:999px;background:#E8EFE9;display:flex;align-items:center;justify-content:center;margin:0 auto 28px}
+.complete-headline{font-family:var(--font-display);font-weight:600;font-size:30px;letter-spacing:-.015em;color:#141210;margin:0 0 10px}
+.complete-sub{font-size:14px;color:#8B8378;line-height:1.7;margin-bottom:36px}
+.complete-actions{display:flex;gap:12px;justify-content:center}
+
+/* ── Source picker sheet (mobile) ────────────────────────────────── */
+.sheet-backdrop{position:fixed;inset:0;background:rgba(20,18,16,.4);z-index:300;backdrop-filter:none}
+.source-picker-sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:301;
+  background:#FAF8F4;border-top:1px solid #E7E1D6;
+  border-radius:12px 12px 0 0;
+  padding:16px 20px 32px;
+  transform:translateY(100%);transition:transform .25s ease;
 }
-.form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: #C9A961; box-shadow: 0 0 0 3px rgba(201,169,97,0.12); }
-.form-textarea { resize: vertical; min-height: 80px; }
-.form-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B8378' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.source-picker-sheet.is-open{transform:translateY(0)}
+.sheet-pill{width:36px;height:4px;background:#D8D2C6;border-radius:999px;margin:0 auto 20px}
+.source-title{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 20px;color:#141210}
+.source-options{display:flex;flex-direction:column;gap:10px}
+.source-opt{display:flex;align-items:center;gap:14px;height:56px;border:1px solid #E7E1D6;padding:0 16px;background:#FFFFFF;cursor:pointer;font-size:15px;font-weight:500;color:#141210;font-family:var(--font-body);text-align:left;transition:border-color .15s}
+.source-opt:hover{border-color:#C9A961}
+.source-opt-icon{font-size:18px}
 
-/* EXIF panel */
-.exif-panel { background: #F4F0E8; padding: 16px 18px; margin-bottom: 20px; }
-.exif-panel-title { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #8B8378; margin-bottom: 10px; font-family: var(--font-body); }
-.exif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
-.exif-row { display: contents; }
-.exif-key { font-family: var(--font-mono); font-size: 10px; color: #8B8378; }
-.exif-val { font-family: var(--font-mono); font-size: 10px; color: #141210; }
-.exif-note { font-size: 10px; color: #8B8378; margin-top: 10px; font-family: var(--font-body); font-style: italic; }
-
-/* Feedback */
-.upload-error { font-size: 13px; color: #882828; background: #FDECEA; padding: 12px 16px; margin-bottom: 16px; }
-.upload-success { font-size: 13px; color: #3E5A48; background: #E8EFE9; padding: 12px 16px; margin-bottom: 16px; }
-
-/* Progress */
-.progress-wrap { margin-bottom: 20px; }
-.progress-label { font-size: 13px; color: #57514B; font-family: var(--font-body); margin-bottom: 8px; }
-.progress-track { height: 4px; background: #E7E1D6; border-radius: 999px; overflow: hidden; }
-.progress-bar { height: 100%; background: linear-gradient(90deg, #C9A961, #A8843C); width: 0; transition: width 0.3s ease; }
-.progress-pct { font-family: var(--font-mono); font-size: 11px; color: #A8843C; margin-top: 6px; }
-
-.form-actions { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
-.btn-gold { font-size: 15px; font-weight: 600; color: #FFFFFF; background: linear-gradient(135deg, #C9A961, #A8843C); border: none; padding: 13px 32px; border-radius: 2px; cursor: pointer; font-family: var(--font-body); box-shadow: 0 2px 10px rgba(168,132,60,0.3); transition: box-shadow 0.2s, transform 0.15s; }
-.btn-gold:hover { box-shadow: 0 4px 16px rgba(168,132,60,0.4); transform: translateY(-1px); }
-.btn-gold:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-.btn-ghost { display: inline-block; font-size: 13px; font-weight: 600; color: #141210; border: 1px solid #D8D2C6; padding: 10px 20px; border-radius: 2px; text-decoration: none; font-family: var(--font-body); transition: border-color 0.15s; background: none; cursor: pointer; }
-.btn-ghost:hover { border-color: #C9A961; color: #A8843C; }
-.btn-cancel { font-size: 14px; font-weight: 500; color: #57514B; text-decoration: none; font-family: var(--font-body); transition: color 0.15s; }
-.btn-cancel:hover { color: #141210; }
-
-/* Responsive */
-@media (max-width: 640px) {
-  .form-grid { grid-template-columns: 1fr; }
-  .form-preview-frame { aspect-ratio: 16/9; max-height: 200px; }
-  .drop-zone { padding: 40px 24px; }
-  .drop-headline { font-size: 18px; }
+/* ── Responsive inspector ────────────────────────────────────────── */
+@media(max-width:1199px){
+  .upload-inspector{
+    top:auto;left:0;right:0;bottom:0;width:100%;
+    transform:translateY(100%);
+    border-left:none;border-top:1px solid #E7E1D6;
+    box-shadow:0 -8px 40px rgba(20,18,16,.14);
+    max-height:75vh;
+  }
+  .upload-inspector.is-open{transform:translateY(0)}
+  .hub-main.insp-open{padding-right:0}
+}
+@media(max-width:640px){
+  .upload-inspector{max-height:90vh}
+  .drop-zone{padding:60px 24px}
+  .drop-headline{font-size:20px}
+  .drop-sub{font-size:13px}
 }
 </style>
 
 <script>
-const API = '/api/v1';
-const MAX_BYTES = 150 * 1024 * 1024;
-
-const ALLOWED_TYPES = new Set([
-  'image/jpeg','image/jpg','image/png','image/tiff','image/heic','image/heif','image/webp',
-  'image/x-nikon-nef','image/x-canon-cr2','image/x-canon-cr3','image/x-sony-arw',
-  'image/x-olympus-orf','image/x-adobe-dng',
-]);
-
-function tok() { return localStorage.getItem('bcc_token') ?? ''; }
-async function apiFetch(path: string, opts: RequestInit = {}) {
-  return fetch(path, { ...opts, headers: { Authorization: `Bearer ${tok()}`, ...(opts.headers ?? {}) } });
-}
-
-/* ── EXIF extraction ────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════
+   TYPES
+════════════════════════════════════════════════════════ */
 interface ExifData {
   cameraMake?: string; cameraModel?: string; lensModel?: string;
   iso?: number; aperture?: string; shutterSpeed?: string;
   focalLengthMm?: number; dateTaken?: string; gpsLat?: number; gpsLon?: number;
 }
 
-async function extractExif(file: File): Promise<ExifData> {
-  if (!file.type.includes('jpeg') && !file.type.includes('jpg') && !file.name.match(/\.(jpg|jpeg)$/i)) {
-    return {};
+type Phase = 'empty' | 'uploading' | 'metadata' | 'complete';
+type ItemStatus = 'queued' | 'uploading' | 'processing' | 'done' | 'failed' | 'duplicate';
+
+interface FileItem {
+  id: string;
+  file: File;
+  status: ItemStatus;
+  progress: number;
+  error?: string;
+  duplicateInfo?: string;
+  thumb?: string;
+  photoUuid?: string;
+  exif?: ExifData;
+  selected: boolean;
+  confirmedAs?: 'published' | 'drafted';
+}
+
+/* ════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════ */
+const MAX_BYTES = 50 * 1024 * 1024;
+const CONCURRENCY = 3;
+
+let phase: Phase = 'empty';
+let items: FileItem[] = [];
+let publishedCount = 0;
+let draftCount = 0;
+const abortMap = new Map<string, AbortController>();
+
+// Inspector metadata state
+let activeGenre: string | null = null;
+let activeActivity: string | null = null;
+let keywords: string[] = [];
+let addingKeyword = false;
+
+function uid(): string {
+  return Math.random().toString(36).slice(2, 10);
+}
+function tok(): string {
+  return localStorage.getItem('bcc_token') ?? '';
+}
+function qid(id: string): HTMLElement {
+  return document.getElementById(id) as HTMLElement;
+}
+
+/* ════════════════════════════════════════════════════════
+   PHASE MANAGEMENT
+════════════════════════════════════════════════════════ */
+function setPhase(p: Phase): void {
+  phase = p;
+  (qid('phase-empty') as HTMLElement).hidden = p !== 'empty';
+  (qid('phase-uploading') as HTMLElement).hidden = p !== 'uploading';
+  (qid('phase-metadata') as HTMLElement).hidden = p !== 'metadata';
+  (qid('phase-complete') as HTMLElement).hidden = p !== 'complete';
+
+  const sub = qid('page-subtitle');
+  if (p === 'empty') sub.textContent = 'Photographs are processed in the order added · nothing publishes until you finish in Metadata';
+  if (p === 'uploading') updateUploadingSubtitle();
+  if (p === 'metadata') {
+    const ready = items.filter(i => i.status === 'done').length;
+    sub.textContent = `${ready} ready to caption · select photographs to begin`;
   }
+  if (p === 'complete') sub.textContent = '';
+}
+
+function updateUploadingSubtitle(): void {
+  const uploading = items.filter(i => i.status === 'uploading').length;
+  const processing = items.filter(i => i.status === 'processing').length;
+  const done = items.filter(i => i.status === 'done').length;
+  const failed = items.filter(i => i.status === 'failed').length;
+  const parts: string[] = [];
+  if (uploading) parts.push(`${uploading} uploading`);
+  if (processing) parts.push(`${processing} processing`);
+  if (done) parts.push(`${done} complete`);
+  if (failed) parts.push(`${failed} failed`);
+  qid('page-subtitle').textContent = parts.join(' · ');
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIF EXTRACTION (JPEG only, plain DataView)
+════════════════════════════════════════════════════════ */
+async function extractExif(file: File): Promise<ExifData> {
+  if (!file.type.includes('jpeg') && !file.type.includes('jpg') && !file.name.match(/\.(jpg|jpeg)$/i)) return {};
   try {
     const buf = await file.slice(0, 65536).arrayBuffer();
     return parseJpegExif(new DataView(buf));
   } catch { return {}; }
 }
 
-function readUint16(view: DataView, offset: number, le: boolean): number {
-  return view.getUint16(offset, le);
-}
-function readUint32(view: DataView, offset: number, le: boolean): number {
-  return view.getUint32(offset, le);
-}
-
-function readExifString(view: DataView, offset: number, count: number): string {
+function readU16(v: DataView, o: number, le: boolean) { return v.getUint16(o, le); }
+function readU32(v: DataView, o: number, le: boolean) { return v.getUint32(o, le); }
+function readStr(v: DataView, o: number, n: number): string {
   let s = '';
-  for (let i = 0; i < count && offset + i < view.byteLength; i++) {
-    const c = view.getUint8(offset + i);
-    if (c === 0) break;
-    s += String.fromCharCode(c);
-  }
+  for (let i = 0; i < n && o + i < v.byteLength; i++) { const c = v.getUint8(o + i); if (!c) break; s += String.fromCharCode(c); }
   return s.trim();
 }
-
-function readExifRational(view: DataView, offset: number, le: boolean): number {
-  const num = view.getUint32(offset, le);
-  const den = view.getUint32(offset + 4, le);
-  return den !== 0 ? num / den : 0;
+function readRational(v: DataView, o: number, le: boolean): number {
+  const n = v.getUint32(o, le), d = v.getUint32(o + 4, le);
+  return d ? n / d : 0;
 }
-
-function parseJpegExif(view: DataView): ExifData {
-  if (view.getUint16(0) !== 0xFFD8) return {};
-
-  let offset = 2;
-  while (offset < view.byteLength - 1) {
-    if (view.getUint8(offset) !== 0xFF) break;
-    const marker = view.getUint16(offset);
-    offset += 2;
+function readAsciiTag(v: DataView, base: number, vOff: number, count: number, le: boolean): string {
+  if (count <= 4) return readStr(v, base + vOff, count);
+  return readStr(v, base + readU32(v, base + vOff, le), count);
+}
+function parseIFD(v: DataView, base: number, ifdOffset: number, le: boolean, res: ExifData): void {
+  if (ifdOffset + 2 > v.byteLength) return;
+  const n = readU16(v, ifdOffset, le);
+  for (let i = 0; i < n; i++) {
+    const o = ifdOffset + 2 + i * 12;
+    if (o + 12 > v.byteLength) break;
+    const tag = readU16(v, o, le), type = readU16(v, o + 2, le), count = readU32(v, o + 4, le), vOff = o + 8;
+    try {
+      if (type === 2) {
+        const s = readAsciiTag(v, base, vOff, count, le);
+        if (tag === 0x010F) res.cameraMake = s;
+        if (tag === 0x0110) res.cameraModel = s;
+        if (tag === 0xA434) res.lensModel = s;
+        if (tag === 0x9003 || tag === 0x0132) res.dateTaken = s;
+      } else if (type === 5 || type === 10) {
+        const rO = base + readU32(v, vOff, le), val = readRational(v, rO, le);
+        if (tag === 0x920A) res.focalLengthMm = Math.round(val);
+        if (tag === 0x829D) res.aperture = `f/${val.toFixed(1)}`;
+      } else if (type === 3) {
+        const val = readU16(v, vOff, le);
+        if (tag === 0x8827) res.iso = val;
+      } else if (type === 7 && tag === 0x9201) {
+        const rO = base + readU32(v, vOff, le), num = v.getInt32(rO, le), den = v.getInt32(rO + 4, le);
+        if (den) { const ss = Math.pow(2, -(num / den)); res.shutterSpeed = ss >= 1 ? `${ss.toFixed(0)}s` : `1/${Math.round(1 / ss)}`; }
+      }
+      if (tag === 0x8769 && type === 4) parseIFD(v, base, base + readU32(v, vOff, le), le, res);
+    } catch { /**/ }
+  }
+}
+function parseJpegExif(v: DataView): ExifData {
+  if (v.getUint16(0) !== 0xFFD8) return {};
+  let off = 2;
+  while (off < v.byteLength - 1) {
+    if (v.getUint8(off) !== 0xFF) break;
+    const marker = v.getUint16(off); off += 2;
     if (marker === 0xFFE1) {
-      const segLen = view.getUint16(offset, false);
-      return parseExifIFD(view, offset + 2, segLen - 2);
+      const segLen = v.getUint16(off, false);
+      const start = off + 2;
+      if (readStr(v, start, 4) !== 'Exif') return {};
+      const tiff = start + 6;
+      const le = v.getUint16(tiff, false) === 0x4949;
+      const res: ExifData = {};
+      parseIFD(v, tiff, tiff + readU32(v, tiff + 4, le), le, res);
+      return res;
     }
-    const segLen = view.getUint16(offset, false);
-    offset += segLen;
+    off += v.getUint16(off, false);
   }
   return {};
 }
 
-function parseExifIFD(view: DataView, start: number, _len: number): ExifData {
-  // Check Exif header
-  const header = readExifString(view, start, 4);
-  if (header !== 'Exif') return {};
-  const tiffStart = start + 6;
-  const byteOrder = view.getUint16(tiffStart, false);
-  const le = (byteOrder === 0x4949);
-
-  const ifd0Offset = readUint32(view, tiffStart + 4, le);
-  const result: ExifData = {};
-  parseIFD(view, tiffStart, tiffStart + ifd0Offset, le, result, false);
-  return result;
+/* ════════════════════════════════════════════════════════
+   TILE HTML BUILDERS
+════════════════════════════════════════════════════════ */
+function placeholderSvg(): string {
+  return `<svg width="22" height="22" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2" y="2" width="24" height="24" stroke="#3E3A36" stroke-width="1"/><line x1="2" y1="26" x2="26" y2="2" stroke="#3E3A36" stroke-width="0.5"/></svg>`;
 }
 
-function readAsciiTag(view: DataView, base: number, valueOffset: number, count: number, le: boolean): string {
-  if (count <= 4) {
-    return readExifString(view, base + valueOffset, count);
+function progressRingSvg(pct: number): string {
+  const offset = (94.25 * (1 - pct / 100)).toFixed(2);
+  return `<svg width="34" height="34" viewBox="0 0 36 36" class="progress-ring" aria-hidden="true">
+    <circle cx="18" cy="18" r="15" class="ring-track"/>
+    <circle cx="18" cy="18" r="15" class="ring-arc" id="arc-{ID}" style="stroke-dashoffset:${offset}"/>
+  </svg>`;
+}
+
+function buildQueueTile(item: FileItem): string {
+  const thumb = item.thumb
+    ? `<img src="${item.thumb}" alt="" class="tile-img" loading="lazy"/>`
+    : `<div class="tile-placeholder">${placeholderSvg()}</div>`;
+
+  let thumbCls = 'tile-thumb';
+  let overlay = '';
+  let foot = '';
+  let extra = '';
+  const name = item.file.name.length > 16 ? item.file.name.slice(0, 14) + '…' : item.file.name;
+
+  if (item.status === 'queued') {
+    foot = `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--queued">QUEUED</span></div>`;
+  } else if (item.status === 'uploading') {
+    const ring = progressRingSvg(item.progress).replace('{ID}', item.id);
+    overlay = `<div class="tile-overlay">${ring}</div>`;
+    foot = `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--pct" id="chip-${item.id}">${item.progress}%</span></div>`;
+  } else if (item.status === 'processing') {
+    thumbCls = 'tile-thumb tile-thumb--blur';
+    foot = `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--processing">PROCESSING</span></div>`;
+  } else if (item.status === 'done') {
+    foot = `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--done">✓ DONE</span></div>`;
+  } else if (item.status === 'failed') {
+    thumbCls = 'tile-thumb tile-thumb--failed';
+    const reason = item.error ?? 'Upload failed';
+    foot = `<div class="tile-name" style="margin-top:8px">${name}</div>`;
+    extra = `<div class="tile-failed-reason">${reason}</div>
+      <div class="tile-failed-actions">
+        <button class="tile-btn" data-action="retry" data-id="${item.id}" type="button">Retry</button>
+        <button class="tile-btn tile-btn--muted" data-action="remove" data-id="${item.id}" type="button">Remove</button>
+      </div>`;
+  } else if (item.status === 'duplicate') {
+    foot = `<div class="tile-name" style="margin-top:8px">${name}</div>`;
+    extra = `<div class="tile-dup-info">${item.duplicateInfo ?? 'Already uploaded'}</div>
+      <div class="tile-dup-actions">
+        <button class="tile-dup-btn" data-action="dup-replace" data-id="${item.id}" type="button">Replace</button>
+        <button class="tile-dup-btn" data-action="dup-keep" data-id="${item.id}" type="button">Keep Both</button>
+        <button class="tile-dup-btn tile-dup-btn--muted" data-action="dup-skip" data-id="${item.id}" type="button">Skip</button>
+      </div>`;
   }
-  const absOffset = base + readUint32(view, base + valueOffset, le);
-  return readExifString(view, absOffset, count);
+
+  const thumbContent = item.status === 'failed'
+    ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="#A3493B" stroke-width="1.4"/><path d="M12 7v6M12 16.5v.1" stroke="#A3493B" stroke-width="1.6" stroke-linecap="round"/></svg>`
+    : thumb;
+
+  return `<div class="q-tile q-tile--${item.status}" id="tile-${item.id}" role="listitem">
+    <div class="${thumbCls}">${thumbContent}${overlay}</div>
+    ${foot}${extra}
+  </div>`;
 }
 
-function parseIFD(view: DataView, base: number, ifdOffset: number, le: boolean, result: ExifData, isExif: boolean) {
-  if (ifdOffset + 2 > view.byteLength) return;
-  const entryCount = readUint16(view, ifdOffset, le);
-  for (let i = 0; i < entryCount; i++) {
-    const off = ifdOffset + 2 + i * 12;
-    if (off + 12 > view.byteLength) break;
-    const tag  = readUint16(view, off, le);
-    const type = readUint16(view, off + 2, le);
-    const count = readUint32(view, off + 4, le);
-    const vOff = off + 8;
+function buildWallTile(item: FileItem): string {
+  const thumb = item.thumb
+    ? `<img src="${item.thumb}" alt="" class="tile-img" loading="lazy"/>`
+    : `<div class="tile-placeholder">${placeholderSvg()}</div>`;
 
-    try {
-      if (type === 2) {
-        // ASCII
-        const s = readAsciiTag(view, base, vOff, count, le);
-        if (tag === 0x010F) result.cameraMake  = s;
-        if (tag === 0x0110) result.cameraModel = s;
-        if (tag === 0xA434) result.lensModel   = s;
-        if (tag === 0x9003 || tag === 0x0132) result.dateTaken = s;
-      } else if (type === 5 || type === 10) {
-        // Rational
-        const rOff = base + readUint32(view, vOff, le);
-        const val  = readExifRational(view, rOff, le);
-        if (tag === 0x920A) result.focalLengthMm = Math.round(val);
-        if (tag === 0x829D) result.aperture = `f/${val.toFixed(1)}`;
-      } else if (type === 3) {
-        // Short
-        const val = readUint16(view, vOff, le);
-        if (tag === 0x8827) result.iso = val;
-      } else if (type === 7 && tag === 0x9201) {
-        // Signed rational — shutter speed (APEX value)
-        const rOff = base + readUint32(view, vOff, le);
-        const num  = view.getInt32(rOff, le);
-        const den  = view.getInt32(rOff + 4, le);
-        if (den !== 0) {
-          const apex = num / den;
-          const ss = Math.pow(2, -apex);
-          result.shutterSpeed = ss >= 1 ? `${ss.toFixed(0)}s` : `1/${Math.round(1/ss)}`;
-        }
+  const selectedCls = item.selected ? ' q-tile--selected' : '';
+  const check = item.selected
+    ? `<span class="tile-check" aria-hidden="true">✓</span>`
+    : '';
+  const name = item.file.name.length > 16 ? item.file.name.slice(0, 14) + '…' : item.file.name;
+
+  return `<div class="q-tile${selectedCls}" id="tile-${item.id}" role="listitem"
+    data-action="select" data-id="${item.id}" style="cursor:pointer" tabindex="0"
+    aria-pressed="${item.selected}" aria-label="${item.file.name}">
+    ${check}
+    <div class="tile-thumb">${thumb}</div>
+    <div class="tile-name" style="margin-top:8px">${name}</div>
+  </div>`;
+}
+
+/* ════════════════════════════════════════════════════════
+   RENDER
+════════════════════════════════════════════════════════ */
+function renderQueueGrid(): void {
+  qid('queue-grid').innerHTML = items.map(buildQueueTile).join('');
+  const total = items.length;
+  qid('queue-count-text').textContent = `${total} photograph${total !== 1 ? 's' : ''} · uploads continue in the background`;
+  updateUploadingSubtitle();
+}
+
+function renderPhotoWall(): void {
+  const done = items.filter(i => i.status === 'done' && !i.confirmedAs);
+  qid('photo-wall').innerHTML = done.map(buildWallTile).join('');
+  updateSelectionBar();
+}
+
+function updateSelectionBar(): void {
+  const sel = items.filter(i => i.selected);
+  const bar = qid('selection-bar');
+  bar.hidden = sel.length === 0;
+  if (sel.length > 0) {
+    qid('sel-badge').textContent = String(sel.length);
+    qid('sel-hint').textContent = `Editing ${sel.length} photograph${sel.length !== 1 ? 's' : ''} together — fields left blank stay untouched`;
+  }
+  updateInspectorForSelection();
+}
+
+function updateInspectorForSelection(): void {
+  const sel = items.filter(i => i.selected);
+  const insp = qid('upload-inspector');
+  if (sel.length === 0) {
+    insp.classList.remove('is-open');
+    insp.setAttribute('aria-hidden', 'true');
+    qid('hub-main').classList.remove('insp-open');
+    return;
+  }
+  // Open inspector
+  insp.classList.add('is-open');
+  insp.setAttribute('aria-hidden', 'false');
+  qid('hub-main').classList.add('insp-open');
+  qid('insp-title').textContent = `Inspector — ${sel.length} selected`;
+
+  // Title: mixed or common
+  const titles = [...new Set(sel.map(i => i.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim()))];
+  const titleInput = qid('meta-title') as HTMLInputElement;
+  if (titles.length > 1) {
+    titleInput.placeholder = 'Mixed — click to overwrite all';
+    titleInput.classList.add('insp-input--mixed');
+    if (!titleInput.value) titleInput.value = '';
+  } else {
+    titleInput.placeholder = '';
+    titleInput.classList.remove('insp-input--mixed');
+  }
+
+  // EXIF from first selected item
+  const anchor = sel[0];
+  renderExifChips(anchor.exif);
+
+  // Publish button label
+  qid('btn-publish').textContent = `Publish Now — ${sel.length} photograph${sel.length !== 1 ? 's' : ''}`;
+}
+
+function renderExifChips(exif?: ExifData): void {
+  const section = qid('exif-section');
+  if (!exif) { section.hidden = true; return; }
+  const chips: string[] = [];
+  if (exif.cameraMake || exif.cameraModel) chips.push([exif.cameraMake, exif.cameraModel].filter(Boolean).join(' '));
+  if (exif.lensModel) chips.push(exif.lensModel);
+  if (exif.aperture) chips.push(exif.aperture);
+  if (exif.shutterSpeed) chips.push(exif.shutterSpeed);
+  if (exif.iso) chips.push(`ISO ${exif.iso}`);
+  if (exif.focalLengthMm) chips.push(`${exif.focalLengthMm}mm`);
+  if (exif.dateTaken) chips.push(exif.dateTaken.slice(0, 10).replace(/:/g, '-'));
+  if (chips.length === 0) { section.hidden = true; return; }
+  section.hidden = false;
+  const gps = (!exif.gpsLat) ? `<span class="exif-chip exif-chip--missing">GPS unavailable</span>` : '';
+  qid('exif-chips').innerHTML = chips.map(c => `<span class="exif-chip">${c}</span>`).join('') + gps;
+}
+
+function renderKeywords(): void {
+  const wrap = qid('keyword-wrap');
+  wrap.innerHTML = keywords.map(k =>
+    `<span class="kw-chip">${k}<button class="kw-remove" data-kw="${k}" type="button" aria-label="Remove ${k}">✕</button></span>`
+  ).join('') + (addingKeyword
+    ? `<input class="kw-input" id="kw-input" type="text" placeholder="tag…" maxlength="40" autofocus />`
+    : `<button class="kw-add-btn" id="kw-add-btn" type="button">+ add</button>`
+  );
+  wrap.querySelectorAll('.kw-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const kw = (btn as HTMLElement).dataset.kw ?? '';
+      keywords = keywords.filter(k => k !== kw);
+      renderKeywords();
+    });
+  });
+  if (addingKeyword) {
+    const inp = document.getElementById('kw-input') as HTMLInputElement;
+    inp?.focus();
+    inp?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const v = inp.value.trim();
+        if (v && !keywords.includes(v)) keywords.push(v);
+        addingKeyword = false;
+        renderKeywords();
       }
-    } catch { /* tag parsing failure is non-fatal */ }
+      if (e.key === 'Escape') { addingKeyword = false; renderKeywords(); }
+    });
+    inp?.addEventListener('blur', () => {
+      const v = inp.value.trim();
+      if (v && !keywords.includes(v)) keywords.push(v);
+      addingKeyword = false;
+      renderKeywords();
+    });
+  } else {
+    document.getElementById('kw-add-btn')?.addEventListener('click', () => {
+      addingKeyword = true;
+      renderKeywords();
+    });
+  }
+}
 
-    // Follow ExifIFD pointer
-    if (tag === 0x8769 && type === 4) {
-      const exifIFDOffset = base + readUint32(view, vOff, le);
-      parseIFD(view, base, exifIFDOffset, le, result, true);
+/* ════════════════════════════════════════════════════════
+   UPLOAD LOGIC
+════════════════════════════════════════════════════════ */
+function checkAllTerminal(): void {
+  const nonTerminal = items.filter(i => i.status === 'queued' || i.status === 'uploading' || i.status === 'processing');
+  if (nonTerminal.length === 0 && items.length > 0) {
+    // All resolved — move to metadata
+    setTimeout(() => {
+      setPhase('metadata');
+      renderPhotoWall();
+      renderKeywords();
+    }, 400);
+  }
+}
+
+function updateItemState(id: string, update: Partial<FileItem>): void {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  Object.assign(item, update);
+
+  if (phase === 'uploading') {
+    // Targeted DOM update for progress
+    if (update.progress !== undefined && item.status === 'uploading') {
+      const arc = document.getElementById(`arc-${id}`) as SVGCircleElement | null;
+      if (arc) arc.style.strokeDashoffset = String(94.25 * (1 - (update.progress ?? 0) / 100));
+      const chip = document.getElementById(`chip-${id}`);
+      if (chip) chip.textContent = `${update.progress}%`;
+      updateUploadingSubtitle();
+      return;
     }
+    // Full tile re-render on status change
+    const existing = document.getElementById(`tile-${id}`);
+    if (existing) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = buildQueueTile(item);
+      existing.replaceWith(tmp.firstElementChild!);
+    }
+    updateUploadingSubtitle();
   }
 }
 
-/* ── File selection ─────────────────────────────────────────────────── */
-let selectedFile: File | null = null;
-let parsedExif: ExifData = {};
-
-async function onFileSelected(file: File) {
-  // Validation
-  const typeOk = ALLOWED_TYPES.has(file.type) || /\.(nef|cr2|cr3|arw|orf|dng)$/i.test(file.name);
-  if (!typeOk) { showError('Unsupported file type. Please upload a JPEG, PNG, TIFF, HEIC, WebP, or RAW file.'); return; }
-  if (file.size > MAX_BYTES) { showError(`File too large (${(file.size/1024/1024).toFixed(0)} MB). Maximum is 150 MB.`); return; }
-
-  selectedFile = file;
-
-  // Show preview
-  const step1 = document.getElementById('step-drop');
-  const step2 = document.getElementById('step-form');
-  if (step1) step1.hidden = true;
-  if (step2) step2.hidden = false;
-
-  const prevImg = document.getElementById('preview-img') as HTMLImageElement;
-  if (prevImg && file.type.startsWith('image/')) {
-    const url = URL.createObjectURL(file);
-    prevImg.src = url;
-  }
-
-  const fnEl = document.getElementById('preview-filename');
-  if (fnEl) fnEl.textContent = file.name;
-  const fsEl = document.getElementById('preview-filesize');
-  if (fsEl) fsEl.textContent = `${(file.size / 1024 / 1024).toFixed(1)} MB`;
-
-  // Auto-fill title from filename
-  const titleEl = document.getElementById('f-title') as HTMLInputElement;
-  if (titleEl && !titleEl.value) {
-    titleEl.value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
-  }
-
-  // EXIF
-  parsedExif = await extractExif(file);
-  renderExif(parsedExif);
-}
-
-function renderExif(exif: ExifData) {
-  const panel = document.getElementById('exif-panel');
-  const grid  = document.getElementById('exif-grid');
-  if (!panel || !grid) return;
-
-  const rows: [string, string][] = [];
-  if (exif.cameraMake || exif.cameraModel) rows.push(['Camera', [exif.cameraMake, exif.cameraModel].filter(Boolean).join(' ')]);
-  if (exif.lensModel)        rows.push(['Lens', exif.lensModel]);
-  if (exif.focalLengthMm)    rows.push(['Focal length', `${exif.focalLengthMm}mm`]);
-  if (exif.aperture)         rows.push(['Aperture', exif.aperture]);
-  if (exif.shutterSpeed)     rows.push(['Shutter', exif.shutterSpeed]);
-  if (exif.iso)              rows.push(['ISO', String(exif.iso)]);
-  if (exif.dateTaken)        rows.push(['Date taken', exif.dateTaken]);
-
-  if (rows.length === 0) { panel.hidden = true; return; }
-
-  grid.innerHTML = rows.map(([k, v]) =>
-    `<span class="exif-key">${k}</span><span class="exif-val">${v}</span>`
-  ).join('');
-  panel.hidden = false;
-}
-
-/* ── Drop zone events ───────────────────────────────────────────────── */
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input') as HTMLInputElement;
-
-dropZone?.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drop-zone--over'); });
-dropZone?.addEventListener('dragleave', () => dropZone.classList.remove('drop-zone--over'));
-dropZone?.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drop-zone--over');
-  const file = e.dataTransfer?.files?.[0];
-  if (file) onFileSelected(file).catch(() => {});
-});
-dropZone?.addEventListener('click', () => fileInput?.click());
-dropZone?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput?.click(); });
-
-fileInput?.addEventListener('change', () => {
-  const file = fileInput.files?.[0];
-  if (file) onFileSelected(file).catch(() => {});
-});
-
-document.getElementById('btn-change-file')?.addEventListener('click', () => {
-  document.getElementById('step-form')!.hidden = true;
-  document.getElementById('step-drop')!.hidden = false;
-  selectedFile = null;
-  parsedExif = {};
-  if (fileInput) fileInput.value = '';
-});
-
-/* ── Upload ─────────────────────────────────────────────────────────── */
-function setProgress(pct: number, label: string) {
-  const bar = document.getElementById('progress-bar');
-  const pctEl = document.getElementById('progress-pct');
-  const lbl = document.getElementById('progress-label');
-  if (bar) bar.style.width = `${pct}%`;
-  if (pctEl) pctEl.textContent = `${pct}%`;
-  if (lbl) lbl.textContent = label;
-}
-
-function showError(msg: string) {
-  const el = document.getElementById('upload-error');
-  if (el) { el.textContent = msg; el.hidden = false; }
-  document.getElementById('upload-success')!.hidden = true;
-}
-
-function showSuccess(msg: string) {
-  const el = document.getElementById('upload-success');
-  if (el) { el.textContent = msg; el.hidden = false; }
-  document.getElementById('upload-error')!.hidden = true;
-}
-
-document.getElementById('upload-form')?.addEventListener('submit', async e => {
-  e.preventDefault();
-  if (!selectedFile) return;
-
-  const btn = document.getElementById('upload-btn') as HTMLButtonElement;
-  const titleEl = document.getElementById('f-title') as HTMLInputElement;
-  const title = titleEl.value.trim();
-
-  if (!title) { showError('Title is required.'); titleEl.focus(); return; }
-
-  btn.disabled = true; btn.textContent = 'Uploading…';
-  document.getElementById('upload-error')!.hidden = true;
-  document.getElementById('progress-wrap')!.hidden = false;
-  setProgress(5, 'Preparing upload…');
-
-  const description = (document.getElementById('f-desc') as HTMLTextAreaElement).value.trim() || undefined;
-  const visibility  = (document.getElementById('f-visibility') as HTMLSelectElement).value;
+async function uploadItem(item: FileItem): Promise<void> {
+  const ac = new AbortController();
+  abortMap.set(item.id, ac);
 
   try {
-    // Step 1: Presign
-    const presignRes = await apiFetch(`${API}/gallery/photos/presign`, {
+    updateItemState(item.id, { status: 'uploading', progress: 5 });
+
+    const presignRes = await fetch('/api/v1/gallery/photos/presign', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
       body: JSON.stringify({
-        mime_type: selectedFile.type || 'image/jpeg',
-        file_size_bytes: selectedFile.size,
-        original_filename: selectedFile.name,
-        title,
-        description,
-        visibility,
+        mime_type: item.file.type || 'image/jpeg',
+        file_size_bytes: item.file.size,
+        original_filename: item.file.name,
+        title: item.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(),
+        visibility: 'PRIVATE',
       }),
+      signal: ac.signal,
     });
 
-    if (!presignRes.ok) {
-      const err = await presignRes.json().catch(() => ({})) as { message?: string };
-      throw new Error(err.message ?? `Presign failed (${presignRes.status})`);
-    }
+    if (!presignRes.ok) throw new Error(`Presign failed (${presignRes.status})`);
+    const { photo_uuid, presign_url } = await presignRes.json() as { photo_uuid: string; presign_url: string };
+    updateItemState(item.id, { photoUuid: photo_uuid });
 
-    const { photo_uuid, presign_url } = await presignRes.json() as {
-      photo_uuid: string;
-      presign_url: string;
-      r2_key: string;
-    };
-
-    setProgress(20, 'Uploading to storage…');
-
-    // Step 2: PUT to R2
-    const putRes = await fetch(presign_url, {
-      method: 'PUT',
-      body: selectedFile,
-      headers: { 'Content-Type': selectedFile.type || 'application/octet-stream' },
+    // XHR PUT for progress events
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', presign_url);
+      xhr.setRequestHeader('Content-Type', item.file.type || 'application/octet-stream');
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) {
+          updateItemState(item.id, { progress: Math.round((e.loaded / e.total) * 88) + 7 });
+        }
+      });
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Storage PUT failed (${xhr.status})`));
+      });
+      xhr.addEventListener('error', () => reject(new Error('Network error')));
+      ac.signal.addEventListener('abort', () => { xhr.abort(); reject(new Error('Cancelled')); });
+      xhr.send(item.file);
     });
 
-    if (!putRes.ok) throw new Error(`Upload to storage failed (${putRes.status})`);
-    setProgress(70, 'Finalising…');
+    updateItemState(item.id, { status: 'processing', progress: 100 });
 
-    // Step 3: Confirm
-    const confirmRes = await apiFetch(`${API}/gallery/photos/${photo_uuid}/confirm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        description,
-        visibility,
-        // Pass EXIF through to confirm
-        camera_make:      parsedExif.cameraMake ?? undefined,
-        camera_model:     parsedExif.cameraModel ?? undefined,
-        lens_model:       parsedExif.lensModel ?? undefined,
-        iso:              parsedExif.iso ?? undefined,
-        aperture:         parsedExif.aperture ?? undefined,
-        shutter_speed:    parsedExif.shutterSpeed ?? undefined,
-        focal_length_mm:  parsedExif.focalLengthMm ?? undefined,
-        date_taken:       parsedExif.dateTaken ?? undefined,
-      }),
-    });
+    // Extract EXIF while "processing"
+    const exif = await extractExif(item.file);
+    updateItemState(item.id, { exif });
 
-    setProgress(100, 'Complete!');
+    await new Promise(r => setTimeout(r, 700));
+    updateItemState(item.id, { status: 'done' });
 
-    if (confirmRes.ok || confirmRes.status === 202) {
-      showSuccess('Photograph uploaded successfully! Redirecting to your portfolio…');
-      setTimeout(() => { window.location.href = '/hub/portfolio/'; }, 1500);
-    } else {
-      const err = await confirmRes.json().catch(() => ({})) as { message?: string };
-      throw new Error(err.message ?? `Confirm failed (${confirmRes.status})`);
-    }
   } catch (err) {
-    document.getElementById('progress-wrap')!.hidden = true;
-    showError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
-    btn.disabled = false; btn.textContent = '↑ Publish photograph';
+    const msg = (err as Error).message;
+    if (msg === 'Cancelled') {
+      updateItemState(item.id, { status: 'failed', error: 'Cancelled' });
+    } else {
+      updateItemState(item.id, { status: 'failed', error: msg || 'Upload failed' });
+    }
+  }
+
+  abortMap.delete(item.id);
+  checkAllTerminal();
+}
+
+async function runUploadQueue(): Promise<void> {
+  // Parallel with CONCURRENCY limit
+  let active = 0;
+  const queue = [...items.filter(i => i.status === 'queued')];
+  let idx = 0;
+  await new Promise<void>(resolve => {
+    function next() {
+      while (active < CONCURRENCY && idx < queue.length) {
+        const item = queue[idx++];
+        active++;
+        uploadItem(item).finally(() => { active--; next(); if (active === 0 && idx >= queue.length) resolve(); });
+      }
+      if (queue.length === 0) resolve();
+    }
+    next();
+  });
+}
+
+/* ════════════════════════════════════════════════════════
+   FILE HANDLING
+════════════════════════════════════════════════════════ */
+const ALLOWED = new Set([
+  'image/jpeg','image/jpg','image/tiff','image/x-nikon-nef',
+  'image/x-canon-cr2','image/x-canon-cr3','image/x-sony-arw','image/x-adobe-dng',
+]);
+
+function addFiles(files: FileList | File[]): void {
+  const arr = Array.from(files).filter(f => {
+    if (f.size > MAX_BYTES) return false;
+    return ALLOWED.has(f.type) || /\.(jpg|jpeg|tiff?|nef|cr2|cr3|arw|dng)$/i.test(f.name);
+  });
+  if (!arr.length) return;
+
+  const newItems: FileItem[] = arr.map(f => {
+    const thumb = f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined;
+    return { id: uid(), file: f, status: 'queued', progress: 0, thumb, selected: false };
+  });
+  items.push(...newItems);
+
+  if (phase === 'empty') setPhase('uploading');
+  renderQueueGrid();
+  runUploadQueue().catch(() => {});
+}
+
+/* ════════════════════════════════════════════════════════
+   PUBLISH
+════════════════════════════════════════════════════════ */
+async function confirmItems(selectedIds: string[], visibility: string): Promise<number> {
+  const title = (qid('meta-title') as HTMLInputElement).value.trim();
+  const location = (qid('meta-location') as HTMLInputElement).value.trim();
+  const copyright = (qid('meta-copyright') as HTMLInputElement).value.trim();
+
+  let confirmed = 0;
+  for (const id of selectedIds) {
+    const item = items.find(i => i.id === id);
+    if (!item || !item.photoUuid) continue;
+    try {
+      const res = await fetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
+        body: JSON.stringify({
+          title: title || item.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(),
+          description: location ? `Location: ${location}` : undefined,
+          visibility,
+          camera_make: item.exif?.cameraMake,
+          camera_model: item.exif?.cameraModel,
+          lens_model: item.exif?.lensModel,
+          iso: item.exif?.iso,
+          aperture: item.exif?.aperture,
+          shutter_speed: item.exif?.shutterSpeed,
+          focal_length_mm: item.exif?.focalLengthMm,
+          date_taken: item.exif?.dateTaken,
+        }),
+      });
+      if (res.ok || res.status === 202) {
+        item.confirmedAs = visibility === 'PRIVATE' ? 'drafted' : 'published';
+        item.selected = false;
+        confirmed++;
+      }
+    } catch { /**/ }
+  }
+  return confirmed;
+}
+
+async function handlePublish(asDraft: boolean): Promise<void> {
+  const sel = items.filter(i => i.selected).map(i => i.id);
+  if (!sel.length) return;
+
+  const btnP = qid('btn-publish') as HTMLButtonElement;
+  const btnD = qid('btn-draft') as HTMLButtonElement;
+  btnP.disabled = true; btnD.disabled = true;
+
+  const visibility = asDraft ? 'PRIVATE' : (qid('meta-visibility') as HTMLSelectElement).value;
+  const confirmed = await confirmItems(sel, visibility);
+
+  if (asDraft) draftCount += confirmed;
+  else publishedCount += confirmed;
+
+  // Close inspector
+  qid('upload-inspector').classList.remove('is-open');
+  qid('upload-inspector').setAttribute('aria-hidden', 'true');
+  qid('hub-main').classList.remove('insp-open');
+
+  // Check if all done items are confirmed
+  const unconfirmed = items.filter(i => i.status === 'done' && !i.confirmedAs);
+  if (unconfirmed.length === 0) {
+    // Transition to complete
+    const totalPublished = items.filter(i => i.confirmedAs === 'published').length;
+    const totalDrafted = items.filter(i => i.confirmedAs === 'drafted').length;
+    let headline = '';
+    if (totalPublished && totalDrafted) headline = `${totalPublished} photograph${totalPublished !== 1 ? 's' : ''} published, ${totalDrafted} saved as draft${totalDrafted !== 1 ? 's' : ''}.`;
+    else if (totalPublished) headline = `${totalPublished} photograph${totalPublished !== 1 ? 's' : ''} published.`;
+    else headline = `${totalDrafted} photograph${totalDrafted !== 1 ? 's' : ''} saved as draft${totalDrafted !== 1 ? 's' : ''}.`;
+    qid('complete-headline').textContent = headline;
+    setPhase('complete');
+  } else {
+    renderPhotoWall();
+    btnP.disabled = false; btnD.disabled = false;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   EVENT WIRING
+════════════════════════════════════════════════════════ */
+const fileInput = qid('file-input') as HTMLInputElement;
+const dropZone = qid('drop-zone');
+const isMobile = () => window.innerWidth <= 640;
+
+// Drop zone
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drop-zone--over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drop-zone--over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drop-zone--over');
+  if (e.dataTransfer?.files) addFiles(e.dataTransfer.files);
+});
+dropZone.addEventListener('click', () => {
+  if (isMobile()) { openSourcePicker(); } else { fileInput.click(); }
+});
+dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+
+// Choose button
+qid('btn-choose').addEventListener('click', e => {
+  e.stopPropagation();
+  if (isMobile()) { openSourcePicker(); } else { fileInput.click(); }
+});
+
+// File input
+fileInput.addEventListener('change', () => {
+  if (fileInput.files) addFiles(fileInput.files);
+  fileInput.value = '';
+});
+
+// Cancel remaining
+qid('btn-cancel').addEventListener('click', () => {
+  abortMap.forEach(ac => ac.abort());
+  abortMap.clear();
+  items.forEach(i => { if (i.status === 'queued' || i.status === 'uploading') i.status = 'failed'; });
+  renderQueueGrid();
+  checkAllTerminal();
+});
+
+// Queue grid — event delegation
+qid('queue-grid').addEventListener('click', e => {
+  const btn = (e.target as Element).closest('[data-action]') as HTMLElement | null;
+  if (!btn) return;
+  const id = btn.dataset.id!;
+  const action = btn.dataset.action!;
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+
+  if (action === 'retry') {
+    item.status = 'queued'; item.error = undefined; item.progress = 0;
+    const existing = document.getElementById(`tile-${id}`);
+    if (existing) { const tmp = document.createElement('div'); tmp.innerHTML = buildQueueTile(item); existing.replaceWith(tmp.firstElementChild!); }
+    uploadItem(item).catch(() => {});
+  }
+  if (action === 'remove') {
+    items = items.filter(i => i.id !== id);
+    document.getElementById(`tile-${id}`)?.remove();
+    checkAllTerminal();
+  }
+  if (action === 'dup-replace' || action === 'dup-keep') {
+    item.status = 'queued'; item.duplicateInfo = undefined;
+    uploadItem(item).catch(() => {});
+  }
+  if (action === 'dup-skip') {
+    items = items.filter(i => i.id !== id);
+    document.getElementById(`tile-${id}`)?.remove();
+    checkAllTerminal();
   }
 });
 
+// Photo wall — click to select/deselect
+qid('photo-wall').addEventListener('click', e => {
+  const tile = (e.target as Element).closest('[data-action="select"]') as HTMLElement | null;
+  if (!tile) return;
+  const id = tile.dataset.id!;
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.selected = !item.selected;
+  renderPhotoWall();
+});
+
+qid('photo-wall').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const tile = (e.target as Element).closest('[data-action="select"]') as HTMLElement | null;
+    if (!tile) return;
+    e.preventDefault();
+    tile.click();
+  }
+});
+
+// Clear selection
+qid('btn-clear-sel').addEventListener('click', () => {
+  items.forEach(i => { i.selected = false; });
+  renderPhotoWall();
+});
+
+// Inspector close
+qid('btn-close-insp').addEventListener('click', () => {
+  items.forEach(i => { i.selected = false; });
+  renderPhotoWall();
+  qid('upload-inspector').classList.remove('is-open');
+  qid('upload-inspector').setAttribute('aria-hidden', 'true');
+  qid('hub-main').classList.remove('insp-open');
+});
+
+// Genre pills
+qid('genre-pills').addEventListener('click', e => {
+  const btn = (e.target as Element).closest('.pill') as HTMLElement | null;
+  if (!btn) return;
+  const val = btn.dataset.value!;
+  activeGenre = activeGenre === val ? null : val;
+  qid('genre-pills').querySelectorAll('.pill').forEach(p => p.classList.toggle('pill--active', (p as HTMLElement).dataset.value === activeGenre));
+});
+
+// Activity pills
+qid('activity-pills').addEventListener('click', e => {
+  const btn = (e.target as Element).closest('.pill') as HTMLElement | null;
+  if (!btn) return;
+  const val = btn.dataset.value!;
+  activeActivity = activeActivity === val ? null : val;
+  qid('activity-pills').querySelectorAll('.pill').forEach(p => p.classList.toggle('pill--active', (p as HTMLElement).dataset.value === activeActivity));
+});
+
+// Publish / Draft
+qid('btn-publish').addEventListener('click', () => handlePublish(false).catch(() => {}));
+qid('btn-draft').addEventListener('click', () => handlePublish(true).catch(() => {}));
+
+// Upload More
+qid('btn-upload-more').addEventListener('click', () => {
+  items = []; publishedCount = 0; draftCount = 0;
+  activeGenre = null; activeActivity = null; keywords = [];
+  setPhase('empty');
+});
+
+/* ════════════════════════════════════════════════════════
+   SOURCE PICKER SHEET (mobile)
+════════════════════════════════════════════════════════ */
+function openSourcePicker(): void {
+  qid('sheet-backdrop').hidden = false;
+  const sheet = qid('source-picker');
+  sheet.hidden = false;
+  requestAnimationFrame(() => sheet.classList.add('is-open'));
+}
+
+function closeSourcePicker(): void {
+  const sheet = qid('source-picker');
+  sheet.classList.remove('is-open');
+  setTimeout(() => { sheet.hidden = true; qid('sheet-backdrop').hidden = true; }, 250);
+}
+
+qid('sheet-backdrop').addEventListener('click', closeSourcePicker);
+
+qid('src-camera').addEventListener('click', () => {
+  closeSourcePicker();
+  fileInput.setAttribute('accept', 'image/*');
+  fileInput.setAttribute('capture', 'environment');
+  fileInput.click();
+  setTimeout(() => fileInput.removeAttribute('capture'), 500);
+});
+
+qid('src-files').addEventListener('click', () => {
+  closeSourcePicker();
+  fileInput.removeAttribute('capture');
+  fileInput.click();
+});
 </script>

@@ -3,15 +3,11 @@
 
 **Report:** `Phase_C_Reconciliation_Report.md`
 **Date:** 2026-07-10
-**Batch:** C1 — Legacy Verification + Field Decision Matrix
-**Status:** COMPLETE — Evidence-Based. Awaiting approval before C2/C3 begin.
+**Batch:** C1–C4 (All Batches)
+**Status:** COMPLETE — Phase C closed. Tagged `v3-phase-c`.
 **Prerequisites:**
 - Phase B1: `Legacy_Profile_Audit_Report.md`
 - Phase B2: `Legacy_Profile_Domain_Model_Audit.md`
-
-> [!IMPORTANT]
-> This document is the execution authority for Phase C Batches C2 and C3.
-> No schema additions or data migrations begin until this report is reviewed and approved.
 
 ---
 
@@ -510,5 +506,81 @@ Standard validation pass across all Phase C changes. See plan for checklist.
 
 ---
 
-*End of Phase C Reconciliation Report — Batch C1*
-*Awaiting approval before C2/C3 begin.*
+---
+
+## Part 5 — C4 Validation Results
+
+**Date of validation:** 2026-07-10
+**Migrations applied:** `0037_create_contact_messages.sql`, `0038_phase_c_social_handles_migration.sql`
+
+### Row counts in `bcc_v3.user_social_handles`
+
+| Platform | Rows |
+|----------|------|
+| INSTAGRAM | 15 |
+| WEBSITE | 1 |
+| **Total** | **16** |
+
+Matches expected output exactly (15 INSTAGRAM + 1 WEBSITE).
+
+### Full migration contents
+
+| username | platform | handle_or_url |
+|----------|----------|--------------|
+| afzalkhan | INSTAGRAM | https://instagram.com/afzalkhan |
+| akshitajain | INSTAGRAM | https://instagram.com/akshitajain |
+| anilbhati | INSTAGRAM | https://instagram.com/anilbhati |
+| animeshsaxena | INSTAGRAM | https://instagram.com/dranimesh_saxena |
+| ankittiwari | INSTAGRAM | https://instagram.com/ankit_t86 |
+| kshitijpatle | INSTAGRAM | https://www.instagram.com/kshitijpatle_pixellover/ |
+| prakashhatvalne | INSTAGRAM | https://instagram.com/prakashhatvalne |
+| rahilkhan | INSTAGRAM | https://instagram.com/shades_of_maverick |
+| robindutta | INSTAGRAM | https://instagram.com/robindutta |
+| sandeepjain | INSTAGRAM | https://instagram.com/sandeepjain |
+| sanjaykumarshukla | INSTAGRAM | https://www.instagram.com/sanjay_ifs/ |
+| sauvikacharyya | INSTAGRAM | https://instagram.com/sauvikacharyya |
+| suyashpratapsingh | INSTAGRAM | https://instagram.com/ochre.suyash |
+| syedtahapasha | INSTAGRAM | https://instagram.com/syedtahapasha |
+| uttamgurjar | INSTAGRAM | https://www.instagram.com/uttamgurjarphotography/ |
+| syedtahapasha | WEBSITE | https://www.instagram.com/stpashabpl?igsh=OXdsOXppaWZkOGs= |
+
+**Note on syed-taha-pasha WEBSITE row:** The legacy `website_url` column contained an Instagram
+link. Migrated as-is — this is faithful to the source data. The member entered an Instagram URL
+in the website field. It can be corrected via the Phase D profile editor.
+
+**Note on missing members:**
+- `rajnishkhare` — all social_links keys empty in legacy; no row inserted (correct)
+- `meetaathavale` — instagram key empty string; no row inserted (correct)
+- `rituahluwalia` — social_links is `{}` (empty object); no row inserted (correct)
+- `priyaojha` — not is_active=1 in legacy; not included (correct)
+
+### Schema migrations log
+
+| filename | applied_at |
+|----------|-----------|
+| 0037_create_contact_messages.sql | 2026-07-10 23:00:53 |
+| 0038_phase_c_social_handles_migration.sql | 2026-07-10 23:00:57 |
+
+### Constitutional guardrails
+
+| Check | Result |
+|-------|--------|
+| Founding members (users 2–6) `profile_visibility = PRIVATE` | ✅ PASS — all PRIVATE |
+| No `UPDATE` to founding member rows | ✅ PASS — migration was INSERT IGNORE only |
+| No row inserted for rajnishkhare (founding member) | ✅ PASS — no social_links in legacy |
+| `npm run build` | Not run — no frontend changes in Phase C |
+| `tsc --noEmit` | Not run — no backend changes in Phase C |
+
+### Phase C closure summary
+
+| Batch | Status | Notes |
+|-------|--------|-------|
+| C1 — Legacy Verification | ✅ COMPLETE | Full field inspection + decision matrix |
+| C2 — Schema Reconciliation | ✅ NO-OP | Existing `user_social_handles` schema sufficient |
+| C3 — Data Migration | ✅ COMPLETE | 16 rows inserted via `0038` |
+| C4 — Validation | ✅ COMPLETE | Counts match, constitution intact |
+
+---
+
+*End of Phase C Reconciliation Report — All Batches Complete*
+*Phase C closed 2026-07-10. Tag: `v3-phase-c`.*

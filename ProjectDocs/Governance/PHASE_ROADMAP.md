@@ -1,166 +1,407 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
-**Status:** Living document — update this file as phases complete.
-**Last updated:** 2026-07-06
-**Companion documents:** `MEM-006`, `MEM-007`, `TECH-STACK-FREEZE.md`,
-`BCC_Unified_Platform_Specification_v3.docx`
+**Status:** AUTHORITATIVE — Living Roadmap
+**Version:** 2.0
+**Last Updated:** 2026-07-10
 
 ---
 
-## HOW TO USE THIS FILE
-Single source of truth for sequencing — what is built, what is next, what is open.
-Start every new session by pointing Claude here. The `.docx` spec covers *what* each
-module does in depth; this file covers *status and sequencing only*.
+# PURPOSE
+
+This document defines the implementation sequence of the BCC Unified Platform V3.
+
+It is the authoritative roadmap describing:
+
+- completed milestones
+- current implementation priorities
+- deployment sequencing
+- future platform expansion
+
+Detailed implementation belongs to the Platform Specification.
+Governance belongs to MEM-006 and MEM-007.
+
+This document governs **when** work happens, not **how** it is implemented.
 
 ---
 
-## WHAT IS COMPLETE — FULL AUDIT (as of 2026-07-06)
+# CURRENT STATUS
 
-### Infrastructure & Design
-| Item | Status | Key facts |
-|------|--------|-----------|
-| Phase 0 — Infrastructure | ✅ COMPLETE | PM2 + Nginx + Certbot + GitHub Actions CI/CD on master |
-| Phase 0.5 — Design System | ✅ COMPLETE | "Refined Editorial Luxury" frozen in `BCC V3 Design System.md` |
-| Hub Component Architecture Freeze — HUB-ARCH-001 v1.0 | ✅ COMPLETE | Authenticated Member Hub frontend composition. See `Architecture/HUB_COMPONENT_ARCHITECTURE_FREEZE_v1.0.md` |
+## Stage 1 — Foundation
 
-### Backend Modules
-| Module | Status | Key facts |
-|--------|--------|-----------|
-| Module 01 — Identity & User Management | ✅ COMPLETE | 6 registration methods, JWT + rotating refresh, argon2, RbacGuard/RbacService, `toMysqlDatetime()` timezone fix. Phone OTP gated off. Instagram dropped. |
-| Module 02 — Membership Management | ✅ COMPLETE | 7-state lifecycle, 3-layer entitlements, dual-track recognition, renewal engine, voting register, card PDF (pdf-lib), MEM-007 numbering service, Founding block trigger-locked. |
-| Module 04 — Events & Activity Management | ✅ COMPLETE | Migration 0033 — 5 tables (events, event_invite_list, event_registrations, event_volunteer_slots, event_volunteers). Seeds 0008+0009: 6 event notification types + 7 RBAC permissions. |
-| Module 05 — Gallery & Digital Archive | ✅ COMPLETE | Migration 0034. 15 genre tags live. Presign/confirm upload flow auth-gated. Albums CRUD. Visibility enforcement in service layer. ImageKit URL endpoint set. `GET /api/v1/gallery/tags` live. |
-| Module 06 — Photographer Profiles | ✅ COMPLETE | `GET /api/v1/photographers`, `GET /api/v1/photographers/:username`. All 7 founding members return from directory endpoint. |
-| Module 17 — Communication Engine | ✅ COMPLETE | 29 notification types, 54 templates (EMAIL + IN_APP). `CommunicationService.dispatch(typeKey, userId, variables)` is the single entry point. Bell API: 6 endpoints at `/api/v1/notifications/*`. MEMBERSHIP_REINSTATED + MEMBERSHIP_RENEWED fully seeded — no open stubs remain. |
+**Status:** ✅ COMPLETE
 
-### Frontend Pages
-| Route | Status | Notes |
-|-------|--------|-------|
-| `/` | ✅ LIVE | Home (Spotlight, StatBand, Gallery Wall, Events, Tiers, Journal) |
-| `/about` | ✅ LIVE | About page |
-| `/activities` | ✅ LIVE | Activities listing |
-| `/activities/*` | ✅ LIVE | 6 individual activity pages |
-| `/showcase` | ✅ LIVE | Photo showcase |
-| `/gallery/photographer` | ✅ LIVE | Photographer directory |
-| `/gallery/photographer/[slug]` | ✅ LIVE | Photographer profile page |
-| `/join` | ✅ LIVE | Membership landing — 3 public tiers only |
-| `/auth/signin` | ✅ LIVE | Email+password + Google + Facebook sign-in |
-| `/auth/register` | ✅ LIVE | Registration (MEM-006 P1 identity notice) |
-| `/auth/callback` | ✅ LIVE | OAuth token receiver (hash fragment) |
-| `/verify-email` | ✅ LIVE | Email verification |
-| `/hub` | ✅ LIVE | Member Hub dashboard (auth-gated) |
-| `/hub/membership/apply` | ✅ LIVE | Membership application (Basic/Student/Individual) |
+### Design System
 
-**Total: 18 pages deployed.**
+- ✅ V6 91 — Site Header
+- ✅ V6 92 — Site Footer
 
-### Membership Data
-| Item | Status |
-|------|--------|
-| Founding Block (serials 00001–00007) | ✅ COMPLETE — ACTIVE memberships, permanent numbers, trigger-locked |
-| Migration Track C — legacy members | ✅ COMPLETE — migration 0035. 18 users created (16 Basic Members + 2 Registered Users). 16 BCCTempXXXXX issued (BCCTemp00001–BCCTemp00016). 312 photos linked. See data quality notes below. |
-| Historical block non-legacy members (Kamal Kushlani, Lubna Rashid, Feher Murtaza, Yogesh More, Neha Zode) | 🔶 PENDING — not in legacy DB, must be created manually when ready. Accounts use same ADMIN_CREATED flow. |
+### Public Pages
+
+- ✅ V6 01 — Home
+- ✅ V6 03 — Showcase
+
+### Member Hub
+
+- ✅ V6 09 — Hub Home
+- ✅ V6 10 — Portfolio
 
 ---
 
-## SCHEMA STATE (as of 2026-07-06)
-| Layer | Last item |
-|-------|-----------|
-| Migrations | 0035 (Migration Track C) |
-| Seeds | seed_0009 |
-| Notable tables | users, memberships, membership_classes, member_recognitions, class_entitlements, individual_overrides, membership_number_pool, membership_number_log, membership_temp_identifiers, voting_register_snapshots, notification_types, notification_templates, notification_log, in_app_notifications, notification_preferences, events, event_invite_list, event_registrations, event_volunteer_slots, event_volunteers, photos, photo_albums, photo_album_items, photo_tags, photo_tag_assignments |
+# STAGE 2 — MEMBER HUB FOUNDATION
+
+**Status:** 🚧 ACTIVE
+
+Current development focus.
 
 ---
 
-## MIGRATION TRACK C — DATA QUALITY NOTES
-Flag for Rajnish to review before permanent number batch:
+## PHASE A — Complete the Member Hub Foundation
 
-| Member | Issue |
-|--------|-------|
-| Meeta Athavale (meetaathavale) | Phone was '1111' in legacy — stored as NULL in V3. No bcc_member_profiles row existed in legacy. |
-| Ritu Ahluwalia (rituahluwalia) | Phone was '1111' in legacy — stored as NULL in V3. No bcc_member_profiles row existed in legacy. 0 photos. |
-| Dr. Sanjay Kumar Shukla (sanjaykumarshukla) | Phone '+9198959996930' has 13 digits after +91 — likely should be +919895999693. Stored as-is. |
-| Sauvik Acharyya (sauvikacharyya) | 0 photos in legacy — no photos migrated. |
-| afzalkhan, priyaojha | Created as Registered Users only — no membership, no BCCTemp identifier. Confirmed prior session decision. |
+### A1
+
+Hub Component Architecture
+
+✅ COMPLETE
 
 ---
 
-## OPEN ITEMS BACKLOG
-Carry these into every session until resolved.
+### A2
 
-| # | Item | Priority | Notes |
-|---|------|----------|-------|
-| 1 | **Membership card redesign** — portrait CR80 55×87mm two-sided | High | Dedicated Module 02 revisit session. Current code builds landscape single-sided. Decision + implementation both pending. |
-| 2 | **Facebook OAuth** — switch app from Development → Live in Meta Developer Console | High | Async, no code. Blocks all Facebook social login for real users. |
-| 3 | **Google OAuth callback URL** — verify correct redirect URI in Google Console matches `.env` | High | Dedicated auth-fix session needed. Social login not end-to-end tested. |
-| 4 | **Logo filename rename** — committed as `"BCC Default.png"` (space), referenced as `/images/bcc-logo-default.png` | Medium | One `git mv` command. Can be done in any session. |
-| 5 | **`showcase.astro` dark-theme inconsistency** | Low | Deferred. |
-| 6 | **5 remaining non-legacy historical members** — Kamal Kushlani, Lubna Rashid, Feher Murtaza, Yogesh More, Neha Zode | Medium | Not in legacy DB. Create via ADMIN_CREATED flow when ready. No photos to migrate. |
-| 7 | **Permanent number batch** — assign BCC numbers to all BCCTemp00001–BCCTemp00016 holders | Medium | External spreadsheet → admin batch import. Open per MEM-007 Amendment 001. |
+V6 12 — Members Hub Navigation
+
+Design Authority
 
 ---
 
-## MIGRATION TRACK STATE
-| Track | Status |
-|-------|--------|
-| A — Schema discovery & field mapping | ✅ COMPLETE |
-| B — Public content & portfolio assets | ✅ COMPLETE (311 photos in R2, serving via ImageKit on V3 profiles) |
-| C — Membership data | ✅ COMPLETE — migration 0035. 26 users total, 23 memberships, 16 BCCTemp IDs, 312 photos. 5 non-legacy members still pending (open item #6). |
-| D — Parallel operation & DNS cutover | ⏳ NOT STARTED — legacy site remains authoritative |
+### A3
+
+Reconcile
+
+V6 09 — Members Hub Home
 
 ---
 
-## PHASE 2b — NEXT — Contest Engine & Certificates
+### A4
 
-These are the only remaining Phase 2 modules. Nothing else blocks them.
+Reconcile
 
-### Module 03 — Contest Management Engine
-- 15+ contest formats (monthly, open, invitational, portfolio, live, etc.)
-- Submission management with eligibility enforcement (MEM-006)
-- Full judging engine: blind/double-blind, multi-round, multi-criteria scoring
-- Results, awards, staged release
-- Entry fees → Module 11; communication triggers → Module 17
-
-### Module 12 — Certificates & Badges
-- Template builder, all certificate types (participation, achievement, membership)
-- Badge library, points system, verification URLs
-- **Dependency:** Membership card (Module 02 revisit, open item #1) should be
-  resolved before or during this module — they share PDF generation logic.
-
-### Module 11 — Financial Core (expand in Phase 2b)
-- Membership fee collection already wired from Phase 1
-- Expand: event fee collection, contest entry fees, expense recording, event P&L,
-  full INR ledger, Razorpay webhook handling, receipt generation
+V6 10 — Portfolio
 
 ---
 
-## PHASE 3 — Growth (after Phase 2b complete)
+### A5
+
+Reconcile
+
+V6 11 — Upload Studio
+
+---
+
+### A6
+
+Implementation
+
+Implementation order
+
+```
+HubLayout
+        ↓
+HubSidebar
+        ↓
+HubPageHeader
+        ↓
+HubSection
+        ↓
+Navigation
+        ↓
+Hub Home
+        ↓
+Portfolio
+        ↓
+Upload Studio
+```
+
+---
+
+### A7
+
+Validation
+
+- UI Verification
+- Functional Testing
+- Deployment
+- Bug Fixing
+- Git Commit
+- Production-ready Member Hub
+
+---
+
+## PHASE B — Legacy Profile Migration Audit
+
+Audit all legacy member profile fields before designing the new Member Profile.
+
+Includes (but is not limited to):
+
+- Biography
+- About
+- Equipment
+- Camera Bodies
+- Lenses
+- Awards
+- Distinctions
+- Honours
+- Social Links
+- Websites
+- Profile Photograph
+- Cover Photograph
+- Portfolio Metadata
+- Member KYC Information
+- Membership Consent Requirements
+
+Deliverable:
+
+**Legacy Profile Audit Report**
+
+---
+
+## PHASE C — Legacy Data Reconciliation
+
+Compare
+
+Legacy Database
+
+↓
+
+Current V3 Database
+
+↓
+
+Required V6 Data Model
+
+Resolve missing fields before Member Profile implementation.
+
+---
+
+## PHASE D — Member Profile
+
+Design and implement
+
+V6 13 — Member Profile
+
+including
+
+- Public Photographer Profile integration
+- Private Member Profile
+- Membership KYC
+- Consent workflow
+- Profile completion
+- Visibility preferences
+
+---
+
+## PHASE E — Production Cutover
+
+Deploy
+
+```
+v3bcc.bhopal.info
+        ↓
+bcc.bhopal.info
+```
+
+Activities
+
+- Internal testing
+- Core committee validation
+- Existing member onboarding
+- Portfolio migration
+- Legacy site becomes read-only
+- DNS cutover
+- Public launch
+
+---
+
+## System Deliverables
+
+- V6 98 — token.css
+- V6 99 — systemdesign.md
+
+---
+
+# STAGE 3 — PLATFORM COMPLETION
+
+---
+
+## PHASE F — Membership & Billing
+
+- V6 14 — Membership & Billing
+- V6 15 — Future Modules Workspace
+
+---
+
+## PHASE G — Collections & Series
+
+- V6 16 — Collections & Series
+- V6 17 — Membership Card
+- V6 18 — Notifications
+
+---
+
+## PHASE H — Taxonomy Architecture
+
+Create
+
+TAXONOMY_ARCHITECTURE_FREEZE_v1.0.md
+
+Scope includes
+
+- Genres
+- Categories
+- Collections
+- Portfolio Series
+- Activity Types
+- Contest Types
+- Membership Types
+- Recognition Types
+- Equipment Taxonomy
+- Tags
+- Awards
+- Certificate Types
+- Exhibition Types
+
+---
+
+## PHASE I — Remaining Public Pages
+
+### Public Pages
+
+- V6 04 — Photographers Directory
+- V6 05 — Photographer Profile
+- V6 02 — About
+- V6 06 — Activities
+- V6 07 — Journal
+- V6 08 — Journal Article
+
+### Authentication (Visual Reconciliation)
+
+Existing functionality remains.
+
+V6 visual refresh only.
+
+- Sign In
+- Register
+- Forgot Password
+- Reset Password
+- Verify Email
+
+---
+
+# CONTINUATION OF ORIGINAL ROADMAP
+
+After completion of the V6 UI Migration, continue with the remaining platform modules.
+
+---
+
+# PHASE 2b — Contest Engine & Certificates
+
+These are the only remaining Phase 2 platform modules.
+
+---
+
+## Module 03 — Contest Management Engine
+
+- 15+ Contest Formats
+- Submission Management
+- Eligibility Enforcement (MEM-006)
+- Blind / Double Blind Judging
+- Multi-round Evaluation
+- Results Management
+- Awards
+- Publication Workflow
+
+Dependencies
+
+- Module 11
+- Module 17
+
+---
+
+## Module 12 — Certificates & Badges
+
+- Certificate Template Builder
+- Membership Certificates
+- Participation Certificates
+- Achievement Certificates
+- Badge Library
+- QR Verification
+- Verification URLs
+
+Dependency
+
+Membership Card redesign (Module 02 revisit)
+
+---
+
+## Module 11 — Financial Core
+
+Expand the existing financial system with
+
+- Event Fees
+- Contest Entry Fees
+- Expense Recording
+- Event P&L
+- INR Ledger
+- Razorpay Integration
+- Receipt Generation
+
+---
+
+# PHASE 3 — Growth
+
+After Phase 2b completion.
+
+Modules
+
 - Module 09 — Community & Social Engagement
 - Module 10 — Volunteer Management
 - Module 07 — Exhibition Management
-- Module 14 — Digital Archive (historical records import)
-- Module 16 — Mobile PWA (service worker, offline, push, QR scanner, install manifest)
-- Migration Track D — DNS cutover, legacy site decommission
+- Module 14 — Digital Archive
+- Module 16 — Mobile PWA
+- Migration Track D — Legacy Site Decommission
 
 ---
 
-## PHASE 4 — Intelligence
-- Module 08 — Photography School (full LMS, mentor system, assignments, certs)
-- Module 13 — Governance & Admin advanced features
-- Module 15 — AI Ecosystem Phase 1 (auto-tagging, semantic search)
-- Native mobile: Capacitor wrapping Astro PWA → iOS + Android
+# PHASE 4 — Intelligence
+
+Modules
+
+- Module 08 — Photography School
+- Module 13 — Governance & Administration
+- Module 15 — AI Ecosystem Phase 1
+- Native Mobile Applications
 
 ---
 
-## PHASE 5 — Scale (Year 3+)
-- Multi-tenancy groundwork
-- AI Phase 2: visual search, educational feedback, renewal prediction
-- Sub-groups / interest groups
-- Video contests, Open Badges, Lightroom plugin
+# PHASE 5 — Scale
+
+Long-term platform evolution.
+
+- Multi-tenancy
+- AI Phase 2
+- Visual Search
+- Educational Feedback
+- Renewal Prediction
+- Interest Groups
+- Video Contests
+- Open Badges
+- Lightroom Plugin
 
 ---
 
-## CONVERSATION-SPLITTING PLAN
-- This roadmap is updated at the end of every session — paste back the summary.
-- Each major build step gets its own fresh conversation pointed at this file.
-- **Next session:** Phase 2b — start with Module 03 (Contest Engine) or Module 12
-  (Certificates & Badges) — confirm which first.
+# CONVERSATION WORKFLOW
+
+This roadmap is updated after every major implementation milestone.
+
+Each major phase should begin in a fresh conversation referencing this roadmap.
+
+This document remains the single authoritative sequencing document for BCC Unified Platform V3.

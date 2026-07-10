@@ -34,3 +34,12 @@ Supporting frozen source files (do not modify):
 - Grey bars — body copy placeholders
 - "⚙ ADMIN-TOGGLED" — section controlled by admin toggle
 - "hi-fi: [desc]" — describes production colour/treatment
+
+## Hub Architecture (Authenticated Pages)
+
+For any work on `frontend/src/layouts/HubLayout.astro` or `frontend/src/pages/hub/*`,
+read **HUB-ARCH-001** before implementation:
+`ProjectDocs/Architecture/HUB_COMPONENT_ARCHITECTURE_FREEZE_v1.0.md`
+
+Hub implementation must not violate HUB-ARCH-001.
+No deviation from the composition model is permitted without a formal revision to that document.

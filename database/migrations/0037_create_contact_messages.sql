@@ -22,5 +22,5 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   KEY idx_contact_messages_submitted (submitted_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO schema_migrations (filename, executed_at)
+INSERT IGNORE INTO schema_migrations (filename, applied_at)
   VALUES ('0037_create_contact_messages.sql', NOW());

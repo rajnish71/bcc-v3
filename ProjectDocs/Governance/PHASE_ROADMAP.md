@@ -21,6 +21,7 @@ module does in depth; this file covers *status and sequencing only*.
 |------|--------|-----------|
 | Phase 0 — Infrastructure | ✅ COMPLETE | PM2 + Nginx + Certbot + GitHub Actions CI/CD on master |
 | Phase 0.5 — Design System | ✅ COMPLETE | "Refined Editorial Luxury" frozen in `BCC V3 Design System.md` |
+| Hub Component Architecture Freeze — HUB-ARCH-001 v1.0 | ✅ COMPLETE | Authenticated Member Hub frontend composition. See `Architecture/HUB_COMPONENT_ARCHITECTURE_FREEZE_v1.0.md` |
 
 ### Backend Modules
 | Module | Status | Key facts |

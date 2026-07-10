@@ -13,7 +13,7 @@
 --             ImageKit/R2 URL). hero_r2_key is reserved for direct R2 uploads.
 -- ============================================================================
 
-INSERT IGNORE INTO schema_migrations (filename, executed_at)
+INSERT IGNORE INTO schema_migrations (filename, applied_at)
   VALUES ('0036_journal_schema.sql', NOW());
 
 CREATE TABLE IF NOT EXISTS journal_posts (
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS journal_posts (
   reading_time_minutes TINYINT UNSIGNED NOT NULL DEFAULT 5,
 
   -- Author: FK to users; NULL = authored as "Bhopal Camera Club" (institutional)
-  author_user_id       INT UNSIGNED NULL,
+  author_user_id       BIGINT NULL,
   author_display_name  VARCHAR(255) NOT NULL DEFAULT 'Bhopal Camera Club',
 
   status               ENUM('DRAFT','PUBLISHED','ARCHIVED') NOT NULL DEFAULT 'DRAFT',

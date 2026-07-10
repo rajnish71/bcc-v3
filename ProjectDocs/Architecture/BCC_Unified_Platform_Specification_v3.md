@@ -11,6 +11,8 @@ This document is the complete functional specification for the BCC Unified Platf
  
 *Both documents are APPROVED, FROZEN, and AUTHORITATIVE. Their rules are not configurable. They flow through every domain of this platform.*
  
+*HUB-ARCH-001 (Hub Component Architecture Freeze v1.0) — governing authenticated Member Hub frontend composition, component hierarchy, authentication ownership, RBAC model, and component communication. All Hub page implementation shall conform to this architecture. See `Architecture/HUB_COMPONENT_ARCHITECTURE_FREEZE_v1.0.md`.*
+ 
 | CONSTITUTIONAL DOCUMENT — MEM-006  ·  MODULE CONST  **MEM-006 CONSTITUTIONAL FOUNDATION** *The five principles and domain model that govern all membership architecture in this platform* |
 | --- |
  

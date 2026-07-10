@@ -90,7 +90,9 @@ Architecture/
 
 ├── BCC\_Unified\_Platform\_Specification\_v3.md
 
-└── BCC\_V3\_Stage2\_Reconciliation\_Audit.md
+├── BCC\_V3\_Stage2\_Reconciliation\_Audit.md
+
+└── HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md
 
 ```
 
@@ -283,6 +285,50 @@ Required Wireframe
 
 
 Architecture/BCC\_Unified\_Platform\_Specification\_v3.md
+
+
+
+↓
+
+
+
+Governance/TECH-STACK-FREEZE.md
+
+
+
+\---
+
+
+
+\## Hub Implementation
+
+
+
+Governance/Bootstrap.md
+
+
+
+↓
+
+
+
+Governance/SOURCE\_INDEX.md
+
+
+
+↓
+
+
+
+Architecture/HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md
+
+
+
+↓
+
+
+
+Required Wireframe (Wireframes/V6/09 Hub Home/ or relevant Hub wireframe)
 
 
 

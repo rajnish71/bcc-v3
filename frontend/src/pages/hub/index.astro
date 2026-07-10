@@ -146,6 +146,10 @@ import HubLayout from '../../layouts/HubLayout.astro';
         <div class="journey-num" id="jn-years">—</div>
         <div class="journey-label">Years</div>
       </div>
+      <div class="journey-stat">
+        <div class="journey-num" id="jn-award">—</div>
+        <div class="journey-label">Award</div>
+      </div>
     </div>
 
   </main><!-- /hub-main -->
@@ -823,7 +827,7 @@ import HubLayout from '../../layouts/HubLayout.astro';
   border-top: 1px solid #E7E1D6;
   border-bottom: 1px solid #E7E1D6;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   margin-bottom: 40px;
 }
 .journey-stat {
@@ -1540,6 +1544,7 @@ function renderJourneyNumbers(photoCount: number) {
   setText('jn-events', '—');
   setText('jn-courses', '—');
   setText('jn-years', '—');
+  setText('jn-award', '—');
   show('journey-numbers');
 }
 

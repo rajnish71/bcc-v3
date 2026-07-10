@@ -1,0 +1,921 @@
+---
+/**
+ * hub/profile/index.astro — Member Profile Editor (V6 Phase 1)
+ * Route: /hub/profile/
+ *
+ * Editable fields:
+ *   - Display name (full_name)
+ *   - Bio
+ *   - City, State, Country
+ *   - Experience level
+ *   - Website
+ *   - Social handles: Instagram, Flickr, 500px, YouTube
+ *   - Avatar upload (presign → R2 PUT → confirm)
+ *
+ * API surface used:
+ *   GET    /api/v1/users/me              — load current profile
+ *   PATCH  /api/v1/users/profile        — update text fields + socials
+ *   POST   /api/v1/users/profile/avatar/presign  — get presigned URL
+ *   POST   /api/v1/users/profile/avatar/confirm  — confirm after PUT
+ *   GET    /api/v1/photographer-profiles/:username — fallback profile read
+ *
+ * NOTE: /api/v1/users/profile PATCH and avatar endpoints do not yet
+ * exist in users.controller.ts. Until they are implemented on the backend,
+ * the form will display a "backend not yet implemented" notice and the
+ * fields will be read-only. The page is fully wired and will activate
+ * automatically once those endpoints ship.
+ */
+import HubLayout from '../../../layouts/HubLayout.astro';
+---
+
+<HubLayout title="My Profile" description="Edit your Bhopal Camera Club member profile.">
+
+<!-- ── LEFT RAIL ─────────────────────────────────────────────────────── -->
+<div class="hub-shell-wrap">
+
+  <nav class="hub-rail" aria-label="Hub navigation">
+    <div class="rail-section">
+      <div class="rail-label">Studio</div>
+      <a href="/hub/" class="rail-item">Home</a>
+      <a href="/hub/portfolio/" class="rail-item">Portfolio</a>
+      <a href="/hub/upload/" class="rail-item">Upload</a>
+      <a href="/hub/upload/batch/" class="rail-item">Batch Upload</a>
+    </div>
+    <div class="rail-section">
+      <div class="rail-label">Grow</div>
+      <span class="rail-item rail-item--soon">Academy <span class="rail-soon">SOON</span></span>
+      <span class="rail-item rail-item--soon">Contests <span class="rail-soon">SOON</span></span>
+    </div>
+    <div class="rail-section">
+      <div class="rail-label">Account</div>
+      <a href="/hub/profile/" class="rail-item rail-item--active">
+        <span class="rail-dot"></span>My Profile
+      </a>
+      <a href="/hub/membership/" class="rail-item">Membership &amp; Billing</a>
+    </div>
+    <div class="rail-footer">
+      <button id="rail-signout" type="button" class="rail-signout">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- ── HUB TABS (641–1199px) ─────────────────────────────────────── -->
+  <div class="hub-tabs-bar" role="tablist" aria-label="Hub sections">
+    <a href="/hub/"           class="hub-tab" role="tab">Home</a>
+    <a href="/hub/portfolio/" class="hub-tab" role="tab">Portfolio</a>
+    <a href="/hub/upload/"    class="hub-tab" role="tab">Upload</a>
+    <a href="/activities/?type=photo_walk" class="hub-tab" role="tab">Photo Walks</a>
+    <a href="/hub/profile/"   class="hub-tab hub-tab--active" role="tab" aria-selected="true">Account</a>
+  </div>
+
+  <!-- ── MAIN ──────────────────────────────────────────────────────── -->
+  <main class="hub-main" id="hub-main">
+
+    <!-- Page header -->
+    <div class="profile-header">
+      <div class="section-kicker"><span class="kicker-rule"></span>Account</div>
+      <h1 class="profile-title">My Profile</h1>
+      <p class="profile-subtitle">Your public photographer profile on Bhopal Camera Club.</p>
+    </div>
+
+    <!-- Backend status notice — shown when profile PATCH is not yet live -->
+    <div class="backend-notice" id="backend-notice" hidden>
+      <span class="backend-notice__icon">⚠</span>
+      <span id="backend-notice-text">Profile editing endpoints are not yet available. Fields are shown in read-only mode.</span>
+    </div>
+
+    <!-- Save feedback -->
+    <div class="save-feedback save-feedback--success" id="save-success" hidden>Profile saved successfully.</div>
+    <div class="save-feedback save-feedback--error"   id="save-error"   hidden></div>
+
+    <!-- ── AVATAR ROW ──────────────────────────────────────────────── -->
+    <div class="profile-avatar-row">
+      <div class="avatar-frame" id="avatar-frame">
+        <div class="avatar-initials" id="avatar-initials">—</div>
+        <img id="avatar-img" class="avatar-img" src="" alt="Your avatar" hidden />
+      </div>
+      <div class="avatar-actions">
+        <label class="btn-avatar-upload" for="avatar-file-input" id="avatar-upload-label">
+          Change avatar
+        </label>
+        <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
+        <div class="avatar-hint">JPG, PNG or WebP · max 5 MB · Square crop recommended</div>
+        <div class="avatar-progress" id="avatar-progress" hidden>
+          <div class="avatar-progress-bar" id="avatar-progress-bar"></div>
+        </div>
+        <div class="avatar-status" id="avatar-status" hidden></div>
+      </div>
+    </div>
+
+    <!-- ── PROFILE FORM ────────────────────────────────────────────── -->
+    <form class="profile-form" id="profile-form" novalidate>
+
+      <div class="form-section">
+        <div class="form-section-title">Basic Information</div>
+
+        <div class="form-row">
+          <div class="form-group form-group--full">
+            <label class="form-label" for="field-fullname">Display Name <span class="form-required">*</span></label>
+            <input class="form-input" type="text" id="field-fullname" name="full_name"
+              placeholder="Your full name" maxlength="120" required />
+            <div class="form-hint">This is how your name appears on your portfolio and membership card.</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group form-group--full">
+            <label class="form-label" for="field-bio">Bio</label>
+            <textarea class="form-textarea" id="field-bio" name="bio"
+              rows="4" maxlength="600"
+              placeholder="A short description about yourself and your photography…"></textarea>
+            <div class="form-hint form-hint--counter"><span id="bio-count">0</span>/600</div>
+          </div>
+        </div>
+
+        <div class="form-row form-row--3col">
+          <div class="form-group">
+            <label class="form-label" for="field-city">City</label>
+            <input class="form-input" type="text" id="field-city" name="city" placeholder="e.g. Bhopal" maxlength="100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="field-state">State</label>
+            <input class="form-input" type="text" id="field-state" name="state" placeholder="e.g. Madhya Pradesh" maxlength="100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="field-country">Country</label>
+            <input class="form-input" type="text" id="field-country" name="country" placeholder="e.g. India" maxlength="100" />
+          </div>
+        </div>
+
+        <div class="form-row form-row--2col">
+          <div class="form-group">
+            <label class="form-label" for="field-experience">Experience Level</label>
+            <select class="form-select" id="field-experience" name="experience_level">
+              <option value="">— select —</option>
+              <option value="BEGINNER">Beginner</option>
+              <option value="ENTHUSIAST">Enthusiast</option>
+              <option value="SERIOUS_AMATEUR">Serious Amateur</option>
+              <option value="PROFESSIONAL">Professional</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="field-website">Website</label>
+            <input class="form-input" type="url" id="field-website" name="website"
+              placeholder="https://yoursite.com" maxlength="300" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Social &amp; Links</div>
+
+        <div class="form-row form-row--2col">
+          <div class="form-group">
+            <label class="form-label" for="field-instagram">Instagram</label>
+            <div class="form-input-prefix-wrap">
+              <span class="form-input-prefix">@</span>
+              <input class="form-input form-input--prefixed" type="text" id="field-instagram"
+                name="INSTAGRAM" placeholder="username" maxlength="60" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="field-flickr">Flickr</label>
+            <div class="form-input-prefix-wrap">
+              <span class="form-input-prefix">flickr.com/</span>
+              <input class="form-input form-input--prefixed" type="text" id="field-flickr"
+                name="FLICKR" placeholder="username" maxlength="60" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row form-row--2col">
+          <div class="form-group">
+            <label class="form-label" for="field-500px">500px</label>
+            <div class="form-input-prefix-wrap">
+              <span class="form-input-prefix">500px.com/</span>
+              <input class="form-input form-input--prefixed" type="text" id="field-500px"
+                name="FIVE_HUNDRED_PX" placeholder="username" maxlength="60" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="field-youtube">YouTube</label>
+            <div class="form-input-prefix-wrap">
+              <span class="form-input-prefix">youtube.com/@</span>
+              <input class="form-input form-input--prefixed" type="text" id="field-youtube"
+                name="YOUTUBE" placeholder="channelname" maxlength="60" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-save" id="save-btn">Save profile</button>
+        <a href="/hub/" class="btn-cancel">Cancel</a>
+      </div>
+
+    </form>
+
+    <!-- ── PUBLIC PROFILE LINK ─────────────────────────────────────── -->
+    <div class="profile-public-link" id="profile-public-link" hidden>
+      <span class="profile-public-link__label">Your public profile:</span>
+      <a href="" id="profile-public-link__anchor" class="profile-public-link__url" target="_blank" rel="noopener"></a>
+    </div>
+
+  </main>
+
+  <!-- ── PERSONAL RAIL ──────────────────────────────────────────────── -->
+  <aside class="personal-rail">
+    <div class="personal-card">
+      <div class="personal-card__label">Profile Tips</div>
+      <ul class="tips-list">
+        <li>A clear bio helps members and visitors understand your photographic style.</li>
+        <li>Add your Instagram to grow your following via your public portfolio page.</li>
+        <li>Your display name appears on membership cards — use your full name.</li>
+      </ul>
+    </div>
+    <div class="personal-card" id="preview-card">
+      <div class="personal-card__label">Preview</div>
+      <div class="preview-avatar-wrap">
+        <div class="preview-avatar" id="preview-avatar">
+          <div class="preview-initials" id="preview-initials">—</div>
+        </div>
+        <div class="preview-info">
+          <div class="preview-name" id="preview-name">—</div>
+          <div class="preview-location" id="preview-location"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div><!-- /hub-shell-wrap -->
+
+<!-- Mobile bar -->
+<nav class="hub-mobile-bar" aria-label="Hub quick navigation">
+  <a href="/hub/" class="mobile-bar-item">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3 8.5L10 2l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V8.5z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Home</span>
+  </a>
+  <a href="/hub/portfolio/" class="mobile-bar-item">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="16" height="16" stroke="currentColor" stroke-width="1.4"/>
+      <circle cx="7" cy="7" r="1.5" stroke="currentColor" stroke-width="1"/>
+      <polyline points="18 13 13 8 5 18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Portfolio</span>
+  </a>
+  <a href="/hub/upload/" class="mobile-bar-item mobile-bar-item--upload">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="10" stroke="currentColor" stroke-width="1.4"/>
+      <line x1="11" y1="7" x2="11" y2="15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      <polyline points="7 11 11 7 15 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Upload</span>
+  </a>
+  <a href="/hub/profile/" class="mobile-bar-item mobile-bar-item--active" aria-current="page">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.4"/>
+      <path d="M2 18c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <span>Account</span>
+  </a>
+</nav>
+
+</HubLayout>
+
+<style>
+/* ── SHELL (reuse hub grid) ────────────────────────────────────────── */
+:root {
+  --hub-rail-w: 240px;
+  --hub-personal-w: 280px;
+  --hub-gap: 40px;
+  --hub-pad: 48px;
+}
+
+.hub-shell-wrap {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 var(--hub-pad);
+  display: grid;
+  grid-template-columns: var(--hub-rail-w) 1fr var(--hub-personal-w);
+  gap: 0 var(--hub-gap);
+  align-items: start;
+}
+
+/* ── RAIL ──────────────────────────────────────────────────────────── */
+.hub-rail {
+  grid-column: 1;
+  border-right: 1px solid #E7E1D6;
+  padding: 40px 24px 32px 0;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 96px);
+  position: sticky;
+  top: 96px;
+}
+.rail-section { margin-bottom: 8px; }
+.rail-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #8B8378;
+  margin: 20px 0 4px; font-family: var(--font-body);
+}
+.rail-section:first-child .rail-label { margin-top: 0; }
+.rail-item {
+  display: flex; align-items: center; height: 44px;
+  font-size: 15px; font-weight: 500; color: #57514B;
+  padding-left: 16px; text-decoration: none;
+  transition: color 0.15s; border-radius: 2px;
+}
+.rail-item:hover { color: #141210; }
+.rail-item--active { color: #141210; padding-left: 0; gap: 10px; }
+.rail-item--soon { color: #8B8378; cursor: default; justify-content: space-between; padding-right: 0; }
+.rail-dot {
+  width: 6px; height: 6px; border-radius: 999px;
+  background: linear-gradient(135deg, #C9A961, #A8843C); flex-shrink: 0;
+}
+.rail-soon {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; color: #8B8378; background: #F0EBE0; padding: 2px 6px;
+}
+.rail-footer { margin-top: auto; border-top: 1px solid #E7E1D6; padding-top: 20px; }
+.rail-signout {
+  font-size: 14px; color: #8B8378; background: none;
+  border: none; cursor: pointer; padding: 0; font-family: var(--font-body); transition: color 0.15s;
+}
+.rail-signout:hover { color: #141210; }
+
+/* ── HUB TABS ──────────────────────────────────────────────────────── */
+.hub-tabs-bar {
+  display: none; grid-column: 1 / -1; gap: 8px;
+  padding: 20px 0 0; overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.hub-tabs-bar::-webkit-scrollbar { display: none; }
+.hub-tab {
+  flex-shrink: 0; font-size: 13px; font-weight: 500;
+  padding: 8px 16px; border-radius: 999px;
+  border: 1px solid #D8D2C6; background: #FAF8F4; color: #57514B;
+  text-decoration: none; white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.hub-tab:hover { border-color: #C9A961; color: #141210; }
+.hub-tab--active { background: #141210; border-color: #141210; color: #FAF8F4; }
+
+/* ── MAIN ──────────────────────────────────────────────────────────── */
+.hub-main {
+  grid-column: 2;
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+/* ── PROFILE HEADER ────────────────────────────────────────────────── */
+.profile-header {
+  padding-bottom: 24px;
+  border-bottom: 1px solid #E7E1D6;
+  margin-bottom: 28px;
+}
+.section-kicker {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #A8843C; margin-bottom: 14px;
+  font-family: var(--font-body);
+}
+.kicker-rule {
+  display: inline-block; width: 28px; height: 1px;
+  background: #C9A961; flex-shrink: 0;
+}
+.profile-title {
+  font-family: var(--font-display); font-size: clamp(28px, 3vw, 38px);
+  font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
+  color: #141210; margin: 0 0 8px;
+}
+.profile-subtitle { font-size: 14px; color: #8B8378; margin: 0; font-family: var(--font-body); }
+
+/* ── BACKEND NOTICE ────────────────────────────────────────────────── */
+.backend-notice {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #FBF0E8; border: 1px solid #E8C99A;
+  padding: 14px 18px; margin-bottom: 20px;
+  font-size: 13px; color: #8C6830; font-family: var(--font-body);
+}
+.backend-notice__icon { flex-shrink: 0; font-size: 16px; }
+
+/* ── SAVE FEEDBACK ─────────────────────────────────────────────────── */
+.save-feedback {
+  padding: 12px 18px; margin-bottom: 20px;
+  font-size: 13px; font-weight: 500; font-family: var(--font-body);
+}
+.save-feedback--success { background: #E8EFE9; color: #3E5A48; }
+.save-feedback--error   { background: #FDECEA; color: #882828; }
+
+/* ── AVATAR ROW ────────────────────────────────────────────────────── */
+.profile-avatar-row {
+  display: flex; align-items: center; gap: 24px;
+  margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid #E7E1D6;
+}
+.avatar-frame {
+  width: 88px; height: 88px; border-radius: 999px;
+  background: linear-gradient(135deg, #3E5A48, #2A3D30);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0; position: relative;
+}
+.avatar-initials {
+  font-family: var(--font-display); font-size: 28px; font-weight: 700;
+  color: rgba(255,255,255,0.9); letter-spacing: -0.01em;
+}
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-actions { flex: 1; }
+.btn-avatar-upload {
+  display: inline-block; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: #141210;
+  border: 1px solid #D8D2C6; padding: 9px 18px; border-radius: 2px;
+  font-family: var(--font-body); transition: border-color 0.15s;
+  margin-bottom: 8px;
+}
+.btn-avatar-upload:hover { border-color: #C9A961; color: #A8843C; }
+.avatar-hint { font-size: 12px; color: #8B8378; font-family: var(--font-body); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.avatar-progress { height: 3px; background: #E7E1D6; margin-top: 10px; border-radius: 999px; overflow: hidden; }
+.avatar-progress-bar { height: 100%; background: linear-gradient(90deg, #C9A961, #A8843C); width: 0; transition: width 0.2s; }
+.avatar-status { font-size: 12px; margin-top: 6px; font-family: var(--font-body); }
+.avatar-status--ok  { color: #3E5A48; }
+.avatar-status--err { color: #882828; }
+
+/* ── FORM ──────────────────────────────────────────────────────────── */
+.profile-form { display: flex; flex-direction: column; gap: 0; }
+
+.form-section {
+  padding-bottom: 32px; margin-bottom: 32px; border-bottom: 1px solid #F0EBE0;
+}
+.form-section:last-of-type { border-bottom: none; }
+.form-section-title {
+  font-family: var(--font-display); font-size: 16px; font-weight: 600;
+  color: #141210; margin-bottom: 20px;
+}
+
+.form-row { display: flex; gap: 16px; margin-bottom: 16px; }
+.form-row:last-child { margin-bottom: 0; }
+.form-row--3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.form-row--2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group--full { flex: 1; }
+
+.form-label {
+  font-size: 12px; font-weight: 600; color: #57514B;
+  letter-spacing: 0.04em; font-family: var(--font-body);
+}
+.form-required { color: #A8843C; }
+
+.form-input, .form-textarea, .form-select {
+  font-family: var(--font-body); font-size: 14px; color: #141210;
+  border: 1px solid #D8D2C6; padding: 10px 14px;
+  border-radius: 2px; background: #FFFFFF; width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  outline: none; border-color: #C9A961; box-shadow: 0 0 0 3px rgba(201,169,97,0.12);
+}
+.form-textarea { resize: vertical; min-height: 100px; }
+.form-select { cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B8378' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+}
+
+.form-input-prefix-wrap { display: flex; }
+.form-input-prefix {
+  display: flex; align-items: center;
+  font-size: 13px; color: #8B8378; font-family: var(--font-mono);
+  background: #F4F0E8; border: 1px solid #D8D2C6; border-right: none;
+  padding: 10px 10px; border-radius: 2px 0 0 2px; white-space: nowrap;
+}
+.form-input--prefixed { border-radius: 0 2px 2px 0; }
+
+.form-hint {
+  font-size: 11px; color: #8B8378; font-family: var(--font-body); line-height: 1.5;
+}
+.form-hint--counter { text-align: right; margin-top: 4px; }
+
+.form-actions {
+  display: flex; align-items: center; gap: 16px;
+  padding-top: 24px; margin-top: 4px;
+}
+.btn-save {
+  font-size: 15px; font-weight: 600; color: #FFFFFF;
+  background: linear-gradient(135deg, #C9A961, #A8843C);
+  border: none; padding: 13px 32px; border-radius: 2px; cursor: pointer;
+  font-family: var(--font-body);
+  box-shadow: 0 2px 10px rgba(168,132,60,0.3);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.btn-save:hover { box-shadow: 0 4px 16px rgba(168,132,60,0.4); transform: translateY(-1px); }
+.btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-cancel {
+  font-size: 14px; font-weight: 500; color: #57514B;
+  text-decoration: none; font-family: var(--font-body); transition: color 0.15s;
+}
+.btn-cancel:hover { color: #141210; }
+
+/* ── PUBLIC PROFILE LINK ───────────────────────────────────────────── */
+.profile-public-link {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 28px; padding-top: 24px; border-top: 1px solid #E7E1D6;
+  font-size: 13px; font-family: var(--font-body); flex-wrap: wrap; gap: 6px;
+}
+.profile-public-link__label { color: #8B8378; }
+.profile-public-link__url { color: #A8843C; word-break: break-all; }
+
+/* ── PERSONAL RAIL ─────────────────────────────────────────────────── */
+.personal-rail {
+  grid-column: 3; border-left: 1px solid #E7E1D6;
+  padding-top: 40px; padding-left: 32px;
+  display: flex; flex-direction: column; gap: 20px;
+  position: sticky; top: 96px; max-height: calc(100vh - 120px);
+  overflow-y: auto; scrollbar-width: none;
+}
+.personal-rail::-webkit-scrollbar { display: none; }
+.personal-card {
+  background: #FFFFFF; border: 1px solid #E7E1D6;
+  box-shadow: 0 1px 2px rgba(20,18,16,0.04); padding: 22px;
+}
+.personal-card__label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #A8843C; margin-bottom: 10px;
+  font-family: var(--font-body);
+}
+.tips-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.tips-list li {
+  font-size: 12px; color: #57514B; line-height: 1.6; font-family: var(--font-body);
+  padding-left: 14px; position: relative;
+}
+.tips-list li::before {
+  content: '—'; position: absolute; left: 0; color: #C9A961;
+}
+
+/* ── PREVIEW CARD ──────────────────────────────────────────────────── */
+.preview-avatar-wrap { display: flex; align-items: center; gap: 14px; }
+.preview-avatar {
+  width: 48px; height: 48px; border-radius: 999px;
+  background: linear-gradient(135deg, #3E5A48, #2A3D30);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.preview-initials { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); }
+.preview-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: #141210; }
+.preview-location { font-size: 12px; color: #8B8378; margin-top: 2px; font-family: var(--font-body); }
+
+/* ── MOBILE BAR ────────────────────────────────────────────────────── */
+.hub-mobile-bar {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.97); border-top: 1px solid #E7E1D6;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  z-index: 100; justify-content: space-around; align-items: flex-start;
+}
+@media (max-width: 640px) { .hub-mobile-bar { display: flex; } }
+.mobile-bar-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 12px; color: #8B8378; text-decoration: none;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.02em;
+  transition: color 0.15s; font-family: var(--font-body);
+}
+.mobile-bar-item:hover, .mobile-bar-item--active { color: #141210; }
+.mobile-bar-item--upload { color: #A8843C; }
+
+/* ── RESPONSIVE ────────────────────────────────────────────────────── */
+@media (min-width: 1200px) {
+  .hub-rail     { display: flex; }
+  .hub-tabs-bar { display: none; }
+}
+@media (min-width: 641px) and (max-width: 1199px) {
+  .hub-tabs-bar { display: flex; }
+  .hub-rail     { display: none !important; }
+  .hub-shell-wrap { grid-template-columns: 1fr; padding: 0 24px; }
+  .hub-main     { grid-column: 1; }
+  .personal-rail { grid-column: 1; border-left: none; padding-left: 0; margin-top: 32px; position: static; max-height: none; }
+}
+@media (max-width: 640px) {
+  .hub-tabs-bar { display: none; }
+  .hub-rail     { display: none !important; }
+  .hub-shell-wrap { grid-template-columns: 1fr; padding: 0 16px; padding-bottom: 80px; }
+  .hub-main     { grid-column: 1; }
+  .personal-rail { grid-column: 1; border-left: none; padding-left: 0; margin-top: 24px; position: static; max-height: none; }
+  .form-row--3col, .form-row--2col { grid-template-columns: 1fr; }
+  .profile-avatar-row { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+<script>
+import { logout } from '../../../lib/auth';
+
+const API = '/api/v1';
+const CDN = 'https://ik.imagekit.io/duynda7oq';
+
+function tok(): string { return localStorage.getItem('bcc_token') ?? ''; }
+
+async function apiFetch(path: string, opts: RequestInit = {}): Promise<Response> {
+  return fetch(path, {
+    ...opts,
+    headers: { Authorization: `Bearer ${tok()}`, ...(opts.headers ?? {}) },
+  });
+}
+
+function showEl(id: string) { const el = document.getElementById(id); if (el) el.hidden = false; }
+function hideEl(id: string) { const el = document.getElementById(id); if (el) el.hidden = true; }
+
+/* ── Load profile ──────────────────────────────────────────────────── */
+async function loadProfile() {
+  const res = await apiFetch(`${API}/users/me`);
+  if (!res.ok) return;
+  const u = await res.json() as {
+    fullName?: string; username?: string; createdAt?: string;
+    bio?: string | null; city?: string | null; state?: string | null;
+    country?: string | null; experienceLevel?: string | null;
+    website?: string | null; socials?: Array<{ platform: string; handle_or_url: string }>;
+  };
+
+  // Basic fields
+  const fn = u.fullName ?? '';
+  setVal('field-fullname', fn);
+  setVal('field-bio', u.bio ?? '');
+  setVal('field-city', u.city ?? '');
+  setVal('field-state', u.state ?? '');
+  setVal('field-country', u.country ?? '');
+  setVal('field-website', u.website ?? '');
+  (document.getElementById('field-experience') as HTMLSelectElement | null)!.value = u.experienceLevel ?? '';
+
+  // Social handles
+  if (Array.isArray(u.socials)) {
+    u.socials.forEach(s => {
+      const map: Record<string, string> = {
+        INSTAGRAM: 'field-instagram', FLICKR: 'field-flickr',
+        FIVE_HUNDRED_PX: 'field-500px', YOUTUBE: 'field-youtube',
+      };
+      const id = map[s.platform];
+      if (id) setVal(id, s.handle_or_url);
+    });
+  }
+
+  // Avatar initials
+  const initials = fn.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const initialsEl = document.getElementById('avatar-initials');
+  if (initialsEl) initialsEl.textContent = initials || '?';
+
+  // Preview
+  updatePreview(fn, u.city, u.country);
+
+  // Public profile link
+  if (u.username) {
+    const anchor = document.getElementById('profile-public-link__anchor') as HTMLAnchorElement | null;
+    if (anchor) {
+      anchor.href = `/photographers/${u.username}/`;
+      anchor.textContent = `v3bcc.bhopal.info/photographers/${u.username}/`;
+    }
+    showEl('profile-public-link');
+  }
+
+  // Bio counter
+  updateBioCount();
+
+  // Check if PATCH endpoint is available (do a preflight OPTIONS or catch 404/405)
+  checkPatchEndpoint();
+}
+
+function setVal(id: string, val: string) {
+  const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+  if (el) el.value = val;
+}
+
+function updatePreview(fullName: string, city?: string | null, country?: string | null) {
+  const nameEl = document.getElementById('preview-name');
+  const locEl = document.getElementById('preview-location');
+  const initialsEl = document.getElementById('preview-initials');
+  if (nameEl) nameEl.textContent = fullName || '—';
+  const loc = [city, country].filter(Boolean).join(', ');
+  if (locEl) locEl.textContent = loc;
+  const initials = (fullName || '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  if (initialsEl) initialsEl.textContent = initials || '?';
+}
+
+function updateBioCount() {
+  const bio = document.getElementById('field-bio') as HTMLTextAreaElement | null;
+  const counter = document.getElementById('bio-count');
+  if (bio && counter) counter.textContent = String(bio.value.length);
+}
+
+async function checkPatchEndpoint() {
+  try {
+    // The PATCH endpoint returns 401 if not authenticated, 404/405 if not yet implemented
+    const res = await apiFetch(`${API}/users/profile`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (res.status === 404 || res.status === 405) {
+      // Endpoint not implemented yet
+      showNotice('Profile editing is not yet enabled on the backend. Fields shown are read-only until the endpoint ships.');
+      setReadOnly(true);
+    }
+    // 200/400/422 = endpoint exists, forms are live
+  } catch {
+    // Network error or CORS — assume live
+  }
+}
+
+function showNotice(msg: string) {
+  const el = document.getElementById('backend-notice-text');
+  if (el) el.textContent = msg;
+  showEl('backend-notice');
+}
+
+function setReadOnly(ro: boolean) {
+  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement | null;
+  if (saveBtn) saveBtn.disabled = ro;
+  if (ro) {
+    document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+      '.profile-form input, .profile-form textarea, .profile-form select'
+    ).forEach(el => { el.readOnly = true; el.style.background = '#F4F0E8'; });
+    const avatarLabel = document.getElementById('avatar-upload-label');
+    if (avatarLabel) { avatarLabel.style.opacity = '0.5'; avatarLabel.style.pointerEvents = 'none'; }
+  }
+}
+
+/* ── Form submission ───────────────────────────────────────────────── */
+document.getElementById('profile-form')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement | null;
+  if (saveBtn?.disabled) return;
+
+  hideEl('save-success'); hideEl('save-error');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+  const fn = (document.getElementById('field-fullname') as HTMLInputElement).value.trim();
+  if (!fn) {
+    showError('Display name is required.');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save profile'; }
+    return;
+  }
+
+  const payload = {
+    full_name: fn,
+    bio:    (document.getElementById('field-bio')    as HTMLTextAreaElement).value.trim() || null,
+    city:   (document.getElementById('field-city')   as HTMLInputElement).value.trim() || null,
+    state:  (document.getElementById('field-state')  as HTMLInputElement).value.trim() || null,
+    country:(document.getElementById('field-country') as HTMLInputElement).value.trim() || null,
+    experience_level: (document.getElementById('field-experience') as HTMLSelectElement).value || null,
+    website:(document.getElementById('field-website') as HTMLInputElement).value.trim() || null,
+    socials: buildSocials(),
+  };
+
+  try {
+    const res = await apiFetch(`${API}/users/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      showEl('save-success');
+      updatePreview(fn,
+        (document.getElementById('field-city') as HTMLInputElement).value,
+        (document.getElementById('field-country') as HTMLInputElement).value
+      );
+      // Refresh bcc_user in localStorage
+      const raw = localStorage.getItem('bcc_user');
+      if (raw) {
+        try {
+          const u = JSON.parse(raw) as Record<string, unknown>;
+          u.displayName = fn;
+          u.initials = fn.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+          localStorage.setItem('bcc_user', JSON.stringify(u));
+        } catch { /* ignore */ }
+      }
+    } else {
+      const err = await res.json().catch(() => ({})) as { message?: string };
+      showError(typeof err.message === 'string' ? err.message : `Save failed (${res.status})`);
+    }
+  } catch {
+    showError('Network error. Check your connection and try again.');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save profile'; }
+  }
+});
+
+function buildSocials(): Array<{ platform: string; handle_or_url: string }> {
+  const map: Record<string, string> = {
+    INSTAGRAM: 'field-instagram', FLICKR: 'field-flickr',
+    FIVE_HUNDRED_PX: 'field-500px', YOUTUBE: 'field-youtube',
+  };
+  return Object.entries(map)
+    .map(([platform, id]) => {
+      const val = (document.getElementById(id) as HTMLInputElement | null)?.value.trim();
+      return val ? { platform, handle_or_url: val } : null;
+    })
+    .filter((x): x is { platform: string; handle_or_url: string } => x !== null);
+}
+
+function showError(msg: string) {
+  const el = document.getElementById('save-error');
+  if (el) { el.textContent = msg; el.hidden = false; }
+}
+
+/* ── Bio counter ───────────────────────────────────────────────────── */
+document.getElementById('field-bio')?.addEventListener('input', updateBioCount);
+
+/* ── Live preview ──────────────────────────────────────────────────── */
+document.getElementById('field-fullname')?.addEventListener('input', () => {
+  const fn = (document.getElementById('field-fullname') as HTMLInputElement).value;
+  const city = (document.getElementById('field-city') as HTMLInputElement).value;
+  const country = (document.getElementById('field-country') as HTMLInputElement).value;
+  updatePreview(fn, city, country);
+  const initials = fn.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const initialsEl = document.getElementById('avatar-initials');
+  if (initialsEl) initialsEl.textContent = initials || '?';
+});
+
+/* ── Avatar upload ─────────────────────────────────────────────────── */
+document.getElementById('avatar-file-input')?.addEventListener('change', async e => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showAvatarStatus('File too large (max 5 MB)', true); return; }
+
+  // Preview locally first
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('avatar-img') as HTMLImageElement | null;
+    if (img && ev.target?.result) {
+      img.src = String(ev.target.result);
+      img.hidden = false;
+      const initials = document.getElementById('avatar-initials');
+      if (initials) initials.style.display = 'none';
+    }
+  };
+  reader.readAsDataURL(file);
+
+  // Try presign → PUT → confirm
+  showEl('avatar-progress');
+  setProgress(10);
+
+  try {
+    const presignRes = await apiFetch(`${API}/users/profile/avatar/presign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mime_type: file.type, file_size_bytes: file.size }),
+    });
+
+    if (presignRes.status === 404 || presignRes.status === 405) {
+      // Endpoint not yet live — show notice but keep local preview
+      hideEl('avatar-progress');
+      showAvatarStatus('Avatar upload backend not yet implemented — preview only.', false);
+      return;
+    }
+    if (!presignRes.ok) { hideEl('avatar-progress'); showAvatarStatus('Presign failed', true); return; }
+
+    const { uploadUrl, r2Key } = await presignRes.json() as { uploadUrl: string; r2Key: string };
+    setProgress(30);
+
+    // PUT to R2
+    const putRes = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+    if (!putRes.ok) { hideEl('avatar-progress'); showAvatarStatus('Upload failed', true); return; }
+    setProgress(80);
+
+    // Confirm
+    const confirmRes = await apiFetch(`${API}/users/profile/avatar/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ r2_key: r2Key }),
+    });
+    setProgress(100);
+    hideEl('avatar-progress');
+
+    if (confirmRes.ok) {
+      showAvatarStatus('Avatar updated successfully!', false);
+    } else {
+      showAvatarStatus('Upload confirmed but processing may be delayed.', false);
+    }
+  } catch {
+    hideEl('avatar-progress');
+    showAvatarStatus('Network error during upload.', true);
+  }
+});
+
+function setProgress(pct: number) {
+  const bar = document.getElementById('avatar-progress-bar');
+  if (bar) bar.style.width = `${pct}%`;
+}
+
+function showAvatarStatus(msg: string, isErr: boolean) {
+  const el = document.getElementById('avatar-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `avatar-status avatar-status--${isErr ? 'err' : 'ok'}`;
+  el.hidden = false;
+  setTimeout(() => { el.hidden = true; }, 5000);
+}
+
+/* ── Sign out ──────────────────────────────────────────────────────── */
+document.getElementById('rail-signout')?.addEventListener('click', logout);
+
+/* ── Init ──────────────────────────────────────────────────────────── */
+loadProfile().catch(() => {});
+</script>

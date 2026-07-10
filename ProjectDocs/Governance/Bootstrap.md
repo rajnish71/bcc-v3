@@ -71,6 +71,8 @@ E:\\WebProjects\\BCC-V3\\ProjectDocs\\legacysystemdesign.md
 
 E:\\WebProjects\\BCC-V3\\ProjectDocs\\CLAUDE.md
 
+E:\\WebProjects\\BCC-V3\\ProjectDocs\\Architecture\\HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md (HUB-ARCH-001)
+
 
 
 Governance:

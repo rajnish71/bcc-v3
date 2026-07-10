@@ -1,0 +1,282 @@
+---
+/**
+ * verify/index.astro — Public Membership Card Verification
+ * Route: /verify/
+ *
+ * Static page — token is read from window.location.pathname client-side.
+ * QR codes link to: /verify/{token}
+ * The page is served at /verify/ but reads the path segment after /verify/ from JS.
+ *
+ * NOTE: This works for direct URL navigation because we configure the server
+ * to serve /verify/index.html for all /verify/* paths. In development, the
+ * Astro dev server handles this automatically via SPA fallback.
+ * In production (Nginx/Caddy), configure: try_files /verify/index.html
+ * for the /verify/* location block.
+ *
+ * Calls GET /api/v1/membership/verify/:token
+ * Returns: { fullName, membershipNumber, className, lifecycleState, activatedAt, expiresAt }
+ */
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Bhopal Camera Club — Membership card verification" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Membership Verification | Bhopal Camera Club</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<div class="vf-page">
+
+  <header class="vf-header">
+    <a href="/" class="vf-brand">
+      <img src="/brand/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" class="vf-logo" />
+    </a>
+  </header>
+
+  <!-- Loading -->
+  <div class="vf-state" id="vf-loading" role="status" aria-live="polite">
+    <div class="vf-dots">
+      <span class="vf-dot"></span>
+      <span class="vf-dot"></span>
+      <span class="vf-dot"></span>
+    </div>
+    <div class="vf-state-text">Verifying membership card…</div>
+  </div>
+
+  <!-- Valid -->
+  <div class="vf-state" id="vf-valid" hidden aria-live="polite">
+    <div class="vf-card">
+      <div class="vf-card-header">
+        <img src="/brand/BCC White Logo.png" alt="BCC" class="vf-card-logo" />
+        <div class="vf-card-verified-badge">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="6.5" fill="#3E5A48" stroke="#3E5A48"/>
+            <path d="M4 7l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Verified Member
+        </div>
+      </div>
+      <div class="vf-card-body">
+        <div class="vf-name" id="vf-name">—</div>
+        <div class="vf-class" id="vf-class">—</div>
+        <div class="vf-divider"></div>
+        <div class="vf-fields">
+          <div class="vf-field">
+            <div class="vf-field-label">Membership No.</div>
+            <div class="vf-field-value" id="vf-memno">—</div>
+          </div>
+          <div class="vf-field">
+            <div class="vf-field-label" id="vf-expiry-label">Valid Thru</div>
+            <div class="vf-field-value vf-field-value--gold" id="vf-expiry">—</div>
+          </div>
+        </div>
+        <div class="vf-divider"></div>
+        <div class="vf-state-row">
+          <span class="vf-state-dot" id="vf-state-dot"></span>
+          <span class="vf-state-text-sm" id="vf-state-text">Active</span>
+        </div>
+      </div>
+    </div>
+    <div class="vf-footer-note">
+      This card was verified against the Bhopal Camera Club membership register.<br>
+      Verification time: <span id="vf-verified-at"></span>
+    </div>
+    <a href="/" class="vf-home-link">Visit BCC website &#8594;</a>
+  </div>
+
+  <!-- Invalid -->
+  <div class="vf-state" id="vf-invalid" hidden aria-live="polite">
+    <div class="vf-invalid-icon">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <circle cx="24" cy="24" r="22" stroke="#D0A832" stroke-width="1.5"/>
+        <path d="M24 14v14" stroke="#D0A832" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="24" cy="33" r="1.5" fill="#D0A832"/>
+      </svg>
+    </div>
+    <div class="vf-invalid-title">Membership not verified</div>
+    <div class="vf-invalid-desc" id="vf-invalid-desc">
+      This QR code could not be verified against the BCC membership register. It may be expired, invalid, or the card may have been revoked.
+    </div>
+    <a href="/join/" class="btn-join">Learn about BCC membership &#8594;</a>
+  </div>
+
+  <!-- Error -->
+  <div class="vf-state" id="vf-error" hidden aria-live="polite">
+    <div class="vf-invalid-icon">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <circle cx="24" cy="24" r="22" stroke="#D8D2C6" stroke-width="1.5"/>
+        <path d="M18 18l12 12M30 18l-12 12" stroke="#D8D2C6" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="vf-invalid-title">Unable to verify</div>
+    <div class="vf-invalid-desc">A network error occurred. Please check your connection and try again.</div>
+    <button class="btn-retry" id="btn-retry">Try again</button>
+  </div>
+
+  <!-- No token -->
+  <div class="vf-state" id="vf-notoken" hidden>
+    <div class="vf-invalid-title">No card token provided</div>
+    <div class="vf-invalid-desc">Scan a BCC membership card QR code to verify a member.</div>
+    <a href="/" class="btn-join">Go to BCC website &#8594;</a>
+  </div>
+
+</div>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Outfit', system-ui, sans-serif; background: #FAF8F4; color: #141210; min-height: 100vh; }
+
+.vf-page { max-width: 480px; margin: 0 auto; padding: 48px 24px 80px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+.vf-header { width: 100%; margin-bottom: 40px; text-align: center; }
+.vf-logo { height: 44px; width: auto; }
+
+.vf-state { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+/* Loading */
+.vf-dots { display: flex; gap: 8px; margin-bottom: 16px; }
+.vf-dot { width: 10px; height: 10px; border-radius: 50%; background: #C9A961; animation: vfp 1.2s infinite ease-in-out both; }
+.vf-dot:nth-child(2) { animation-delay: 0.2s; } .vf-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes vfp { 0%,80%,100% { transform: scale(0); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
+.vf-state-text { font-size: 14px; color: #8B8378; }
+
+/* Membership card */
+.vf-card { width: 100%; max-width: 360px; background: #141210; color: #FAF8F4; box-shadow: 0 8px 40px rgba(20,18,16,0.18); margin-bottom: 20px; }
+.vf-card-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px 16px; border-bottom: 1px solid rgba(250,248,244,0.08); }
+.vf-card-logo { height: 22px; width: auto; }
+.vf-card-verified-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #86C99A; letter-spacing: 0.06em; }
+.vf-card-body { padding: 20px 22px 22px; }
+.vf-name { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; color: #FAF8F4; margin-bottom: 4px; }
+.vf-class { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #C9A961; font-weight: 600; }
+.vf-divider { height: 1px; background: rgba(250,248,244,0.08); margin: 16px 0; }
+.vf-fields { display: flex; justify-content: space-between; gap: 16px; }
+.vf-field-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(250,248,244,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+.vf-field-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FAF8F4; }
+.vf-field-value--gold { color: #C9A961; }
+.vf-state-row { display: flex; align-items: center; gap: 8px; }
+.vf-state-dot { width: 7px; height: 7px; border-radius: 999px; background: #86C99A; flex-shrink: 0; }
+.vf-state-text-sm { font-size: 12px; color: rgba(250,248,244,0.6); }
+
+.vf-footer-note { font-size: 12px; color: #8B8378; text-align: center; line-height: 1.7; margin-bottom: 20px; }
+.vf-home-link { font-size: 13px; font-weight: 600; color: #A8843C; text-decoration: none; border-bottom: 1px solid rgba(168,132,60,0.4); }
+
+/* Invalid / error */
+.vf-invalid-icon { margin-bottom: 20px; }
+.vf-invalid-title { font-size: 22px; font-weight: 700; color: #141210; margin-bottom: 12px; text-align: center; }
+.vf-invalid-desc { font-size: 14px; color: #57514B; line-height: 1.7; text-align: center; margin-bottom: 24px; }
+
+.btn-join { display: inline-block; font-size: 14px; font-weight: 600; color: #FFFFFF; background: linear-gradient(135deg, #C9A961, #A8843C); padding: 13px 28px; border-radius: 2px; text-decoration: none; box-shadow: 0 2px 10px rgba(168,132,60,0.3); }
+.btn-retry { font-size: 14px; font-weight: 600; color: #141210; background: none; border: 1px solid #D8D2C6; padding: 12px 24px; border-radius: 2px; cursor: pointer; font-family: 'Outfit', sans-serif; transition: border-color 0.15s; }
+.btn-retry:hover { border-color: #C9A961; color: #A8843C; }
+</style>
+
+<script>
+const API = '/api/v1';
+
+function showState(id: string) {
+  ['vf-loading','vf-valid','vf-invalid','vf-error','vf-notoken'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.hidden = s !== id;
+  });
+}
+
+function extractToken(): string {
+  // Token is the path segment after /verify/
+  // e.g. /verify/abc123def → abc123def
+  const path = window.location.pathname;
+  const match = path.match(/\/verify\/([^/?#]+)/);
+  if (match) return match[1];
+  // Fallback: query param ?token=...
+  return new URLSearchParams(window.location.search).get('token') ?? '';
+}
+
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }).toUpperCase();
+  } catch { return '—'; }
+}
+
+async function verify() {
+  const token = extractToken();
+  if (!token) { showState('vf-notoken'); return; }
+
+  showState('vf-loading');
+
+  try {
+    const res = await fetch(`${API}/membership/verify/${encodeURIComponent(token)}`);
+
+    if (res.status === 404) { showState('vf-invalid'); return; }
+
+    if (!res.ok) {
+      const desc = document.getElementById('vf-invalid-desc');
+      if (desc) desc.textContent = `Verification failed (${res.status}). Please contact BCC if this persists.`;
+      showState('vf-invalid');
+      return;
+    }
+
+    interface VerifyResult {
+      fullName?: string;
+      membershipNumber?: string | null;
+      className?: string | null;
+      lifecycleState?: string;
+      activatedAt?: string | null;
+      expiresAt?: string | null;
+    }
+    const data = await res.json() as VerifyResult;
+
+    const nameEl    = document.getElementById('vf-name');
+    const classEl   = document.getElementById('vf-class');
+    const memnoEl   = document.getElementById('vf-memno');
+    const expiryEl  = document.getElementById('vf-expiry');
+    const exLblEl   = document.getElementById('vf-expiry-label');
+    const stateEl   = document.getElementById('vf-state-text');
+    const dotEl     = document.getElementById('vf-state-dot');
+    const verAtEl   = document.getElementById('vf-verified-at');
+
+    if (nameEl)   nameEl.textContent   = data.fullName ?? '—';
+    if (classEl)  classEl.textContent  = (data.className ?? 'Member').toUpperCase();
+    if (memnoEl)  memnoEl.textContent  = data.membershipNumber ?? '—';
+    if (stateEl)  stateEl.textContent  = data.lifecycleState ?? 'Active';
+
+    if (data.expiresAt) {
+      if (expiryEl) expiryEl.textContent = formatDate(data.expiresAt);
+      if (exLblEl)  exLblEl.textContent  = 'Valid Thru';
+    } else {
+      if (expiryEl) expiryEl.textContent = 'Lifetime';
+      if (exLblEl)  exLblEl.textContent  = 'Status';
+    }
+
+    if (dotEl && data.lifecycleState && data.lifecycleState !== 'ACTIVE') {
+      dotEl.style.background = '#C9A961';
+    }
+
+    if (verAtEl) {
+      verAtEl.textContent = new Date().toLocaleTimeString('en-IN', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
+        timeZoneName: 'short',
+      });
+    }
+
+    showState('vf-valid');
+  } catch {
+    showState('vf-error');
+  }
+}
+
+document.getElementById('btn-retry')?.addEventListener('click', () => verify().catch(() => showState('vf-error')));
+
+setTimeout(() => verify().catch(() => showState('vf-error')), 150);
+</script>
+
+</body>
+</html>

@@ -33,6 +33,7 @@ Related Documents:
 * V6 00 BCC Design Principles (Design Authority)
 * CLAUDE.md — Claude Code Operating Contract
 * SOURCE_INDEX.md
+* PHOTO-ARCH-001
 
 ---
 
@@ -865,6 +866,15 @@ Changes to frozen decisions require:
 1. Human Authority approval
 2. A new versioned document (v1.1 or v2.0 as appropriate)
 3. Updated references in SOURCE_INDEX.md and CLAUDE.md
+
+---
+
+Photo presentation within Hub pages shall follow
+PHOTO-ARCH-001.
+
+HubLayout governs authenticated shell behaviour.
+
+PHOTO-ARCH-001 governs the photographic asset itself.
 
 ---
 Revision History

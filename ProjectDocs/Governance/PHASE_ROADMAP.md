@@ -59,16 +59,54 @@ Current development focus.
 
 ### A1
 
+Architecture Foundations
+
+✅ HUB-ARCH-001 — Hub Component Architecture
+
 Hub Component Architecture
 
 **Status:** ✅ COMPLETE
 **Completed:** 2026-07-10
+
+Purpose:
+
+Establish the canonical architecture governing the authenticated Member Hub, including layout composition, authentication ownership, RBAC propagation, navigation structure and component responsibilities.
 
 - Authored HUB-ARCH-001 v1.0 — the frozen composition model for the authenticated Member Hub
 - Defined the HubLayout / HubSidebar / HubPageHeader / HubSection component hierarchy
 - Established the slot-based composition pattern separating shell from page content
 - Froze the sidebar navigation structure, active-state logic, and responsive collapse behaviour
 - Documented in `Architecture/HUB_COMPONENT_ARCHITECTURE_FREEZE_v1.0.md`
+
+---
+
+### A1a
+
+Photo Asset Architecture
+
+**Status:** 📋 PLANNED
+
+Purpose:
+
+Establish the platform-wide canonical architecture governing photographic assets.
+
+Planned deliverable:
+
+PHOTO-ARCH-001 — Photo Asset Architecture Freeze v1.0
+
+Will define:
+
+- Canonical Photo Identity
+- Container Architecture
+- Viewing Context
+- Canonical Photo URLs
+- Photo Ownership Model
+- Navigation Context
+- Asset Reuse Across Modules
+
+Target location:
+
+Architecture/PHOTO-ASSET-ARCHITECTURE_FREEZE_v1.0.md
 
 ---
 

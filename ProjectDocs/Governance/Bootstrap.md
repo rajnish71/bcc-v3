@@ -73,6 +73,8 @@ E:\\WebProjects\\BCC-V3\\ProjectDocs\\CLAUDE.md
 
 E:\\WebProjects\\BCC-V3\\ProjectDocs\\Architecture\\HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md (HUB-ARCH-001)
 
+E:\\WebProjects\\BCC-V3\\ProjectDocs\\Architecture\\PHOTO-ASSET-ARCHITECTURE\_FREEZE\_v1.0.md (PHOTO-ARCH-001)
+
 
 
 Governance:
@@ -122,4 +124,40 @@ Frontend authority:
 9\. Existing V3 implementation takes precedence over AI assumptions.
 
 10\. Legacy database is the source of truth for migration reconciliation.
+
+
+
+
+
+PHOTO-ARCH-001
+
+Photo Asset Architecture Freeze
+
+Platform-wide canonical photo architecture.
+
+
+
+Mandatory for every implementation involving:
+
+
+
+• Showcase
+
+• Portfolio
+
+• Stories
+
+• Collections
+
+• Journal
+
+• Activities
+
+• Contests
+
+• Exhibitions
+
+• Homepage
+
+
 

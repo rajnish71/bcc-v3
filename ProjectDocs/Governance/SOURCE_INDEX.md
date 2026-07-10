@@ -88,11 +88,10 @@ Contains the authoritative platform architecture and implementation reconciliati
 
 Architecture/
 
-├── BCC\_Unified\_Platform\_Specification\_v3.md
-
-├── BCC\_V3\_Stage2\_Reconciliation\_Audit.md
-
-└── HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md
+├── BCC_Unified_Platform_Specification_v3.md
+├── HUB_COMPONENT_ARCHITECTURE_FREEZE_v1.0.md
+├── PHOTO-ASSET-ARCHITECTURE_FREEZE_v1.0.md
+└── BCC_V3_Stage2_Reconciliation_Audit.md
 
 ```
 

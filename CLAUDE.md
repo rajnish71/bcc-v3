@@ -16,7 +16,8 @@ is ambiguous, STOP and say so before proceeding.
 3. **TECH-STACK-FREEZE** `ProjectDocs/TECH-STACK-FREEZE.md`
 4. **PHASE\_ROADMAP** `ProjectDocs/PHASE\_ROADMAP.md`
 5. **HUB-ARCH-001** `ProjectDocs/Architecture/HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md` — authenticated Member Hub frontend composition
-6. **This file** — operational rules for Claude Code
+6. **PHOTO-ARCH-001** `ProjectDocs/Architecture/PHOTO-ASSET-ARCHITECTURE_FREEZE_v1.0.md`
+7. **This file** — operational rules for Claude Code
 
 \---
 

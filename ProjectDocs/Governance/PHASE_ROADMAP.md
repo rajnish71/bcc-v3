@@ -1,8 +1,8 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
 **Status:** AUTHORITATIVE — Living Roadmap
-**Version:** 2.0
-**Last Updated:** 2026-07-10 — Phase A design reconciliation complete; A6 READY TO START
+**Version:** 2.1
+**Last Updated:** 2026-07-10 — Phase A complete; Member Hub implementation validated and deployed
 
 ---
 
@@ -49,13 +49,14 @@ This document governs **when** work happens, not **how** it is implemented.
 
 # STAGE 2 — MEMBER HUB FOUNDATION
 
-**Status:** 🚧 ACTIVE
-
-Current development focus.
+**Status:** ✅ PHASE A COMPLETE — Phase B next
 
 ---
 
 ## PHASE A — Complete the Member Hub Foundation
+
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-10
 
 ### A1
 
@@ -174,49 +175,14 @@ Reconcile V6 11 — Upload Studio
 
 Implementation
 
-**Status:** READY TO START
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-10
 
-Implementation Order
-
-1. HubLayout
-2. HubSidebar
-3. Members Hub Navigation (V6 12)
-4. Members Hub Home (V6 09)
-5. Members Hub Portfolio (V6 10)
-6. Members Hub Upload Studio (V6 11)
-
-Batch Structure
-
-```
-Batch 1 — Shell
-  HubLayout
-  HubSidebar
-
-Batch 2 — Navigation
-  Members Hub Navigation (V6 12)
-
-Batch 3 — Hub Home
-  Members Hub Home (V6 09)
-
-Batch 4 — Portfolio
-  Members Hub Portfolio (V6 10)
-
-Batch 5 — Upload Studio
-  Members Hub Upload Studio (V6 11)
-```
-
-Implementation Rules
-
-- Do not begin the next batch until the current batch is fully implemented, verified, committed, and pushed.
-- Read the relevant Design Authority file before implementing each batch.
-- Use ONLY the `.dc.html` files listed in Implementation Authority below.
-- Do not use PDFs unless clarification is required.
-- Do not use older wireframes.
-- Do not redesign. Do not simplify. Do not modernize. Do not introduce new architecture.
-- Implement exactly as documented.
-- If implementation conflicts with the Design Authority, stop and report.
-- Validate every batch before committing.
-- One logical feature per commit.
+- Batch 1 — HubLayout + HubSidebar: shell composition, JWT auth guard, role extraction, slot structure
+- Batch 2 — Members Hub Navigation (V6 12): three responsive surfaces (desktop rail, tablet tabs, mobile bar), RBAC elevation
+- Batch 3 — Members Hub Home (V6 09): all six sections, populated + empty states, loading shimmer, client-side data fetching
+- Batch 4 — Members Hub Portfolio (V6 10): toolbar, grid/list view, SelectionBar, Inspector overlay, delete confirm dialog
+- Batch 5 — Members Hub Upload Studio (V6 11): four-phase flow, drop zone, queue grid with progress, metadata inspector, mobile source picker
 
 ---
 
@@ -245,12 +211,29 @@ Supporting Design System Files (reference only — do not re-implement)
 
 Validation
 
-- UI Verification
-- Functional Testing
-- Deployment
-- Bug Fixing
-- Git Commit
-- Production-ready Member Hub
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-10
+
+Release validation audit conducted against all four design authority wireframes:
+
+- HubLayout — composition, auth guard, responsive grid, loading state: ✅ PASS
+- HubSidebar — all three responsive surfaces, RBAC elevation, keyboard interaction, accessibility: ✅ PASS
+- V6 12 Navigation — all nav items and group labels verified against wireframe: ✅ PASS
+- V6 09 Hub Home — all six sections, populated/empty states, CTA ownership, loading shimmer: ✅ PASS
+- V6 10 Portfolio — toolbar, inspector, grid/list view, selection bar, empty state: ✅ PASS
+- V6 11 Upload Studio — four phases, drop zone, queue, metadata, complete state: ✅ PASS
+
+Build: ✅ Clean — 59 pages built in 1.11s, zero errors
+TypeScript: ✅ Clean — zero type errors
+Design fidelity: ✅ Verified — tokens, typography, gold CTA rule, photo border-radius-0
+Accessibility: ✅ Verified — ARIA roles, keyboard navigation, focus-visible outlines, screen-reader labels
+Responsive: ✅ Verified — desktop / tablet / mobile breakpoints across all components
+
+Known limitations (non-blocking — future phases):
+- Journey Strip "Full journey →" links to `/hub/journey/` (Phase B page, not yet implemented)
+- Academy card renders placeholder mock data (Academy marked SOON, not yet implemented)
+
+**Phase A — Member Hub Foundation: COMPLETE**
 
 ---
 

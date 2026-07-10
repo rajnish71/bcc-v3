@@ -26,15 +26,15 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
     <!-- Page Header -->
     <header class="port-header">
-      <div class="section-kicker"><span class="kicker-rule"></span>Studio</div>
+      <div class="section-kicker"><span class="kicker-rule"></span>MEMBER HUB — STUDIO</div>
       <div class="port-header-row">
-        <h1 class="port-title">My Portfolio</h1>
+        <h1 class="port-title">Portfolio Manager</h1>
         <div class="port-header-meta" id="port-header-meta">
           <span class="port-photo-count" id="photo-count-label" aria-live="polite"></span>
           <span class="port-meta-sep port-meta-sep--sel" id="sel-sep" hidden>·</span>
           <span class="port-selected-label" id="selected-count-label" hidden></span>
           <span class="port-meta-sep">·</span>
-          <a href="#" class="port-view-link" id="view-portfolio-link">View public portfolio</a>
+          <a href="#" class="port-view-link" id="view-portfolio-link">View public portfolio ↗</a>
         </div>
       </div>
     </header>
@@ -91,13 +91,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       <div class="sel-bar-left">
         <span class="sel-count-badge" id="sel-count-badge">0</span>
         <span class="sel-count-text">selected</span>
-        <button class="sel-cancel-btn" id="sel-cancel-btn" type="button">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-            <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-          Cancel
-        </button>
+        <button class="sel-cancel-btn" id="sel-cancel-btn" type="button">Clear</button>
       </div>
       <div class="sel-bar-actions">
         <button class="sel-action-btn" id="sel-feature-btn" type="button">Feature</button>
@@ -125,8 +119,8 @@ import HubLayout from '../../../layouts/HubLayout.astro';
               <circle cx="17" cy="18" r="3.5" stroke="#D8D2C6" stroke-width="1"/>
               <polyline points="10 38 20 27 28 33 34 26 38 30" stroke="#D8D2C6" stroke-width="1" stroke-linejoin="round"/>
             </svg>
-            <p class="port-empty-title">No photographs yet</p>
-            <p class="port-empty-desc">Your portfolio is where the world meets your eye.<br>Start with one photograph.</p>
+            <p class="port-empty-title">Your curation room is ready.</p>
+            <p class="port-empty-desc">Upload photographs to begin curating your public portfolio — feature your best work, control what's visible, and tell each photograph's story.</p>
             <a href="/hub/upload/" class="btn-gold-cta">&#8593; Upload Photograph</a>
           </div>
         </div>
@@ -146,25 +140,28 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 <aside class="insp-panel" id="insp-panel" hidden aria-label="Photograph inspector" role="complementary">
 
   <div class="insp-topbar">
-    <div class="insp-nav" role="group" aria-label="Navigate photographs">
-      <button class="insp-nav-btn" id="insp-prev-btn" type="button" aria-label="Previous photograph">
+    <span class="insp-title-label">Inspector</span>
+    <div class="insp-topbar-right">
+      <div class="insp-nav" role="group" aria-label="Navigate photographs">
+        <button class="insp-nav-btn" id="insp-prev-btn" type="button" aria-label="Previous photograph">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <polyline points="9 2 4 7 9 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <span class="insp-nav-label" id="insp-nav-label">1 of 1</span>
+        <button class="insp-nav-btn" id="insp-next-btn" type="button" aria-label="Next photograph">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <polyline points="5 2 10 7 5 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <button class="insp-close-btn" id="insp-close-btn" type="button" aria-label="Close inspector">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <polyline points="9 2 4 7 9 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <span class="insp-nav-label" id="insp-nav-label">1 of 1</span>
-      <button class="insp-nav-btn" id="insp-next-btn" type="button" aria-label="Next photograph">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <polyline points="5 2 10 7 5 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="2" y1="2" x2="12" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="12" y1="2" x2="2" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
       </button>
     </div>
-    <button class="insp-close-btn" id="insp-close-btn" type="button" aria-label="Close inspector">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <line x1="2" y1="2" x2="12" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="12" y1="2" x2="2" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-    </button>
   </div>
 
   <div class="insp-preview-wrap">
@@ -174,19 +171,22 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   <div class="insp-body">
 
     <div class="insp-field">
-      <label class="insp-label" for="insp-title">Title</label>
+      <label class="insp-label" for="insp-title">Caption</label>
       <input class="insp-input" type="text" id="insp-title" maxlength="200" />
-    </div>
-
-    <div class="insp-field">
-      <label class="insp-label" for="insp-caption">Caption</label>
-      <textarea class="insp-textarea" id="insp-caption" rows="2" maxlength="500"></textarea>
     </div>
 
     <div class="insp-field">
       <label class="insp-label" for="insp-description">Description</label>
       <textarea class="insp-textarea" id="insp-description" rows="3" maxlength="1000"></textarea>
     </div>
+
+    <div class="insp-field">
+      <label class="insp-label" for="insp-exh-label">Exhibition Label</label>
+      <input class="insp-input insp-input--mono" type="text" id="insp-exh-label" maxlength="200" placeholder="Title, Location — Year" />
+    </div>
+
+    <!-- EXIF chips -->
+    <div class="insp-exif" id="insp-exif" hidden></div>
 
     <div class="insp-field">
       <label class="insp-label" for="insp-visibility">Visibility</label>
@@ -198,8 +198,12 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       </select>
     </div>
 
-    <!-- EXIF chips -->
-    <div class="insp-exif" id="insp-exif" hidden></div>
+    <div class="insp-focal-row">
+      <div>
+        <div class="insp-label">Focal Point</div>
+        <div class="insp-focal-hint">Set on preview →</div>
+      </div>
+    </div>
 
     <div class="insp-error" id="insp-error" hidden></div>
 
@@ -277,12 +281,23 @@ import HubLayout from '../../../layouts/HubLayout.astro';
    TOOLBAR
 ───────────────────────────────────────────────────────────────────────── */
 .port-toolbar {
-  padding: 16px 0 0; border-bottom: 1px solid #E7E1D6;
+  padding: 16px 0; border-bottom: 1px solid #E7E1D6;
   margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;
 }
 .toolbar-row { display: flex; align-items: center; gap: 12px; }
 .toolbar-row--search { }
 .toolbar-row--controls { flex-wrap: wrap; justify-content: space-between; }
+
+/* Desktop: collapse to single 44px row */
+@media (min-width: 1200px) {
+  .port-toolbar {
+    flex-direction: row; align-items: center; height: 44px;
+    padding: 0; gap: 14px;
+  }
+  .toolbar-row--search { flex: 0 0 auto; }
+  .toolbar-row--controls { flex: 1; flex-wrap: nowrap; justify-content: flex-start; gap: 8px; }
+  .toolbar-genre-chips { flex-wrap: nowrap; }
+}
 
 /* Search */
 .toolbar-search-wrap {
@@ -354,11 +369,11 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   color: #FFFFFF; font-size: 12px; font-weight: 700; font-family: var(--font-mono);
   display: flex; align-items: center; justify-content: center; padding: 0 8px;
 }
-.sel-count-text { font-size: 13px; color: #8B8378; font-family: var(--font-body); }
+.sel-count-text { font-size: 13px; font-weight: 500; color: #FAF8F4; font-family: var(--font-body); }
 .sel-cancel-btn {
-  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
-  color: #8B8378; background: none; border: none; cursor: pointer;
-  font-family: var(--font-body); padding: 0; transition: color 0.15s;
+  font-size: 12px; font-weight: 400; color: #8B8378; background: none; border: none;
+  border-left: 1px solid rgba(250,248,244,0.15); padding: 0 0 0 14px; cursor: pointer;
+  font-family: var(--font-body); transition: color 0.15s;
 }
 .sel-cancel-btn:hover { color: #FAF8F4; }
 .sel-bar-actions { display: flex; align-items: center; gap: 8px; }
@@ -368,8 +383,10 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   cursor: pointer; font-family: var(--font-body); transition: background 0.15s, color 0.15s;
 }
 .sel-action-btn:hover { background: rgba(250,248,244,0.12); color: #FAF8F4; }
-.sel-action-btn--danger { color: #E8A0A0; border-color: rgba(232,160,160,0.25); }
-.sel-action-btn--danger:hover { background: rgba(136,40,40,0.25); color: #FDECEA; }
+.sel-action-btn--danger {
+  color: #FFFFFF; background: #A3493B; border-color: #A3493B;
+}
+.sel-action-btn--danger:hover { background: #8B3A2E; border-color: #8B3A2E; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    PORTFOLIO WALL & GRID
@@ -416,9 +433,10 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
 /* Featured flag */
 .mat-featured-flag {
-  position: absolute; top: 0; left: 0; z-index: 2;
+  position: absolute; top: 8px; left: 8px; z-index: 2;
   background: linear-gradient(135deg, #C9A961, #A8843C);
-  padding: 4px 8px; display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px; display: flex; align-items: center; gap: 4px;
+  box-shadow: 0 2px 6px rgba(168,132,60,0.35);
 }
 .mat-featured-flag-text {
   font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
@@ -572,6 +590,11 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   padding: 16px 20px; border-bottom: 1px solid #E7E1D6; flex-shrink: 0;
   position: sticky; top: 0; background: #FFFFFF; z-index: 1;
 }
+.insp-title-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #A8843C; font-family: var(--font-body);
+}
+.insp-topbar-right { display: flex; align-items: center; gap: 10px; }
 .insp-nav { display: flex; align-items: center; gap: 8px; }
 .insp-nav-btn {
   width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
@@ -613,6 +636,17 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   cursor: pointer; appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5' fill='none'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%238B8378' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
+
+/* Exhibition label mono input */
+.insp-input--mono { font-family: var(--font-mono); font-size: 12px; }
+
+/* Focal point row */
+.insp-focal-row {
+  padding: 12px 0; border-top: 1px solid #F0EBE0; border-bottom: 1px solid #F0EBE0;
+}
+.insp-focal-hint {
+  font-size: 13px; color: #A8843C; margin-top: 4px; font-family: var(--font-body);
 }
 
 /* EXIF chips */
@@ -720,6 +754,7 @@ interface Photo {
   title?: string | null;
   caption?: string | null;
   description?: string | null;
+  exhibition_label?: string | null;
   genre?: string | null;
   visibility?: string;
   status?: string;
@@ -938,10 +973,10 @@ function updateHeaderCount() {
   const selEl   = document.getElementById('selected-count-label');
   const selSep  = document.getElementById('sel-sep');
 
-  if (countEl) countEl.textContent = `${allPhotos.length} photograph${allPhotos.length !== 1 ? 's' : ''}`;
+  if (countEl) countEl.innerHTML = `<span style="font-family:var(--font-mono)">${allPhotos.length}</span> photograph${allPhotos.length !== 1 ? 's' : ''}`;
 
   const selCount = selectedUuids.size;
-  if (selEl)  selEl.textContent = `${selCount} selected`;
+  if (selEl)  selEl.innerHTML = `<span style="font-family:var(--font-mono);color:#A8843C">${selCount}</span> selected`;
   if (selEl)  selEl.hidden  = selCount === 0;
   if (selSep) selSep.hidden = selCount === 0;
 }
@@ -1015,9 +1050,9 @@ function populateInspector(p: Photo) {
   img.src = p.urls?.medium ?? p.urls?.large ?? p.urls?.thumbnail ?? '';
   img.alt = p.title ?? '';
 
-  (document.getElementById('insp-title') as HTMLInputElement).value = p.title ?? '';
-  (document.getElementById('insp-caption') as HTMLTextAreaElement).value = p.caption ?? '';
+  (document.getElementById('insp-title') as HTMLInputElement).value = p.title ?? p.caption ?? '';
   (document.getElementById('insp-description') as HTMLTextAreaElement).value = p.description ?? '';
+  (document.getElementById('insp-exh-label') as HTMLInputElement).value = p.exhibition_label ?? '';
   (document.getElementById('insp-visibility') as HTMLSelectElement).value = p.visibility ?? 'PUBLIC';
 
   const exifEl = document.getElementById('insp-exif')!;
@@ -1076,15 +1111,15 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
   const saveBtn = document.getElementById('insp-save-btn') as HTMLButtonElement;
   saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
 
-  const title       = (document.getElementById('insp-title') as HTMLInputElement).value.trim();
-  const caption     = (document.getElementById('insp-caption') as HTMLTextAreaElement).value.trim() || null;
-  const description = (document.getElementById('insp-description') as HTMLTextAreaElement).value.trim() || null;
-  const visibility  = (document.getElementById('insp-visibility') as HTMLSelectElement).value;
+  const title            = (document.getElementById('insp-title') as HTMLInputElement).value.trim();
+  const description      = (document.getElementById('insp-description') as HTMLTextAreaElement).value.trim() || null;
+  const exhibition_label = (document.getElementById('insp-exh-label') as HTMLInputElement).value.trim() || null;
+  const visibility       = (document.getElementById('insp-visibility') as HTMLSelectElement).value;
 
   const res = await apiFetch(`${API}/gallery/photos/${inspectorUuid}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, caption, description, visibility }),
+    body: JSON.stringify({ title, description, exhibition_label, visibility }),
   });
 
   saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
@@ -1093,7 +1128,7 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
     // Update local cache
     const updated = await res.json() as Photo;
     const idx = allPhotos.findIndex(p => p.uuid === inspectorUuid);
-    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated };
+    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, visibility };
     closeInspector();
     applyFilters();
   } else {

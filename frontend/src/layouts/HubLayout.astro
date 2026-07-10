@@ -108,7 +108,8 @@ const activeRoute = Astro.url.pathname;
 /* ──────────────────────────────────────────────────────
    HUB FRAME & GRID
 ────────────────────────────────────────────────────── */
-.hub-frame { min-height: calc(100vh - 96px); }
+/* padding-top clears the 96px fixed SiteHeader so content is never clipped beneath it */
+.hub-frame { min-height: calc(100vh - 96px); padding-top: 96px; }
 
 /*
   Desktop ≥ 1200px: two-column grid

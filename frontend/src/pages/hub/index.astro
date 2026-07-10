@@ -904,6 +904,18 @@ import HubLayout from '../../layouts/HubLayout.astro';
 .ph-svg { stroke: #3E3A36; }
 
 /* ═══════════════════════════════════════════════════════════════
+   HIDDEN ATTRIBUTE GUARD
+   Author-defined display values (grid / flex / inline-block) override
+   the browser UA [hidden]{ display:none } rule. Restore correct behaviour
+   for every element in this page that uses a non-default display.
+═══════════════════════════════════════════════════════════════ */
+#hub-upload-cta[hidden]      { display: none; }
+#attention-row[hidden]       { display: none; }
+#photo-grid-loading[hidden]  { display: none; }
+#photo-grid[hidden]          { display: none; }
+#journey-numbers[hidden]     { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════
    MOBILE OVERRIDES
 ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {

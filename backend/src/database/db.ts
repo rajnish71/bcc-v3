@@ -25,6 +25,12 @@ export interface UsersTable {
   status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
   username: string | null;
   bio: string | null;
+  tagline: Nullable<string>;
+  awards_html: Nullable<string>;
+  photography_genres: Nullable<unknown>;
+  areas_of_expertise: Nullable<unknown>;
+  favourite_subjects: Nullable<unknown>;
+  preferred_camera_system: Nullable<string>;
   city: string | null;
   state: string | null;
   address_line1: Nullable<string>;
@@ -166,8 +172,46 @@ export interface MfaMethodsTable {
 export interface UserSocialHandlesTable {
   id: Generated<number>;
   user_id: number;
-  platform: 'INSTAGRAM' | 'FLICKR' | 'FIVE_HUNDRED_PX' | 'YOUTUBE' | 'WEBSITE';
+  platform:
+    | 'INSTAGRAM'
+    | 'FLICKR'
+    | 'FIVE_HUNDRED_PX'
+    | 'YOUTUBE'
+    | 'WEBSITE'
+    | 'FACEBOOK'
+    | 'X_TWITTER'
+    | 'TIKTOK'
+    | 'LINKEDIN';
   handle_or_url: string;
+}
+
+export interface UserCoverPhotosTable {
+  id: Generated<number>;
+  user_id: number;
+  r2_key: string;
+  imagekit_url: string;
+  is_active: boolean;
+  active_lock: number | null;
+  uploaded_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface UserPhotoTitlesTable {
+  id: Generated<number>;
+  user_id: number;
+  body_code: 'FIP' | 'PSA' | 'FIAP' | 'GPU' | 'OTHER';
+  title_code: string;
+  body_name: string | null;
+  sort_order: number;
+}
+
+export interface UserAwardsTable {
+  id: Generated<number>;
+  user_id: number;
+  award_name: string;
+  awarding_body: string | null;
+  award_year: number | null;
+  description: string | null;
+  sort_order: number;
 }
 
 export interface UserGearTable {
@@ -835,6 +879,9 @@ export interface DB {
   account_lockouts: AccountLockoutsTable;
   mfa_methods: MfaMethodsTable;
   user_social_handles: UserSocialHandlesTable;
+  user_cover_photos: UserCoverPhotosTable;
+  user_photo_titles: UserPhotoTitlesTable;
+  user_awards: UserAwardsTable;
   user_gear: UserGearTable;
   notification_preferences: NotificationPreferencesTable;
   roles: RolesTable;

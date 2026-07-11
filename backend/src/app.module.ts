@@ -12,6 +12,7 @@ import { GalleryModule } from './modules/gallery/gallery.module';
 import { PhotographerProfilesModule } from './modules/photographer-profiles/photographer-profiles.module';
 import { JournalModule } from './modules/journal/journal.module';
 import { ContactModule } from './modules/contact/contact.module';
+import { HubProfileModule } from './modules/hub/profile/hub-profile.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ContactModule } from './modules/contact/contact.module';
     PhotographerProfilesModule,
     JournalModule,
     ContactModule,
+    HubProfileModule,
   ],
   controllers: [AppController],
 })

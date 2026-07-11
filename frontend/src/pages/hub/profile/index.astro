@@ -1,737 +1,1511 @@
 ---
 /**
- * hub/profile/index.astro — Member Profile Editor (V6 Phase 1)
- * Route: /hub/profile/
+ * /hub/profile — V6 13 Member Profile Editor
+ * Design authority: ProjectDocs/Wireframes/V6/13 Hub Member Profile/
+ * API: GET/PUT /api/v1/hub/profile  PUT /social  PUT /gear  PUT /distinctions
+ *      POST /avatar/presign + /confirm   POST /cover/presign + /confirm
  *
- * Editable fields:
- *   - Display name (full_name)
- *   - Bio
- *   - City, State, Country
- *   - Experience level
- *   - Website
- *   - Social handles: Instagram, Flickr, 500px, YouTube
- *   - Avatar upload (presign → R2 PUT → confirm)
+ * OVERRIDES (take precedence over wireframe):
+ *   1. Name fields (Title/First/Middle/Last) are READ-ONLY — edit via Account Settings.
+ *   2. year_joined_bcc is READ-ONLY — admin-set.
+ *   3. Public URL prefix: v3bcc.bhopal.info/photographers/{username}
  *
- * API surface used:
- *   GET    /api/v1/users/me              — load current profile
- *   PATCH  /api/v1/users/profile        — update text fields + socials
- *   POST   /api/v1/users/profile/avatar/presign  — get presigned URL
- *   POST   /api/v1/users/profile/avatar/confirm  — confirm after PUT
- *   GET    /api/v1/photographer-profiles/:username — fallback profile read
- *
- * NOTE: /api/v1/users/profile PATCH and avatar endpoints do not yet
- * exist in users.controller.ts. Until they are implemented on the backend,
- * the form will display a "backend not yet implemented" notice and the
- * fields will be read-only. The page is fully wired and will activate
- * automatically once those endpoints ship.
+ * Tiptap v2 NOT installed — bio/awards use textarea with note.
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
 ---
 
 <HubLayout title="My Profile" description="Edit your Bhopal Camera Club member profile.">
 
-<!-- ── LEFT RAIL ─────────────────────────────────────────────────────── -->
-  <main class="hub-main" id="hub-main">
-
-    <!-- Page header -->
-    <div class="profile-header">
-      <div class="section-kicker"><span class="kicker-rule"></span>Account</div>
-      <h1 class="profile-title">My Profile</h1>
-      <p class="profile-subtitle">Your public photographer profile on Bhopal Camera Club.</p>
+<!-- ── PROFILE HEADER ──────────────────────────────────────────────────── -->
+<div class="ph" id="ph">
+  <!-- Cover banner -->
+  <div class="ph-cover" id="ph-cover">
+    <div class="ph-cover-stripe" id="ph-cover-stripe"></div>
+    <img id="ph-cover-img" class="ph-cover-img" src="" alt="" hidden />
+    <div class="ph-cover-actions">
+      <label class="ph-cover-btn" for="cover-file-input" title="Change cover photo">↑ Change cover</label>
+      <input type="file" id="cover-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
     </div>
+  </div>
 
-    <!-- Backend status notice — shown when profile PATCH is not yet live -->
-    <div class="backend-notice" id="backend-notice" hidden>
-      <span class="backend-notice__icon">⚠</span>
-      <span id="backend-notice-text">Profile editing endpoints are not yet available. Fields are shown in read-only mode.</span>
-    </div>
-
-    <!-- Save feedback -->
-    <div class="save-feedback save-feedback--success" id="save-success" hidden>Profile saved successfully.</div>
-    <div class="save-feedback save-feedback--error"   id="save-error"   hidden></div>
-
-    <!-- ── AVATAR ROW ──────────────────────────────────────────────── -->
-    <div class="profile-avatar-row">
-      <div class="avatar-frame" id="avatar-frame">
-        <div class="avatar-initials" id="avatar-initials">—</div>
-        <img id="avatar-img" class="avatar-img" src="" alt="Your avatar" hidden />
+  <!-- Avatar + identity row -->
+  <div class="ph-identity">
+    <div class="ph-avatar-wrap" id="ph-avatar-wrap">
+      <div class="ph-avatar" id="ph-avatar">
+        <span class="ph-avatar-initials" id="ph-initials">—</span>
+        <img id="ph-avatar-img" class="ph-avatar-img" src="" alt="" hidden />
       </div>
-      <div class="avatar-actions">
-        <label class="btn-avatar-upload" for="avatar-file-input" id="avatar-upload-label">
-          Change avatar
+      <label class="ph-avatar-edit" for="avatar-file-input" title="Change profile photo">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M8.5 1.5L10.5 3.5M1 9l.5 1.5L3 10l7-7-2-2-7 7Z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </label>
+      <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
+    </div>
+    <div class="ph-meta">
+      <div class="ph-name" id="ph-name">—</div>
+      <div class="ph-badges">
+        <span class="ph-tier-badge" id="ph-tier">—</span>
+        <span class="ph-number" id="ph-number" style="font-family:var(--font-mono)">—</span>
+      </div>
+      <a class="ph-public-link" id="ph-public-link" href="#" target="_blank" rel="noopener">View public profile ↗</a>
+    </div>
+    <div class="ph-save-wrap">
+      <span class="ph-status" id="ph-status">All changes saved</span>
+      <button class="ph-save-btn" id="save-btn" type="button">Save Changes</button>
+    </div>
+  </div>
+
+  <!-- Tab strip -->
+  <nav class="ph-tabs" id="ph-tabs" role="tablist" aria-label="Profile sections">
+    <button class="ph-tab ph-tab--active" data-section="identity" role="tab">Identity</button>
+    <button class="ph-tab" data-section="personal" role="tab">Personal</button>
+    <button class="ph-tab" data-section="address" role="tab">Address</button>
+    <button class="ph-tab" data-section="public" role="tab">Public Profile</button>
+    <button class="ph-tab" data-section="social" role="tab">Social</button>
+    <button class="ph-tab" data-section="equipment" role="tab">Equipment</button>
+    <button class="ph-tab" data-section="distinctions" role="tab">Distinctions</button>
+    <button class="ph-tab" data-section="internal" role="tab">Internal</button>
+    <button class="ph-tab" data-section="account" role="tab">Account</button>
+    <button class="ph-tab" data-section="statistics" role="tab">Statistics</button>
+  </nav>
+</div>
+
+<!-- ── MOBILE SAVE BAR ─────────────────────────────────────────────────── -->
+<div class="mobile-save-bar" id="mobile-save-bar">
+  <button class="mobile-save-btn" id="mobile-save-btn" type="button">Save Changes</button>
+</div>
+
+<!-- ── SECTIONS ───────────────────────────────────────────────────────── -->
+<div class="profile-body">
+
+  <!-- § Identity -->
+  <section class="ps" id="section-identity" data-section="identity">
+    <div class="ps-head"><span class="ps-title">Identity</span></div>
+
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <div class="ps-label">Profile Photo</div>
+        <div class="ps-avatar-preview">
+          <div class="ps-avatar-thumb" id="ps-avatar-thumb">
+            <span id="ps-avatar-thumb-initials">—</span>
+            <img id="ps-avatar-thumb-img" src="" alt="" hidden />
+          </div>
+          <div class="ps-avatar-actions">
+            <label class="btn-secondary" for="avatar-file-input">Upload photo</label>
+            <button class="btn-text-danger" id="btn-remove-avatar" type="button">Remove</button>
+          </div>
+        </div>
+        <div class="ps-hint">JPG, PNG, WebP · max 5 MB</div>
+        <div class="ps-upload-status" id="avatar-status" hidden></div>
+      </div>
+
+      <div class="ps-field-group">
+        <div class="ps-label">Cover Banner</div>
+        <div class="ps-cover-preview">
+          <div class="ps-cover-thumb" id="ps-cover-thumb">
+            <div class="ps-cover-stripe-sm" id="ps-cover-stripe-sm"></div>
+            <img id="ps-cover-thumb-img" src="" alt="" hidden />
+          </div>
+          <div class="ps-avatar-actions">
+            <label class="btn-secondary" for="cover-file-input">Upload cover</label>
+            <button class="btn-text-danger" id="btn-remove-cover" type="button">Remove</button>
+          </div>
+        </div>
+        <div class="ps-hint">JPG, PNG, WebP · max 10 MB</div>
+        <div class="ps-upload-status" id="cover-status" hidden></div>
+      </div>
+    </div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <div class="ps-label">Public Profile URL</div>
+        <div class="ps-url-row">
+          <span class="ps-url-prefix">v3bcc.bhopal.info/photographers/</span>
+          <span class="ps-url-value" id="ps-url-value">—</span>
+          <button class="ps-url-copy" id="ps-url-copy" type="button">Copy</button>
+          <a class="ps-url-view" id="ps-url-view" href="#" target="_blank" rel="noopener">View ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <div class="ps-label">Membership Tier</div>
+        <div class="ps-readonly-val" id="identity-tier">—</div>
+      </div>
+      <div class="ps-field-group">
+        <div class="ps-label">Membership Number</div>
+        <div class="ps-readonly-val" id="identity-number" style="font-family:var(--font-mono)">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § Personal -->
+  <section class="ps" id="section-personal" data-section="personal">
+    <div class="ps-head"><span class="ps-title">Personal</span></div>
+
+    <!-- Read-only name block (OVERRIDE 1) -->
+    <div class="ps-readonly-notice">Name fields are managed in <a href="/hub/account-settings" class="ps-link">Account Settings</a>.</div>
+
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <label class="ps-label">Title</label>
+        <div class="form-input form-input--readonly" id="ro-title">—</div>
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label">First Name</label>
+        <div class="form-input form-input--readonly" id="ro-firstname">—</div>
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label">Middle Name</label>
+        <div class="form-input form-input--readonly" id="ro-middlename">—</div>
+      </div>
+    </div>
+
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <label class="ps-label">Last Name</label>
+        <div class="form-input form-input--readonly" id="ro-lastname">—</div>
+      </div>
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Email <span class="ps-locked">LOCKED</span></label>
+        <div class="form-input form-input--readonly" id="ro-email">—</div>
+        <div class="ps-hint">Change email in Account Settings.</div>
+      </div>
+    </div>
+
+    <!-- Editable fields -->
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-phone">Phone</label>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">+91</span>
+          <input class="form-input form-input--prefixed" type="tel" id="field-phone" name="phone"
+            placeholder="10-digit number" maxlength="10" pattern="\d{10}" />
+        </div>
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-gender">Gender</label>
+        <select class="form-select" id="field-gender" name="gender">
+          <option value="">— select —</option>
+          <option value="MALE">Male</option>
+          <option value="FEMALE">Female</option>
+          <option value="OTHER">Other</option>
+          <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+        </select>
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-dob">Date of Birth</label>
+        <input class="form-input" type="date" id="field-dob" name="dateOfBirth" />
+      </div>
+    </div>
+  </section>
+
+  <!-- § Address -->
+  <section class="ps" id="section-address" data-section="address">
+    <div class="ps-head"><span class="ps-title">Address</span></div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-addr1">Address Line 1</label>
+        <input class="form-input" type="text" id="field-addr1" name="addressLine1" maxlength="255" />
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-addr2">Address Line 2 <span class="ps-optional">(optional)</span></label>
+        <input class="form-input" type="text" id="field-addr2" name="addressLine2" maxlength="255" />
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-addr3">Address Line 3 / Landmark <span class="ps-optional">(optional)</span></label>
+        <input class="form-input" type="text" id="field-addr3" name="addressLine3" maxlength="255" />
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-city">City</label>
+        <input class="form-input" type="text" id="field-city" name="city" maxlength="100" />
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-state">State</label>
+        <select class="form-select" id="field-state" name="state">
+          <option value="">— select —</option>
+          <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
+          <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option>
+          <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
+          <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+          <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
+          <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
+          <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+          <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
+          <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+          <option>West Bengal</option>
+          <option>Andaman and Nicobar Islands</option><option>Chandigarh</option>
+          <option>Dadra and Nagar Haveli and Daman and Diu</option>
+          <option>Delhi</option><option>Jammu and Kashmir</option>
+          <option>Ladakh</option><option>Lakshadweep</option><option>Puducherry</option>
+        </select>
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-pin">PIN Code</label>
+        <input class="form-input" type="text" id="field-pin" name="pinCode" maxlength="6" pattern="\d{6}" placeholder="6 digits" />
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-blood">Blood Group</label>
+        <select class="form-select" id="field-blood" name="bloodGroup">
+          <option value="">— select —</option>
+          <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="ps-divider"><span>Emergency Contact</span></div>
+
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-ec-name">Contact Name</label>
+        <input class="form-input" type="text" id="field-ec-name" name="emergencyContactName" maxlength="150" />
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-ec-phone">Contact Phone</label>
+        <input class="form-input" type="tel" id="field-ec-phone" name="emergencyContactPhone" maxlength="15" />
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-ec-rel">Relationship</label>
+        <select class="form-select" id="field-ec-rel" name="emergencyContactRelationship">
+          <option value="">— select —</option>
+          <option value="SPOUSE">Spouse</option><option value="PARENT">Parent</option>
+          <option value="SIBLING">Sibling</option><option value="CHILD">Child</option>
+          <option value="FRIEND">Friend</option><option value="OTHER">Other</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- § Public Profile -->
+  <section class="ps" id="section-public" data-section="public">
+    <div class="ps-head"><span class="ps-title">Public Profile</span></div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-tagline">
+          Tagline <span class="ps-counter" id="tagline-count">0/120</span>
         </label>
-        <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
-        <div class="avatar-hint">JPG, PNG or WebP · max 5 MB · Square crop recommended</div>
-        <div class="avatar-progress" id="avatar-progress" hidden>
-          <div class="avatar-progress-bar" id="avatar-progress-bar"></div>
-        </div>
-        <div class="avatar-status" id="avatar-status" hidden></div>
+        <input class="form-input" type="text" id="field-tagline" name="tagline" maxlength="120"
+          placeholder="A short line about your photography…" />
       </div>
     </div>
 
-    <!-- ── PROFILE FORM ────────────────────────────────────────────── -->
-    <form class="profile-form" id="profile-form" novalidate>
-
-      <div class="form-section">
-        <div class="form-section-title">Basic Information</div>
-
-        <div class="form-row">
-          <div class="form-group form-group--full">
-            <label class="form-label" for="field-fullname">Display Name <span class="form-required">*</span></label>
-            <input class="form-input" type="text" id="field-fullname" name="full_name"
-              placeholder="Your full name" maxlength="120" required />
-            <div class="form-hint">This is how your name appears on your portfolio and membership card.</div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group form-group--full">
-            <label class="form-label" for="field-bio">Bio</label>
-            <textarea class="form-textarea" id="field-bio" name="bio"
-              rows="4" maxlength="600"
-              placeholder="A short description about yourself and your photography…"></textarea>
-            <div class="form-hint form-hint--counter"><span id="bio-count">0</span>/600</div>
-          </div>
-        </div>
-
-        <div class="form-row form-row--3col">
-          <div class="form-group">
-            <label class="form-label" for="field-city">City</label>
-            <input class="form-input" type="text" id="field-city" name="city" placeholder="e.g. Bhopal" maxlength="100" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="field-state">State</label>
-            <input class="form-input" type="text" id="field-state" name="state" placeholder="e.g. Madhya Pradesh" maxlength="100" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="field-country">Country</label>
-            <input class="form-input" type="text" id="field-country" name="country" placeholder="e.g. India" maxlength="100" />
-          </div>
-        </div>
-
-        <div class="form-row form-row--2col">
-          <div class="form-group">
-            <label class="form-label" for="field-experience">Experience Level</label>
-            <select class="form-select" id="field-experience" name="experience_level">
-              <option value="">— select —</option>
-              <option value="BEGINNER">Beginner</option>
-              <option value="ENTHUSIAST">Enthusiast</option>
-              <option value="SERIOUS_AMATEUR">Serious Amateur</option>
-              <option value="PROFESSIONAL">Professional</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="field-website">Website</label>
-            <input class="form-input" type="url" id="field-website" name="website"
-              placeholder="https://yoursite.com" maxlength="300" />
-          </div>
-        </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-website">Personal Website</label>
+        <input class="form-input" type="url" id="field-website" name="websiteUrl"
+          placeholder="https://yoursite.com" maxlength="500" />
       </div>
-
-      <div class="form-section">
-        <div class="form-section-title">Social &amp; Links</div>
-
-        <div class="form-row form-row--2col">
-          <div class="form-group">
-            <label class="form-label" for="field-instagram">Instagram</label>
-            <div class="form-input-prefix-wrap">
-              <span class="form-input-prefix">@</span>
-              <input class="form-input form-input--prefixed" type="text" id="field-instagram"
-                name="INSTAGRAM" placeholder="username" maxlength="60" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="field-flickr">Flickr</label>
-            <div class="form-input-prefix-wrap">
-              <span class="form-input-prefix">flickr.com/</span>
-              <input class="form-input form-input--prefixed" type="text" id="field-flickr"
-                name="FLICKR" placeholder="username" maxlength="60" />
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row form-row--2col">
-          <div class="form-group">
-            <label class="form-label" for="field-500px">500px</label>
-            <div class="form-input-prefix-wrap">
-              <span class="form-input-prefix">500px.com/</span>
-              <input class="form-input form-input--prefixed" type="text" id="field-500px"
-                name="FIVE_HUNDRED_PX" placeholder="username" maxlength="60" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="field-youtube">YouTube</label>
-            <div class="form-input-prefix-wrap">
-              <span class="form-input-prefix">youtube.com/@</span>
-              <input class="form-input form-input--prefixed" type="text" id="field-youtube"
-                name="YOUTUBE" placeholder="channelname" maxlength="60" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn-save" id="save-btn">Save profile</button>
-        <a href="/hub/" class="btn-cancel">Cancel</a>
-      </div>
-
-    </form>
-
-    <!-- ── PUBLIC PROFILE LINK ─────────────────────────────────────── -->
-    <div class="profile-public-link" id="profile-public-link" hidden>
-      <span class="profile-public-link__label">Your public profile:</span>
-      <a href="" id="profile-public-link__anchor" class="profile-public-link__url" target="_blank" rel="noopener"></a>
     </div>
 
-  </main>
-
-  <!-- ── PERSONAL RAIL ──────────────────────────────────────────────── -->
-  <aside class="personal-rail">
-    <div class="personal-card">
-      <div class="personal-card__label">Profile Tips</div>
-      <ul class="tips-list">
-        <li>A clear bio helps members and visitors understand your photographic style.</li>
-        <li>Add your Instagram to grow your following via your public portfolio page.</li>
-        <li>Your display name appears on membership cards — use your full name.</li>
-      </ul>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Areas of Expertise</label>
+        <div class="chip-input" id="chip-expertise" data-field="areasOfExpertise"></div>
+        <div class="ps-hint">Press Enter or Tab to add. Max 10 items.</div>
+      </div>
     </div>
-    <div class="personal-card" id="preview-card">
-      <div class="personal-card__label">Preview</div>
-      <div class="preview-avatar-wrap">
-        <div class="preview-avatar" id="preview-avatar">
-          <div class="preview-initials" id="preview-initials">—</div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Favourite Subjects</label>
+        <div class="chip-input" id="chip-subjects" data-field="favouriteSubjects"></div>
+        <div class="ps-hint">Press Enter or Tab to add. Max 10 items.</div>
+      </div>
+    </div>
+
+    <div class="ps-row">
+      <div class="ps-field-group">
+        <label class="ps-label" for="field-camera-system">Preferred Camera System</label>
+        <select class="form-select" id="field-camera-system" name="preferredCameraSystem">
+          <option value="">— select —</option>
+          <option>Nikon</option><option>Canon</option><option>Sony</option>
+          <option>Fujifilm</option><option>OM System</option><option>Other</option>
+        </select>
+      </div>
+      <div class="ps-field-group">
+        <label class="ps-label">Year Joined BCC</label>
+        <div class="form-input form-input--readonly" id="ro-year-joined">—</div>
+        <div class="ps-hint">Set by BCC administration.</div>
+      </div>
+    </div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Photography Genres</label>
+        <div class="genre-grid" id="genre-grid"></div>
+      </div>
+    </div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-bio">
+          Biography <span class="ps-counter" id="bio-count">0/3000</span>
+        </label>
+        <textarea class="form-textarea" id="field-bio" name="bio" rows="8"
+          maxlength="3000" placeholder="Tell your story as a photographer…"></textarea>
+        <div class="ps-hint">Rich text editor (Tiptap v2) to be wired. Plain text stored for now.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § Social Links -->
+  <section class="ps" id="section-social" data-section="social">
+    <div class="ps-head"><span class="ps-title">Social Links</span></div>
+
+    <div class="social-grid">
+      <div class="social-row">
+        <span class="social-label">Instagram</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">instagram.com/</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="INSTAGRAM" placeholder="username" maxlength="60" />
         </div>
-        <div class="preview-info">
-          <div class="preview-name" id="preview-name">—</div>
-          <div class="preview-location" id="preview-location"></div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">Facebook</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">facebook.com/</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="FACEBOOK" placeholder="username or page" maxlength="100" />
+        </div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">X / Twitter</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">x.com/</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="X_TWITTER" placeholder="username" maxlength="60" />
+        </div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">YouTube</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">youtube.com/@</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="YOUTUBE" placeholder="channelname" maxlength="60" />
+        </div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">TikTok</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">tiktok.com/@</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="TIKTOK" placeholder="username" maxlength="60" />
+        </div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">LinkedIn</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">linkedin.com/in/</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="LINKEDIN" placeholder="username" maxlength="100" />
+        </div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">Flickr</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">flickr.com/</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="FLICKR" placeholder="username" maxlength="60" />
+        </div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">500px</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">500px.com/</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="FIVE_HUNDRED_PX" placeholder="username" maxlength="60" />
+        </div>
+      </div>
+      <div class="social-row">
+        <span class="social-label">Personal Website</span>
+        <div class="form-input-prefix-wrap">
+          <span class="form-input-prefix">https://</span>
+          <input class="form-input form-input--prefixed" type="text" data-platform="WEBSITE" placeholder="yoursite.com" maxlength="200" />
         </div>
       </div>
     </div>
-  </aside>
+    <div class="ps-hint" style="margin-top:12px">Blank handles are hidden on your public profile.</div>
+  </section>
+
+  <!-- § Equipment -->
+  <section class="ps" id="section-equipment" data-section="equipment">
+    <div class="ps-head"><span class="ps-title">Equipment</span></div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Camera Bodies</label>
+        <div class="chip-input" id="chip-bodies" data-field="bodies"></div>
+        <div class="ps-hint">e.g. Nikon Z8, Canon R5. Press Enter or Tab to add.</div>
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Lenses</label>
+        <div class="chip-input" id="chip-lenses" data-field="lenses"></div>
+        <div class="ps-hint">e.g. 70-200mm f/2.8, 50mm f/1.4</div>
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Drones <span class="ps-optional">(optional)</span></label>
+        <div class="chip-input" id="chip-drones" data-field="drones"></div>
+        <div class="ps-hint">e.g. DJI Mini 4 Pro</div>
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label">Other Equipment <span class="ps-optional">(optional)</span></label>
+        <div class="chip-input" id="chip-other-gear" data-field="otherGear"></div>
+        <div class="ps-hint">Filters, tripods, lighting, etc.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § Distinctions -->
+  <section class="ps" id="section-distinctions" data-section="distinctions">
+    <div class="ps-head"><span class="ps-title">Distinctions</span></div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-fiap">FIAP Distinctions</label>
+        <input class="form-input" type="text" id="field-fiap" name="fiap"
+          placeholder="e.g. AFIAP EFIAP MFIAP" maxlength="500" />
+        <div class="ps-hint">Space-separated codes awarded by FIAP.</div>
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-fip">FIP Distinctions</label>
+        <input class="form-input" type="text" id="field-fip" name="fip"
+          placeholder="e.g. AFIP EFIP MFIP" maxlength="500" />
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-psa">PSA Distinctions</label>
+        <input class="form-input" type="text" id="field-psa" name="psa"
+          placeholder="e.g. PPSA FPSA MPSA" maxlength="500" />
+      </div>
+    </div>
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-other-titles">Other Distinctions</label>
+        <input class="form-input" type="text" id="field-other-titles" name="other"
+          placeholder="e.g. GPU-CR3 GPU-VIP-3 FRPA" maxlength="1000" />
+        <div class="ps-hint">GPU codes and other international body codes, space-separated.</div>
+      </div>
+    </div>
+
+    <div class="ps-divider"><span>Awards &amp; Recognition</span></div>
+
+    <div class="ps-row">
+      <div class="ps-field-group ps-field-group--full">
+        <label class="ps-label" for="field-awards">Awards &amp; Recognition</label>
+        <textarea class="form-textarea" id="field-awards" name="awardsHtml" rows="8"
+          placeholder="List your awards, contest wins, and other recognitions…"></textarea>
+        <div class="ps-hint">Rich text editor (Tiptap v2) to be wired. Plain text stored for now.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § Internal BCC -->
+  <section class="ps" id="section-internal" data-section="internal">
+    <div class="ps-head"><span class="ps-title">Internal BCC</span></div>
+    <div class="ps-readonly-notice" id="internal-notice">These roles are managed by BCC administration.</div>
+
+    <div class="internal-roles">
+      <div class="internal-role">
+        <div class="internal-role-info">
+          <div class="internal-role-name">Coordinator</div>
+          <div class="internal-role-desc">Event and activity coordination</div>
+        </div>
+        <div class="internal-toggle internal-toggle--off" id="toggle-coordinator" data-role="coordinator"></div>
+      </div>
+      <div class="internal-role">
+        <div class="internal-role-info">
+          <div class="internal-role-name">Mentor</div>
+          <div class="internal-role-desc">Photography guidance for newer members</div>
+        </div>
+        <div class="internal-toggle internal-toggle--off" id="toggle-mentor" data-role="mentor"></div>
+      </div>
+      <div class="internal-role">
+        <div class="internal-role-info">
+          <div class="internal-role-name">Instructor</div>
+          <div class="internal-role-desc">Leads workshops and training</div>
+        </div>
+        <div class="internal-toggle internal-toggle--off" id="toggle-instructor" data-role="instructor"></div>
+      </div>
+      <div class="internal-role">
+        <div class="internal-role-info">
+          <div class="internal-role-name">Volunteer</div>
+          <div class="internal-role-desc">General club activities and events</div>
+        </div>
+        <div class="internal-toggle internal-toggle--off" id="toggle-volunteer" data-role="volunteer"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § Account -->
+  <section class="ps" id="section-account" data-section="account">
+    <div class="ps-head"><span class="ps-title">Account</span></div>
+
+    <div class="account-actions">
+      <a href="/hub/account-settings#name" class="account-action-row">
+        <div class="account-action-info">
+          <div class="account-action-name">Name &amp; Title</div>
+          <div class="account-action-desc">Change your display name and title</div>
+        </div>
+        <span class="account-action-arrow">→</span>
+      </a>
+      <a href="/hub/account-settings#email" class="account-action-row">
+        <div class="account-action-info">
+          <div class="account-action-name">Email Address</div>
+          <div class="account-action-desc">Update or change your login email</div>
+        </div>
+        <span class="account-action-arrow">→</span>
+      </a>
+      <a href="/hub/account-settings#password" class="account-action-row">
+        <div class="account-action-info">
+          <div class="account-action-name">Change Password</div>
+          <div class="account-action-desc">Update your account password</div>
+        </div>
+        <span class="account-action-arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- § Statistics -->
+  <section class="ps" id="section-statistics" data-section="statistics">
+    <div class="ps-head"><span class="ps-title">Statistics</span></div>
+    <div class="ps-readonly-notice">Read-only. Values are computed from your activity on the platform.</div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card__value" id="stat-since">—</div>
+        <div class="stat-card__label">Member Since</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__value" id="stat-class">—</div>
+        <div class="stat-card__label">Membership Class</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__value" id="stat-photos">0</div>
+        <div class="stat-card__label">Portfolio Photos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__value" id="stat-events">0</div>
+        <div class="stat-card__label">Events Attended</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__value" id="stat-awards">0</div>
+        <div class="stat-card__label">Contest Awards</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__value" id="stat-score">0</div>
+        <div class="stat-card__label">Activity Score</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- .profile-body -->
 
 </HubLayout>
 
 <style>
-/* ── MAIN ──────────────────────────────────────────────────────────── */
-.hub-main {
-  padding-top: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
+/* ── Utilities ─────────────────────────────────────────────────────────────── */
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+/* ── PROFILE HEADER ─────────────────────────────────────────────────────── */
+.ph { background:#fff; border-bottom:1px solid #E7E1D6; position:sticky; top:96px; z-index:50; }
+
+/* Cover */
+.ph-cover {
+  height:160px; width:100%; position:relative; overflow:hidden;
+  background:#1A1614;
+}
+.ph-cover-stripe {
+  width:100%; height:100%;
+  background: repeating-linear-gradient(
+    -45deg, #2A2320 0px, #2A2320 10px, #1A1614 10px, #1A1614 20px
+  );
+}
+.ph-cover-img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.ph-cover-actions {
+  position:absolute; top:12px; right:16px;
+}
+.ph-cover-btn {
+  font-size:12px; font-weight:600; color:#fff; background:rgba(0,0,0,0.45);
+  border:1px solid rgba(255,255,255,0.3); padding:7px 14px; cursor:pointer;
+  font-family:var(--font-body); backdrop-filter:blur(4px);
+  transition:background 0.15s;
+}
+.ph-cover-btn:hover { background:rgba(0,0,0,0.65); }
+
+/* Identity row */
+.ph-identity {
+  display:flex; align-items:flex-end; gap:16px;
+  padding:0 32px 16px; flex-wrap:wrap;
+}
+.ph-avatar-wrap {
+  position:relative; flex-shrink:0;
+  margin-top:-52px;
+}
+.ph-avatar {
+  width:104px; height:104px; border-radius:999px;
+  background:linear-gradient(135deg, #3E5A48, #2A3D30);
+  border:4px solid #fff;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+.ph-avatar-initials {
+  font-family:var(--font-display); font-size:36px; font-weight:700;
+  color:rgba(255,255,255,0.9);
+}
+.ph-avatar-img { width:100%; height:100%; object-fit:cover; }
+.ph-avatar-edit {
+  position:absolute; bottom:4px; right:4px;
+  width:28px; height:28px; border-radius:999px;
+  background:linear-gradient(135deg, #C9A961, #A8843C);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:#fff; border:2px solid #fff;
 }
 
-/* ── PROFILE HEADER ────────────────────────────────────────────────── */
-.profile-header {
-  padding-bottom: 24px;
-  border-bottom: 1px solid #E7E1D6;
-  margin-bottom: 28px;
+.ph-meta { flex:1; padding-bottom:4px; min-width:180px; }
+.ph-name {
+  font-family:var(--font-display); font-size:22px; font-weight:700;
+  color:#141210; margin-bottom:4px;
 }
-.section-kicker {
-  display: flex; align-items: center; gap: 12px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.18em;
-  text-transform: uppercase; color: #A8843C; margin-bottom: 14px;
-  font-family: var(--font-body);
+.ph-badges { display:flex; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap; }
+.ph-tier-badge {
+  font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  background:#F4F0E8; color:#A8843C; padding:3px 10px; border:1px solid #C9A961;
 }
-.kicker-rule {
-  display: inline-block; width: 28px; height: 1px;
-  background: #C9A961; flex-shrink: 0;
+.ph-number { font-size:12px; color:#8B8378; }
+.ph-public-link {
+  font-size:12px; color:#A8843C; text-decoration:none; font-family:var(--font-body);
 }
-.profile-title {
-  font-family: var(--font-display); font-size: clamp(28px, 3vw, 38px);
-  font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
-  color: #141210; margin: 0 0 8px;
-}
-.profile-subtitle { font-size: 14px; color: #8B8378; margin: 0; font-family: var(--font-body); }
+.ph-public-link:hover { text-decoration:underline; }
 
-/* ── BACKEND NOTICE ────────────────────────────────────────────────── */
-.backend-notice {
-  display: flex; align-items: flex-start; gap: 10px;
-  background: #FBF0E8; border: 1px solid #E8C99A;
-  padding: 14px 18px; margin-bottom: 20px;
-  font-size: 13px; color: #8C6830; font-family: var(--font-body);
+.ph-save-wrap {
+  display:flex; align-items:center; gap:12px; flex-shrink:0; margin-left:auto;
+  padding-bottom:8px;
 }
-.backend-notice__icon { flex-shrink: 0; font-size: 16px; }
+.ph-status { font-size:12px; color:#8B8378; font-family:var(--font-body); }
+.ph-status--saving { color:#C9A961; }
+.ph-status--error { color:#882828; }
+.ph-save-btn {
+  font-size:14px; font-weight:600; color:#fff;
+  background:linear-gradient(135deg, #C9A961, #A8843C);
+  border:none; padding:11px 24px; cursor:pointer; font-family:var(--font-body);
+  box-shadow:0 2px 8px rgba(168,132,60,0.3);
+  transition:box-shadow 0.2s, transform 0.15s;
+}
+.ph-save-btn:hover { box-shadow:0 4px 14px rgba(168,132,60,0.4); transform:translateY(-1px); }
+.ph-save-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
 
-/* ── SAVE FEEDBACK ─────────────────────────────────────────────────── */
-.save-feedback {
-  padding: 12px 18px; margin-bottom: 20px;
-  font-size: 13px; font-weight: 500; font-family: var(--font-body);
+/* Tab strip */
+.ph-tabs {
+  display:flex; gap:0; border-top:1px solid #F0EBE0;
+  overflow-x:auto; scrollbar-width:none; padding:0 32px;
 }
-.save-feedback--success { background: #E8EFE9; color: #3E5A48; }
-.save-feedback--error   { background: #FDECEA; color: #882828; }
+.ph-tabs::-webkit-scrollbar { display:none; }
+.ph-tab {
+  font-size:13px; font-weight:500; color:#8B8378;
+  background:none; border:none; padding:10px 16px; cursor:pointer;
+  font-family:var(--font-body); white-space:nowrap; position:relative;
+  border-bottom:2px solid transparent; transition:color 0.15s, border-color 0.15s;
+}
+.ph-tab:hover { color:#141210; }
+.ph-tab--active { color:#141210; font-weight:700; border-bottom-color:#C9A961; }
 
-/* ── AVATAR ROW ────────────────────────────────────────────────────── */
-.profile-avatar-row {
-  display: flex; align-items: center; gap: 24px;
-  margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid #E7E1D6;
+/* ── MOBILE SAVE BAR ─────────────────────────────────────────────────────── */
+.mobile-save-bar {
+  display:none; position:fixed; bottom:64px; left:0; right:0; z-index:100;
+  padding:12px 16px; background:#fff; border-top:1px solid #E7E1D6;
+  box-shadow:0 -4px 12px rgba(0,0,0,0.08);
 }
-.avatar-frame {
-  width: 88px; height: 88px; border-radius: 999px;
-  background: linear-gradient(135deg, #3E5A48, #2A3D30);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden; flex-shrink: 0; position: relative;
+.mobile-save-btn {
+  width:100%; padding:14px; font-size:15px; font-weight:700; color:#fff;
+  background:linear-gradient(135deg, #C9A961, #A8843C);
+  border:none; cursor:pointer; font-family:var(--font-body);
 }
-.avatar-initials {
-  font-family: var(--font-display); font-size: 28px; font-weight: 700;
-  color: rgba(255,255,255,0.9); letter-spacing: -0.01em;
-}
-.avatar-img { width: 100%; height: 100%; object-fit: cover; }
-.avatar-actions { flex: 1; }
-.btn-avatar-upload {
-  display: inline-block; cursor: pointer;
-  font-size: 13px; font-weight: 600; color: #141210;
-  border: 1px solid #D8D2C6; padding: 9px 18px; border-radius: 2px;
-  font-family: var(--font-body); transition: border-color 0.15s;
-  margin-bottom: 8px;
-}
-.btn-avatar-upload:hover { border-color: #C9A961; color: #A8843C; }
-.avatar-hint { font-size: 12px; color: #8B8378; font-family: var(--font-body); }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-.avatar-progress { height: 3px; background: #E7E1D6; margin-top: 10px; border-radius: 999px; overflow: hidden; }
-.avatar-progress-bar { height: 100%; background: linear-gradient(90deg, #C9A961, #A8843C); width: 0; transition: width 0.2s; }
-.avatar-status { font-size: 12px; margin-top: 6px; font-family: var(--font-body); }
-.avatar-status--ok  { color: #3E5A48; }
-.avatar-status--err { color: #882828; }
+@media (max-width: 640px) { .mobile-save-bar { display:block; } .ph-save-wrap { display:none; } }
 
-/* ── FORM ──────────────────────────────────────────────────────────── */
-.profile-form { display: flex; flex-direction: column; gap: 0; }
+/* ── SECTIONS ────────────────────────────────────────────────────────────── */
+.profile-body { padding:40px 32px 120px; display:flex; flex-direction:column; gap:0; }
 
-.form-section {
-  padding-bottom: 32px; margin-bottom: 32px; border-bottom: 1px solid #F0EBE0;
+.ps {
+  padding-bottom:40px; margin-bottom:40px;
+  border-bottom:1px solid #F0EBE0;
+  scroll-margin-top:240px;
 }
-.form-section:last-of-type { border-bottom: none; }
-.form-section-title {
-  font-family: var(--font-display); font-size: 16px; font-weight: 600;
-  color: #141210; margin-bottom: 20px;
+.ps:last-child { border-bottom:none; }
+.ps-head { margin-bottom:24px; }
+.ps-title {
+  font-family:var(--font-display); font-size:18px; font-weight:700;
+  color:#141210;
+}
+.ps-row { display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+.ps-row:last-child { margin-bottom:0; }
+.ps-field-group { display:flex; flex-direction:column; gap:6px; flex:1; min-width:180px; }
+.ps-field-group--full { flex:1 1 100%; }
+
+.ps-label {
+  font-size:12px; font-weight:600; color:#57514B;
+  letter-spacing:0.04em; font-family:var(--font-body); display:flex; gap:8px; align-items:center;
+}
+.ps-counter { font-weight:400; color:#8B8378; margin-left:auto; }
+.ps-hint { font-size:11px; color:#8B8378; font-family:var(--font-body); line-height:1.5; }
+.ps-optional { font-weight:400; color:#8B8378; }
+.ps-locked { font-size:10px; font-weight:700; letter-spacing:0.1em; color:#8B8378; background:#F4F0E8; padding:2px 7px; }
+.ps-link { color:#A8843C; }
+.ps-readonly-notice {
+  font-size:13px; color:#57514B; background:#FAF8F4;
+  border:1px solid #E7E1D6; padding:10px 14px; margin-bottom:20px;
+  font-family:var(--font-body);
+}
+.ps-divider {
+  margin:24px 0 20px; display:flex; align-items:center; gap:14px;
+  font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  color:#A8843C; font-family:var(--font-body);
+}
+.ps-divider::before, .ps-divider::after {
+  content:''; flex:1; height:1px; background:#E7E1D6;
 }
 
-.form-row { display: flex; gap: 16px; margin-bottom: 16px; }
-.form-row:last-child { margin-bottom: 0; }
-.form-row--3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.form-row--2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group--full { flex: 1; }
-
-.form-label {
-  font-size: 12px; font-weight: 600; color: #57514B;
-  letter-spacing: 0.04em; font-family: var(--font-body);
-}
-.form-required { color: #A8843C; }
-
+/* ── FORM ELEMENTS ───────────────────────────────────────────────────────── */
 .form-input, .form-textarea, .form-select {
-  font-family: var(--font-body); font-size: 14px; color: #141210;
-  border: 1px solid #D8D2C6; padding: 10px 14px;
-  border-radius: 2px; background: #FFFFFF; width: 100%;
-  transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+  font-family:var(--font-body); font-size:14px; color:#141210;
+  border:1px solid #D8D2C6; padding:10px 14px;
+  background:#fff; width:100%; box-sizing:border-box;
+  transition:border-color 0.15s, box-shadow 0.15s;
 }
 .form-input:focus, .form-textarea:focus, .form-select:focus {
-  outline: none; border-color: #C9A961; box-shadow: 0 0 0 3px rgba(201,169,97,0.12);
+  outline:none; border-color:#C9A961; box-shadow:0 0 0 3px rgba(201,169,97,0.12);
 }
-.form-textarea { resize: vertical; min-height: 100px; }
-.form-select { cursor: pointer; appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B8378' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+.form-input--readonly {
+  background:#F4F0E8; color:#57514B; cursor:default; min-height:42px;
+  display:flex; align-items:center; border:1px solid #E7E1D6;
+  padding:10px 14px; font-family:var(--font-body); font-size:14px;
 }
-
-.form-input-prefix-wrap { display: flex; }
+.form-textarea { resize:vertical; min-height:160px; }
+.form-select {
+  cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B8378' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
+}
+.form-input-prefix-wrap { display:flex; }
 .form-input-prefix {
-  display: flex; align-items: center;
-  font-size: 13px; color: #8B8378; font-family: var(--font-mono);
-  background: #F4F0E8; border: 1px solid #D8D2C6; border-right: none;
-  padding: 10px 10px; border-radius: 2px 0 0 2px; white-space: nowrap;
+  display:flex; align-items:center; font-size:12px; color:#8B8378;
+  font-family:var(--font-mono); background:#F4F0E8; border:1px solid #D8D2C6;
+  border-right:none; padding:10px 10px; white-space:nowrap; flex-shrink:0;
 }
-.form-input--prefixed { border-radius: 0 2px 2px 0; }
+.form-input--prefixed { border-left:none; flex:1; min-width:0; }
 
-.form-hint {
-  font-size: 11px; color: #8B8378; font-family: var(--font-body); line-height: 1.5;
+/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+.btn-secondary {
+  display:inline-block; cursor:pointer; font-size:13px; font-weight:600;
+  color:#141210; border:1px solid #D8D2C6; padding:9px 18px;
+  font-family:var(--font-body); transition:border-color 0.15s; background:none;
 }
-.form-hint--counter { text-align: right; margin-top: 4px; }
+.btn-secondary:hover { border-color:#C9A961; color:#A8843C; }
+.btn-text-danger {
+  background:none; border:none; font-size:13px; color:#882828; cursor:pointer;
+  font-family:var(--font-body); padding:9px 0;
+}
+.btn-text-danger:hover { text-decoration:underline; }
 
-.form-actions {
-  display: flex; align-items: center; gap: 16px;
-  padding-top: 24px; margin-top: 4px;
+/* ── IDENTITY SECTION ────────────────────────────────────────────────────── */
+.ps-avatar-preview, .ps-cover-preview { display:flex; align-items:center; gap:16px; }
+.ps-avatar-thumb {
+  width:64px; height:64px; border-radius:999px;
+  background:linear-gradient(135deg,#3E5A48,#2A3D30);
+  display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
 }
-.btn-save {
-  font-size: 15px; font-weight: 600; color: #FFFFFF;
-  background: linear-gradient(135deg, #C9A961, #A8843C);
-  border: none; padding: 13px 32px; border-radius: 2px; cursor: pointer;
-  font-family: var(--font-body);
-  box-shadow: 0 2px 10px rgba(168,132,60,0.3);
-  transition: box-shadow 0.2s, transform 0.15s;
-}
-.btn-save:hover { box-shadow: 0 4px 16px rgba(168,132,60,0.4); transform: translateY(-1px); }
-.btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-.btn-cancel {
-  font-size: 14px; font-weight: 500; color: #57514B;
-  text-decoration: none; font-family: var(--font-body); transition: color 0.15s;
-}
-.btn-cancel:hover { color: #141210; }
+.ps-avatar-thumb span { font-family:var(--font-display); font-size:22px; font-weight:700; color:rgba(255,255,255,0.9); }
+.ps-avatar-thumb img { width:100%; height:100%; object-fit:cover; }
+.ps-avatar-actions { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
 
-/* ── PUBLIC PROFILE LINK ───────────────────────────────────────────── */
-.profile-public-link {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 28px; padding-top: 24px; border-top: 1px solid #E7E1D6;
-  font-size: 13px; font-family: var(--font-body); flex-wrap: wrap; gap: 6px;
+.ps-cover-thumb {
+  width:120px; height:64px; overflow:hidden; flex-shrink:0; position:relative;
 }
-.profile-public-link__label { color: #8B8378; }
-.profile-public-link__url { color: #A8843C; word-break: break-all; }
+.ps-cover-stripe-sm {
+  width:100%; height:100%;
+  background:repeating-linear-gradient(-45deg,#2A2320 0,#2A2320 6px,#1A1614 6px,#1A1614 12px);
+}
+.ps-cover-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
-/* ── PERSONAL RAIL ─────────────────────────────────────────────────── */
-.personal-rail {
-  border-left: 1px solid #E7E1D6;
-  padding-top: 40px; padding-left: 32px;
-  display: flex; flex-direction: column; gap: 20px;
-  position: sticky; top: 96px; max-height: calc(100vh - 120px);
-  overflow-y: auto; scrollbar-width: none;
+.ps-url-row {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  background:#F4F0E8; border:1px solid #E7E1D6; padding:10px 14px;
 }
-.personal-rail::-webkit-scrollbar { display: none; }
-.personal-card {
-  background: #FFFFFF; border: 1px solid #E7E1D6;
-  box-shadow: 0 1px 2px rgba(20,18,16,0.04); padding: 22px;
+.ps-url-prefix { font-size:13px; color:#8B8378; font-family:var(--font-mono); }
+.ps-url-value { font-size:13px; color:#A8843C; font-family:var(--font-mono); font-weight:600; }
+.ps-url-copy {
+  font-size:12px; font-weight:600; color:#57514B; background:none; border:1px solid #D8D2C6;
+  padding:4px 10px; cursor:pointer; font-family:var(--font-body);
 }
-.personal-card__label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
-  text-transform: uppercase; color: #A8843C; margin-bottom: 10px;
-  font-family: var(--font-body);
+.ps-url-copy:hover { border-color:#C9A961; color:#A8843C; }
+.ps-url-view { font-size:12px; color:#A8843C; font-family:var(--font-body); }
+
+.ps-readonly-val { font-size:14px; color:#57514B; font-family:var(--font-body); }
+.ps-upload-status { font-size:12px; font-family:var(--font-body); margin-top:6px; }
+.ps-upload-status--ok { color:#3E5A48; }
+.ps-upload-status--err { color:#882828; }
+
+/* ── CHIP INPUT ─────────────────────────────────────────────────────────── */
+.chip-input {
+  display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+  border:1px solid #D8D2C6; padding:8px 10px; min-height:44px;
+  background:#fff; cursor:text; transition:border-color 0.15s;
 }
-.tips-list {
-  list-style: none; padding: 0; margin: 0;
-  display: flex; flex-direction: column; gap: 10px;
+.chip-input:focus-within { border-color:#C9A961; box-shadow:0 0 0 3px rgba(201,169,97,0.12); }
+.chip-item {
+  display:inline-flex; align-items:center; gap:4px;
+  background:#F4F0E8; border:1px solid #D8D2C6;
+  font-size:13px; color:#141210; padding:3px 10px;
+  font-family:var(--font-body);
 }
-.tips-list li {
-  font-size: 12px; color: #57514B; line-height: 1.6; font-family: var(--font-body);
-  padding-left: 14px; position: relative;
+.chip-item button {
+  background:none; border:none; cursor:pointer; color:#8B8378;
+  padding:0 0 0 2px; font-size:14px; line-height:1;
 }
-.tips-list li::before {
-  content: '—'; position: absolute; left: 0; color: #C9A961;
+.chip-item button:hover { color:#882828; }
+.chip-text-input {
+  border:none; outline:none; font-size:13px; font-family:var(--font-body);
+  color:#141210; background:transparent; min-width:120px; flex:1; padding:2px 4px;
 }
 
-/* ── PREVIEW CARD ──────────────────────────────────────────────────── */
-.preview-avatar-wrap { display: flex; align-items: center; gap: 14px; }
-.preview-avatar {
-  width: 48px; height: 48px; border-radius: 999px;
-  background: linear-gradient(135deg, #3E5A48, #2A3D30);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; overflow: hidden;
+/* ── GENRE GRID ─────────────────────────────────────────────────────────── */
+.genre-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+.genre-chip {
+  font-size:13px; font-weight:500; color:#57514B;
+  border:1px solid #D8D2C6; padding:6px 14px; cursor:pointer;
+  font-family:var(--font-body); background:#fff; transition:all 0.15s;
+  user-select:none;
 }
-.preview-initials { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); }
-.preview-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: #141210; }
-.preview-location { font-size: 12px; color: #8B8378; margin-top: 2px; font-family: var(--font-body); }
+.genre-chip:hover { border-color:#C9A961; color:#A8843C; }
+.genre-chip--selected { background:#C9A961; border-color:#A8843C; color:#fff; font-weight:600; }
 
-/* ── RESPONSIVE ────────────────────────────────────────────────────── */
-@media (min-width: 641px) and (max-width: 1199px) {
-  .personal-rail { border-left: none; padding-left: 0; margin-top: 32px; position: static; max-height: none; }
+/* ── SOCIAL GRID ─────────────────────────────────────────────────────────── */
+.social-grid { display:flex; flex-direction:column; gap:12px; }
+.social-row { display:flex; align-items:center; gap:12px; }
+.social-label {
+  font-size:13px; font-weight:600; color:#57514B; font-family:var(--font-body);
+  width:130px; flex-shrink:0;
 }
-@media (max-width: 640px) {
-  .personal-rail { border-left: none; padding-left: 0; margin-top: 24px; position: static; max-height: none; }
-  .form-row--3col, .form-row--2col { grid-template-columns: 1fr; }
-  .profile-avatar-row { flex-direction: column; align-items: flex-start; }
+
+/* ── INTERNAL BCC ────────────────────────────────────────────────────────── */
+.internal-roles { display:flex; flex-direction:column; gap:0; }
+.internal-role {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 0; border-bottom:1px solid #F0EBE0;
+}
+.internal-role:last-child { border-bottom:none; }
+.internal-role-name { font-size:14px; font-weight:600; color:#141210; font-family:var(--font-body); }
+.internal-role-desc { font-size:12px; color:#8B8378; margin-top:2px; font-family:var(--font-body); }
+.internal-toggle {
+  width:44px; height:24px; border-radius:999px; position:relative;
+  background:#D8D2C6; transition:background 0.2s; flex-shrink:0;
+  opacity:0.5; cursor:not-allowed;
+}
+.internal-toggle::after {
+  content:''; position:absolute; width:18px; height:18px; border-radius:999px;
+  background:#fff; top:3px; left:3px; transition:transform 0.2s;
+  box-shadow:0 1px 3px rgba(0,0,0,0.2);
+}
+.internal-toggle--on { background:#C9A961; }
+.internal-toggle--on::after { transform:translateX(20px); }
+
+/* ── ACCOUNT SECTION ─────────────────────────────────────────────────────── */
+.account-actions { display:flex; flex-direction:column; gap:0; }
+.account-action-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 0; border-bottom:1px solid #F0EBE0; text-decoration:none;
+  transition:background 0.1s;
+}
+.account-action-row:last-child { border-bottom:none; }
+.account-action-row:hover { background:#FAF8F4; padding-left:8px; margin:0 -8px; }
+.account-action-name { font-size:14px; font-weight:600; color:#141210; font-family:var(--font-body); }
+.account-action-desc { font-size:12px; color:#8B8378; margin-top:2px; font-family:var(--font-body); }
+.account-action-arrow { font-size:18px; color:#C9A961; flex-shrink:0; }
+
+/* ── STATISTICS ──────────────────────────────────────────────────────────── */
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:8px; }
+.stat-card {
+  background:#FAF8F4; border:1px solid #E7E1D6; padding:20px 16px; text-align:center;
+}
+.stat-card__value {
+  font-family:var(--font-display); font-size:28px; font-weight:700; color:#141210;
+  margin-bottom:6px;
+}
+.stat-card__label { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#8B8378; font-family:var(--font-body); }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (min-width:641px) and (max-width:1199px) {
+  .ph { position:relative; top:auto; }
+  .ph-identity { padding:0 24px 16px; }
+  .ph-tabs { padding:0 24px; }
+  .profile-body { padding:32px 24px 100px; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:640px) {
+  .ph { position:relative; top:auto; }
+  .ph-identity { padding:0 16px 14px; gap:12px; }
+  .ph-meta .ph-name { font-size:18px; }
+  .ph-tabs { padding:0 16px; }
+  .ph-tab { padding:10px 12px; font-size:12px; }
+  .profile-body { padding:24px 16px 140px; }
+  .ps-row { flex-direction:column; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .social-row { flex-direction:column; align-items:flex-start; }
+  .social-label { width:auto; }
 }
 </style>
 
 <script>
-const API = '/api/v1';
-const CDN = 'https://ik.imagekit.io/duynda7oq';
-
+const API = '/api/v1/hub/profile';
 function tok(): string { return localStorage.getItem('bcc_token') ?? ''; }
-
-async function apiFetch(path: string, opts: RequestInit = {}): Promise<Response> {
-  return fetch(path, {
+async function apiFetch(url: string, opts: RequestInit = {}): Promise<Response> {
+  return fetch(url, {
     ...opts,
     headers: { Authorization: `Bearer ${tok()}`, ...(opts.headers ?? {}) },
   });
 }
 
-function showEl(id: string) { const el = document.getElementById(id); if (el) el.hidden = false; }
-function hideEl(id: string) { const el = document.getElementById(id); if (el) el.hidden = true; }
+// ── Dirty tracking ─────────────────────────────────────────────────────────
+const dirty = new Set<string>();
+function markDirty(section: string) {
+  dirty.add(section);
+  setStatus('');
+}
 
-/* ── Load profile ──────────────────────────────────────────────────── */
-async function loadProfile() {
-  const res = await apiFetch(`${API}/users/me`);
-  if (!res.ok) return;
-  const u = await res.json() as {
-    fullName?: string; username?: string; createdAt?: string;
-    bio?: string | null; city?: string | null; state?: string | null;
-    country?: string | null; experienceLevel?: string | null;
-    website?: string | null; socials?: Array<{ platform: string; handle_or_url: string }>;
-  };
+// ── Status ──────────────────────────────────────────────────────────────────
+function setStatus(msg: string, cls = '') {
+  const el = document.getElementById('ph-status');
+  if (!el) return;
+  el.textContent = msg || 'All changes saved';
+  el.className = `ph-status ${cls}`.trim();
+}
 
-  // Basic fields
-  const fn = u.fullName ?? '';
-  setVal('field-fullname', fn);
-  setVal('field-bio', u.bio ?? '');
-  setVal('field-city', u.city ?? '');
-  setVal('field-state', u.state ?? '');
-  setVal('field-country', u.country ?? '');
-  setVal('field-website', u.website ?? '');
-  (document.getElementById('field-experience') as HTMLSelectElement | null)!.value = u.experienceLevel ?? '';
+// ── Genre list ──────────────────────────────────────────────────────────────
+const GENRES = [
+  'Landscape','Portrait','Wildlife','Street','Documentary',
+  'Macro','Architecture','Aerial','Sports','Night',
+  'Astro','Travel','Abstract','Fashion','Fine Art',
+];
 
-  // Social handles
-  if (Array.isArray(u.socials)) {
-    u.socials.forEach(s => {
-      const map: Record<string, string> = {
-        INSTAGRAM: 'field-instagram', FLICKR: 'field-flickr',
-        FIVE_HUNDRED_PX: 'field-500px', YOUTUBE: 'field-youtube',
-      };
-      const id = map[s.platform];
-      if (id) setVal(id, s.handle_or_url);
+let selectedGenres: string[] = [];
+
+function renderGenreGrid(selected: string[]) {
+  selectedGenres = [...selected];
+  const grid = document.getElementById('genre-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  GENRES.forEach(g => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = g;
+    btn.className = 'genre-chip' + (selectedGenres.includes(g) ? ' genre-chip--selected' : '');
+    btn.addEventListener('click', () => {
+      if (selectedGenres.includes(g)) {
+        selectedGenres = selectedGenres.filter(x => x !== g);
+      } else if (selectedGenres.length < 10) {
+        selectedGenres.push(g);
+      }
+      btn.className = 'genre-chip' + (selectedGenres.includes(g) ? ' genre-chip--selected' : '');
+      markDirty('main');
+    });
+    grid.appendChild(btn);
+  });
+}
+
+// ── Chip input ──────────────────────────────────────────────────────────────
+const chipData: Record<string, string[]> = {
+  areasOfExpertise: [], favouriteSubjects: [],
+  bodies: [], lenses: [], drones: [], otherGear: [],
+};
+
+function initChipInput(containerId: string, field: string) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const input = document.createElement('input');
+  input.className = 'chip-text-input';
+  input.placeholder = 'Type and press Enter…';
+  container.appendChild(input);
+
+  function renderChips() {
+    const existing = container!.querySelectorAll('.chip-item');
+    existing.forEach(el => el.remove());
+    chipData[field].forEach((val, idx) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip-item';
+      chip.textContent = val;
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button'; removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => {
+        chipData[field].splice(idx, 1);
+        renderChips(); markDirty(field.startsWith('bodies') || field.startsWith('lenses') || field.startsWith('drones') || field.startsWith('otherGear') ? 'gear' : 'main');
+      });
+      chip.appendChild(removeBtn);
+      container!.insertBefore(chip, input);
     });
   }
 
-  // Avatar initials
-  const initials = fn.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const initialsEl = document.getElementById('avatar-initials');
-  if (initialsEl) initialsEl.textContent = initials || '?';
-
-  // Preview
-  updatePreview(fn, u.city, u.country);
-
-  // Public profile link
-  if (u.username) {
-    const anchor = document.getElementById('profile-public-link__anchor') as HTMLAnchorElement | null;
-    if (anchor) {
-      anchor.href = `/photographers/${u.username}/`;
-      anchor.textContent = `v3bcc.bhopal.info/photographers/${u.username}/`;
+  input.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      const val = input.value.trim();
+      if (val && chipData[field].length < 10 && !chipData[field].includes(val)) {
+        chipData[field].push(val);
+        input.value = '';
+        renderChips();
+        const isGear = ['bodies','lenses','drones','otherGear'].includes(field);
+        markDirty(isGear ? 'gear' : 'main');
+      }
     }
-    showEl('profile-public-link');
+  });
+
+  container.addEventListener('click', () => input.focus());
+}
+
+// ── Load profile ────────────────────────────────────────────────────────────
+async function loadProfile() {
+  const res = await apiFetch(API);
+  if (!res.ok) return;
+  const p = await res.json() as Record<string, any>;
+
+  // Header
+  const initials = (p.fullName ?? '').trim().split(/\s+/).map((w: string) => w[0] ?? '').join('').slice(0,2).toUpperCase();
+  setTxt('ph-initials', initials || '?');
+  setTxt('ps-avatar-thumb-initials', initials || '?');
+  setTxt('ph-name', p.fullName ?? '—');
+  setTxt('ph-tier', p.membershipTier ?? '—');
+  setTxt('ph-number', p.membershipNumber ?? '—');
+  setTxt('ph-public-link', `v3bcc.bhopal.info/photographers/${p.username ?? ''}`);
+  setAttr('ph-public-link', 'href', `/photographers/${p.username ?? ''}/`);
+  setTxt('ps-url-value', p.username ?? '—');
+  setAttr('ps-url-view', 'href', `/photographers/${p.username ?? ''}/`);
+  setTxt('identity-tier', p.membershipTier ?? '—');
+  setTxt('identity-number', p.membershipNumber ?? '—');
+
+  // Avatar
+  if (p.avatarUrl) {
+    showImg('ph-avatar-img', 'ph-initials', p.avatarUrl);
+    showImg('ps-avatar-thumb-img', 'ps-avatar-thumb-initials', p.avatarUrl);
+  }
+  // Cover
+  if (p.coverUrl) {
+    showCover(p.coverUrl);
   }
 
-  // Bio counter
-  updateBioCount();
+  // Personal
+  setRO('ro-title', p.nameTitle ?? '—');
+  setRO('ro-firstname', p.firstName ?? '—');
+  setRO('ro-middlename', p.middleName ?? '—');
+  setRO('ro-lastname', p.lastName ?? '—');
+  setRO('ro-email', p.email ?? '—');
+  setInpVal('field-phone', p.phone ?? '');
+  setSelVal('field-gender', p.gender ?? '');
+  setInpVal('field-dob', p.dateOfBirth ? String(p.dateOfBirth).split('T')[0] : '');
 
-  // Check if PATCH endpoint is available (do a preflight OPTIONS or catch 404/405)
-  checkPatchEndpoint();
+  // Address
+  setInpVal('field-addr1', p.addressLine1 ?? '');
+  setInpVal('field-addr2', p.addressLine2 ?? '');
+  setInpVal('field-addr3', p.addressLine3 ?? '');
+  setInpVal('field-city', p.city ?? '');
+  setSelVal('field-state', p.state ?? '');
+  setInpVal('field-pin', p.pinCode ?? '');
+  setSelVal('field-blood', p.bloodGroup ?? '');
+  setInpVal('field-ec-name', p.emergencyContactName ?? '');
+  setInpVal('field-ec-phone', p.emergencyContactPhone ?? '');
+  setSelVal('field-ec-rel', p.emergencyContactRelationship ?? '');
+
+  // Public Profile
+  setInpVal('field-tagline', p.tagline ?? '');
+  updateCounter('field-tagline', 'tagline-count', 120);
+  setInpVal('field-website', p.websiteUrl ?? '');
+  setSelVal('field-camera-system', p.preferredCameraSystem ?? '');
+  setRO('ro-year-joined', p.yearJoinedBcc ? String(p.yearJoinedBcc) : '—');
+  setTxtArea('field-bio', p.bio ?? '');
+  updateCounter('field-bio', 'bio-count', 3000);
+  renderGenreGrid(Array.isArray(p.photographyGenres) ? p.photographyGenres : []);
+
+  // Chips
+  chipData.areasOfExpertise = Array.isArray(p.areasOfExpertise) ? [...p.areasOfExpertise] : [];
+  chipData.favouriteSubjects = Array.isArray(p.favouriteSubjects) ? [...p.favouriteSubjects] : [];
+  reRenderAllChips(['chip-expertise','chip-subjects']);
+
+  // Social handles
+  const socials: {platform: string; handle: string}[] = Array.isArray(p.socialLinks) ? p.socialLinks : [];
+  document.querySelectorAll<HTMLInputElement>('[data-platform]').forEach(input => {
+    const found = socials.find(s => s.platform === input.dataset.platform);
+    input.value = found?.handle ?? '';
+  });
+
+  // Gear
+  chipData.bodies = Array.isArray(p.gear?.bodies) ? [...p.gear.bodies] : [];
+  chipData.lenses = Array.isArray(p.gear?.lenses) ? [...p.gear.lenses] : [];
+  chipData.otherGear = Array.isArray(p.gear?.other) ? [...p.gear.other] : [];
+  reRenderAllChips(['chip-bodies','chip-lenses','chip-drones','chip-other-gear']);
+
+  // Distinctions
+  setInpVal('field-fiap', p.photoTitles?.fiap ?? '');
+  setInpVal('field-fip', p.photoTitles?.fip ?? '');
+  setInpVal('field-psa', p.photoTitles?.psa ?? '');
+  setInpVal('field-other-titles', p.photoTitles?.other ?? '');
+  setTxtArea('field-awards', p.awardsHtml ?? '');
+
+  // Internal roles
+  ['coordinator','mentor','instructor','volunteer'].forEach(role => {
+    const el = document.getElementById(`toggle-${role}`);
+    if (!el) return;
+    if (p.internalRoles?.[role]) el.classList.add('internal-toggle--on');
+    else el.classList.remove('internal-toggle--on');
+  });
+
+  // Stats
+  const stats = p.stats ?? {};
+  setTxt('stat-since', stats.memberSince ? new Date(stats.memberSince).getFullYear().toString() : '—');
+  setTxt('stat-class', stats.membershipClass ?? '—');
+  setTxt('stat-photos', String(stats.portfolioCount ?? 0));
+  setTxt('stat-events', String(stats.eventAttendance ?? 0));
+  setTxt('stat-awards', String(stats.contestAwards ?? 0));
+  setTxt('stat-score', String(stats.activityScore ?? 0));
 }
 
-function setVal(id: string, val: string) {
-  const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
-  if (el) el.value = val;
+function reRenderAllChips(containerIds: string[]) {
+  containerIds.forEach(id => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    const input = container.querySelector<HTMLInputElement>('.chip-text-input');
+    const field = container.dataset.field ?? '';
+    container.querySelectorAll('.chip-item').forEach(el => el.remove());
+    (chipData[field] ?? []).forEach((val: string, idx: number) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip-item';
+      chip.textContent = val;
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.textContent = '×';
+      btn.addEventListener('click', () => {
+        chipData[field].splice(idx, 1);
+        reRenderAllChips([id]);
+        const isGear = ['bodies','lenses','drones','otherGear'].includes(field);
+        markDirty(isGear ? 'gear' : 'main');
+      });
+      chip.appendChild(btn);
+      if (input) container.insertBefore(chip, input);
+      else container.appendChild(chip);
+    });
+  });
 }
 
-function updatePreview(fullName: string, city?: string | null, country?: string | null) {
-  const nameEl = document.getElementById('preview-name');
-  const locEl = document.getElementById('preview-location');
-  const initialsEl = document.getElementById('preview-initials');
-  if (nameEl) nameEl.textContent = fullName || '—';
-  const loc = [city, country].filter(Boolean).join(', ');
-  if (locEl) locEl.textContent = loc;
-  const initials = (fullName || '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  if (initialsEl) initialsEl.textContent = initials || '?';
-}
+// ── Save ──────────────────────────────────────────────────────────────────
+async function saveAll() {
+  const btn = document.getElementById('save-btn') as HTMLButtonElement | null;
+  const mBtn = document.getElementById('mobile-save-btn') as HTMLButtonElement | null;
+  if (btn) btn.disabled = true;
+  if (mBtn) mBtn.disabled = true;
+  setStatus('Saving…', 'ph-status--saving');
 
-function updateBioCount() {
-  const bio = document.getElementById('field-bio') as HTMLTextAreaElement | null;
-  const counter = document.getElementById('bio-count');
-  if (bio && counter) counter.textContent = String(bio.value.length);
-}
+  const promises: Promise<any>[] = [];
 
-async function checkPatchEndpoint() {
+  // Main profile fields (always save — lightweight operation)
+  const mainBody: Record<string, any> = {
+    phone: (getInp('field-phone') || null),
+    gender: (getSel('field-gender') || null),
+    dateOfBirth: (getInp('field-dob') || null),
+    addressLine1: (getInp('field-addr1') || null),
+    addressLine2: (getInp('field-addr2') || null),
+    addressLine3: (getInp('field-addr3') || null),
+    city: (getInp('field-city') || null),
+    state: (getSel('field-state') || null),
+    pinCode: (getInp('field-pin') || null),
+    bloodGroup: (getSel('field-blood') || null),
+    emergencyContactName: (getInp('field-ec-name') || null),
+    emergencyContactPhone: (getInp('field-ec-phone') || null),
+    emergencyContactRelationship: (getSel('field-ec-rel') || null),
+    tagline: (getInp('field-tagline') || null),
+    websiteUrl: (getInp('field-website') || null),
+    areasOfExpertise: chipData.areasOfExpertise,
+    favouriteSubjects: chipData.favouriteSubjects,
+    preferredCameraSystem: (getSel('field-camera-system') || null),
+    photographyGenres: selectedGenres,
+    bio: (getTxtArea('field-bio') || null),
+  };
+  promises.push(apiFetch(API, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(mainBody),
+  }));
+
+  // Social links
+  const links: {platform: string; handle: string}[] = [];
+  document.querySelectorAll<HTMLInputElement>('[data-platform]').forEach(input => {
+    const val = input.value.trim();
+    if (val) links.push({ platform: input.dataset.platform!, handle: val });
+  });
+  promises.push(apiFetch(`${API}/social`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ links }),
+  }));
+
+  // Gear
+  promises.push(apiFetch(`${API}/gear`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      bodies: chipData.bodies,
+      lenses: chipData.lenses,
+      drones: chipData.drones,
+      other: chipData.otherGear,
+    }),
+  }));
+
+  // Distinctions
+  promises.push(apiFetch(`${API}/distinctions`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fiap: getInp('field-fiap') || undefined,
+      fip: getInp('field-fip') || undefined,
+      psa: getInp('field-psa') || undefined,
+      other: getInp('field-other-titles') || undefined,
+      awardsHtml: getTxtArea('field-awards') || undefined,
+    }),
+  }));
+
   try {
-    // The PATCH endpoint returns 401 if not authenticated, 404/405 if not yet implemented
-    const res = await apiFetch(`${API}/users/profile`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    if (res.status === 404 || res.status === 405) {
-      // Endpoint not implemented yet
-      showNotice('Profile editing is not yet enabled on the backend. Fields shown are read-only until the endpoint ships.');
-      setReadOnly(true);
+    const results = await Promise.all(promises);
+    const allOk = results.every(r => r.ok);
+    if (allOk) {
+      dirty.clear();
+      setStatus('All changes saved');
+    } else {
+      const errs = results.filter(r => !r.ok);
+      const msg = await errs[0].json().catch(() => ({})) as {message?: string};
+      setStatus(typeof msg.message === 'string' ? msg.message : 'Save failed', 'ph-status--error');
     }
-    // 200/400/422 = endpoint exists, forms are live
   } catch {
-    // Network error or CORS — assume live
+    setStatus('Network error — try again', 'ph-status--error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (mBtn) mBtn.disabled = false;
   }
 }
 
-function showNotice(msg: string) {
-  const el = document.getElementById('backend-notice-text');
-  if (el) el.textContent = msg;
-  showEl('backend-notice');
-}
+// ── Avatar upload ─────────────────────────────────────────────────────────
+async function uploadMedia(file: File, type: 'avatar' | 'cover') {
+  const maxBytes = type === 'cover' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+  const statusId = type === 'avatar' ? 'avatar-status' : 'cover-status';
 
-function setReadOnly(ro: boolean) {
-  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement | null;
-  if (saveBtn) saveBtn.disabled = ro;
-  if (ro) {
-    document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-      '.profile-form input, .profile-form textarea, .profile-form select'
-    ).forEach(el => { el.readOnly = true; el.style.background = '#F4F0E8'; });
-    const avatarLabel = document.getElementById('avatar-upload-label');
-    if (avatarLabel) { avatarLabel.style.opacity = '0.5'; avatarLabel.style.pointerEvents = 'none'; }
+  if (file.size > maxBytes) {
+    showUploadStatus(statusId, `File too large (max ${type === 'cover' ? 10 : 5} MB)`, true);
+    return;
   }
-}
-
-/* ── Form submission ───────────────────────────────────────────────── */
-document.getElementById('profile-form')?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement | null;
-  if (saveBtn?.disabled) return;
-
-  hideEl('save-success'); hideEl('save-error');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
-
-  const fn = (document.getElementById('field-fullname') as HTMLInputElement).value.trim();
-  if (!fn) {
-    showError('Display name is required.');
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save profile'; }
+  if (!['image/jpeg','image/jpg','image/png','image/webp'].includes(file.type)) {
+    showUploadStatus(statusId, 'Only JPG, PNG, or WebP allowed', true);
     return;
   }
 
-  const payload = {
-    full_name: fn,
-    bio:    (document.getElementById('field-bio')    as HTMLTextAreaElement).value.trim() || null,
-    city:   (document.getElementById('field-city')   as HTMLInputElement).value.trim() || null,
-    state:  (document.getElementById('field-state')  as HTMLInputElement).value.trim() || null,
-    country:(document.getElementById('field-country') as HTMLInputElement).value.trim() || null,
-    experience_level: (document.getElementById('field-experience') as HTMLSelectElement).value || null,
-    website:(document.getElementById('field-website') as HTMLInputElement).value.trim() || null,
-    socials: buildSocials(),
-  };
-
-  try {
-    const res = await apiFetch(`${API}/users/profile`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      showEl('save-success');
-      updatePreview(fn,
-        (document.getElementById('field-city') as HTMLInputElement).value,
-        (document.getElementById('field-country') as HTMLInputElement).value
-      );
-      // Refresh bcc_user in localStorage
-      const raw = localStorage.getItem('bcc_user');
-      if (raw) {
-        try {
-          const u = JSON.parse(raw) as Record<string, unknown>;
-          u.displayName = fn;
-          u.initials = fn.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-          localStorage.setItem('bcc_user', JSON.stringify(u));
-        } catch { /* ignore */ }
-      }
-    } else {
-      const err = await res.json().catch(() => ({})) as { message?: string };
-      showError(typeof err.message === 'string' ? err.message : `Save failed (${res.status})`);
-    }
-  } catch {
-    showError('Network error. Check your connection and try again.');
-  } finally {
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save profile'; }
-  }
-});
-
-function buildSocials(): Array<{ platform: string; handle_or_url: string }> {
-  const map: Record<string, string> = {
-    INSTAGRAM: 'field-instagram', FLICKR: 'field-flickr',
-    FIVE_HUNDRED_PX: 'field-500px', YOUTUBE: 'field-youtube',
-  };
-  return Object.entries(map)
-    .map(([platform, id]) => {
-      const val = (document.getElementById(id) as HTMLInputElement | null)?.value.trim();
-      return val ? { platform, handle_or_url: val } : null;
-    })
-    .filter((x): x is { platform: string; handle_or_url: string } => x !== null);
-}
-
-function showError(msg: string) {
-  const el = document.getElementById('save-error');
-  if (el) { el.textContent = msg; el.hidden = false; }
-}
-
-/* ── Bio counter ───────────────────────────────────────────────────── */
-document.getElementById('field-bio')?.addEventListener('input', updateBioCount);
-
-/* ── Live preview ──────────────────────────────────────────────────── */
-document.getElementById('field-fullname')?.addEventListener('input', () => {
-  const fn = (document.getElementById('field-fullname') as HTMLInputElement).value;
-  const city = (document.getElementById('field-city') as HTMLInputElement).value;
-  const country = (document.getElementById('field-country') as HTMLInputElement).value;
-  updatePreview(fn, city, country);
-  const initials = fn.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const initialsEl = document.getElementById('avatar-initials');
-  if (initialsEl) initialsEl.textContent = initials || '?';
-});
-
-/* ── Avatar upload ─────────────────────────────────────────────────── */
-document.getElementById('avatar-file-input')?.addEventListener('change', async e => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { showAvatarStatus('File too large (max 5 MB)', true); return; }
-
-  // Preview locally first
+  // Local preview
   const reader = new FileReader();
   reader.onload = ev => {
-    const img = document.getElementById('avatar-img') as HTMLImageElement | null;
-    if (img && ev.target?.result) {
-      img.src = String(ev.target.result);
-      img.hidden = false;
-      const initials = document.getElementById('avatar-initials');
-      if (initials) initials.style.display = 'none';
+    if (type === 'avatar') {
+      showImg('ph-avatar-img', 'ph-initials', String(ev.target?.result ?? ''));
+      showImg('ps-avatar-thumb-img', 'ps-avatar-thumb-initials', String(ev.target?.result ?? ''));
+    } else {
+      showCover(String(ev.target?.result ?? ''));
     }
   };
   reader.readAsDataURL(file);
 
-  // Try presign → PUT → confirm
-  showEl('avatar-progress');
-  setProgress(10);
+  showUploadStatus(statusId, 'Uploading…', false);
 
   try {
-    const presignRes = await apiFetch(`${API}/users/profile/avatar/presign`, {
+    const presignRes = await apiFetch(`${API}/${type}/presign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mime_type: file.type, file_size_bytes: file.size }),
+      body: JSON.stringify({ mimeType: file.type, fileSizeBytes: file.size }),
     });
-
-    if (presignRes.status === 404 || presignRes.status === 405) {
-      // Endpoint not yet live — show notice but keep local preview
-      hideEl('avatar-progress');
-      showAvatarStatus('Avatar upload backend not yet implemented — preview only.', false);
-      return;
-    }
-    if (!presignRes.ok) { hideEl('avatar-progress'); showAvatarStatus('Presign failed', true); return; }
-
+    if (!presignRes.ok) { showUploadStatus(statusId, 'Presign failed', true); return; }
     const { uploadUrl, r2Key } = await presignRes.json() as { uploadUrl: string; r2Key: string };
-    setProgress(30);
 
-    // PUT to R2
     const putRes = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-    if (!putRes.ok) { hideEl('avatar-progress'); showAvatarStatus('Upload failed', true); return; }
-    setProgress(80);
+    if (!putRes.ok) { showUploadStatus(statusId, 'Upload failed', true); return; }
 
-    // Confirm
-    const confirmRes = await apiFetch(`${API}/users/profile/avatar/confirm`, {
+    const confirmRes = await apiFetch(`${API}/${type}/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ r2_key: r2Key }),
+      body: JSON.stringify({ r2Key }),
     });
-    setProgress(100);
-    hideEl('avatar-progress');
-
     if (confirmRes.ok) {
-      showAvatarStatus('Avatar updated successfully!', false);
+      showUploadStatus(statusId, type === 'avatar' ? 'Photo updated!' : 'Cover updated!', false);
     } else {
-      showAvatarStatus('Upload confirmed but processing may be delayed.', false);
+      showUploadStatus(statusId, 'Upload confirmed but may take a moment to reflect.', false);
     }
   } catch {
-    hideEl('avatar-progress');
-    showAvatarStatus('Network error during upload.', true);
+    showUploadStatus(statusId, 'Network error during upload', true);
+  }
+}
+
+function showUploadStatus(id: string, msg: string, isErr: boolean) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `ps-upload-status ps-upload-status--${isErr ? 'err' : 'ok'}`;
+  el.hidden = false;
+  if (!isErr) setTimeout(() => { el.hidden = true; }, 4000);
+}
+
+function showImg(imgId: string, fallbackId: string, src: string) {
+  const img = document.getElementById(imgId) as HTMLImageElement | null;
+  const fb = document.getElementById(fallbackId);
+  if (img) { img.src = src; img.hidden = false; }
+  if (fb) (fb as HTMLElement).style.display = 'none';
+}
+
+function showCover(src: string) {
+  const stripe = document.getElementById('ph-cover-stripe');
+  const img = document.getElementById('ph-cover-img') as HTMLImageElement | null;
+  const stripeSmall = document.getElementById('ps-cover-stripe-sm');
+  const imgSmall = document.getElementById('ps-cover-thumb-img') as HTMLImageElement | null;
+  if (stripe) stripe.style.display = 'none';
+  if (img) { img.src = src; img.hidden = false; }
+  if (stripeSmall) stripeSmall.style.display = 'none';
+  if (imgSmall) { imgSmall.src = src; imgSmall.hidden = false; }
+}
+
+// ── Tab navigation + IntersectionObserver ─────────────────────────────────
+function initTabs() {
+  const tabs = document.querySelectorAll<HTMLButtonElement>('.ph-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const sectionId = `section-${tab.dataset.section}`;
+      const section = document.getElementById(sectionId);
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveTab(tab.dataset.section ?? '');
+    });
+  });
+
+  // IntersectionObserver to update active tab on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const section = entry.target as HTMLElement;
+        setActiveTab(section.dataset.section ?? '');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+
+  document.querySelectorAll('.ps[data-section]').forEach(section => {
+    observer.observe(section);
+  });
+}
+
+function setActiveTab(sectionKey: string) {
+  document.querySelectorAll<HTMLButtonElement>('.ph-tab').forEach(tab => {
+    tab.classList.toggle('ph-tab--active', tab.dataset.section === sectionKey);
+  });
+}
+
+// ── Copy URL ──────────────────────────────────────────────────────────────
+document.getElementById('ps-url-copy')?.addEventListener('click', () => {
+  const username = (document.getElementById('ps-url-value') as HTMLElement)?.textContent ?? '';
+  if (username && username !== '—') {
+    navigator.clipboard.writeText(`https://v3bcc.bhopal.info/photographers/${username}/`).catch(() => {});
+    const btn = document.getElementById('ps-url-copy') as HTMLButtonElement;
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
   }
 });
 
-function setProgress(pct: number) {
-  const bar = document.getElementById('avatar-progress-bar');
-  if (bar) bar.style.width = `${pct}%`;
+// ── Field change listeners ────────────────────────────────────────────────
+function listenDirty(ids: string[], section: string) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    el?.addEventListener('change', () => markDirty(section));
+    el?.addEventListener('input', () => markDirty(section));
+  });
 }
 
-function showAvatarStatus(msg: string, isErr: boolean) {
-  const el = document.getElementById('avatar-status');
-  if (!el) return;
-  el.textContent = msg;
-  el.className = `avatar-status avatar-status--${isErr ? 'err' : 'ok'}`;
-  el.hidden = false;
-  setTimeout(() => { el.hidden = true; }, 5000);
+function initCounters() {
+  const tagline = document.getElementById('field-tagline') as HTMLInputElement | null;
+  tagline?.addEventListener('input', () => updateCounter('field-tagline', 'tagline-count', 120));
+  const bio = document.getElementById('field-bio') as HTMLTextAreaElement | null;
+  bio?.addEventListener('input', () => updateCounter('field-bio', 'bio-count', 3000));
 }
 
-/* ── Init ──────────────────────────────────────────────────────────── */
+function updateCounter(fieldId: string, counterId: string, max: number) {
+  const field = document.getElementById(fieldId) as HTMLInputElement | HTMLTextAreaElement | null;
+  const counter = document.getElementById(counterId);
+  if (field && counter) counter.textContent = `${field.value.length}/${max}`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function setTxt(id: string, val: string) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setAttr(id: string, attr: string, val: string) { const el = document.getElementById(id); if (el) el.setAttribute(attr, val); }
+function setRO(id: string, val: string) { const el = document.getElementById(id) as HTMLElement | null; if (el) el.textContent = val; }
+function setInpVal(id: string, val: string) { const el = document.getElementById(id) as HTMLInputElement | null; if (el) el.value = val; }
+function setTxtArea(id: string, val: string) { const el = document.getElementById(id) as HTMLTextAreaElement | null; if (el) el.value = val; }
+function setSelVal(id: string, val: string) { const el = document.getElementById(id) as HTMLSelectElement | null; if (el) el.value = val; }
+function getInp(id: string): string { return (document.getElementById(id) as HTMLInputElement | null)?.value.trim() ?? ''; }
+function getTxtArea(id: string): string { return (document.getElementById(id) as HTMLTextAreaElement | null)?.value ?? ''; }
+function getSel(id: string): string { return (document.getElementById(id) as HTMLSelectElement | null)?.value ?? ''; }
+
+// ── Init ──────────────────────────────────────────────────────────────────
+// Chip inputs
+initChipInput('chip-expertise', 'areasOfExpertise');
+initChipInput('chip-subjects', 'favouriteSubjects');
+initChipInput('chip-bodies', 'bodies');
+initChipInput('chip-lenses', 'lenses');
+initChipInput('chip-drones', 'drones');
+initChipInput('chip-other-gear', 'otherGear');
+
+// Genre grid placeholder (will be populated on load)
+renderGenreGrid([]);
+
+// Tab nav
+initTabs();
+
+// Counters
+initCounters();
+
+// Dirty tracking for standard fields
+listenDirty([
+  'field-phone','field-gender','field-dob',
+  'field-addr1','field-addr2','field-addr3','field-city','field-state','field-pin',
+  'field-blood','field-ec-name','field-ec-phone','field-ec-rel',
+  'field-tagline','field-website','field-camera-system','field-bio',
+], 'main');
+listenDirty(['field-fiap','field-fip','field-psa','field-other-titles','field-awards'], 'distinctions');
+document.querySelectorAll('[data-platform]').forEach(el => {
+  el.addEventListener('input', () => markDirty('social'));
+});
+
+// Save buttons
+document.getElementById('save-btn')?.addEventListener('click', saveAll);
+document.getElementById('mobile-save-btn')?.addEventListener('click', saveAll);
+
+// Avatar upload
+document.getElementById('avatar-file-input')?.addEventListener('change', e => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (file) uploadMedia(file, 'avatar');
+});
+
+// Cover upload
+document.getElementById('cover-file-input')?.addEventListener('change', e => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (file) uploadMedia(file, 'cover');
+});
+
+// Load data
 loadProfile().catch(() => {});
 </script>

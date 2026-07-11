@@ -27,8 +27,13 @@ export interface UsersTable {
   bio: string | null;
   city: string | null;
   state: string | null;
+  address_line1: Nullable<string>;
+  address_line2: Nullable<string>;
+  pin_code: Nullable<string>;
   country: Generated<string>;
   date_of_birth: ColumnType<Date | null, string | null, string | null>;
+  gender: Nullable<'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY'>;
+  year_joined_bcc: Nullable<number>;
   experience_level: 'BEGINNER' | 'ENTHUSIAST' | 'SERIOUS_AMATEUR' | 'PROFESSIONAL' | null;
   language_pref: Generated<'EN' | 'HI'>;
   profile_visibility: Generated<'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE'>;
@@ -217,6 +222,16 @@ export interface IdentityAuditLogTable {
 // ============================================================================
 // MEM-006 / MEM-007 tables
 // ============================================================================
+
+export interface MembershipConsentLogTable {
+  id: Generated<number>;
+  user_id: number;
+  consent_type: 'APPLICATION' | 'RENEWAL';
+  terms_version: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  consented_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
 
 export interface MembershipClassesTable {
   id: Generated<number>;
@@ -812,6 +827,7 @@ export interface DB {
   user_roles: UserRolesTable;
   identity_audit_log: IdentityAuditLogTable;
 
+  membership_consent_log: MembershipConsentLogTable;
   membership_classes: MembershipClassesTable;
   group_entities: GroupEntitiesTable;
   group_delegates: GroupDelegatesTable;

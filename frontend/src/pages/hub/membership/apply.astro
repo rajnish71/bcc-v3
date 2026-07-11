@@ -1,554 +1,107 @@
 ---
 /**
- * hub/membership/apply.astro -- Membership application
+ * hub/membership/apply.astro — V6 19 Membership Application Form (Variant A)
  * Route: /hub/membership/apply/
  *
- * MEM-006 PUBLIC DOMAIN POLICY:
- * This page is INSIDE the member hub (auth-gated) -- constitutional classes
- * (Full/Life/Patron/Founding) are NOT shown here either, because this is a
- * self-service application page for incoming members. The upgrade pathway
- * for constitutional classes is a coordinator action, not self-service.
+ * Shell: SiteHeader + centered content + SiteFooter. No HubSidebar, no HubLayout.
+ * The application flow is a transitional page for registered users who have not
+ * yet applied for membership. It is accessible to all authenticated users.
  *
- * Only the three self-service operational classes are shown:
- *   5 = Basic Member  (free)
- *   6 = Student Member
- *   7 = Individual Member
+ * MEM-006: Only Basic Membership shown. No constitutional class names.
+ * MEM-006 P1: Apply for Membership is a distinct CTA from Register or Sign In.
+ * MEM-007: No membership number at any point. PENDING state only on submission.
  *
- * API: POST /api/v1/membership/applications { membershipClassId: number }
+ * RBAC: USER role minimum (any authenticated user).
+ *   - No active/pending membership → render 3-step application form.
+ *   - PENDING membership → render AlreadyPendingScreen.
+ *   - ACTIVE or APPROVED membership → redirect to /hub/.
+ *   - Unauthenticated → redirect to /auth/signin/.
  *
- * MEM-006 P1 three-CTA distinction:
- *   Register  -- already done (user is here because they're registered)
- *   Apply     -- this page
- *   Sign In   -- irrelevant (already signed in)
- *
- * MEM-007: No membership number is assigned here. Numbers are assigned
- * only on ACTIVE transition (after approval + payment/activation).
+ * Auth guard: client-side (AccessTokenGuard on API endpoint handles real auth).
+ * All redirect logic lives in MembershipApplicationFlow.astro component.
  */
-import HubLayout from '../../../layouts/HubLayout.astro';
-
-const CLASSES = [
-  {
-    id: 5,
-    code: 'BASIC_MEMBER',
-    label: 'Basic',
-    title: 'Basic Member',
-    price: 'Free',
-    priceSub: 'No annual fee',
-    badgeColor: '#5C5876',
-    desc: 'Your starting point in the BCC community. Platform identity, showcase access, and club news at no cost.',
-    features: [
-      'BCC platform profile',
-      'Public Showcase access',
-      'Event announcements and club news',
-      'BCC Newsletter',
-    ],
-  },
-  {
-    id: 6,
-    code: 'STUDENT_MEMBER',
-    label: 'Student',
-    title: 'Student Member',
-    price: 'Annual fee',
-    priceSub: 'Disclosed on application review',
-    badgeColor: '#1A9DAE',
-    desc: 'For photography students and active learners. Workshops, mentored sessions, and events at student rates.',
-    features: [
-      'Everything in Basic',
-      'Workshop and event participation (student rate)',
-      'Mentored feedback sessions',
-      'Portfolio on Showcase',
-    ],
-  },
-  {
-    id: 7,
-    code: 'INDIVIDUAL_MEMBER',
-    label: 'Individual',
-    title: 'Individual Member',
-    price: 'Annual fee',
-    priceSub: 'Disclosed on application review',
-    badgeColor: '#3E5A48',
-    desc: 'Full participation for active photographers -- contests, exhibitions, and a digital membership card.',
-    features: [
-      'Everything in Student',
-      'Contest submissions',
-      'Exhibition participation',
-      'Priority event registration',
-      'Digital membership card (PDF)',
-    ],
-    recommended: true,
-  },
-];
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import MembershipApplicationFlow from '../../../components/hub/MembershipApplicationFlow.astro';
 ---
 
-<HubLayout title="Apply for Membership" description="Choose a BCC membership class and submit your application.">
+<BaseLayout
+  title="Apply for Membership"
+  description="Apply for BCC Basic Membership — three simple steps."
+  bodyClass="apply-flow-page"
+>
+  <section class="apply-flow">
+    <div class="apply-flow__container">
 
-  <div class="apply-page">
-    <div class="container">
+      <!-- Breadcrumb -->
+      <nav class="apply-flow__breadcrumb" aria-label="Breadcrumb">
+        <span class="apply-flow__bc-item apply-flow__bc-mono">Member Hub</span>
+        <span class="apply-flow__bc-sep">›</span>
+        <span class="apply-flow__bc-item apply-flow__bc-active apply-flow__bc-mono">Membership Application</span>
+      </nav>
 
-      <!-- Page header -->
-      <div class="apply-header">
-        <a href="/hub/" class="apply-back" aria-label="Back to Member Hub">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Member Hub
-        </a>
-        <h1 class="apply-title">Apply for Membership</h1>
-        <p class="apply-sub">Select the class that best fits your involvement with Bhopal Camera Club.</p>
+      <!-- Page heading -->
+      <div class="apply-flow__heading">
+        <h1 class="apply-flow__title">Membership Application</h1>
+        <div class="apply-flow__meta">
+          <span class="apply-flow__meta-route apply-flow__bc-mono">/hub/membership/apply</span>
+          <span class="apply-flow__meta-badge apply-flow__bc-mono">RBAC: USER</span>
+        </div>
       </div>
 
-      <!-- Error / success banners -->
-      <div id="apply-error" class="apply-banner apply-banner--error" hidden role="alert"></div>
-      <div id="apply-success" class="apply-banner apply-banner--success" hidden role="status"></div>
-
-      <!-- Class cards -->
-      <div class="apply-grid" id="apply-grid" role="radiogroup" aria-label="Membership classes">
-        {CLASSES.map((cls) => (
-          <label
-            class:list={['apply-card', cls.recommended && 'apply-card--recommended']}
-            data-id={cls.id}
-          >
-            <input
-              type="radio"
-              name="membershipClass"
-              value={cls.id}
-              class="apply-radio"
-              aria-label={cls.title}
-            />
-
-            {cls.recommended && (
-              <span class="apply-card__rec" aria-label="Most popular">Most popular</span>
-            )}
-
-            <!-- Badge strip -->
-            <div class="apply-card__badge-strip" style={`background:${cls.badgeColor}`}></div>
-
-            <div class="apply-card__body">
-              <div class="apply-card__top">
-                <div>
-                  <p class="apply-card__label">{cls.label}</p>
-                  <h2 class="apply-card__title">{cls.title}</h2>
-                </div>
-                <div class="apply-card__price">
-                  <span class="apply-card__price-main">{cls.price}</span>
-                  <span class="apply-card__price-sub">{cls.priceSub}</span>
-                </div>
-              </div>
-
-              <p class="apply-card__desc">{cls.desc}</p>
-
-              <ul class="apply-card__features" aria-label={`Features of ${cls.title}`}>
-                {cls.features.map(f => (
-                  <li class="apply-card__feature">
-                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-                      <path d="M2 7l3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <div class="apply-card__select-indicator" aria-hidden="true">
-                <span class="apply-card__select-dot"></span>
-                <span class="apply-card__select-text">Select</span>
-              </div>
-
-            </div>
-          </label>
-        ))}
-      </div>
-
-      <!-- Application note -->
-      <div class="apply-note">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M8 7v4M8 5h.01" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <span>
-          Applications are reviewed by a BCC coordinator.
-          For Student and Individual classes, the membership fee will be confirmed during review.
-          You will be notified by email at each stage.
-        </span>
-      </div>
-
-      <!-- Submit -->
-      <div class="apply-footer">
-        <button id="apply-btn" type="button" class="btn btn-gold btn-lg apply-submit" disabled>
-          Submit Application
-        </button>
-        <a href="/hub/" class="btn btn-text btn-md">Cancel</a>
-      </div>
+      <!-- 3-step form (Variant A) -->
+      <MembershipApplicationFlow variant="apply" />
 
     </div>
-  </div>
-
-</HubLayout>
+  </section>
+</BaseLayout>
 
 <style>
-.apply-page { padding: var(--s-8) 0 var(--s-12); }
+.apply-flow-page {}
 
-/* Header */
-.apply-header { margin-bottom: var(--s-6); }
-
-.apply-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-400);
-  text-decoration: none;
-  margin-bottom: var(--s-3);
-  font-family: var(--font-body);
-  transition: color var(--m-fast);
+.apply-flow {
+  min-height: calc(100vh - 200px);
+  padding: var(--s-8) 0 var(--s-12);
 }
-.apply-back:hover { color: var(--gold-600); }
 
-.apply-title {
-  font-size: clamp(26px, 3.5vw, 36px);
+.apply-flow__container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 var(--s-5);
+}
+
+.apply-flow__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--s-3);
+}
+.apply-flow__bc-item { font-size: 12px; color: var(--ink-400); }
+.apply-flow__bc-active { color: var(--gold-600); }
+.apply-flow__bc-mono { font-family: var(--font-mono); }
+.apply-flow__bc-sep { font-family: var(--font-mono); font-size: 12px; color: var(--ink-400); }
+
+.apply-flow__heading { margin-bottom: var(--s-5); }
+.apply-flow__title {
+  font-family: var(--font-display);
+  font-size: 26px;
   font-weight: 700;
-  color: var(--ink-900);
   letter-spacing: -0.02em;
+  color: var(--ink-900);
   margin: 0 0 var(--s-1);
 }
-
-.apply-sub {
-  font-size: 15px;
-  color: var(--ink-600);
-  margin: 0;
-  font-family: var(--font-body);
-}
-
-/* Banners */
-.apply-banner {
-  padding: 12px 16px;
-  border-radius: var(--r-2);
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: var(--s-3);
-  font-family: var(--font-body);
-}
-.apply-banner--error   { background: #FEF2F2; border: 1px solid #FCA5A5; color: #B91C1C; }
-.apply-banner--success { background: #F0FDF4; border: 1px solid #86EFAC; color: #15803D; }
-
-/* 3-column grid */
-.apply-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--s-3);
-  margin-bottom: var(--s-4);
-}
-@media (max-width: 900px) { .apply-grid { grid-template-columns: 1fr; } }
-
-/* Class card */
-.apply-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-0);
-  border: 1.5px solid var(--hairline);
-  border-radius: var(--r-1);
-  box-shadow: var(--e-1);
-  cursor: pointer;
-  overflow: hidden;
-  transition: border-color var(--m-fast), box-shadow var(--m-fast), transform var(--m-fast);
-}
-.apply-card:hover {
-  border-color: var(--hairline-strong);
-  box-shadow: var(--e-2);
-  transform: translateY(-2px);
-}
-.apply-card:has(.apply-radio:checked) {
-  border-color: var(--gold-600);
-  box-shadow: 0 0 0 3px rgba(168,132,60,.15), var(--e-2);
-}
-
-.apply-radio { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
-
-/* Recommended badge */
-.apply-card__rec {
-  position: absolute;
-  top: var(--s-2);
-  right: var(--s-2);
-  background: var(--gold-gradient);
-  color: var(--ink-inverse);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: var(--r-full);
-  font-family: var(--font-body);
-  z-index: 1;
-}
-
-/* Colour strip (membership tier colour) */
-.apply-card__badge-strip {
-  height: 4px;
-  width: 100%;
-  flex-shrink: 0;
-}
-
-.apply-card__body {
-  padding: var(--s-3);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-}
-
-.apply-card__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--s-2);
-}
-
-.apply-card__label {
+.apply-flow__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.apply-flow__meta-route { font-size: 11px; color: var(--ink-400); }
+.apply-flow__meta-badge {
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-400);
-  margin: 0 0 3px;
-  font-family: var(--font-body);
-}
-
-.apply-card__title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ink-900);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.apply-card__price { text-align: right; flex-shrink: 0; }
-
-.apply-card__price-main {
-  display: block;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink-900);
-  font-family: var(--font-display);
-}
-
-.apply-card__price-sub {
-  display: block;
-  font-size: 10px;
-  color: var(--ink-400);
-  font-family: var(--font-body);
-  margin-top: 2px;
-}
-
-.apply-card__desc {
-  font-size: 13px;
-  color: var(--ink-600);
-  line-height: 1.6;
-  margin: 0;
-  font-family: var(--font-body);
-}
-
-.apply-card__features {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  flex: 1;
-}
-
-.apply-card__feature {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  font-size: 12px;
-  color: var(--ink-600);
-  font-family: var(--font-body);
-  line-height: 1.5;
-}
-.apply-card__feature svg { flex-shrink: 0; margin-top: 2px; color: var(--forest-600); }
-
-/* Select indicator */
-.apply-card__select-indicator {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding-top: var(--s-2);
-  border-top: 1px solid var(--hairline-soft);
-  margin-top: auto;
-}
-
-.apply-card__select-dot {
-  width: 16px; height: 16px;
-  border: 1.5px solid var(--hairline-strong);
-  border-radius: var(--r-full);
-  flex-shrink: 0;
-  transition: background var(--m-fast), border-color var(--m-fast);
-}
-
-.apply-card:has(.apply-radio:checked) .apply-card__select-dot {
-  background: var(--gold-600);
-  border-color: var(--gold-600);
-  box-shadow: inset 0 0 0 3px var(--surface-0);
-}
-
-.apply-card__select-text {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-400);
-  font-family: var(--font-body);
-  transition: color var(--m-fast);
-}
-
-.apply-card:has(.apply-radio:checked) .apply-card__select-text {
-  color: var(--gold-600);
-  font-weight: 600;
-}
-
-/* Application note */
-.apply-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px 16px;
   background: var(--surface-2);
   border: 1px solid var(--hairline);
-  border-radius: var(--r-2);
-  font-size: 13px;
+  padding: 3px 10px;
   color: var(--ink-600);
-  line-height: 1.6;
-  font-family: var(--font-body);
-  margin-bottom: var(--s-4);
-}
-.apply-note svg { flex-shrink: 0; margin-top: 2px; color: var(--gold-600); }
-
-/* Footer */
-.apply-footer {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
 }
 
-.apply-submit {
-  min-width: 200px;
-  position: relative;
+@media (max-width: 640px) {
+  .apply-flow { padding: var(--s-5) 0 var(--s-8); }
+  .apply-flow__container { padding: 0 var(--s-3); }
+  .apply-flow__title { font-size: 22px; }
 }
-.apply-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 </style>
-
-<script>
-  const API = '/api/v1';
-
-  function token(): string | null { return localStorage.getItem('bcc_token'); }
-
-  async function checkExistingMembership() {
-    const t = token();
-    if (!t) return;
-    try {
-      const res = await fetch(`${API}/membership/mine`, {
-        headers: { Authorization: `Bearer ${t}` }
-      });
-      if (res.ok) {
-        const memberships = await res.json() as any[];
-        const existing = memberships.find(
-          m => m.lifecycle_state === 'ACTIVE' || m.lifecycle_state === 'APPROVED' || m.lifecycle_state === 'PENDING'
-        );
-        if (existing) {
-          window.location.replace('/hub/');
-        }
-      }
-    } catch (e) {}
-  }
-  checkExistingMembership();
-
-  function showError(msg: string): void {
-    const el = document.getElementById('apply-error');
-    if (!el) return;
-    el.textContent = msg;
-    el.hidden = false;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  function showSuccess(msg: string): void {
-    const el = document.getElementById('apply-success');
-    const err = document.getElementById('apply-error');
-    if (err) err.hidden = true;
-    if (!el) return;
-    el.textContent = msg;
-    el.hidden = false;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  const applyBtn = document.getElementById('apply-btn') as HTMLButtonElement | null;
-  let selectedClassId: number | null = null;
-
-  /* -- Radio selection -------------------------------------------------- */
-  document.querySelectorAll<HTMLInputElement>('.apply-radio').forEach(radio => {
-    radio.addEventListener('change', () => {
-      selectedClassId = parseInt(radio.value, 10);
-      if (applyBtn) {
-        applyBtn.disabled = false;
-        const label = radio.closest('.apply-card')?.querySelector('.apply-card__title')?.textContent ?? '';
-        applyBtn.textContent = `Apply as ${label}`;
-      }
-    });
-  });
-
-  /* -- Submit ------------------------------------------------------------ */
-  applyBtn?.addEventListener('click', async () => {
-    if (!selectedClassId) return;
-
-    applyBtn.disabled = true;
-    applyBtn.textContent = 'Submitting...';
-
-    try {
-      const res = await fetch(`${API}/membership/applications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token() ?? ''}`,
-        },
-        body: JSON.stringify({ membershipClassId: selectedClassId }),
-      });
-
-      if (res.status === 409) {
-        showError('You already have an active or pending membership application.');
-        applyBtn.disabled = false;
-        applyBtn.textContent = 'Submit Application';
-        return;
-      }
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({})) as { message?: string };
-        showError(typeof err.message === 'string' ? err.message : 'Application failed. Please try again.');
-        applyBtn.disabled = false;
-        applyBtn.textContent = 'Submit Application';
-        return;
-      }
-
-      // Success
-      const grid   = document.getElementById('apply-grid');
-      const footer = document.querySelector('.apply-footer');
-      const note   = document.querySelector('.apply-note');
-      if (grid)   grid.style.opacity = '0.5';
-      if (grid)   grid.style.pointerEvents = 'none';
-      if (footer) (footer as HTMLElement).style.display = 'none';
-      if (note)   (note as HTMLElement).style.display = 'none';
-
-      showSuccess(
-        'Your application has been submitted. A BCC coordinator will review it and you will be notified by email. You can track status in your Member Hub.'
-      );
-
-      // Redirect to hub after 4 seconds
-      setTimeout(() => { window.location.replace('/hub/'); }, 4000);
-
-    } catch {
-      showError('A network error occurred. Please check your connection and try again.');
-      if (applyBtn) {
-        applyBtn.disabled = false;
-        applyBtn.textContent = 'Submit Application';
-      }
-    }
-  });
-</script>

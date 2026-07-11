@@ -20,6 +20,8 @@ import { MembershipCardService } from './card/membership-card.service';
 import { MembershipCardController } from './card/membership-card.controller';
 import { MembershipVerifyController } from './card/membership-verify.controller';
 import { MembershipController } from './membership.controller';
+import { HubMembershipService } from './hub/hub-membership.service';
+import { HubMembershipController } from './hub/hub-membership.controller';
 
 @Module({
   imports: [AuthModule, RbacModule, CommunicationModule, StorageModule],
@@ -32,6 +34,7 @@ import { MembershipController } from './membership.controller';
     MembershipCardController,
     MembershipVerifyController,
     MembershipController,
+    HubMembershipController,
   ],
   providers: [
     MembershipNumberingService,
@@ -42,6 +45,7 @@ import { MembershipController } from './membership.controller';
     ApplicationWorkflowService,
     VotingRegisterService,
     MembershipCardService,
+    HubMembershipService,
   ],
   exports: [
     MembershipLifecycleService,

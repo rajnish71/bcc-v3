@@ -1,0 +1,1044 @@
+---
+/**
+ * MembershipApplicationFlow.astro
+ * Shared 3-step membership form component used by:
+ *   /hub/membership/apply  (Variant A — APPLICATION, USER role)
+ *   /hub/membership/renew  (Variant B — RENEWAL, MEMBER role)
+ *
+ * MEM-006: Only "Basic Membership" shown. No constitutional class names.
+ * MEM-007: No membership number shown at any point. PENDING state only.
+ *
+ * Props:
+ *   variant — 'apply' | 'renew' — written to data-variant on #maf-root,
+ *             read by client script to drive API endpoint and copy.
+ *
+ * Wireframe flags implemented:
+ *   FLAG 1: tcCheckbox2 (Privacy) always enabled — no scroll lock.
+ *   FLAG 2: DOB rendered full-width first, then Gender+Phone in 2-col.
+ */
+interface Props {
+  variant: 'apply' | 'renew';
+}
+const { variant } = Astro.props;
+---
+
+<div id="maf-root" data-variant={variant}>
+
+  <!-- Loading state -->
+  <div id="maf-loading" class="maf-loading" aria-live="polite">
+    <span class="maf-loading__dot"></span>
+    <span class="maf-loading__dot"></span>
+    <span class="maf-loading__dot"></span>
+  </div>
+
+  <!-- AlreadyPendingScreen -->
+  <div id="maf-pending-screen" class="maf-screen" style="display:none">
+    <div class="maf-pending">
+      <div class="maf-pending__header">
+        <span class="maf-pending__icon">⏳</span>
+        <div>
+          <div class="maf-pending__title">Application Already Submitted</div>
+          <div class="maf-pending__sub">You already have a pending membership application.</div>
+        </div>
+      </div>
+      <div class="maf-pending__body">
+        <div class="maf-pending__meta">
+          <div class="maf-pending__meta-card">
+            <div class="maf-meta-label">Submitted</div>
+            <div id="maf-pending-date" class="maf-meta-value maf-mono">—</div>
+          </div>
+          <div class="maf-pending__meta-card">
+            <div class="maf-meta-label">Status</div>
+            <div class="maf-meta-value maf-status-pending">
+              <span class="maf-status-dot"></span>Under Review
+            </div>
+          </div>
+        </div>
+        <p class="maf-pending__note">Your application is being reviewed by the BCC membership committee. You'll be notified by email once a decision is made. Please allow 7–14 working days from your submission date.</p>
+        <div class="maf-pending__actions">
+          <a href="/hub/" class="btn btn-outline btn-md">← Back to Hub Home</a>
+          <span class="maf-contact">Questions? <a href="mailto:membership@bcc.bhopal.info">membership@bcc.bhopal.info</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variant B: pre-fill banner -->
+  <div id="maf-prefill-banner" class="maf-prefill-banner" style="display:none">
+    <span class="maf-prefill-banner__icon">ℹ</span>
+    <div>
+      <div class="maf-prefill-banner__title">Fields pre-populated from your member profile</div>
+      <div class="maf-prefill-banner__body">Please review and update your details before submitting. Changes made here will also update your Member Profile.</div>
+    </div>
+  </div>
+
+  <!-- Step indicator -->
+  <div id="maf-steps" class="maf-steps" style="display:none" aria-label="Form steps">
+    <div class="maf-step" data-step="1" aria-current="step">
+      <div class="maf-step__circle" id="maf-sc-1">1</div>
+      <div class="maf-step__label">Personal<br/>Details</div>
+    </div>
+    <div class="maf-step__connector" id="maf-conn-12"></div>
+    <div class="maf-step" data-step="2">
+      <div class="maf-step__circle" id="maf-sc-2">2</div>
+      <div class="maf-step__label">Terms &amp;<br/>Consent</div>
+    </div>
+    <div class="maf-step__connector" id="maf-conn-23"></div>
+    <div class="maf-step" data-step="3">
+      <div class="maf-step__circle" id="maf-sc-3">3</div>
+      <div class="maf-step__label">Review &amp;<br/>Submit</div>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: Personal Details ── -->
+  <div id="maf-step1" class="maf-step-content" style="display:none">
+    <div class="maf-step-header">
+      <h3 class="maf-step-title">Personal Details</h3>
+      <p class="maf-step-desc">Fields marked ✱ are required. This information will be verified during the review process.</p>
+    </div>
+
+    <!-- Identity strip (read-only) -->
+    <div class="maf-identity-strip">
+      <div class="maf-identity-strip__label">Identity — set at registration · read only</div>
+      <div id="maf-identity-name" class="maf-identity-strip__name">—</div>
+      <div id="maf-identity-email" class="maf-identity-strip__email">—</div>
+    </div>
+
+    <!-- FLAG 2: DOB full-width first -->
+    <div class="maf-field">
+      <label class="maf-field__label" for="maf-dob">Date of Birth <span class="maf-req">✱</span></label>
+      <input id="maf-dob" class="maf-input" type="date" autocomplete="bday" />
+      <div id="maf-err-dob" class="maf-field__error" style="display:none"></div>
+    </div>
+
+    <!-- Gender + Phone (2-col) -->
+    <div class="maf-grid-2">
+      <div class="maf-field">
+        <label class="maf-field__label" for="maf-gender">Gender <span class="maf-req">✱</span></label>
+        <select id="maf-gender" class="maf-input maf-select">
+          <option value="">Select…</option>
+          <option value="MALE">Male</option>
+          <option value="FEMALE">Female</option>
+          <option value="OTHER">Other</option>
+          <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+        </select>
+        <div id="maf-err-gender" class="maf-field__error" style="display:none"></div>
+      </div>
+      <div class="maf-field">
+        <label class="maf-field__label" for="maf-phone">Phone Number <span class="maf-req">✱</span></label>
+        <input id="maf-phone" class="maf-input" type="tel" placeholder="+91 98765 43210" autocomplete="tel" />
+        <div id="maf-err-phone" class="maf-field__error" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Address Line 1 -->
+    <div class="maf-field">
+      <label class="maf-field__label" for="maf-addr1">Address Line 1 <span class="maf-req">✱</span></label>
+      <input id="maf-addr1" class="maf-input" type="text" placeholder="Street, locality" autocomplete="address-line1" />
+      <div id="maf-err-addr1" class="maf-field__error" style="display:none"></div>
+    </div>
+
+    <!-- Address Line 2 -->
+    <div class="maf-field">
+      <label class="maf-field__label" for="maf-addr2">Address Line 2 <span class="maf-opt">(optional)</span></label>
+      <input id="maf-addr2" class="maf-input" type="text" placeholder="Landmark, area" autocomplete="address-line2" />
+    </div>
+
+    <!-- City + State + PIN (3-col) -->
+    <div class="maf-grid-3">
+      <div class="maf-field">
+        <label class="maf-field__label" for="maf-city">City <span class="maf-req">✱</span></label>
+        <input id="maf-city" class="maf-input" type="text" autocomplete="address-level2" />
+        <div id="maf-err-city" class="maf-field__error" style="display:none"></div>
+      </div>
+      <div class="maf-field">
+        <label class="maf-field__label" for="maf-state">State <span class="maf-req">✱</span></label>
+        <input id="maf-state" class="maf-input" type="text" autocomplete="address-level1" />
+        <div id="maf-err-state" class="maf-field__error" style="display:none"></div>
+      </div>
+      <div class="maf-field">
+        <label class="maf-field__label" for="maf-pin">PIN Code <span class="maf-req">✱</span></label>
+        <input id="maf-pin" class="maf-input" type="text" placeholder="462001" autocomplete="postal-code" maxlength="6" />
+        <div id="maf-err-pin" class="maf-field__error" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Step 1 navigation -->
+    <div class="maf-nav maf-nav--end">
+      <button id="maf-btn-next1" class="btn btn-gold btn-md">Continue → Terms &amp; Conditions</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Terms & Consent ── -->
+  <div id="maf-step2" class="maf-step-content" style="display:none">
+    <div class="maf-step-header">
+      <div class="maf-step-header__row">
+        <h3 class="maf-step-title">Membership Terms &amp; Conditions</h3>
+        <span class="maf-version-tag maf-mono">Terms v1.0 · July 2026</span>
+      </div>
+      <p class="maf-step-desc">Read the complete terms below. Scroll to the end to enable the agreement checkbox.</p>
+    </div>
+
+    <!-- T&C scroll panel -->
+    <div id="maf-tc-panel" class="maf-tc-panel" tabindex="0" aria-label="Membership Terms and Conditions — scroll to read">
+      <div class="maf-tc-content">
+        <h4 class="maf-tc-h4">BCC Membership Terms and Conditions</h4>
+        <p class="maf-tc-meta maf-mono">Version 1.0 · Effective 1 July 2026 · Bhopal Camera Club</p>
+
+        <h5 class="maf-tc-h5">1. Membership Eligibility</h5>
+        <p>Membership of Bhopal Camera Club (BCC) is open to all individuals with a genuine interest in photography, subject to the conditions set out herein and the BCC Constitution. Applicants must hold a registered account on the BCC platform prior to applying.</p>
+
+        <h5 class="maf-tc-h5">2. Application and Approval</h5>
+        <p>Submission of this form creates a pending application. The BCC membership committee reviews all applications and reserves the right to approve or decline at its discretion. Applicants will be notified of the outcome by email within 7–14 working days. No membership number is issued until formal activation by the BCC administration.</p>
+
+        <h5 class="maf-tc-h5">3. Member Obligations</h5>
+        <p>Members are expected to uphold the BCC Code of Conduct, participate constructively in club activities, and maintain the dignity and reputation of the club. Membership entitlements are personal and non-transferable.</p>
+
+        <h5 class="maf-tc-h5">4. Intellectual Property Rights</h5>
+        <p>Members retain full copyright over all photographs submitted to the BCC platform. By uploading work, members grant BCC a non-exclusive, royalty-free licence to display, promote, and archive the work within the BCC platform and affiliated publications.</p>
+
+        <h5 class="maf-tc-h5">5. Data Protection and Privacy</h5>
+        <p>BCC processes personal data in accordance with applicable Indian data protection regulations. Member data is used solely for club operations, communication, and membership management. Data is never sold or disclosed to third parties. Full details are available in the BCC Privacy Policy.</p>
+
+        <h5 class="maf-tc-h5">6. Fees and Renewals</h5>
+        <p>Membership fees are determined by the BCC Executive Committee and are subject to annual review. Membership is valid for one calendar year from the date of admin activation. Renewals must be submitted within the 60-day window prior to expiry or within 30 days after expiry.</p>
+
+        <h5 class="maf-tc-h5">7. Termination</h5>
+        <p>Membership may be surrendered by the member at any time by written notice to the BCC Secretary. BCC reserves the right to suspend or terminate membership in cases of breach of these terms or the BCC Code of Conduct, following due process and notification.</p>
+
+        <h5 class="maf-tc-h5">8. Amendments</h5>
+        <p>BCC reserves the right to amend these terms at any time. Members will be notified of material changes. Continued membership after notification constitutes acceptance of the revised terms. The current version of these terms is always available at bcc.bhopal.info/terms.</p>
+
+        <div class="maf-tc-end">
+          <span class="maf-mono">— END OF TERMS · Version 1.0 · July 2026 —</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll status -->
+    <div id="maf-tc-status" class="maf-tc-status maf-tc-status--unread">
+      <span id="maf-tc-status-text">↓ Scroll to the end to enable the agreement checkbox</span>
+    </div>
+
+    <!-- Checkbox 1: T&C — scroll-gated (FLAG 1) -->
+    <div id="maf-cb1-wrap" class="maf-cb-wrap maf-cb-wrap--locked" aria-disabled="true">
+      <button id="maf-cb1" type="button" class="maf-cb" aria-checked="false" role="checkbox" disabled>
+        <span id="maf-cb1-box" class="maf-cb__box"></span>
+        <span class="maf-cb__label">I have read and agree to the <strong>BCC Membership Terms and Conditions</strong></span>
+      </button>
+    </div>
+
+    <!-- Checkbox 2: Privacy — ALWAYS ENABLED (FLAG 1) -->
+    <div class="maf-cb-wrap">
+      <button id="maf-cb2" type="button" class="maf-cb" aria-checked="false" role="checkbox">
+        <span id="maf-cb2-box" class="maf-cb__box"></span>
+        <span class="maf-cb__label">I consent to BCC storing and processing my personal data in accordance with the <strong>Privacy Policy</strong></span>
+      </button>
+    </div>
+
+    <!-- Step 2 navigation -->
+    <div class="maf-nav maf-nav--between">
+      <button id="maf-btn-back2" type="button" class="maf-back-link">← Back</button>
+      <button id="maf-btn-next2" class="btn btn-gold btn-md" disabled>Continue → Review &amp; Submit</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Review & Submit ── -->
+  <div id="maf-step3" class="maf-step-content" style="display:none">
+    <div class="maf-step-header">
+      <h3 class="maf-step-title">Review &amp; Submit</h3>
+      <p class="maf-step-desc">Confirm your details are correct before submitting. This information will be used during the review process.</p>
+    </div>
+
+    <!-- Details summary table -->
+    <div class="maf-review-table">
+      <div class="maf-review-table__header">Personal Details — Step 1 Summary</div>
+      <div class="maf-review-row maf-review-row--readonly">
+        <span class="maf-review-row__key maf-mono">Full Name</span>
+        <span id="maf-rev-name" class="maf-review-row__val maf-review-row__val--muted">—</span>
+      </div>
+      <div class="maf-review-row maf-review-row--readonly">
+        <span class="maf-review-row__key maf-mono">Email Address</span>
+        <span id="maf-rev-email" class="maf-review-row__val maf-review-row__val--muted">—</span>
+      </div>
+      <div class="maf-review-row">
+        <span class="maf-review-row__key maf-mono">Date of Birth</span>
+        <span id="maf-rev-dob" class="maf-review-row__val">—</span>
+      </div>
+      <div class="maf-review-row">
+        <span class="maf-review-row__key maf-mono">Gender</span>
+        <span id="maf-rev-gender" class="maf-review-row__val">—</span>
+      </div>
+      <div class="maf-review-row">
+        <span class="maf-review-row__key maf-mono">Phone Number</span>
+        <span id="maf-rev-phone" class="maf-review-row__val">—</span>
+      </div>
+      <div class="maf-review-row">
+        <span class="maf-review-row__key maf-mono">Address Line 1</span>
+        <span id="maf-rev-addr1" class="maf-review-row__val">—</span>
+      </div>
+      <div id="maf-rev-addr2-row" class="maf-review-row" style="display:none">
+        <span class="maf-review-row__key maf-mono">Address Line 2</span>
+        <span id="maf-rev-addr2" class="maf-review-row__val">—</span>
+      </div>
+      <div class="maf-review-row">
+        <span class="maf-review-row__key maf-mono">City</span>
+        <span id="maf-rev-city" class="maf-review-row__val">—</span>
+      </div>
+      <div class="maf-review-row">
+        <span class="maf-review-row__key maf-mono">State</span>
+        <span id="maf-rev-state" class="maf-review-row__val">—</span>
+      </div>
+      <div class="maf-review-row">
+        <span class="maf-review-row__key maf-mono">PIN Code</span>
+        <span id="maf-rev-pin" class="maf-review-row__val">—</span>
+      </div>
+    </div>
+
+    <!-- Membership type -->
+    <div class="maf-membership-badge">
+      <div class="maf-membership-badge__info">
+        <div class="maf-membership-badge__label">Membership Selection</div>
+        <div class="maf-membership-badge__name">Basic Membership</div>
+        <div class="maf-membership-badge__term maf-mono">1 Year · Effective from date of activation</div>
+      </div>
+      <div class="maf-membership-badge__tag">Basic Membership · 1 Year</div>
+    </div>
+
+    <!-- Renewal timeline (Variant B only) -->
+    <div id="maf-renewal-meta" class="maf-renewal-meta" style="display:none">
+      <div class="maf-renewal-meta__label">Renewal Timeline</div>
+      <div class="maf-renewal-meta__grid">
+        <div>
+          <div class="maf-renewal-meta__key">Current expiry</div>
+          <div id="maf-renewal-expiry" class="maf-mono maf-renewal-meta__val--expiry">—</div>
+        </div>
+        <div>
+          <div class="maf-renewal-meta__key">New expiry (after approval)</div>
+          <div id="maf-renewal-projected" class="maf-mono maf-renewal-meta__val--projected">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review note -->
+    <p class="maf-review-note">Your application will be reviewed by the BCC team. You will be notified by email once approved. No membership number is issued until the review is complete.</p>
+
+    <!-- Error banner -->
+    <div id="maf-submit-error" class="maf-error-banner" style="display:none" role="alert"></div>
+
+    <!-- Step 3 navigation -->
+    <div class="maf-nav maf-nav--between">
+      <button id="maf-btn-back3" type="button" class="maf-back-link">← Back</button>
+      <button id="maf-btn-submit" class="btn btn-gold btn-md maf-submit-btn">
+        <span id="maf-submit-label">Submit Application</span>
+        <span id="maf-submit-spinner" style="display:none" aria-hidden="true">◐</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SUCCESS ── -->
+  <div id="maf-success-screen" class="maf-screen maf-success" style="display:none">
+    <div class="maf-success__icon" aria-hidden="true">✓</div>
+    <h2 id="maf-success-heading" class="maf-success__heading">Application Submitted</h2>
+    <div class="maf-success__status maf-mono">Status: Application Under Review</div>
+    <p id="maf-success-body" class="maf-success__body">We'll email you once your application is reviewed by the BCC committee.</p>
+    <p class="maf-success__note">No membership number is assigned until an administrator reviews and approves your application. Expected timeline: 7–14 working days.</p>
+    <div class="maf-success__next">
+      <div class="maf-success__next-label">What happens next</div>
+      <div class="maf-success__next-item"><span class="maf-gold">1.</span> BCC admin team reviews your application</div>
+      <div class="maf-success__next-item"><span class="maf-gold">2.</span> You receive an email confirmation of outcome</div>
+      <div class="maf-success__next-item"><span class="maf-gold">3.</span> On approval: membership activated, your Member Hub unlocks</div>
+    </div>
+    <a id="maf-success-return" href="/" class="btn btn-outline btn-md">← Return to Home</a>
+  </div>
+
+</div>
+
+<style>
+/* ── Layout ── */
+#maf-root { max-width: 680px; }
+
+/* ── Loading ── */
+.maf-loading {
+  display: flex;
+  gap: 8px;
+  padding: var(--s-6) 0;
+}
+.maf-loading__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold-500);
+  animation: mafPulse 1.2s infinite ease-in-out both;
+}
+.maf-loading__dot:nth-child(2) { animation-delay: 0.2s; }
+.maf-loading__dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes mafPulse {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Step indicator ── */
+.maf-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: var(--s-5);
+  max-width: 480px;
+}
+.maf-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.maf-step__circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--surface-0);
+  border: 2px solid var(--hairline-strong);
+  color: var(--ink-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: var(--font-display);
+  transition: background var(--m-fast), border-color var(--m-fast), color var(--m-fast);
+}
+.maf-step__circle.is-active {
+  background: var(--gold-gradient);
+  border-color: transparent;
+  color: var(--ink-inverse);
+}
+.maf-step__circle.is-done {
+  background: var(--gold-600);
+  border-color: transparent;
+  color: var(--ink-inverse);
+}
+.maf-step__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-400);
+  text-align: center;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.maf-step__label.is-active { font-weight: 600; color: var(--gold-700); }
+.maf-step__connector {
+  flex: 1;
+  height: 2px;
+  background: var(--hairline);
+  margin-top: 17px;
+  min-width: 32px;
+  transition: background var(--m-fast);
+}
+.maf-step__connector.is-done { background: var(--gold-500); }
+
+/* ── Step content ── */
+.maf-step-header { margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--hairline); }
+.maf-step-header__row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.maf-step-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--ink-900); margin: 0 0 4px; }
+.maf-step-desc { font-size: 13px; color: var(--ink-400); margin: 0; }
+.maf-version-tag { font-family: var(--font-mono); font-size: 10px; background: var(--surface-2); border: 1px solid var(--hairline); padding: 4px 12px; color: var(--ink-400); }
+
+/* ── Identity strip ── */
+.maf-identity-strip {
+  background: var(--surface-2);
+  border-radius: var(--r-2);
+  padding: 18px 22px;
+  margin-bottom: var(--s-3);
+}
+.maf-identity-strip__label { font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+.maf-identity-strip__name { font-size: 16px; font-weight: 500; color: var(--ink-600); margin-bottom: 5px; }
+.maf-identity-strip__email { font-size: 13px; color: var(--ink-400); }
+
+/* ── Form fields ── */
+.maf-field { margin-bottom: var(--s-3); }
+.maf-field__label { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-600); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.maf-req { color: var(--gold-600); margin-left: 2px; }
+.maf-opt { font-size: 11px; color: var(--ink-400); text-transform: none; letter-spacing: 0; font-family: var(--font-body); }
+.maf-input {
+  display: block;
+  width: 100%;
+  height: 44px;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-2);
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--ink-900);
+  font-family: var(--font-body);
+  transition: border-color var(--m-fast), box-shadow var(--m-fast);
+  outline: none;
+  appearance: none;
+  box-sizing: border-box;
+}
+.maf-input:focus { border-color: var(--gold-600); box-shadow: 0 0 0 3px rgba(168,132,60,0.12); }
+.maf-input.has-error { border-color: #C0392B; }
+.maf-select { cursor: pointer; padding-right: 32px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238B8378' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+.maf-field__error { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 12px; color: #C0392B; }
+
+/* ── Grids ── */
+.maf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.maf-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+@media (max-width: 600px) {
+  .maf-grid-2 { grid-template-columns: 1fr 1fr; }
+  .maf-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ── Nav ── */
+.maf-nav { display: flex; padding-top: 20px; border-top: 1px solid var(--hairline); margin-top: var(--s-2); }
+.maf-nav--end { justify-content: flex-end; }
+.maf-nav--between { justify-content: space-between; align-items: center; }
+.maf-back-link { font-size: 14px; font-weight: 500; color: var(--ink-600); background: none; border: none; cursor: pointer; padding: 0; font-family: var(--font-body); }
+.maf-back-link:hover { color: var(--ink-900); }
+
+/* ── T&C panel ── */
+.maf-tc-panel {
+  height: 320px;
+  overflow-y: scroll;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  padding: 28px 32px;
+  margin-bottom: 14px;
+  scroll-behavior: smooth;
+}
+@media (max-width: 600px) { .maf-tc-panel { height: 240px; padding: 20px 18px; } }
+.maf-tc-content { font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.9; color: var(--ink-700); }
+.maf-tc-h4 { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--ink-900); margin-bottom: 10px; letter-spacing: -0.01em; }
+.maf-tc-meta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); margin-bottom: 20px; }
+.maf-tc-h5 { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--ink-900); margin: 18px 0 6px; }
+.maf-tc-content p { margin-bottom: 14px; }
+.maf-tc-end { padding-top: 16px; border-top: 1px solid var(--hairline); text-align: center; }
+
+/* ── T&C scroll status ── */
+.maf-tc-status { display: flex; align-items: center; padding: 10px 14px; border-radius: var(--r-1); border: 1px solid; margin-bottom: var(--s-3); font-size: 13px; }
+.maf-tc-status--unread { background: var(--surface-2); border-color: var(--hairline); color: var(--ink-400); }
+.maf-tc-status--read { background: #F0F5F2; border-color: #C4D8CB; color: #2A3E32; }
+
+/* ── Checkboxes ── */
+.maf-cb-wrap { margin-bottom: 12px; }
+.maf-cb-wrap--locked { opacity: 0.45; pointer-events: none; }
+.maf-cb-wrap--locked.is-unlocked { opacity: 1; pointer-events: auto; }
+.maf-cb {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-900);
+  line-height: 1.6;
+  transition: border-color var(--m-fast), box-shadow var(--m-fast);
+}
+.maf-cb:not(:disabled):hover { border-color: var(--gold-500); }
+.maf-cb__box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--surface-0);
+  border: 2px solid var(--hairline-strong);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  transition: background var(--m-fast), border-color var(--m-fast);
+}
+.maf-cb__box::after { content: ''; display: none; width: 6px; height: 10px; border: 2px solid #fff; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px,-1px); }
+.maf-cb[aria-checked="true"] .maf-cb__box { background: var(--gold-600); border-color: var(--gold-600); }
+.maf-cb[aria-checked="true"] .maf-cb__box::after { display: block; }
+.maf-cb__label { flex: 1; }
+
+/* ── Review table ── */
+.maf-review-table { background: var(--surface-0); border: 1px solid var(--hairline); border-radius: var(--r-2); overflow: hidden; margin-bottom: var(--s-3); }
+.maf-review-table__header { padding: 14px 20px; background: var(--surface-1); border-bottom: 1px solid var(--hairline); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-400); font-weight: 600; }
+.maf-review-row { display: flex; align-items: baseline; gap: 16px; padding: 12px 20px; border-bottom: 1px solid #F4F0E8; }
+.maf-review-row:last-child { border-bottom: none; }
+.maf-review-row--readonly { background: #FDFBF7; }
+.maf-review-row__key { font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.06em; min-width: 160px; flex-shrink: 0; }
+.maf-review-row__val { font-size: 14px; color: var(--ink-900); font-weight: 500; }
+.maf-review-row__val--muted { color: var(--ink-400); font-weight: 400; }
+
+/* ── Membership badge ── */
+.maf-membership-badge { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--surface-0); border: 1px solid var(--hairline); border-radius: var(--r-2); padding: var(--s-3); margin-bottom: var(--s-3); }
+.maf-membership-badge__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-400); font-weight: 600; margin-bottom: 8px; }
+.maf-membership-badge__name { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink-900); margin-bottom: 4px; }
+.maf-membership-badge__term { font-size: 12px; color: var(--ink-400); }
+.maf-membership-badge__tag { background: rgba(201,169,97,0.1); border: 1px solid #C9A961; padding: 8px 18px; border-radius: var(--r-1); font-size: 12px; font-weight: 600; color: var(--gold-700); white-space: nowrap; }
+
+/* ── Renewal meta ── */
+.maf-renewal-meta { background: #F0F5F2; border: 1px solid #C4D8CB; border-radius: var(--r-2); padding: 18px 20px; margin-bottom: var(--s-3); }
+.maf-renewal-meta__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: #3E5A48; font-weight: 600; margin-bottom: 12px; }
+.maf-renewal-meta__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.maf-renewal-meta__key { font-size: 11px; color: var(--ink-400); margin-bottom: 4px; }
+.maf-renewal-meta__val--expiry { color: #C0392B; font-weight: 600; }
+.maf-renewal-meta__val--projected { color: #3E5A48; font-weight: 600; }
+
+/* ── Review note ── */
+.maf-review-note { font-size: 13px; line-height: 1.7; color: var(--ink-400); font-style: italic; margin-bottom: var(--s-3); }
+
+/* ── Error banner ── */
+.maf-error-banner { padding: 12px 16px; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: var(--r-2); font-size: 14px; color: #B91C1C; margin-bottom: var(--s-3); }
+
+/* ── Submit btn spinner ── */
+.maf-submit-btn { display: inline-flex; align-items: center; gap: 8px; }
+
+/* ── Pending screen ── */
+.maf-pending { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--r-2); overflow: hidden; }
+.maf-pending__header { background: var(--surface-2); border-bottom: 1px solid var(--hairline); padding: 20px 24px; display: flex; align-items: center; gap: 12px; }
+.maf-pending__icon { font-size: 20px; color: var(--gold-600); }
+.maf-pending__title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--ink-900); }
+.maf-pending__sub { font-size: 13px; color: var(--ink-600); margin-top: 2px; }
+.maf-pending__body { padding: var(--s-4); }
+.maf-pending__meta { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--s-3); }
+.maf-pending__meta-card { background: var(--surface-0); border: 1px solid var(--hairline); border-radius: var(--r-1); padding: 14px 16px; }
+.maf-meta-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-400); margin-bottom: 6px; }
+.maf-meta-value { font-size: 13px; font-weight: 600; color: var(--ink-900); }
+.maf-status-pending { color: var(--gold-700); display: flex; align-items: center; gap: 6px; }
+.maf-status-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--gold-500); display: inline-block; }
+.maf-pending__note { font-size: 13px; line-height: 1.7; color: var(--ink-600); margin-bottom: var(--s-3); }
+.maf-pending__actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.maf-contact { font-size: 13px; color: var(--ink-400); }
+.maf-contact a { color: var(--gold-600); }
+
+/* ── Prefill banner ── */
+.maf-prefill-banner { display: flex; align-items: flex-start; gap: 12px; background: #F0F5F2; border: 1px solid #C4D8CB; border-radius: var(--r-2); padding: 14px 18px; margin-bottom: var(--s-4); }
+.maf-prefill-banner__icon { font-size: 16px; color: #3E5A48; flex-shrink: 0; margin-top: 1px; }
+.maf-prefill-banner__title { font-size: 13px; font-weight: 600; color: #2A3E32; margin-bottom: 3px; }
+.maf-prefill-banner__body { font-size: 12px; color: #3E5A48; line-height: 1.6; }
+
+/* ── Success screen ── */
+.maf-success { text-align: center; padding: 60px 40px; }
+.maf-success__icon { width: 72px; height: 72px; border-radius: 999px; background: var(--gold-gradient); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--s-4); box-shadow: 0 4px 20px rgba(168,132,60,0.35); font-size: 32px; color: var(--ink-inverse); }
+.maf-success__heading { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink-900); margin-bottom: 12px; }
+.maf-success__status { display: inline-block; background: var(--surface-2); border: 1px solid var(--hairline); padding: 6px 16px; border-radius: var(--r-1); font-size: 11px; color: var(--ink-600); margin-bottom: 20px; }
+.maf-success__body { font-size: 15px; line-height: 1.75; color: var(--ink-600); margin-bottom: 8px; }
+.maf-success__note { font-size: 13px; line-height: 1.7; color: var(--ink-400); margin-bottom: 32px; font-style: italic; }
+.maf-success__next { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--r-2); padding: 16px 20px; margin-bottom: var(--s-4); text-align: left; }
+.maf-success__next-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-400); font-weight: 600; margin-bottom: 10px; }
+.maf-success__next-item { display: flex; gap: 10px; font-size: 13px; line-height: 2; color: var(--ink-600); }
+.maf-gold { color: var(--gold-600); flex-shrink: 0; }
+
+/* ── Utility ── */
+.maf-mono { font-family: var(--font-mono); }
+.maf-screen {}
+
+/* ── Buttons ── */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-600);
+  border: 1px solid var(--hairline-strong);
+  padding: 12px 28px;
+  border-radius: var(--r-1);
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-body);
+  transition: border-color var(--m-fast), color var(--m-fast);
+}
+.btn-outline:hover { border-color: var(--ink-600); color: var(--ink-900); }
+</style>
+
+<script>
+  (function() {
+    const root = document.getElementById('maf-root') as HTMLElement;
+    const variant = root.dataset.variant as 'apply' | 'renew';
+    const API = '/api/v1';
+
+    // ── State ──────────────────────────────────────────────────────────────
+    let currentStep = 1;
+    let tcScrolled = false;
+    let cb1Checked = false;
+    let cb2Checked = false;
+    let prefill: Record<string, any> = {};
+
+    // ── DOM refs ───────────────────────────────────────────────────────────
+    const loading      = document.getElementById('maf-loading') as HTMLElement;
+    const steps        = document.getElementById('maf-steps') as HTMLElement;
+    const pendingScreen= document.getElementById('maf-pending-screen') as HTMLElement;
+    const successScreen= document.getElementById('maf-success-screen') as HTMLElement;
+    const prefillBanner= document.getElementById('maf-prefill-banner') as HTMLElement;
+    const step1        = document.getElementById('maf-step1') as HTMLElement;
+    const step2        = document.getElementById('maf-step2') as HTMLElement;
+    const step3        = document.getElementById('maf-step3') as HTMLElement;
+    const tcPanel      = document.getElementById('maf-tc-panel') as HTMLElement;
+    const tcStatus     = document.getElementById('maf-tc-status') as HTMLElement;
+    const tcStatusText = document.getElementById('maf-tc-status-text') as HTMLElement;
+    const cb1Wrap      = document.getElementById('maf-cb1-wrap') as HTMLElement;
+    const cb1Btn       = document.getElementById('maf-cb1') as HTMLButtonElement;
+    const cb1Box       = document.getElementById('maf-cb1-box') as HTMLElement;
+    const cb2Btn       = document.getElementById('maf-cb2') as HTMLButtonElement;
+    const cb2Box       = document.getElementById('maf-cb2-box') as HTMLElement;
+    const btnNext2     = document.getElementById('maf-btn-next2') as HTMLButtonElement;
+    const submitBtn    = document.getElementById('maf-btn-submit') as HTMLButtonElement;
+    const submitLabel  = document.getElementById('maf-submit-label') as HTMLElement;
+    const submitSpinner= document.getElementById('maf-submit-spinner') as HTMLElement;
+    const submitError  = document.getElementById('maf-submit-error') as HTMLElement;
+
+    function token(): string | null { return localStorage.getItem('bcc_token'); }
+
+    // ── Step indicator rendering ───────────────────────────────────────────
+    function renderStepIndicator(active: number) {
+      for (let i = 1; i <= 3; i++) {
+        const circle = document.getElementById(`maf-sc-${i}`) as HTMLElement;
+        const label  = circle.nextElementSibling as HTMLElement;
+        circle.classList.remove('is-active', 'is-done');
+        label.classList.remove('is-active');
+        if (i < active) { circle.classList.add('is-done'); circle.textContent = '✓'; }
+        else if (i === active) { circle.classList.add('is-active'); circle.textContent = String(i); label.classList.add('is-active'); }
+        else { circle.textContent = String(i); }
+      }
+      const conn12 = document.getElementById('maf-conn-12') as HTMLElement;
+      const conn23 = document.getElementById('maf-conn-23') as HTMLElement;
+      conn12.classList.toggle('is-done', active > 1);
+      conn23.classList.toggle('is-done', active > 2);
+    }
+
+    // ── Show/hide state screens ────────────────────────────────────────────
+    function showStep(n: number) {
+      currentStep = n;
+      loading.style.display = 'none';
+      steps.style.display   = 'flex';
+      pendingScreen.style.display = 'none';
+      successScreen.style.display = 'none';
+      step1.style.display   = n === 1 ? '' : 'none';
+      step2.style.display   = n === 2 ? '' : 'none';
+      step3.style.display   = n === 3 ? '' : 'none';
+      renderStepIndicator(n);
+      if (n === 3) populateReviewStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showPendingScreen(submittedAt: string | null) {
+      loading.style.display  = 'none';
+      steps.style.display    = 'none';
+      step1.style.display    = 'none';
+      step2.style.display    = 'none';
+      step3.style.display    = 'none';
+      pendingScreen.style.display = '';
+      const dateEl = document.getElementById('maf-pending-date') as HTMLElement;
+      dateEl.textContent = submittedAt
+        ? new Date(submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '—';
+    }
+
+    function showSuccessScreen(email: string) {
+      loading.style.display  = 'none';
+      steps.style.display    = 'none';
+      step1.style.display    = 'none';
+      step2.style.display    = 'none';
+      step3.style.display    = 'none';
+      successScreen.style.display = '';
+      pendingScreen.style.display = 'none';
+
+      const heading = document.getElementById('maf-success-heading') as HTMLElement;
+      const body    = document.getElementById('maf-success-body') as HTMLElement;
+      const returnLink = document.getElementById('maf-success-return') as HTMLAnchorElement;
+
+      if (variant === 'renew') {
+        heading.textContent = 'Renewal Request Submitted';
+        body.textContent    = `We'll email you at ${email} once your renewal is reviewed by the BCC committee.`;
+        returnLink.textContent = '← Return to Member Hub';
+        returnLink.href = '/hub/';
+      } else {
+        heading.textContent = 'Application Submitted';
+        body.textContent    = `We'll email you at ${email} once your application is reviewed by the BCC committee.`;
+        returnLink.textContent = '← Return to Home';
+        returnLink.href = '/';
+      }
+    }
+
+    // ── Pre-populate fields ────────────────────────────────────────────────
+    function populateFields(data: Record<string, any>) {
+      prefill = data;
+      (document.getElementById('maf-identity-name') as HTMLElement).textContent = data.fullName ?? '—';
+      (document.getElementById('maf-identity-email') as HTMLElement).textContent = data.email ?? '—';
+      (document.getElementById('maf-dob') as HTMLInputElement).value = data.dateOfBirth ?? '';
+      const genderSel = document.getElementById('maf-gender') as HTMLSelectElement;
+      if (data.gender) genderSel.value = data.gender;
+      (document.getElementById('maf-phone') as HTMLInputElement).value = data.phone ?? '';
+      (document.getElementById('maf-addr1') as HTMLInputElement).value = data.addressLine1 ?? '';
+      (document.getElementById('maf-addr2') as HTMLInputElement).value = data.addressLine2 ?? '';
+      (document.getElementById('maf-city') as HTMLInputElement).value = data.city ?? '';
+      (document.getElementById('maf-state') as HTMLInputElement).value = data.state ?? '';
+      (document.getElementById('maf-pin') as HTMLInputElement).value = data.pinCode ?? '';
+
+      // Variant B: populate renewal meta
+      if (variant === 'renew' && data.expiresAt) {
+        (document.getElementById('maf-renewal-meta') as HTMLElement).style.display = '';
+        const expiry = new Date(data.expiresAt);
+        const now = new Date();
+        const isExpired = expiry < now;
+        const expiryEl = document.getElementById('maf-renewal-expiry') as HTMLElement;
+        expiryEl.textContent = expiry.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) + (isExpired ? ' — EXPIRED' : '');
+        if (isExpired) expiryEl.classList.add('maf-renewal-meta__val--expiry');
+
+        if (data.projectedNewExpiry) {
+          const projected = new Date(data.projectedNewExpiry);
+          (document.getElementById('maf-renewal-projected') as HTMLElement).textContent =
+            projected.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+      }
+    }
+
+    // ── Populate review step ───────────────────────────────────────────────
+    function populateReviewStep() {
+      const dob   = (document.getElementById('maf-dob') as HTMLInputElement).value;
+      const gender= (document.getElementById('maf-gender') as HTMLSelectElement).value;
+      const phone = (document.getElementById('maf-phone') as HTMLInputElement).value;
+      const addr1 = (document.getElementById('maf-addr1') as HTMLInputElement).value;
+      const addr2 = (document.getElementById('maf-addr2') as HTMLInputElement).value;
+      const city  = (document.getElementById('maf-city') as HTMLInputElement).value;
+      const state = (document.getElementById('maf-state') as HTMLInputElement).value;
+      const pin   = (document.getElementById('maf-pin') as HTMLInputElement).value;
+
+      (document.getElementById('maf-rev-name') as HTMLElement).textContent = prefill.fullName ?? '—';
+      (document.getElementById('maf-rev-email') as HTMLElement).textContent = prefill.email ?? '—';
+      (document.getElementById('maf-rev-dob') as HTMLElement).textContent = dob
+        ? new Date(dob + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '—';
+      const genderLabels: Record<string,string> = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Other', PREFER_NOT_TO_SAY: 'Prefer not to say' };
+      (document.getElementById('maf-rev-gender') as HTMLElement).textContent = genderLabels[gender] ?? '—';
+      (document.getElementById('maf-rev-phone') as HTMLElement).textContent = phone || '—';
+      (document.getElementById('maf-rev-addr1') as HTMLElement).textContent = addr1 || '—';
+      const addr2Row = document.getElementById('maf-rev-addr2-row') as HTMLElement;
+      if (addr2) {
+        addr2Row.style.display = '';
+        (document.getElementById('maf-rev-addr2') as HTMLElement).textContent = addr2;
+      } else {
+        addr2Row.style.display = 'none';
+      }
+      (document.getElementById('maf-rev-city') as HTMLElement).textContent = city || '—';
+      (document.getElementById('maf-rev-state') as HTMLElement).textContent = state || '—';
+      (document.getElementById('maf-rev-pin') as HTMLElement).textContent = pin || '—';
+
+      // Submit button label
+      submitLabel.textContent = variant === 'renew' ? 'Submit Renewal Request' : 'Submit Application';
+    }
+
+    // ── Validation ────────────────────────────────────────────────────────
+    function showError(fieldId: string, msg: string) {
+      const el = document.getElementById(fieldId);
+      if (!el) return;
+      el.textContent = '⚠ ' + msg;
+      el.style.display = 'flex';
+      const input = document.getElementById(fieldId.replace('maf-err-', 'maf-'));
+      if (input) input.classList.add('has-error');
+    }
+    function clearErrors() {
+      document.querySelectorAll<HTMLElement>('.maf-field__error').forEach(e => { e.style.display = 'none'; e.textContent = ''; });
+      document.querySelectorAll<HTMLElement>('.maf-input').forEach(e => e.classList.remove('has-error'));
+    }
+
+    function validateStep1(): boolean {
+      clearErrors();
+      let valid = true;
+      const dob   = (document.getElementById('maf-dob') as HTMLInputElement).value;
+      const gender= (document.getElementById('maf-gender') as HTMLSelectElement).value;
+      const phone = (document.getElementById('maf-phone') as HTMLInputElement).value.trim();
+      const addr1 = (document.getElementById('maf-addr1') as HTMLInputElement).value.trim();
+      const city  = (document.getElementById('maf-city') as HTMLInputElement).value.trim();
+      const state = (document.getElementById('maf-state') as HTMLInputElement).value.trim();
+      const pin   = (document.getElementById('maf-pin') as HTMLInputElement).value.trim();
+
+      if (!dob) { showError('maf-err-dob', 'Date of birth is required'); valid = false; }
+      if (!gender) { showError('maf-err-gender', 'Please select a gender'); valid = false; }
+      if (!phone) { showError('maf-err-phone', 'Phone number is required'); valid = false; }
+      else if (!/^(\+91)?[6-9]\d{9}$/.test(phone.replace(/\s/g,''))) { showError('maf-err-phone', 'Enter a valid 10-digit Indian mobile number'); valid = false; }
+      if (!addr1 || addr1.length < 5) { showError('maf-err-addr1', 'Address is required'); valid = false; }
+      if (!city || city.length < 2) { showError('maf-err-city', 'City is required'); valid = false; }
+      if (!state || state.length < 2) { showError('maf-err-state', 'State is required'); valid = false; }
+      if (!pin) { showError('maf-err-pin', 'PIN code is required'); valid = false; }
+      else if (!/^\d{6}$/.test(pin)) { showError('maf-err-pin', 'Enter a valid 6-digit PIN code'); valid = false; }
+
+      return valid;
+    }
+
+    // ── T&C scroll detection ──────────────────────────────────────────────
+    function checkTcScrolled() {
+      const { scrollTop, clientHeight, scrollHeight } = tcPanel;
+      if (!tcScrolled && scrollTop + clientHeight >= scrollHeight - 10) {
+        tcScrolled = true;
+        tcStatus.className = 'maf-tc-status maf-tc-status--read';
+        tcStatusText.textContent = '✓ You have read the Terms and Conditions';
+        cb1Wrap.classList.add('is-unlocked');
+        cb1Btn.disabled = false;
+      }
+    }
+    tcPanel.addEventListener('scroll', checkTcScrolled, { passive: true });
+
+    // ── Checkbox logic ────────────────────────────────────────────────────
+    cb1Btn.addEventListener('click', () => {
+      if (cb1Btn.disabled) return;
+      cb1Checked = !cb1Checked;
+      cb1Btn.setAttribute('aria-checked', String(cb1Checked));
+      updateNext2State();
+    });
+    cb2Btn.addEventListener('click', () => {
+      cb2Checked = !cb2Checked;
+      cb2Btn.setAttribute('aria-checked', String(cb2Checked));
+      updateNext2State();
+    });
+
+    function updateNext2State() {
+      const canProceed = cb1Checked && cb2Checked;
+      btnNext2.disabled = !canProceed;
+      if (canProceed) {
+        btnNext2.classList.remove('btn--disabled');
+      }
+    }
+
+    // ── Navigation ────────────────────────────────────────────────────────
+    (document.getElementById('maf-btn-next1') as HTMLButtonElement).addEventListener('click', () => {
+      if (validateStep1()) showStep(2);
+    });
+    (document.getElementById('maf-btn-back2') as HTMLButtonElement).addEventListener('click', () => showStep(1));
+    (document.getElementById('maf-btn-next2') as HTMLButtonElement).addEventListener('click', () => {
+      if (cb1Checked && cb2Checked) showStep(3);
+    });
+    (document.getElementById('maf-btn-back3') as HTMLButtonElement).addEventListener('click', () => showStep(2));
+
+    // ── Submit ────────────────────────────────────────────────────────────
+    submitBtn.addEventListener('click', async () => {
+      submitBtn.disabled = true;
+      submitLabel.style.opacity = '0.6';
+      submitSpinner.style.display = 'inline';
+      submitError.style.display = 'none';
+
+      const dob   = (document.getElementById('maf-dob') as HTMLInputElement).value;
+      const gender= (document.getElementById('maf-gender') as HTMLSelectElement).value;
+      const phone = (document.getElementById('maf-phone') as HTMLInputElement).value.trim();
+      const addr1 = (document.getElementById('maf-addr1') as HTMLInputElement).value.trim();
+      const addr2 = (document.getElementById('maf-addr2') as HTMLInputElement).value.trim();
+      const city  = (document.getElementById('maf-city') as HTMLInputElement).value.trim();
+      const state = (document.getElementById('maf-state') as HTMLInputElement).value.trim();
+      const pin   = (document.getElementById('maf-pin') as HTMLInputElement).value.trim();
+
+      const endpoint = variant === 'renew' ? `${API}/hub/membership/renewal` : `${API}/hub/membership/application`;
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token() ?? ''}`,
+          },
+          body: JSON.stringify({
+            dateOfBirth: dob,
+            gender,
+            phone,
+            addressLine1: addr1,
+            addressLine2: addr2 || undefined,
+            city,
+            state,
+            pinCode: pin,
+            termsVersion: 'v1.0',
+          }),
+        });
+
+        if (res.status === 409) {
+          const err = await res.json().catch(() => ({})) as { message?: string };
+          submitError.textContent = typeof err.message === 'string' ? err.message : 'A duplicate application already exists.';
+          submitError.style.display = '';
+          submitBtn.disabled = false;
+          submitLabel.style.opacity = '';
+          submitSpinner.style.display = 'none';
+          return;
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({})) as { message?: string };
+          submitError.textContent = typeof err.message === 'string' ? err.message : 'Submission failed. Please try again.';
+          submitError.style.display = '';
+          submitBtn.disabled = false;
+          submitLabel.style.opacity = '';
+          submitSpinner.style.display = 'none';
+          return;
+        }
+
+        showSuccessScreen(prefill.email ?? '');
+      } catch {
+        submitError.textContent = 'A network error occurred. Please check your connection and try again.';
+        submitError.style.display = '';
+        submitBtn.disabled = false;
+        submitLabel.style.opacity = '';
+        submitSpinner.style.display = 'none';
+      }
+    });
+
+    // ── Load prefill ──────────────────────────────────────────────────────
+    async function loadPrefill() {
+      const t = token();
+      if (!t) {
+        window.location.replace(`/auth/signin/?next=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+
+      const endpoint = variant === 'renew'
+        ? `${API}/hub/membership/renewal`
+        : `${API}/hub/membership/application`;
+
+      try {
+        const res = await fetch(endpoint, {
+          headers: { Authorization: `Bearer ${t}` },
+        });
+
+        if (res.status === 401) {
+          window.location.replace(`/auth/signin/?next=${encodeURIComponent(window.location.pathname)}`);
+          return;
+        }
+        if (res.status === 403) {
+          window.location.replace('/hub/');
+          return;
+        }
+        if (!res.ok) {
+          window.location.replace('/hub/');
+          return;
+        }
+
+        const data = await res.json() as Record<string, any>;
+
+        // Variant A: check application status
+        if (variant === 'apply') {
+          if (data.applicationStatus === 'ACTIVE') {
+            window.location.replace('/hub/');
+            return;
+          }
+          if (data.applicationStatus === 'PENDING') {
+            populateFields(data);
+            showPendingScreen(data.submittedAt);
+            return;
+          }
+        }
+
+        // Variant B: check renewal eligibility
+        if (variant === 'renew' && !data.renewalEligible) {
+          window.location.replace('/hub/');
+          return;
+        }
+
+        populateFields(data);
+        if (variant === 'renew') prefillBanner.style.display = 'flex';
+        showStep(1);
+      } catch {
+        window.location.replace('/hub/');
+      }
+    }
+
+    loadPrefill();
+  })();
+</script>

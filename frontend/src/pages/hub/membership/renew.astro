@@ -1,0 +1,86 @@
+---
+/**
+ * hub/membership/renew.astro — V6 19 Membership Renewal Form (Variant B)
+ * Route: /hub/membership/renew/
+ *
+ * Shell: Full HubLayout (authenticated, role ≥ USER).
+ * HubSidebar active item: "Renewals" (matched by activeRoute).
+ *
+ * MEM-006: Only Basic Membership shown. No constitutional class names.
+ * MEM-007: No membership number at any point. PENDING state only.
+ *
+ * RBAC: MEMBER role (must have ACTIVE or APPROVED membership in the
+ *   renewal window: expires_at ≤ NOW()+60days, OR EXPIRED status).
+ *   If renewalEligible = false → redirect to /hub/.
+ *   Unauthenticated → HubLayout redirects to /auth/signin/.
+ *
+ * Auth guard: HubLayout handles JWT; renewal eligibility checked via
+ *   GET /api/v1/hub/membership/renewal in MembershipApplicationFlow.
+ */
+import HubLayout from '../../../layouts/HubLayout.astro';
+import MembershipApplicationFlow from '../../../components/hub/MembershipApplicationFlow.astro';
+---
+
+<HubLayout
+  title="Renew Membership"
+  description="Renew your BCC Basic Membership — three simple steps."
+>
+
+  <div class="renew-flow">
+
+    <!-- Page heading -->
+    <div class="renew-flow__heading">
+      <nav class="renew-flow__breadcrumb" aria-label="Breadcrumb">
+        <span class="renew-flow__bc-mono">Member Hub</span>
+        <span class="renew-flow__bc-sep">›</span>
+        <span class="renew-flow__bc-active renew-flow__bc-mono">Membership Renewal</span>
+      </nav>
+      <h2 class="renew-flow__title">Membership Renewal</h2>
+      <div class="renew-flow__meta">
+        <span class="renew-flow__meta-route renew-flow__bc-mono">/hub/membership/renew</span>
+        <span class="renew-flow__meta-badge renew-flow__bc-mono">RBAC: MEMBER</span>
+      </div>
+    </div>
+
+    <!-- 3-step form (Variant B) -->
+    <MembershipApplicationFlow variant="renew" />
+
+  </div>
+
+</HubLayout>
+
+<style>
+.renew-flow {
+  padding: var(--s-5) 0 var(--s-10);
+}
+.renew-flow__heading { margin-bottom: var(--s-5); }
+
+.renew-flow__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--s-2);
+}
+.renew-flow__bc-mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-400); }
+.renew-flow__bc-active { color: var(--gold-600); }
+.renew-flow__bc-sep { font-family: var(--font-mono); font-size: 12px; color: var(--ink-400); }
+
+.renew-flow__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+  margin: 0 0 var(--s-1);
+}
+.renew-flow__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.renew-flow__meta-route { font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); }
+.renew-flow__meta-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  padding: 3px 10px;
+  color: var(--ink-600);
+}
+</style>

@@ -2,207 +2,760 @@
 /**
  * photographers/index.astro
  * Route: /photographers/
- * Photographer directory — grid of member profile cards.
+ * Design authority: V6 04 Photographers Directory.dc.html
  *
- * API: GET /api/v1/photographers?limit=100&sort=...
- * Response: { data: [{ id, username, displayName, avatarUrl, photoCount, ... }], meta }
- * Profile link: /photographers/:username/
+ * V6 Layout:
+ *   PageHero (white · 3px amber top-border · stats band)
+ *   → FilterTabs (All · Basic · Student · Individual · Life)
+ *   → ResultsCountBar
+ *   → PhotographerCard grid (4/3/2-col)
+ *   → EmptyState (zero filter results)
+ *
+ * MEM-006 constraints enforced:
+ *   1. PRIVATE profiles excluded at API layer.
+ *   2. Filter tabs: lookup only, no CTA/upgrade pathway.
+ *   3. No joining CTA anywhere on this page.
+ *   4. Basic Member badge shown on cards (permitted here, not on profile page).
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SectionHeader from '../../components/ui/SectionHeader.astro';
 ---
 
 <BaseLayout
-  title="Photographers"
-  description="Meet the photographers of Bhopal Camera Club. Browse member profiles and explore their portfolios."
+  title="Our Photographers · Bhopal Camera Club"
+  description="A community of dedicated image-makers based in Bhopal. Members of the Bhopal Camera Club sharing their vision, craft, and stories with the world."
 >
 
-  <div class="page-hero surface-white">
-    <div class="container">
-      <SectionHeader
-        eyebrow="Our Photographers"
-        title="The people behind the lens"
-        subtitle="BCC is its members. Browse profiles and explore their portfolios."
-        as="h1"
-        data-gsap="reveal"
-      />
-
-      <!-- Search + sort -->
-      <div class="search-row">
-        <div class="search-field">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <input type="search" id="ph-search" class="field search-input" placeholder="Search photographers…" aria-label="Search photographers" />
-        </div>
-        <select id="ph-sort" class="field" style="max-width:180px;" aria-label="Sort photographers">
-          <option value="name">Name A–Z</option>
-          <option value="photos">Most Photos</option>
-          <option value="joined">Joined First</option>
-        </select>
+<!-- ── PAGE HERO ──────────────────────────────────────────────────────────── -->
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-breadcrumb">Photographers Directory · /photographers/</div>
+    <h1 class="hero-title">Our Photographers</h1>
+    <p class="hero-intro">A community of dedicated image-makers based in Bhopal. Members of the Bhopal Camera Club sharing their vision, craft, and stories with the world.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="stat-ph-count">—</div>
+        <div class="hero-stat-label">Active Photographers</div>
+      </div>
+      <div class="hero-stat-sep" aria-hidden="true"></div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="stat-photo-count">—</div>
+        <div class="hero-stat-label">Photos in Showcase</div>
       </div>
     </div>
-    <div class="hairline"></div>
   </div>
+</div>
 
-  <div class="container" style="padding-top:var(--s-4);padding-bottom:var(--s-12);">
-
-    <div class="ph-count" id="ph-count" aria-live="polite">
-      <span id="ph-count-num">—</span> photographers
+<!-- ── FILTER TABS ────────────────────────────────────────────────────────── -->
+<div class="filter-area">
+  <div class="filter-area-inner">
+    <div class="filter-tabs-row">
+      <div class="filter-tabs" id="filter-tabs" role="tablist" aria-label="Filter photographers by membership class">
+        <button class="filter-tab filter-tab--active" data-class="all" role="tab" aria-selected="true">All</button>
+        <button class="filter-tab" data-class="basic"      role="tab" aria-selected="false">Basic</button>
+        <button class="filter-tab" data-class="student"    role="tab" aria-selected="false">Student</button>
+        <button class="filter-tab" data-class="individual" role="tab" aria-selected="false">Individual</button>
+        <button class="filter-tab" data-class="life"       role="tab" aria-selected="false">Life</button>
+      </div>
     </div>
 
-    <!-- Skeleton placeholders (removed after first data load) -->
-    <div class="ph-grid" id="ph-grid" data-gsap="stagger" aria-label="Photographer directory">
-      {[...Array(12)].map(() => (
+    <div class="constraint-note">
+      <span class="constraint-icon">⊘</span>
+      <span><strong>MEM-006</strong> — Filter tabs are for directory lookup only. No joining CTA, application link, or upgrade pathway is attached to any tab.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESULTS BAR ───────────────────────────────────────────────────────── -->
+<div class="results-bar">
+  <div class="results-bar-inner">
+    <span class="results-count" id="results-count" aria-live="polite">
+      <span id="results-num">—</span> photographers
+    </span>
+    <span class="results-sort-note">Sorted: random · No sort control in this version</span>
+  </div>
+</div>
+
+<!-- ── CARD GRID ─────────────────────────────────────────────────────────── -->
+<div class="grid-area">
+  <div class="grid-container">
+
+    <div class="ph-grid" id="ph-grid" aria-label="Photographer directory">
+      {[...Array(8)].map(() => (
         <div class="ph-card-skel" aria-hidden="true">
-          <div class="skel ph-avatar-skel"></div>
-          <div class="skel" style="width:65%;height:12px;margin-top:var(--s-2);"></div>
-          <div class="skel" style="width:45%;height:9px;margin-top:6px;"></div>
+          <div class="skel-avatar-wrap">
+            <div class="skel skel-avatar"></div>
+          </div>
+          <div class="skel-body">
+            <div class="skel" style="width:68%;height:14px;"></div>
+            <div class="skel" style="width:48%;height:10px;margin-top:7px;"></div>
+            <div class="skel" style="width:58%;height:22px;margin-top:12px;border-radius:999px;"></div>
+            <div class="skel-divider"></div>
+            <div class="skel" style="width:88%;height:10px;"></div>
+            <div class="skel" style="width:72%;height:10px;margin-top:5px;"></div>
+          </div>
         </div>
       ))}
     </div>
 
     <div id="ph-empty" hidden class="ph-empty">
-      <p>No photographers match your search.</p>
-      <button class="btn btn-outline btn-md" id="ph-clear">Clear search</button>
+      <svg class="ph-empty-icon" width="64" height="52" viewBox="0 0 64 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="2" y="14" width="60" height="36" rx="4" stroke="currentColor" stroke-width="2"/>
+        <circle cx="32" cy="32" r="12" stroke="currentColor" stroke-width="2"/>
+        <circle cx="32" cy="32" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M22 14V10C22 8.9 22.9 8 24 8H40C41.1 8 42 8.9 42 10V14" stroke="currentColor" stroke-width="2"/>
+        <rect x="6" y="7" width="8" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <div class="ph-empty-title">No photographers found matching your filters</div>
+      <p class="ph-empty-desc">Try a different class filter or clear all filters to see everyone.</p>
+      <button class="btn-clear-filters" id="ph-clear">Clear Filters</button>
     </div>
 
   </div>
+</div>
+
 </BaseLayout>
 
 <style>
-.page-hero { padding-top: calc(var(--nav-h) + var(--s-8)); padding-bottom: var(--s-6); }
+/* ── PAGE HERO ───────────────────────────────────────────────────────────── */
+.page-hero {
+  margin-top: var(--nav-h, 64px);
+  background: #FFFFFF;
+  border-top: 3px solid #A8843C;
+  border-bottom: 1px solid #E7E1D6;
+}
+.hero-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 72px 40px 56px;
+}
+.hero-breadcrumb {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8B8378;
+  margin-bottom: 24px;
+}
+.hero-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(44px, 5.5vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.0;
+  color: #141210;
+  margin-bottom: 20px;
+}
+.hero-intro {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #57514B;
+  max-width: 580px;
+  font-weight: 300;
+  margin-bottom: 48px;
+}
+.hero-stats {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  border-top: 1px solid #E7E1D6;
+  padding-top: 32px;
+  flex-wrap: wrap;
+}
+.hero-stat { padding-right: 48px; }
+.hero-stat-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #141210;
+  line-height: 1;
+}
+.hero-stat-label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8B8378;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.hero-stat-sep {
+  width: 1px;
+  background: #E7E1D6;
+  height: 56px;
+  margin-right: 48px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 4px;
+}
 
-.search-row { display: flex; gap: var(--s-2); margin-top: var(--s-5); max-width: 520px; flex-wrap: wrap; }
-.search-field { position: relative; flex: 1; min-width: 200px; }
-.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
-.search-input { padding-left: 40px !important; }
+/* ── FILTER TABS ─────────────────────────────────────────────────────────── */
+.filter-area {
+  background: #FAF8F4;
+  border-bottom: 1px solid #E7E1D6;
+}
+.filter-area-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 40px 0;
+}
+.filter-tabs-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-tabs-row::-webkit-scrollbar { display: none; }
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.filter-tab {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 10px 18px;
+  border: 1px solid #E7E1D6;
+  background: #FFFFFF;
+  color: #57514B;
+  cursor: pointer;
+  border-radius: 2px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+.filter-tab:hover:not(.filter-tab--active) {
+  border-color: #C9A961;
+  color: #A8843C;
+}
+.filter-tab--active {
+  background: #141210;
+  color: #FAF8F4;
+  border-color: #141210;
+}
+.constraint-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(168,132,60,0.06);
+  border: 1px solid rgba(168,132,60,0.28);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #57514B;
+}
+.constraint-icon {
+  font-size: 14px;
+  color: #A8843C;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+.constraint-note strong { color: #A8843C; font-weight: 700; }
 
-.ph-count { font-size: var(--text-small); color: var(--ink-400); padding: var(--s-3) 0; }
-#ph-count-num { font-weight: 600; color: var(--ink-600); }
+/* ── RESULTS BAR ─────────────────────────────────────────────────────────── */
+.results-bar {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E7E1D6;
+}
+.results-bar-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 14px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.results-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #57514B;
+  font-weight: 500;
+}
+#results-num { color: #141210; }
+.results-sort-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #8B8378;
+  letter-spacing: 0.06em;
+}
 
+/* ── GRID AREA ───────────────────────────────────────────────────────────── */
+.grid-area {
+  background: #F2EFE9;
+  min-height: 50vh;
+  padding: 32px 0 80px;
+}
+.grid-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ── CARD GRID ───────────────────────────────────────────────────────────── */
 .ph-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--s-4);
+  gap: 20px;
 }
 
-.ph-card {
-  display: flex; flex-direction: column; align-items: center;
-  gap: var(--s-2); padding: var(--s-4) var(--s-3);
-  text-align: center; text-decoration: none;
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  transition: box-shadow var(--m-fast), transform var(--m-fast);
+/* ── PHOTOGRAPHER CARD ───────────────────────────────────────────────────── */
+:global(.ph-card) {
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.ph-card:hover { box-shadow: var(--e-2); transform: translateY(-2px); }
-
-.ph-avatar {
-  width: 80px; height: 80px;
-  border-radius: var(--r-full);
-  overflow: hidden;
-  background: var(--forest-gradient);
-  border: 1.5px solid var(--hairline);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-size: 20px; font-weight: 700;
-  color: var(--ink-inverse);
+:global(.ph-card:hover) {
+  border-color: #C9A961;
+  box-shadow: 0 8px 32px rgba(20,18,16,0.09);
+}
+:global(.ph-card-avatar-wrap) {
+  display: flex;
+  justify-content: center;
+  padding: 24px 24px 12px;
+}
+:global(.ph-card-avatar) {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFFFFF;
   flex-shrink: 0;
-  transition: border-color var(--m-fast);
+  letter-spacing: -0.02em;
+  overflow: hidden;
 }
-.ph-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.ph-card:hover .ph-avatar { border-color: var(--gold-500); }
+:global(.ph-card-avatar img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+:global(.ph-card-body) {
+  text-align: center;
+  padding: 0 18px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+:global(.ph-card-name) {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #141210;
+  margin-bottom: 4px;
+  line-height: 1.25;
+  word-break: break-word;
+  transition: color 0.2s ease;
+}
+:global(.ph-card:hover .ph-card-name) { color: #A8843C; }
+:global(.ph-card-username) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #A8843C;
+  margin-bottom: 10px;
+}
+:global(.ph-card-class-badge) {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid currentColor;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+:global(.ph-card-recognition) {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #E7E1D6;
+  color: #8B8378;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+:global(.ph-card-divider) {
+  width: 100%;
+  height: 1px;
+  background: #F0EBE0;
+  margin: 8px 0;
+  flex-shrink: 0;
+}
+:global(.ph-card-tagline) {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #57514B;
+  margin-bottom: 8px;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  width: 100%;
+}
+:global(.ph-card-meta-row) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  min-height: 20px;
+}
+:global(.ph-card-city) {
+  font-size: 12px;
+  color: #8B8378;
+}
+:global(.ph-card-genre) {
+  font-size: 11px;
+  background: #F4F0E8;
+  color: #57514B;
+  padding: 2px 10px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+:global(.ph-card-photo-count) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #8B8378;
+  margin-top: auto;
+}
+:global(.ph-card-arrow) {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: #A8843C;
+}
+:global(.ph-card:hover .ph-card-arrow) { opacity: 1; }
 
-.ph-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--ink-900); }
-.ph-meta { font-size: 12px; color: var(--ink-400); }
-.ph-city { font-size: 11px; color: var(--ink-400); }
+/* ── SKELETON ────────────────────────────────────────────────────────────── */
+.ph-card-skel {
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.skel-avatar-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 24px 24px 12px;
+}
+.skel-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+.skel-body {
+  width: 100%;
+  padding: 0 18px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.skel-divider {
+  width: 100%;
+  height: 1px;
+  background: #F0EBE0;
+  margin: 12px 0;
+}
+.skel {
+  background: linear-gradient(90deg, #F0EBE0 25%, #FAF8F4 50%, #F0EBE0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 2px;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
-/* Skeletons */
-.ph-card-skel { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-4); }
-.ph-avatar-skel { width: 80px; height: 80px; border-radius: var(--r-full); }
+/* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
+.ph-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 32px;
+  text-align: center;
+  gap: 24px;
+}
+.ph-empty-icon { color: #C8C0B8; }
+.ph-empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #8B8378;
+  margin-bottom: 8px;
+}
+.ph-empty-desc {
+  font-size: 14px;
+  color: #B8B0A8;
+  margin-bottom: 4px;
+}
+.btn-clear-filters {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 12px 28px;
+  border: 1.5px solid #A8843C;
+  background: transparent;
+  color: #A8843C;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-clear-filters:hover { background: #A8843C; color: #FFFFFF; }
 
-/* Empty state */
-.ph-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-4); padding: var(--s-12) 0; text-align: center; color: var(--ink-400); }
-.ph-empty p { font-size: var(--text-body); color: var(--ink-600); }
-
-@media (max-width: 1100px) { .ph-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 750px)  { .ph-grid { grid-template-columns: repeat(2, 1fr); } .search-row { flex-direction: column; } }
-@media (max-width: 400px)  { .ph-grid { grid-template-columns: 1fr; } }
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .ph-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 860px) {
+  .hero-inner { padding: 56px 32px 40px; }
+  .filter-area-inner { padding: 20px 32px 0; }
+  .results-bar-inner { padding: 12px 32px; }
+  .grid-container { padding: 0 32px; }
+  .results-sort-note { display: none; }
+}
+@media (max-width: 768px) {
+  .hero-title { font-size: 40px; }
+  .hero-intro { font-size: 16px; margin-bottom: 32px; }
+  .hero-stat-val { font-size: 36px; }
+  .ph-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .hero-inner { padding: 40px 20px 36px; }
+  .filter-area-inner { padding: 16px 20px 0; }
+  .results-bar-inner { padding: 12px 20px; }
+  .grid-container { padding: 0 20px; }
+  .filter-tabs { flex-wrap: nowrap; overflow-x: auto; }
+}
+@media (max-width: 480px) {
+  .ph-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
 </style>
 
 <script>
-  let allPhotographers: any[] = [];
-  let searchTerm = '';
+// ── Types ─────────────────────────────────────────────────────────────────
+interface Photographer {
+  id: number;
+  username: string;
+  displayName: string;
+  tagline: string | null;
+  bio: string | null;
+  city: string | null;
+  memberClass: string;
+  memberSince: number | null;
+  photoCount: number;
+  avatarUrl: string | null;
+}
 
-  async function load() {
-    const countEl = document.getElementById('ph-count-num')!;
-    const sort    = (document.getElementById('ph-sort') as HTMLSelectElement)?.value ?? 'name';
-    try {
-      const res = await fetch(`/api/v1/photographers?limit=100&sort=${sort}`);
-      if (!res.ok) return;
-      const { data, meta } = await res.json();
+// ── Constants ─────────────────────────────────────────────────────────────
+const CLASS_LABELS: Record<string, string> = {
+  founding:   'Founding Member',
+  life:       'Life Member',
+  patron:     'Patron Member',
+  full:       'Full Member',
+  individual: 'Individual Member',
+  student:    'Student Member',
+  basic:      'Basic Member',
+};
+
+const CLASS_COLORS: Record<string, string> = {
+  founding:   '#8A6A2E',
+  life:       '#A8843C',
+  patron:     '#8A6A2E',
+  full:       '#C47A20',
+  individual: '#3E5A48',
+  student:    '#1A9DAE',
+  basic:      '#5C5876',
+};
+
+const AVATAR_BG_PALETTE = [
+  '#3E5A48', '#9A7A30', '#1A6A6A', '#4A5068',
+  '#47514B', '#6B4A2A', '#3A5868', '#5C4A6A',
+  '#6A4A3A', '#2A5C5C',
+];
+
+// ── State ─────────────────────────────────────────────────────────────────
+let allPhotographers: Photographer[] = [];
+let activeClass = 'all';
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function avatarBg(username: string): string {
+  let h = 0;
+  for (let i = 0; i < username.length; i++) h = username.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_BG_PALETTE[Math.abs(h) % AVATAR_BG_PALETTE.length];
+}
+
+function esc(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function initials(name: string): string {
+  return name.trim().split(/\s+/).map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase();
+}
+
+// ── Load data ─────────────────────────────────────────────────────────────
+async function load() {
+  try {
+    const [phRes, feedRes] = await Promise.allSettled([
+      fetch('/api/v1/photographers?limit=200&sort=name'),
+      fetch('/api/v1/gallery/feed?limit=1'),
+    ]);
+
+    // Photographers
+    if (phRes.status === 'fulfilled' && phRes.value.ok) {
+      const { data, meta } = await phRes.value.json();
       allPhotographers = Array.isArray(data) ? data : [];
-      countEl.textContent = (meta?.total_count ?? allPhotographers.length).toLocaleString('en-IN');
-    } catch {
-      countEl.textContent = '—';
+      const total = meta?.total_count ?? allPhotographers.length;
+      const statEl = document.getElementById('stat-ph-count');
+      if (statEl) statEl.textContent = total.toLocaleString('en-IN');
     }
-    render();
+
+    // Photos in showcase
+    if (feedRes.status === 'fulfilled' && feedRes.value.ok) {
+      const feedJson = await feedRes.value.json();
+      const photoTotal = feedJson?.total ?? feedJson?.meta?.total ?? null;
+      const photoStatEl = document.getElementById('stat-photo-count');
+      if (photoStatEl && photoTotal !== null) {
+        photoStatEl.textContent = Number(photoTotal).toLocaleString('en-IN');
+      }
+    }
+  } catch {
+    // Graceful — render with whatever we have
   }
 
-  function render() {
-    const grid    = document.getElementById('ph-grid')!;
-    const emptyEl = document.getElementById('ph-empty')!;
-    grid.innerHTML = '';
+  render();
+}
 
-    const filtered = allPhotographers.filter(ph =>
-      !searchTerm ||
-      (ph.displayName ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (ph.city ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+// ── Render ────────────────────────────────────────────────────────────────
+function render() {
+  const grid    = document.getElementById('ph-grid')!;
+  const emptyEl = document.getElementById('ph-empty')!;
+  const numEl   = document.getElementById('results-num')!;
 
-    if (!filtered.length) {
-      emptyEl.removeAttribute('hidden');
-      return;
+  grid.innerHTML = '';
+
+  const filtered = activeClass === 'all'
+    ? allPhotographers
+    : allPhotographers.filter(ph => ph.memberClass === activeClass);
+
+  numEl.textContent = filtered.length.toLocaleString('en-IN');
+
+  if (!filtered.length) {
+    emptyEl.removeAttribute('hidden');
+    return;
+  }
+  emptyEl.setAttribute('hidden', '');
+
+  filtered.forEach(ph => {
+    const inits   = initials(ph.displayName ?? '?');
+    const bgColor = avatarBg(ph.username);
+    const classKey   = ph.memberClass ?? 'basic';
+    const classLabel = CLASS_LABELS[classKey] ?? classKey;
+    const classColor = CLASS_COLORS[classKey] ?? '#8B8378';
+    const photoLabel = (ph.photoCount ?? 0).toLocaleString('en-IN') + ' photos';
+
+    const card = document.createElement('a');
+    card.href      = `/photographers/${esc(ph.username)}/`;
+    card.className = 'ph-card';
+
+    let avatarHtml: string;
+    if (ph.avatarUrl) {
+      avatarHtml = `<img src="${esc(ph.avatarUrl)}" alt="${esc(ph.displayName ?? '')}" loading="lazy" width="80" height="80" />`;
+    } else {
+      avatarHtml = esc(inits);
     }
-    emptyEl.setAttribute('hidden', '');
 
-    filtered.forEach(ph => {
-      const initials = (ph.displayName ?? '?').slice(0, 2).toUpperCase();
-      // Profile URL uses username slug (e.g. /photographers/rajnishkhare/)
-      const card = document.createElement('a');
-      card.href      = `/photographers/${ph.username}/`;
-      card.className = 'ph-card';
-      card.innerHTML = `
-        <div class="ph-avatar">
-          ${ph.avatarUrl
-            ? `<img src="${ph.avatarUrl}" alt="${ph.displayName}" loading="lazy" width="80" height="80" />`
-            : initials}
-        </div>
-        <div class="ph-name">${ph.displayName ?? ''}</div>
-        <div class="ph-meta">${(ph.photoCount ?? 0).toLocaleString('en-IN')} photos</div>
-        ${ph.city ? `<div class="ph-city">${ph.city}</div>` : ''}
-      `;
-      grid.appendChild(card);
+    const taglineHtml = ph.tagline
+      ? `<div class="ph-card-tagline">${esc(ph.tagline)}</div>`
+      : '';
+
+    const cityHtml = ph.city
+      ? `<span class="ph-card-city">${esc(ph.city)}</span>`
+      : '';
+
+    const metaRowHtml = (ph.city)
+      ? `<div class="ph-card-meta-row">${cityHtml}</div>`
+      : '';
+
+    card.innerHTML = `
+      <div class="ph-card-avatar-wrap">
+        <div class="ph-card-avatar" style="background:${bgColor};">${avatarHtml}</div>
+      </div>
+      <div class="ph-card-body">
+        <div class="ph-card-name">${esc(ph.displayName ?? '')}</div>
+        <div class="ph-card-username">@${esc(ph.username)}</div>
+        <span class="ph-card-class-badge" style="color:${classColor};">${esc(classLabel)}</span>
+        <div class="ph-card-divider"></div>
+        ${taglineHtml}
+        ${metaRowHtml}
+        <div class="ph-card-photo-count">${photoLabel}</div>
+      </div>
+      <svg class="ph-card-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 12L12 2M12 2H4.5M12 2V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+// ── Filter tabs ───────────────────────────────────────────────────────────
+document.querySelectorAll<HTMLButtonElement>('.filter-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeClass = btn.dataset.class ?? 'all';
+
+    document.querySelectorAll<HTMLButtonElement>('.filter-tab').forEach(b => {
+      const isActive = b.dataset.class === activeClass;
+      b.classList.toggle('filter-tab--active', isActive);
+      b.setAttribute('aria-selected', String(isActive));
     });
-  }
 
-  // Search with 180ms debounce
-  let searchTimer: ReturnType<typeof setTimeout>;
-  document.getElementById('ph-search')?.addEventListener('input', e => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      searchTerm = (e.target as HTMLInputElement).value.trim();
-      render();
-    }, 180);
-  });
-
-  document.getElementById('ph-sort')?.addEventListener('change', () => load());
-
-  document.getElementById('ph-clear')?.addEventListener('click', () => {
-    (document.getElementById('ph-search') as HTMLInputElement).value = '';
-    searchTerm = '';
     render();
   });
+});
 
-  load();
+// ── Clear filters ─────────────────────────────────────────────────────────
+document.getElementById('ph-clear')?.addEventListener('click', () => {
+  activeClass = 'all';
+  document.querySelectorAll<HTMLButtonElement>('.filter-tab').forEach(b => {
+    const isActive = b.dataset.class === 'all';
+    b.classList.toggle('filter-tab--active', isActive);
+    b.setAttribute('aria-selected', String(isActive));
+  });
+  render();
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+load();
 </script>

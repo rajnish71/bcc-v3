@@ -1,0 +1,25 @@
+#!/bin/bash
+export MYSQL_PWD=zAkuexH3yylvsguMNXwfeFXf
+DB="mysql -h 127.0.0.1 -P 3306 -u bcc_v3_app bcc_v3 --batch"
+
+echo "=== Audit User 36 ==="
+$DB -e "SELECT id, full_name, email, status FROM users WHERE id = 36;"
+echo "memberships:      $($DB -e "SELECT COUNT(*) FROM memberships WHERE user_id=36;" | tail -1)"
+echo "auth_identities:  $($DB -e "SELECT COUNT(*) FROM auth_identities WHERE user_id=36;" | tail -1)"
+echo "refresh_tokens:   $($DB -e "SELECT COUNT(*) FROM refresh_tokens WHERE user_id=36;" | tail -1)"
+echo "login_history:    $($DB -e "SELECT COUNT(*) FROM login_history WHERE user_id=36;" | tail -1)"
+echo "user_avatars:     $($DB -e "SELECT COUNT(*) FROM user_avatars WHERE user_id=36;" | tail -1)"
+echo "user_roles:       $($DB -e "SELECT COUNT(*) FROM user_roles WHERE user_id=36;" | tail -1)"
+echo "notification_log: $($DB -e "SELECT COUNT(*) FROM notification_log WHERE user_id=36;" | tail -1)"
+echo "event_regs:       $($DB -e "SELECT COUNT(*) FROM event_registrations WHERE user_id=36;" | tail -1)"
+echo "journal_posts:    $($DB -e "SELECT COUNT(*) FROM journal_posts WHERE author_user_id=36;" | tail -1)"
+
+echo ""
+echo "=== Audit Membership 43 ==="
+$DB -e "SELECT id, user_id, membership_number, lifecycle_state, pending_payment_id FROM memberships WHERE id = 43;"
+echo "membership_audit_log: $($DB -e "SELECT COUNT(*) FROM membership_audit_log WHERE membership_id=43;" | tail -1)"
+echo "payments:             $($DB -e "SELECT COUNT(*) FROM payments WHERE membership_id=43;" | tail -1)"
+echo "member_recognitions:  $($DB -e "SELECT COUNT(*) FROM member_recognitions WHERE membership_id=43;" | tail -1)"
+echo "membership_application_documents: $($DB -e "SELECT COUNT(*) FROM membership_application_documents WHERE membership_id=43;" | tail -1)"
+echo "membership_application_messages:  $($DB -e "SELECT COUNT(*) FROM membership_application_messages WHERE membership_id=43;" | tail -1)"
+echo "membership_approval_stages:       $($DB -e "SELECT COUNT(*) FROM membership_approval_stages WHERE membership_id=43;" | tail -1)"

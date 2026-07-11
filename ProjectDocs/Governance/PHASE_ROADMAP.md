@@ -1,8 +1,8 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
 **Status:** AUTHORITATIVE — Living Roadmap
-**Version:** 2.2
-**Last Updated:** 2026-07-11 — Phase D complete; V6 19, V6 20 implemented; V6 13 profile editor implemented
+**Version:** 2.3
+**Last Updated:** 2026-07-11 — Phase D complete; V6 19, V6 20 implemented; V6 13 profile editor implemented, PHOTO-ARCH-001 v1.0 frozen (Batch 1 & 2); Phase E current
 
 ---
 
@@ -83,19 +83,20 @@ Establish the canonical architecture governing the authenticated Member Hub, inc
 
 ### A1a
 
-Photo Asset Architecture
+PHOTO-ARCH-001 — Photo Asset Architecture
 
-**Status:** 📋 PLANNED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-11
 
 Purpose:
 
 Establish the platform-wide canonical architecture governing photographic assets.
 
-Planned deliverable:
+Completed deliverable:
 
 PHOTO-ARCH-001 — Photo Asset Architecture Freeze v1.0
 
-Will define:
+Defines:
 
 - Canonical Photo Identity
 - Container Architecture
@@ -105,10 +106,9 @@ Will define:
 - Navigation Context
 - Asset Reuse Across Modules
 
-Target location:
+Document:
 
 Architecture/PHOTO-ASSET-ARCHITECTURE_FREEZE_v1.0.md
-
 ---
 
 ### A2
@@ -378,31 +378,54 @@ Name parts captured at signup.
 
 ---
 
-## PHASE E — Production Cutover
+## PHASE E — Soft Pre-Launch & Platform Stabilization
 
-**Status:** ⏳ PLANNED
+**Status:** 🚧 CURRENT
 
-Deploy
+Objective
 
-```
+Transition the platform from development to a stable soft pre-launch
+environment by completing the core public photography experience,
+migrating to the production domain, reconciling the design system,
+and performing end-to-end validation before expanding platform capabilities.
+
+Domain Migration
+
 v3bcc.bhopal.info
         ↓
 bcc.bhopal.info
-```
 
-Activities
+Soft Launch Activities
 
 - Internal testing
-- Core committee validation
-- Existing member onboarding
-- Portfolio migration
+- Core committee testing
+- Selected member testing
+- Bug fixing
+- Performance validation
 - Legacy site becomes read-only
-- DNS cutover
-- Public launch
+- DNS migration
+- Soft pre-launch
 
 ---
 
-## System Deliverables
+### Public Pages
+
+- V6 04 — Photographers Directory (Reconciliation)
+- V6 05 — Photographer Profile
+- V6 21 — Canonical Photo / Showcase
+
+---
+
+### Design Authority Reconciliation
+
+- Membership Card widget reconciliation
+- Responsive canonical Membership Card rendering
+- Remove independent dark card implementation
+- General Design Authority reconciliation
+
+---
+
+### System Deliverables
 
 - V6 98 — token.css
 - V6 99 — systemdesign.md

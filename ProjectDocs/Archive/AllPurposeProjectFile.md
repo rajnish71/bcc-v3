@@ -1,6 +1,6 @@
-Objective : 
+Objective :
 
-I. We have to create SiteHeader and SiteFooter, just copy the standard site header used in this project as a independent file, same for site footer.  
+I. We have to create SiteHeader and SiteFooter, just copy the standard site header used in this project as a independent file, same for site footer.
 
 II. We have to create fresh Design System file for V3 BCC - Systemdesign.md, token.css and make changes in wireframes and create new separate Low - fi files of following pages :
 
@@ -38,19 +38,19 @@ II. We have to create fresh Design System file for V3 BCC - Systemdesign.md, tok
 
 
 
-Please remember most of wireframes are already present we have to just make few changes , new wireframe structure can be found in this text document. But overall Design Style of project has to be followed unless mentioned otherwise. 
+Please remember most of wireframes are already present we have to just make few changes , new wireframe structure can be found in this text document. But overall Design Style of project has to be followed unless mentioned otherwise.
 
-In Claude design we have a project named - "V5  BCC Unified Platform Design System". In this project the main reference file is - "01 BCC Design Principles". We have to make certain changes in the reference file before we start editing wireframes. 
+In Claude design we have a project named - "V5  BCC Unified Platform Design System". In this project the main reference file is - "01 BCC Design Principles". We have to make certain changes in the reference file before we start editing wireframes.
 
-After initial edit, BCC Design Principle updated file will become ultimate truth and reference point for rest of this project. 
+After initial edit, BCC Design Principle updated file will become ultimate truth and reference point for rest of this project.
 
-Majority of wireframes are in a file called - "02 V5 Clubbed Wireframes" ( Home, About, Activities, Join, Journal). Now while we have to follow same design principle but we need to create seperate Lo-fi wireframe files for each wireframes. 
+Majority of wireframes are in a file called - "02 V5 Clubbed Wireframes" ( Home, About, Activities, Join, Journal). Now while we have to follow same design principle but we need to create seperate Lo-fi wireframe files for each wireframes.
 
 These files will have placeholders for standard site header and footer but attaching site header and footer is not required.
 
 following files are already independent - "03 BCC Showcase", "04 BCC Hub Visual Master"
 
-New new created files has to be renamed as : 
+New new created files has to be renamed as :
 
 a. "V6 00 BCC Design Principles"
 
@@ -62,7 +62,7 @@ d. "V6 03 Showcase"
 
 e. "V6 04 Photographers Directory"
 
-f. "V6 05 Photographers Profile Page" 
+f. "V6 05 Photographers Profile Page"
 
 g. "V6 06 Activities"
 
@@ -90,11 +90,11 @@ r. "V6 92 SiteFooter"
 
 
 
-The wireframe has to be compatible with our V3 architecture so if any audit is required please as Antigravity to do the audit. similarly as we will be creating these wireframes using Claude Design which itself is very memory intensive, the implementation of this new design system has to be done using Antigravity 2.0 hence we have to ensure there is no scope for ambiguity and transition is as smooth as possible. Once the new wireframes are designed we will delete old files so new set has to be complete in itself. To make it easier for Claude design, we should do it one step at a time and evrytime in a fresh chat under project so that context memory is utilised minimum.  We will start with BCC Design Principles followed by SiteHeader and Site Footer and then you decide the rest of workflow. 
+The wireframe has to be compatible with our V3 architecture so if any audit is required please as Antigravity to do the audit. similarly as we will be creating these wireframes using Claude Design which itself is very memory intensive, the implementation of this new design system has to be done using Antigravity 2.0 hence we have to ensure there is no scope for ambiguity and transition is as smooth as possible. Once the new wireframes are designed we will delete old files so new set has to be complete in itself. To make it easier for Claude design, we should do it one step at a time and evrytime in a fresh chat under project so that context memory is utilised minimum.  We will start with BCC Design Principles followed by SiteHeader and Site Footer and then you decide the rest of workflow.
 
 
 
-Please remember our tech stack is : 
+Please remember our tech stack is :
 
 FINAL\_TECHNOLOGY\_STACK\_FREEZE
 
@@ -180,7 +180,7 @@ Nav ITems - Home, About, Showcase. Activities ( Drop Down ). Learn ( Drop Down )
 
 
 
-Admin Console — full administration, content and moderation. Never visible to lower roles. 
+Admin Console — full administration, content and moderation. Never visible to lower roles.
 
 Moderator Console - selected user roles like coordinator, author, editor, anyone with member + priviledges. Only those tabs visible for which their user role have permission. appears in nav (event, activity, gallery, content management). Member Hub + avatar persist.
 
@@ -200,7 +200,7 @@ Guest - logged out state for public. Become a Member — the single gold CTA. Si
 
 Instead of "The system never depends on curated ratios: grids enforce frame ratios via object-fit: cover with focal-point override; panoramas and full portraits get dedicated display modes."
 
-Each photo retains its original aspect ratio. No object-fit cropping. 
+Each photo retains its original aspect ratio. No object-fit cropping.
 
 
 
@@ -208,7 +208,7 @@ Each photo retains its original aspect ratio. No object-fit cropping.
 
 
 
-as per following wireframe plan : 
+as per following wireframe plan :
 
 
 
@@ -234,9 +234,9 @@ as per following wireframe plan :
 
 \### Wireframe Footer
 
-Rendered identically on every page. 3 row - center row 4-column grid, 
+Rendered identically on every page. 3 row - center row 4-column grid,
 
-Top row - FIP trust badge, social strip, 
+Top row - FIP trust badge, social strip,
 
 Middle Row 4 columns - . No page-specific footer variation. Column one (wider )- BCC Logo and brief description. column 2 - Navigate Column 3 - Explore Column 4 - Guidelines
 
@@ -254,7 +254,7 @@ Bottom Row - copyright bar and FIP details - Corporate Member of Federation of I
 
 
 
-1\. SiteHeader {session} 
+1\. SiteHeader {session}
 
 
 
@@ -272,15 +272,15 @@ Bottom Row - copyright bar and FIP details - Corporate Member of Federation of I
 
 5\. THE CLUB : One community. Four ways to participate. - 	"What We Do" cards: Link to Photowalks, Contests, Exhibitions, and Photography School module pages. All 4 nav links are present from launch; module pages go live progressively per phase roadmap. Cards show amber border on hover (GSAP or CSS).
 
-&#x09;						Photowalks Explore Photowalks → 
+&#x09;						Photowalks Explore Photowalks →
 
-&#x09;						Photo Contests View Contests → 
+&#x09;						Photo Contests View Contests →
 
-&#x09;						Exhibitions See Exhibitions → 
+&#x09;						Exhibitions See Exhibitions →
 
 &#x09;						Photography School
 
-&#x09;						hover: amber border 
+&#x09;						hover: amber border
 
 
 
@@ -316,7 +316,7 @@ Bottom Row - copyright bar and FIP details - Corporate Member of Federation of I
 
 
 
-\# Mobile : 
+\# Mobile :
 
 
 
@@ -328,7 +328,7 @@ Bottom Row - copyright bar and FIP details - Corporate Member of Federation of I
 
 
 
-3\. Club Stat - Live Stat Band 
+3\. Club Stat - Live Stat Band
 
 
 
@@ -336,7 +336,7 @@ Bottom Row - copyright bar and FIP details - Corporate Member of Federation of I
 
 
 
-5\. THE CLUB - One community. Four ways to participate. 
+5\. THE CLUB - One community. Four ways to participate.
 
 
 
@@ -396,7 +396,7 @@ BaseLayout
 
 &#x20; MembershipTiers {plans\[]}
 
-&#x20; Open Contest 
+&#x20; Open Contest
 
 &#x20; JournalCard x3 {recentPosts\[]}
 
@@ -420,11 +420,11 @@ BaseLayout
 
 
 
-\#Desktop 
+\#Desktop
 
 
 
-1\. SiteHeader {session} -  
+1\. SiteHeader {session} -
 
 
 
@@ -444,7 +444,7 @@ BaseLayout
 
 
 
-5\. PhotographerDirectory : 
+5\. PhotographerDirectory :
 
 &#x20;   DirectoryToolbar {query, genre, sort}
 
@@ -470,15 +470,15 @@ BaseLayout
 
 BaseLayout
 
-&#x20; SiteHeader {session} - 
+&#x20; SiteHeader {session} -
 
 &#x20; PageHero {title, intro}
 
-&#x20; FeaturedWork {featuredPhotos\[]} 
+&#x20; FeaturedWork {featuredPhotos\[]}
 
-&#x20; GenrePlates {categories\[]} - 
+&#x20; GenrePlates {categories\[]} -
 
-&#x20; Browse by Genre 
+&#x20; Browse by Genre
 
 &#x20; PhotographerDirectory
 
@@ -488,7 +488,7 @@ BaseLayout
 
 &#x20;   EmptyState | Pagination
 
-&#x20; Featured Photographers  
+&#x20; Featured Photographers
 
 &#x20; ShowcaseBands {exhibitions\[], collections\[]}
 
@@ -514,7 +514,7 @@ BaseLayout
 
 
 
-Identity Block - Avatar - Display Name - Class + Recognition Badges: Class badge = identification label only — no CTA, no joining pathway, no application link. Recognition badge = separate secondary pill with muted styling. Both shown simultaneously per MEM-006 single-active-recognition rule. Member holds ONE class badge + at most ONE active recognition badge. 
+Identity Block - Avatar - Display Name - Class + Recognition Badges: Class badge = identification label only — no CTA, no joining pathway, no application link. Recognition badge = separate secondary pill with muted styling. Both shown simultaneously per MEM-006 single-active-recognition rule. Member holds ONE class badge + at most ONE active recognition badge.
 
 specialties · location · since · counts
 
@@ -546,7 +546,7 @@ I. Right Main column ( Main Content Area )
 
 
 
-5\. photographer-created thematic collections · horizontal scroll strip · links to filtered showcase view.  
+5\. photographer-created thematic collections · horizontal scroll strip · links to filtered showcase view.
 
 
 
@@ -572,11 +572,11 @@ II. Left Narrow Column ( Left Rail )
 
 &#x09;vi.	Preferred Camera
 
-&#x09;vii.	Distincions, Awards and Honors -  ( RTF Editor ) 
+&#x09;vii.	Distincions, Awards and Honors -  ( RTF Editor )
 
 &#x09;viii.	Equipment Bag - a. Camera ('s) b. Lenses c. Other equipments
 
-&#x09; 
+&#x09;
 
 after above 2 columns back to single column
 
@@ -666,7 +666,7 @@ After this end 2 columns
 
 
 
-4\. Photographers Grid - Photographers Cards Grid - Initially Randomly Sorted. 
+4\. Photographers Grid - Photographers Cards Grid - Initially Randomly Sorted.
 
 Each card links to /photographers/\[username] — the individual Photographer Profile page. Profile page shows full portfolio, bio, gear list, contest history, and activity history.
 
@@ -720,7 +720,7 @@ BaseLayout
 
 
 
-3\. Pillar Grid {pillars\[]} - 3 pillars - 
+3\. Pillar Grid {pillars\[]} - 3 pillars -
 
 &#x09;01 Community - Photography is most powerful when shared. Our club is a space where beginners find mentors and masters find inspiration.
 
@@ -730,7 +730,7 @@ BaseLayout
 
 
 
-4\. Timeline {milestones\[]} - Our Story - Legacy of Light - 
+4\. Timeline {milestones\[]} - Our Story - Legacy of Light -
 
 &#x09;May 2015 - First informal grouping - A group of local photography enthusiasts began meeting informally in Bhopal to share critiques and capture the lakes together.
 
@@ -848,7 +848,7 @@ BaseLayout
 
 
 
-2\. PageHero {title, intro} 
+2\. PageHero {title, intro}
 
 
 
@@ -920,7 +920,7 @@ BaseLayout
 
 
 
-2\. PageHero {title, intro} 
+2\. PageHero {title, intro}
 
 
 
@@ -1030,7 +1030,7 @@ BaseLayout
 
 
 
-Hub Shell : 
+Hub Shell :
 
 fixed 240px rail at ≥1200px
 
@@ -1042,7 +1042,7 @@ fixed 240px rail at ≥1200px
 
 
 
-4 Tabs on left rail - 
+4 Tabs on left rail -
 
 1\. Studio - ( 4 sub nav )
 
@@ -1058,13 +1058,13 @@ fixed 240px rail at ≥1200px
 
 2\. Grow - ( 2 sub nav )
 
-&#x09;i. Academy / Learn 
+&#x09;i. Academy / Learn
 
 &#x09;ii. Contest
 
 
 
-3\. Club Activities 
+3\. Club Activities
 
 &#x09;i. Tours
 
@@ -1076,7 +1076,7 @@ fixed 240px rail at ≥1200px
 
 
 
-4\. Account 
+4\. Account
 
 &#x09;i. My Profile ( Edit )
 
@@ -1112,7 +1112,7 @@ VISUAL HIERARCHY
 
 
 
-Left Rail 
+Left Rail
 
 2\. Member Nav
 
@@ -1130,13 +1130,13 @@ Main Content Area
 
 7\. Journey numbers — quietest voice - Learning Acacemy
 
-8\. Personal rail — 	AcademyContinue (ProgressHairline), 
+8\. Personal rail — 	AcademyContinue (ProgressHairline),
 
-&#x09;		MembershipCardDark compact, 
+&#x09;		MembershipCardDark compact,
 
 &#x09;		Membership Card Thumbnail and link to Membership Card Management / Print
 
-&#x09;		Member Stats below Membership Card - JourneyStrip (zero-value milestones dropped). 
+&#x09;		Member Stats below Membership Card - JourneyStrip (zero-value milestones dropped).
 
 
 
@@ -1148,7 +1148,7 @@ HubShell
 
 ├ RecentWork {photos≤5}+UploadTile
 
-├ . I 
+├ . I
 
 ≥1200 two-col · <1200 rail stacks below · ≤640 feed order per mobile spec; gold CTA migrates to HubMobileBar. Loading: shimmer blocks matching layout. Section fetch failure: per-section retry note, page never blanks.
 
@@ -1196,7 +1196,7 @@ PortfolioManager
 
 
 
-\# Wireframe : 
+\# Wireframe :
 
 
 
@@ -1204,7 +1204,7 @@ PortfolioManager
 
 
 
-Left Rail 
+Left Rail
 
 2\. Member Nav
 
@@ -1272,7 +1272,7 @@ SingleUpload
 
 
 
-\# Wireframe 
+\# Wireframe
 
 
 
@@ -1280,7 +1280,7 @@ SingleUpload
 
 
 
-Left Rail 
+Left Rail
 
 2\. Member Nav
 
@@ -1294,7 +1294,7 @@ Main Content Area
 
 
 
-after the photo is uploaded or drag and dropped 
+after the photo is uploaded or drag and dropped
 
 
 
@@ -1364,7 +1364,7 @@ ANNOTATIONS
 
 
 
-$ Design other tabs in hub in accordance with above 
+$ Design other tabs in hub in accordance with above
 
 
 
@@ -1392,7 +1392,7 @@ $ Design other tabs in hub in accordance with above
 
 ### 
 
-##### **July 10th status after  Proposed Roadmap from here** 
+##### **July 10th status after  Proposed Roadmap from here**
 
 
 
@@ -1444,7 +1444,7 @@ A4. Reconcile Portfolio V6 10 — Portfolio ✅
 
 A5. Reconcile Upload Studio V6 11 — Upload Studio ✅
 
-A6. Implement Hub 
+A6. Implement Hub ✅
 
 Claude Code implementation order
 
@@ -1476,47 +1476,85 @@ Portfolio ✅
 
 &#x20;       ↓
 
-Upload Studio
+Upload Studio  ✅
 
 
 
-A7. Validation --> Deploy --> Test --> Fix --> Git Commit --> Production-ready Hub
+A7. Validation --> Deploy --> Test --> Fix --> Git Commit --> Production-ready Hub  ✅
 
 
 
-PHASE B — Legacy Profile Migration Audit
+PHASE B — Legacy Profile Migration Audit ✅
 
 
 
-PHASE C — Legacy Data Reconciliation
+PHASE C — Legacy Data Reconciliation ✅
 
 
 
-PHASE D — Member Profile
+PHASE D — Member Profile  ✅
 
 
 
-V6 13 — Member Profile
+V6 13 — Member Profile ✅
+
+V6 19 - Membership / Consent form ✅
+
+V6 20 - Account Setting ✅
 
 
 
-PHASE E — Move : v3bcc.bhopal.info --> bcc.bhopal.info
+\## PHASE E — Soft Pre-Launch \& Platform Stabilization
+
+A. Move : v3bcc.bhopal.info --> bcc.bhopal.info
 
 
 
-System
-
-────────────
-
-Design Authority Reconciliation - one of the things to check is : 
-
-MembershipCard widget should become a responsive miniature rendering of the canonical BCC Membership Card System, rather than an independent dark information card.
+B. Public Pages
 
 
 
-V6 98  token.css
+\- V6 04 — Photographers Directory (Reconciliation)
 
-V6 99  systemdesign.md|
+\- V6 05 — Photographer Profile
+
+\- V6 21 — Canonical Photo / Showcase
+
+
+
+\---
+
+
+
+\### Design Authority Reconciliation
+
+
+
+\- Membership Card widget reconciliation
+
+\- Responsive canonical Membership Card rendering
+
+\- Remove independent dark card implementation
+
+\- General Design Authority reconciliation
+
+
+
+\---
+
+
+
+\### System Deliverables
+
+
+
+\- V6 98 — token.css
+
+\- V6 99 — systemdesign.md
+
+
+
+\---
 
 
 
@@ -1556,51 +1594,54 @@ TAXONOMY\_ARCHITECTURE\_FREEZE\_v1.0.md
 
 
 
-PHASE I — Remaining Public Pages
+\## PHASE I — Remaining Public Pages
 
 
 
-Public Pages 
-
-────────────
+\### Public Pages
 
 
 
-V6 04  Photographers Directory    (reconciliation)
+\- V6 02 — About
 
-V6 05  Photographer Profile
+\- V6 06 — Activities
 
-V6 02  About
+\- V6 07 — Journal
 
-V6 06  Activities
-
-V6 07  Journal
-
-V6 08  Journal Article
+\- V6 08 — Journal Article
 
 
 
-Authentication
+\### Authentication (Visual Reconciliation)
 
 
 
-• Sign In
-
-• Register
-
-• Forgot Password
-
-• Reset Password
-
-• Verify Email
+Existing functionality remains.
 
 
 
-(V6 visual reconciliation only)
+V6 visual refresh only.
+
+
+
+\- Sign In
+
+\- Register
+
+\- Forgot Password
+
+\- Reset Password
+
+\- Verify Email
+
+
+
+\---
 
 
 
 **After this continuation of original roadmap plan :**
+
 
 
 NEXT — Contest Engine \& Certificates
@@ -1712,8 +1753,4 @@ These are the only remaining Phase 2 modules. Nothing else blocks them.
 \- \*\*Next session:\*\* Phase 2b — start with Module 03 (Contest Engine) or Module 12
 
 &#x20; (Certificates \& Badges) — confirm which first.
-
-
-
-
 

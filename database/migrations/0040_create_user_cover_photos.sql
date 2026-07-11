@@ -56,7 +56,10 @@ CREATE TABLE IF NOT EXISTS user_cover_photos (
 
   -- Enforces one active cover per user at the database layer.
   -- NULL values do not participate in the unique constraint.
-  active_lock   BIGINT GENERATED ALWAYS AS (IF(is_active = TRUE, user_id, NULL)) STORED,
+  -- VIRTUAL (not STORED): MySQL 8.0.46 rejects STORED generated cols combined with
+  -- FK constraints in the same CREATE TABLE. VIRTUAL achieves the same uniqueness
+  -- guarantee — the unique index on a virtual col is a functional index in InnoDB.
+  active_lock   BIGINT GENERATED ALWAYS AS (IF(is_active = TRUE, user_id, NULL)) VIRTUAL,
 
   uploaded_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

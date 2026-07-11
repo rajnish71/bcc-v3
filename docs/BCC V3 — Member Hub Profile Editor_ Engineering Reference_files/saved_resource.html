@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<!-- saved from url=(0253)https://38e559d9-15f3-4bac-86f8-d11f1ee669a9.frame.claudeusercontent.com/_f/1783712192-0d3a/?__frame_t=6866HOwtpj26cL04JF1beyu1.842089ee-6068-4b69-af8b-ae967b85f34c.a8df4523-b23b-4dca-b633-98326b2d237f.1783715847&__frame_v=manifest.f241257c10c35d5c.json -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><!-- frame-runtime --><!--<base href="/_f/1783712192-0d3a/">--><base href="."><script>window.__FRAME_PREAMBLE={"capabilities":{"downloads":"downloads.DUzXFHNF.js","mcp":"mcp.BQqQVVN_.js","self":"self.DqF_PxOe.js"},"transforms":"_transforms.DYk1Ltlh.js"}</script><script>(function(){"use strict";const X="modulepreload",Y=function(e){return"/"+e},Z={},U=function(t,n,u){let o=Promise.resolve();function i(f){const a=new Event("vite:preloadError",{cancelable:!0});if(a.payload=f,window.dispatchEvent(a),!a.defaultPrevented)throw f}return o.then(f=>{for(const a of f||[])a.status==="rejected"&&i(a.reason);return t().catch(i)})},D=["light","dark","system"];function $(e){if(e==null||typeof e!="object")return!1;const t=e.__frame_init;return t!=null&&typeof t=="object"}function q(e){if(e==null||typeof e!="object")return!1;const t=e.__frame_theme;if(t==null||typeof t!="object")return!1;const n=t.theme;return typeof n=="string"&&D.includes(n)}function M(e){if(window===top||e.type==="auxclick"&&e.button!==1)return;const t=e.composedPath?e.composedPath():[e.target];let n=null;for(let f=0;f<t.length;f++){const a=t[f];if(a&&a.matches&&a.matches("a[href],area[href]")){n=a;break}}if(!n&&e.target&&e.target.closest&&(n=e.target.closest("a[href],area[href]")),!n)return;const u=n.getAttribute("href");if(!u)return;let o,i;try{o=new URL(u,document.baseURI),i=new URL(document.baseURI).origin}catch{return}(o.protocol==="http:"||o.protocol==="https:")&&o.origin!==i&&(e.preventDefault(),parent.postMessage({__frame_nav:!0,url:o.href},"*"))}const L={};function y(e){if(window===top)return;const t=Date.now();t-(L[e]||0)<500||(L[e]=t,parent.postMessage({__frame_engaged:!0,kind:e},"*"))}const F=2e3,T=["wheel","touchstart","touchmove","keydown","pointerdown"];let k=0;function B(e){e.isTrusted&&(k=Date.now())}function z(){addEventListener("click",M,!0),addEventListener("auxclick",M,!0)}function W(){for(let e=0;e<T.length;e++)addEventListener(T[e],B,{capture:!0,passive:!0});addEventListener("scroll",e=>{e.isTrusted&&Date.now()-k<F&&y("scroll")},{capture:!0,passive:!0}),addEventListener("pointermove",e=>{e.isTrusted&&y("pointer")},{capture:!0,passive:!0}),addEventListener("click",e=>{e.isTrusted&&y("click")},{capture:!0,passive:!0})}function x(e,t,n){const u=[...t.values()].filter(o=>o.targets.some(i=>i.startsWith(e+".")));return{wrap(o,i){const f=`${e}.${o}`,a=u.filter(s=>s.targets.includes(f));return a.length===0?(...s)=>{try{return i(...s)}catch(d){return Promise.reject(d)}}:(...s)=>{let d=s;for(const c of a){const l=c.module.parameters;if(l)try{d=l(d)}catch{return Promise.reject({code:"transform_error",id:c.id,scope:e,message:"parameters transform failed"})}}let m;try{m=i(...d)}catch(c){m=Promise.reject(c)}return m.then(c=>{for(let l=a.length-1;l>=0;l--){const h=a[l],p=h.module.returns;if(p)try{c=p(c)}catch{return n({id:h.id,scope:e,leg:"returns"}),c}}return c},c=>{for(let l=a.length-1;l>=0;l--){const h=a[l],p=h.module.throws;if(p)try{c=p(c)}catch{return n({id:h.id,scope:e,leg:"throws"}),Promise.reject(c)}}return Promise.reject(c)})}}}}function H(e,t,n,u=()=>{}){const o=new Set(e.changes??[]),i=new Map;for(const f of o){const a=t[f];a&&i.set(f,a)}return{contract:e.contract,changes:o,flags:new Set(e.flags??[]),capabilities:e.capabilities??{},transforms:i,shellOrigin:n.shellOrigin,mount:n.mount,pipe:f=>x(f,i,u)}}(function(){const e=Object.defineProperty,t=globalThis,n=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let u=0;for(let o=0;o<n.length;o++){const i=n[o];try{e(t,i,{value:void 0,writable:!1,configurable:!1})}catch{try{delete t[i]}catch{}try{e(t,i,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof t[i]=="function"&&u++}if(u&&window!==top)try{parent.postMessage({__frame_rtc_lockdown_failed:u},"*")}catch{}})();const K=1e4,G=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function J(e){for(const t of G)if(t.endsWith(":*"))try{const n=new URL(e);if(`${n.protocol}//${n.hostname}:*`===t)return!0}catch{}else if(e===t)return!0;return!1}const w=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities??{}}),E=window.__FRAME_PREAMBLE?.transforms,C=/^[\w.-]+\.js$/,V=/^[a-z][a-z0-9_-]{0,63}$/;let A=null,g=null;function P(e,t,n){try{Object.defineProperty(e,t,{value:n,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(e,t,{value:n,writable:!1,configurable:!0,enumerable:!0})}catch{}}}let R=!1;function N(e){const t=document.documentElement;e==="light"||e==="dark"?(t.dataset.theme=e,t.style.colorScheme=e,R=!0):R&&(delete t.dataset.theme,t.style.colorScheme="",R=!1)}const _=new Map;function Q(e,t){const n=_.get(e);if(!n)return;Object.assign(n.impl,t),n.impl.__settled=()=>Promise.reject({code:"capability_removed",message:`${e}: method not in this runtime`});const u=n.queue;n.queue=[];for(const o of u){const i=t[o.method];i?i(...o.args).then(o.resolve,o.reject):o.reject({code:"capability_removed",message:`${e}.${o.method} is not in this runtime`})}}function O(e,t){const n=_.get(e);if(!n)return;n.impl.__settled=()=>Promise.reject(t);const u=n.queue;n.queue=[];for(const o of u)o.reject(t)}const j=Object.getOwnPropertyDescriptor(window,"claude");if(window!==top&&!(j&&j.writable===!1)){z(),W();const e=j?.value??{};P(window,"claude",e);const t=s=>{const d={impl:Object.create(null),queue:[]};_.set(s,d);const m=new Proxy(d.impl,{get:(c,l)=>{if(typeof l=="string"&&!(l==="then"||l==="toJSON"||l==="valueOf"))return l==="toString"?Object.prototype.toString:(...h)=>{const p=c[l]??c.__settled;return p?p(...h):new Promise((b,S)=>{d.queue.push({method:l,args:h,resolve:b,reject:S})})}},set:()=>!1});P(e,s,m)};for(const s of Object.keys(w)){if(e[s]!==void 0){P(e,s,e[s]);continue}t(s)}let n=null,u=null,o=0;const i=s=>{s.source!==parent||!J(s.origin)||$(s.data)&&(n=s.data.__frame_init,g=s.origin,removeEventListener("message",i),clearTimeout(o),u?.())};addEventListener("message",i),parent.postMessage({__frame_connect:!0},"*");const f=new Promise(s=>{u=s,o=setTimeout(()=>{removeEventListener("message",i),s()},K)}),a=document.readyState==="loading"?new Promise(s=>document.addEventListener("DOMContentLoaded",()=>s(),{once:!0})):Promise.resolve();f.then(async()=>{if(!n||!g){for(const r of _.keys())O(r,{code:"not_granted",message:"frame initialization did not arrive - capability unavailable"});return}N(n.theme);const s=g;addEventListener("message",r=>{r.source!==parent||r.origin!==s||q(r.data)&&N(r.data.__frame_theme.theme)});const d=r=>U(()=>import("/_runtime/"+r),void 0),m=Object.keys(n.capabilities??{});for(const r of m)Object.hasOwn(w,r)||V.test(r)&&e[r]===void 0&&(t(r),O(r,{code:"capability_disabled",message:"capability not in this runtime generation"}));const c=m.filter(r=>Object.hasOwn(w,r)).map(r=>[r,w[r]]).filter(r=>typeof r[1]=="string"&&C.test(r[1])),[l,...h]=await Promise.allSettled([E&&C.test(E)?d(E):Promise.resolve({}),...c.map(([,r])=>d(r))]),p=g;A=H(n,l.status==="fulfilled"&&l.value?.TRANSFORMS||{},{shellOrigin:p,mount:Q},r=>parent.postMessage({__frame_cap_telemetry:r},p));const b=r=>parent.postMessage({__frame_cap_telemetry:{kind:"cap-load-error",cap:r}},p),S=A;h.forEach((r,v)=>{const I=c[v][0];if(r.status!=="fulfilled"){b(I);return}try{r.value?.install?.(S)}catch{b(I)}});for(const[r,v]of _)v.queue.length===0&&Object.keys(v.impl).length>0||O(r,{code:m.includes(r)?"capability_disabled":"not_granted",message:"capability not available in this session"});await a,parent.postMessage({__frame_ready:!0},g)})}})();</script><!-- /frame-runtime --><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+
+<title>BCC V3 — Member Hub Profile Editor: Engineering Reference</title>
+<style>
+:root {
+  --ivory:   #FAF8F4;  --ink:    #141210;
+  --gold:    #C9A961;  --gold-dk:#A8843C;
+  --white:   #FFFFFF;
+
+  --surface:    var(--ivory);
+  --card:       var(--white);
+  --text-p:     var(--ink);
+  --text-s:     #5C5550;
+  --text-t:     #8A847E;
+  --text-mono:  #3A3432;
+  --border:     #E2DDD6;
+  --row-alt:    #F5F1EB;
+
+  /* Status chips */
+  --done-bg:      #E8F2EC; --done-fg:     #2B5C3C;
+  --pending-bg:   #FBF3E2; --pending-fg:  #7A5A1A;
+  --none-bg:      #F5E9E7; --none-fg:     #8B3024;
+  --derived-bg:   #E8EDF5; --derived-fg:  #385178;
+  --deferred-bg:  #EDE8F5; --deferred-fg: #5A4778;
+  --discard-bg:   #EDEBE8; --discard-fg:  #68645E;
+
+  /* Migration column */
+  --mig-d2-bg:   #E2EFF8; --mig-d2-fg:   #2356A0;
+  --mig-d3-bg:   #E8F5EE; --mig-d3-fg:   #245E3A;
+  --mig-ph-bg:   #EEE8F5; --mig-ph-fg:   #5A3890;
+  --mig-sch-bg:  #FDF0E0; --mig-sch-fg:  #7A4A08;
+
+  --font-h: 'Outfit','DM Sans','Gill Sans MT',system-ui,sans-serif;
+  --font-b: 'Inter',system-ui,-apple-system,sans-serif;
+  --font-m: 'JetBrains Mono','Cascadia Code','Fira Code','Consolas',monospace;
+  --r4:4px; --r8:8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface:#1A1816; --card:#221F1C;
+    --text-p:#EDE9E3; --text-s:#9A9288; --text-t:#6A6460; --text-mono:#C0B8B0;
+    --border:#2E2A26; --row-alt:#1E1B18;
+    --done-bg:#172B1F;    --done-fg:#7DC89A;
+    --pending-bg:#241C0C; --pending-fg:#D4A84A;
+    --none-bg:#2A1210;    --none-fg:#E0806A;
+    --derived-bg:#121A2A; --derived-fg:#82A4D0;
+    --deferred-bg:#1A1428;--deferred-fg:#B09CCE;
+    --discard-bg:#1E1C18; --discard-fg:#807870;
+    --mig-d2-bg:#0C1E38;  --mig-d2-fg:#82B4E0;
+    --mig-d3-bg:#102418;  --mig-d3-fg:#7DC89A;
+    --mig-ph-bg:#18102C;  --mig-ph-fg:#B09CCE;
+    --mig-sch-bg:#281800; --mig-sch-fg:#E0A85A;
+  }
+}
+:root[data-theme="dark"] {
+  --surface:#1A1816; --card:#221F1C;
+  --text-p:#EDE9E3; --text-s:#9A9288; --text-t:#6A6460; --text-mono:#C0B8B0;
+  --border:#2E2A26; --row-alt:#1E1B18;
+  --done-bg:#172B1F;--done-fg:#7DC89A;
+  --pending-bg:#241C0C;--pending-fg:#D4A84A;
+  --none-bg:#2A1210;--none-fg:#E0806A;
+  --derived-bg:#121A2A;--derived-fg:#82A4D0;
+  --deferred-bg:#1A1428;--deferred-fg:#B09CCE;
+  --discard-bg:#1E1C18;--discard-fg:#807870;
+  --mig-d2-bg:#0C1E38;--mig-d2-fg:#82B4E0;
+  --mig-d3-bg:#102418;--mig-d3-fg:#7DC89A;
+  --mig-ph-bg:#18102C;--mig-ph-fg:#B09CCE;
+  --mig-sch-bg:#281800;--mig-sch-fg:#E0A85A;
+}
+:root[data-theme="light"] {
+  --surface:#FAF8F4; --card:#FFFFFF;
+  --text-p:#141210; --text-s:#5C5550; --text-t:#8A847E; --text-mono:#3A3432;
+  --border:#E2DDD6; --row-alt:#F5F1EB;
+  --done-bg:#E8F2EC;--done-fg:#2B5C3C;
+  --pending-bg:#FBF3E2;--pending-fg:#7A5A1A;
+  --none-bg:#F5E9E7;--none-fg:#8B3024;
+  --derived-bg:#E8EDF5;--derived-fg:#385178;
+  --deferred-bg:#EDE8F5;--deferred-fg:#5A4778;
+  --discard-bg:#EDEBE8;--discard-fg:#68645E;
+  --mig-d2-bg:#E2EFF8;--mig-d2-fg:#2356A0;
+  --mig-d3-bg:#E8F5EE;--mig-d3-fg:#245E3A;
+  --mig-ph-bg:#EEE8F5;--mig-ph-fg:#5A3890;
+  --mig-sch-bg:#FDF0E0;--mig-sch-fg:#7A4A08;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--surface);color:var(--text-p);
+  font-family:var(--font-b);font-size:13.5px;line-height:1.55;
+  padding:52px 24px 96px;-webkit-font-smoothing:antialiased;
+}
+.doc{max-width:1060px;margin:0 auto;}
+
+/* Header */
+.doc-header{
+  padding-bottom:32px;margin-bottom:36px;border-bottom:1px solid var(--border);
+  display:grid;grid-template-columns:1fr auto;gap:16px 40px;align-items:start;
+}
+.doc-header-main{grid-column:1;}
+.doc-header-aside{grid-column:2;text-align:right;padding-top:4px;}
+.eyebrow{
+  font-family:var(--font-m);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--gold-dk);margin-bottom:10px;
+}
+.doc-title{
+  font-family:var(--font-h);font-size:26px;font-weight:700;
+  color:var(--text-p);line-height:1.18;text-wrap:balance;
+  letter-spacing:-.02em;margin-bottom:14px;
+}
+.doc-purpose{font-size:13px;color:var(--text-s);max-width:600px;line-height:1.65;}
+.meta-list{list-style:none;display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.meta-list li{font-family:var(--font-m);font-size:11px;color:var(--text-t);}
+.meta-list strong{color:var(--text-s);font-weight:500;}
+
+/* Governance rule callout */
+.rule-box{
+  background:var(--card);border:1.5px solid var(--gold);border-radius:var(--r8);
+  padding:18px 20px;margin-bottom:32px;
+  display:flex;gap:14px;align-items:flex-start;
+}
+.rule-icon{
+  font-size:18px;flex-shrink:0;margin-top:1px;
+  color:var(--gold-dk);font-family:var(--font-m);font-weight:700;
+  letter-spacing:-.02em;
+}
+.rule-text strong{
+  font-family:var(--font-h);font-size:13.5px;font-weight:600;
+  color:var(--text-p);display:block;margin-bottom:4px;
+}
+.rule-text p{font-size:12.5px;color:var(--text-s);line-height:1.55;}
+
+/* Schema gaps summary */
+.gaps-box{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r8);
+  padding:18px 20px;margin-bottom:40px;
+}
+.gaps-title{
+  font-family:var(--font-h);font-size:13px;font-weight:600;
+  color:var(--text-p);margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.gaps-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:6px 20px;
+}
+.gaps-item{
+  font-family:var(--font-m);font-size:11.5px;color:var(--none-fg);
+  display:flex;align-items:center;gap:6px;
+}
+.gaps-item::before{content:'○';opacity:.5;}
+
+/* Legend */
+.legend{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r8);
+  padding:16px 20px;margin-bottom:44px;
+  display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;
+}
+.legend-label{
+  font-family:var(--font-m);font-size:10px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text-t);flex-basis:100%;margin-bottom:2px;
+}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-s);}
+
+/* Chips */
+.chip{
+  display:inline-flex;align-items:center;padding:2px 7px;border-radius:var(--r4);
+  font-family:var(--font-m);font-size:10.5px;font-weight:500;
+  white-space:nowrap;letter-spacing:.01em;line-height:1.6;
+}
+.done      {background:var(--done-bg);    color:var(--done-fg);}
+.pending   {background:var(--pending-bg); color:var(--pending-fg);}
+.none      {background:var(--none-bg);    color:var(--none-fg);}
+.derived   {background:var(--derived-bg); color:var(--derived-fg);}
+.deferred  {background:var(--deferred-bg);color:var(--deferred-fg);}
+.discard   {background:var(--discard-bg); color:var(--discard-fg);}
+.mig-d2    {background:var(--mig-d2-bg);  color:var(--mig-d2-fg);}
+.mig-d3    {background:var(--mig-d3-bg);  color:var(--mig-d3-fg);}
+.mig-ph    {background:var(--mig-ph-bg);  color:var(--mig-ph-fg);}
+.mig-sch   {background:var(--mig-sch-bg); color:var(--mig-sch-fg);}
+
+/* Separation of responsibilities */
+.sep-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:44px;
+}
+.sep-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r8);
+  padding:16px;
+}
+.sep-card-title{
+  font-family:var(--font-h);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-t);margin-bottom:8px;
+}
+.sep-card-body{font-size:12px;color:var(--text-s);line-height:1.55;}
+
+/* Category sections */
+.cat{margin-bottom:44px;}
+.cat-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.cat-bar{width:3px;min-height:20px;background:var(--gold);border-radius:2px;flex-shrink:0;}
+.cat-title{
+  font-family:var(--font-h);font-size:15px;font-weight:600;
+  color:var(--text-p);letter-spacing:-.01em;
+}
+.cat-sub{font-size:12px;color:var(--text-s);margin-left:4px;}
+.cat-n{font-family:var(--font-m);font-size:10px;color:var(--text-t);margin-left:auto;letter-spacing:.04em;}
+
+/* Tables */
+.tbl-wrap{
+  overflow-x:auto;border:1px solid var(--border);
+  border-radius:var(--r8);background:var(--card);
+}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{border-bottom:1px solid var(--border);}
+th{
+  font-family:var(--font-m);font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.09em;color:var(--text-t);
+  padding:9px 12px;text-align:left;white-space:nowrap;background:var(--card);
+}
+td{padding:8px 12px;vertical-align:top;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even) td{background:var(--row-alt);}
+
+.f-field{font-family:var(--font-m);font-size:11.5px;color:var(--text-mono);white-space:nowrap;}
+.f-desc{color:var(--text-p);line-height:1.4;}
+.f-loc{font-family:var(--font-m);font-size:11px;color:var(--text-s);line-height:1.5;}
+.f-note{font-size:11.5px;color:var(--text-s);line-height:1.45;}
+.f-note em{font-style:italic;color:var(--text-t);}
+
+/* Who-edits and Visibility labels */
+.lbl{
+  display:inline-block;font-family:var(--font-m);font-size:10.5px;
+  font-weight:500;padding:2px 6px;border-radius:3px;white-space:nowrap;
+}
+.lbl-mem  {background:#EAF0FA;color:#2A4A88;}
+.lbl-adm  {background:#F5EBE8;color:#7A2C1A;}
+.lbl-sys  {background:#EAF0EA;color:#2A5A2A;}
+.lbl-ro   {background:#EDEAE6;color:#5A5450;}
+.lbl-pub  {background:#FBF3E2;color:#6A4A10;}
+.lbl-hub  {background:#E8EDF8;color:#2A4870;}
+.lbl-int  {background:#F0EFF8;color:#4A4070;}
+.lbl-none {background:#EDEAE6;color:#6A6460;}
+
+@media(prefers-color-scheme:dark){
+  .lbl-mem  {background:#0C1C38;color:#82A4D8;}
+  .lbl-adm  {background:#2A1010;color:#E09080;}
+  .lbl-sys  {background:#0C2010;color:#80C880;}
+  .lbl-ro   {background:#1C1C18;color:#908880;}
+  .lbl-pub  {background:#241800;color:#D4A84A;}
+  .lbl-hub  {background:#0C1828;color:#82A4D8;}
+  .lbl-int  {background:#18142A;color:#B09CCE;}
+  .lbl-none {background:#1C1C18;color:#807870;}
+}
+:root[data-theme="dark"] .lbl-mem  {background:#0C1C38;color:#82A4D8;}
+:root[data-theme="dark"] .lbl-adm  {background:#2A1010;color:#E09080;}
+:root[data-theme="dark"] .lbl-sys  {background:#0C2010;color:#80C880;}
+:root[data-theme="dark"] .lbl-ro   {background:#1C1C18;color:#908880;}
+:root[data-theme="dark"] .lbl-pub  {background:#241800;color:#D4A84A;}
+:root[data-theme="dark"] .lbl-hub  {background:#0C1828;color:#82A4D8;}
+:root[data-theme="dark"] .lbl-int  {background:#18142A;color:#B09CCE;}
+:root[data-theme="dark"] .lbl-none {background:#1C1C18;color:#807870;}
+:root[data-theme="light"] .lbl-mem  {background:#EAF0FA;color:#2A4A88;}
+:root[data-theme="light"] .lbl-adm  {background:#F5EBE8;color:#7A2C1A;}
+:root[data-theme="light"] .lbl-sys  {background:#EAF0EA;color:#2A5A2A;}
+:root[data-theme="light"] .lbl-ro   {background:#EDEAE6;color:#5A5450;}
+:root[data-theme="light"] .lbl-pub  {background:#FBF3E2;color:#6A4A10;}
+:root[data-theme="light"] .lbl-hub  {background:#E8EDF8;color:#2A4870;}
+:root[data-theme="light"] .lbl-int  {background:#F0EFF8;color:#4A4070;}
+:root[data-theme="light"] .lbl-none {background:#EDEAE6;color:#6A6460;}
+
+@media(max-width:680px){
+  .doc-header{grid-template-columns:1fr;}
+  .doc-header-aside{text-align:left;}
+  .meta-list{align-items:flex-start;}
+  .sep-grid{grid-template-columns:1fr;}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+
+<div class="doc">
+
+  <!-- ── Header ── -->
+  <header class="doc-header">
+    <div class="doc-header-main">
+      <p class="eyebrow">BCC Unified Platform V3 · Phase D · Engineering Reference</p>
+      <h1 class="doc-title">Member Hub Profile Editor<br>Field Reference</h1>
+      <p class="doc-purpose">
+        Every profile field from the legacy system, classified by V3 schema status, edit authority,
+        display surface, and migration batch. The purpose of this document is to give Claude Design
+        a complete engineering inventory so the V6&nbsp;13 Member Hub Profile Editor can be designed
+        against actual platform capabilities — not assumptions.
+      </p>
+    </div>
+    <aside class="doc-header-aside">
+      <ul class="meta-list">
+        <li><strong>Sources</strong> Track A, B, C; Phase D Blueprint</li>
+        <li><strong>Schema basis</strong> Migrations 0001–0041</li>
+        <li><strong>Phase D</strong> Batch D1 complete</li>
+        <li><strong>Date</strong> 2026-07-11</li>
+      </ul>
+    </aside>
+  </header>
+
+  <!-- ── Governance Rule ── -->
+  <div class="rule-box">
+    <div class="rule-icon">§</div>
+    <div class="rule-text">
+      <strong>Governing Rule — Every Legacy Field Must Be Preserved</strong>
+      <p>
+        Every profile field that exists in the legacy system must be preserved in V3.
+        This rule applies regardless of whether the field is currently populated, currently empty,
+        displayed publicly, displayed in the hub, currently unused, or planned for a future module.
+        Presentation does not determine preservation. The V3 database is the complete system of record.
+        The UI is only one consumer of that data.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Separation of Responsibilities ── -->
+  <div class="sep-grid">
+    <div class="sep-card">
+      <div class="sep-card-title">Legacy Profile</div>
+      <div class="sep-card-body">Reference material only. Tells us what information historically existed. <strong>Not a design authority.</strong></div>
+    </div>
+    <div class="sep-card">
+      <div class="sep-card-title">Member Hub Profile Editor</div>
+      <div class="sep-card-body">Editing interface. Allows members to maintain their complete profile. Contains many fields that never appear publicly — address, personal data, internal membership info, privacy preferences, admin metadata.</div>
+    </div>
+    <div class="sep-card">
+      <div class="sep-card-title">Public Photographer Profile</div>
+      <div class="sep-card-body">Presentation layer only. Consumes profile information from the hub. Intentionally exposes only selected public fields. <strong>Must never define the underlying schema.</strong></div>
+    </div>
+  </div>
+
+  <!-- ── Schema Gaps Summary ── -->
+  <div class="gaps-box">
+    <div class="gaps-title">
+      <span class="chip none">No V3 Schema</span>
+      Fields requiring schema migrations before they can be stored — identified from Track A §4.1
+    </div>
+    <div class="gaps-grid">
+      <div class="gaps-item">first_name</div>
+      <div class="gaps-item">last_name (surname)</div>
+      <div class="gaps-item">name_suffix</div>
+      <div class="gaps-item">address_line1</div>
+      <div class="gaps-item">address_line2</div>
+      <div class="gaps-item">address_line3</div>
+      <div class="gaps-item">pin_code</div>
+      <div class="gaps-item">gender</div>
+      <div class="gaps-item">blood_group</div>
+      <div class="gaps-item">emergency_contact_name</div>
+      <div class="gaps-item">emergency_contact_phone</div>
+      <div class="gaps-item">emergency_contact_relation</div>
+      <div class="gaps-item">preferred_camera_system</div>
+      <div class="gaps-item">gear_bag (free text)</div>
+      <div class="gaps-item">primary_genre (niche)</div>
+      <div class="gaps-item">gallery_layout</div>
+      <div class="gaps-item">social: FACEBOOK</div>
+      <div class="gaps-item">social: LINKEDIN</div>
+      <div class="gaps-item">social: X (Twitter)</div>
+      <div class="gaps-item">social: TIKTOK</div>
+    </div>
+  </div>
+
+  <!-- ── Legend ── -->
+  <div class="legend">
+    <span class="legend-label">Column guide</span>
+    <div class="legend-item"><span class="chip done">Schema + Data</span> Column exists; data populated now</div>
+    <div class="legend-item"><span class="chip pending">Schema, No Data</span> Column exists; data migration pending</div>
+    <div class="legend-item"><span class="chip none">No V3 Schema</span> No V3 column yet — schema migration required</div>
+    <div class="legend-item"><span class="chip derived">Derived</span> Computed from other tables at query time</div>
+    <div class="legend-item"><span class="chip deferred">Deferred</span> Explicitly deferred to a future phase</div>
+    <div class="legend-item"><span class="chip discard">Discarded</span> Excluded — universally empty or superseded</div>
+    <div class="legend-item"><span class="lbl lbl-mem">Member</span> Member edits this in their profile editor</div>
+    <div class="legend-item"><span class="lbl lbl-adm">Admin</span> Admin-only; member cannot edit</div>
+    <div class="legend-item"><span class="lbl lbl-sys">System</span> Set by platform automation</div>
+    <div class="legend-item"><span class="lbl lbl-ro">Read-only</span> Visible but not directly editable by anyone</div>
+    <div class="legend-item"><span class="lbl lbl-pub">Public</span> Shown on public photographer profile</div>
+    <div class="legend-item"><span class="lbl lbl-hub">Hub</span> Visible in Member Hub; not public</div>
+    <div class="legend-item"><span class="lbl lbl-int">Internal</span> Admin/system only; never shown to members</div>
+    <div class="legend-item"><span class="chip mig-d2">Batch D2</span> Will be data-migrated in Batch D2</div>
+    <div class="legend-item"><span class="chip mig-d3">Batch D3</span> Will be data-migrated in Batch D3</div>
+    <div class="legend-item"><span class="chip mig-ph">Phase H</span> Deferred to Phase H taxonomy work</div>
+    <div class="legend-item"><span class="chip mig-sch">Schema req.</span> Requires schema migration before data can be stored</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 01 NAME & IDENTITY                         -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Name &amp; Identity</h2>
+      <span class="cat-n">6 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">full_name</td>
+          <td class="f-desc">Complete display name as a single string. Currently stores prefix + name together (e.g. "Dr. Sanjay Kumar Shukla").</td>
+          <td class="f-loc">users.full_name</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">name_prefix</td>
+          <td class="f-desc">Honorific prefix (Dr., Mr., Mrs., Ms.). Separated from given name in legacy bcc_photographers.first_name + display_name. Currently embedded in users.full_name.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: suffix col</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">first_name</td>
+          <td class="f-desc">Given name, separate from family name. Legacy: bcc_photographers.first_name. Used when prefix or surname must be displayed independently.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: first_name</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">last_name</td>
+          <td class="f-desc">Family name / surname. Legacy: bcc_photographers.surname.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: surname→last_name</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">name_suffix</td>
+          <td class="f-desc">Post-nominal suffix (e.g. "Jr.", "IFS" for service suffixes). Legacy: bcc_photographers.suffix.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: suffix→name_suffix</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">username</td>
+          <td class="f-desc">Unique URL slug for the member's profile page (e.g. "kshitijpatle"). Permanent once set — not editable by member.</td>
+          <td class="f-loc">users.username</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-ro">Read-only</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 02 CONTACT & LOCATION                      -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Contact &amp; Location</h2>
+      <span class="cat-n">9 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">email</td>
+          <td class="f-desc">Primary email address. Typically managed via Account Settings, not the profile editor. Not displayed publicly.</td>
+          <td class="f-loc">users.email</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">phone</td>
+          <td class="f-desc">Mobile phone number. 15 of 19 users have a value; 4 NULL (invalid legacy values discarded). Not displayed publicly.</td>
+          <td class="f-loc">users.phone</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">address_line1</td>
+          <td class="f-desc">Street address line 1. Internal — used for physical mail, event registration, membership correspondence.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: address_line1</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">address_line2</td>
+          <td class="f-desc">Street address line 2 (apartment, building, area). Internal.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: address_line2</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">address_line3</td>
+          <td class="f-desc">Street address line 3. Internal.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: address_line3</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">city</td>
+          <td class="f-desc">City. All 19 migrated members currently "Bhopal". Shown on public profile as location.</td>
+          <td class="f-loc">users.city</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">state</td>
+          <td class="f-desc">State / province. All 19 migrated members: "Madhya Pradesh".</td>
+          <td class="f-loc">users.state</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">country</td>
+          <td class="f-desc">Country. Default: "India" for all migrated members.</td>
+          <td class="f-loc">users.country</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">pin_code</td>
+          <td class="f-desc">Postal / PIN code. Internal — used with address for physical correspondence. Legacy: bcc_photographers city/state/pin_code group.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: pin_code</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 03 PERSONAL INFORMATION                    -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Personal Information</h2>
+      <span class="cat-sub">— private; not shown on public profile</span>
+      <span class="cat-n">4 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">date_of_birth</td>
+          <td class="f-desc">Date of birth. Used internally for Senior Member auto-recognition eligibility (age ≥ 60). Not displayed publicly. Not yet migrated from legacy.</td>
+          <td class="f-loc">users.date_of_birth</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">gender</td>
+          <td class="f-desc">Gender identity. Legacy: bcc_photographers.gender (ENUM). Track A planned to "expand enum in V3". Internal use only.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: gender</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">blood_group</td>
+          <td class="f-desc">Blood group / type. Collected for emergency situations and club events. Internal use only. Legacy: bcc_photographers.blood_group.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: blood_group</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">experience_level</td>
+          <td class="f-desc">Self-reported photography experience level (Beginner / Enthusiast / Serious Amateur / Professional). Schema exists; not yet migrated from legacy.</td>
+          <td class="f-loc">users.experience_level (ENUM)</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 04 EMERGENCY CONTACT                       -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Emergency Contact</h2>
+      <span class="cat-sub">— private; never shown publicly</span>
+      <span class="cat-n">3 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">emergency_contact_name</td>
+          <td class="f-desc">Full name of the emergency contact person. Used when a member needs to be contacted in an emergency during club activities. Legacy: bcc_photographers.emergency_contact_name.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: emergency_contact_*</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">emergency_contact_phone</td>
+          <td class="f-desc">Phone number of the emergency contact. Internal use only.</td>
+          <td class="f-loc">— no column</td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">emergency_contact_relation</td>
+          <td class="f-desc">Relationship of emergency contact to the member (e.g. "Spouse", "Parent"). Internal use only.</td>
+          <td class="f-loc">— no column</td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 05 PUBLIC PROFILE                          -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Public Profile</h2>
+      <span class="cat-sub">— photo, cover image, bio, location</span>
+      <span class="cat-n">6 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">avatar</td>
+          <td class="f-desc">Profile photo. Stored in 5 size variants: THUMB / SMALL / MEDIUM / LARGE / ORIGINAL. 12 of 15 active members have real R2 avatars (confirmed Track B). 3 members have generated placeholders.</td>
+          <td class="f-loc">user_avatars<br>(multi-row, size_variant)</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">cover_photo</td>
+          <td class="f-desc">Full-width banner image. Single active cover enforced at DB layer via generated-column uniqueness. 10 of 17 members have real R2 assets; 7 had Unsplash placeholders (not migrated).</td>
+          <td class="f-loc">user_cover_photos<br>(active row: is_active=TRUE)</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">tagline</td>
+          <td class="f-desc">Short photographer identity statement, max 160 characters. 6 members have real legacy values (e.g. "Visual Storyteller", "Wildlife Photographer"). 4 NULL, 7 empty string.</td>
+          <td class="f-loc">users.tagline</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">bio</td>
+          <td class="f-desc">Long-form biography. Schema exists; data not migrated from legacy yet (not included in Track C scope). Legacy source: bcc_photographers.bio.</td>
+          <td class="f-loc">users.bio (TEXT)</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">primary_genre (niche)</td>
+          <td class="f-desc">Primary photographic genre preference. Legacy: bcc_photographers.niche. Track A §4.1 mapped this to primary_genre with ENUM values matching design categories. No V3 column exists.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: niche→primary_genre</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">gallery_layout</td>
+          <td class="f-desc">Member's preferred layout for their own portfolio gallery (e.g. grid vs. masonry). Legacy: bcc_photographers.gallery_layout. Track A planned to carry this to a gallery module preference.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: gallery_layout</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 06 PHOTOGRAPHY SPECIALTIES & PREFERENCES   -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Photography Specialties &amp; Preferences</h2>
+      <span class="cat-n">5 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">sub_genres</td>
+          <td class="f-desc">Self-reported photographic specialties (e.g. ["Wildlife", "Travel", "Landscape"]). JSON array in legacy. Quality issues — some values don't map to V3 genre ENUM.</td>
+          <td class="f-loc">— no column</td>
+          <td><span class="chip deferred">Deferred</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-ph">Phase H</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">areas_of_expertise</td>
+          <td class="f-desc">Techniques the member has developed (e.g. ["Long Exposure", "Astro", "Golden &amp; Blue Hours"]). JSON array in legacy. Many members have NULL.</td>
+          <td class="f-loc">— no column</td>
+          <td><span class="chip deferred">Deferred</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-ph">Phase H</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">favorite_subjects</td>
+          <td class="f-desc">Preferred photographic subjects (e.g. ["Birds", "Festivals", "Mountain Landscape"]). JSON array in legacy. Many members have NULL.</td>
+          <td class="f-loc">— no column</td>
+          <td><span class="chip deferred">Deferred</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-ph">Phase H</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">genre_distribution</td>
+          <td class="f-desc">Breakdown of the member's photos by genre — computed from existing photos in the gallery. Not stored; derived at query time. 312 photos across 13 members exist now.</td>
+          <td class="f-loc">Derived: COUNT(photos.genre)<br>GROUP BY genre WHERE owner</td>
+          <td><span class="chip derived">Derived</span></td>
+          <td><span class="lbl lbl-sys">System</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">photo_count</td>
+          <td class="f-desc">Total number of photos the member has uploaded to the gallery. Derived at query time.</td>
+          <td class="f-loc">Derived: COUNT(photos)<br>WHERE owner_user_id</td>
+          <td><span class="chip derived">Derived</span></td>
+          <td><span class="lbl lbl-sys">System</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 07 SOCIAL LINKS                            -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Social Links</h2>
+      <span class="cat-n">9 platforms</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Platform</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">INSTAGRAM</td>
+          <td class="f-desc">Instagram URL. 15 members have real values. Full URL format (e.g. https://www.instagram.com/kshitijpatle_pixellover/). Migrated in C3.</td>
+          <td class="f-loc">user_social_handles<br>(platform='INSTAGRAM')</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">WEBSITE</td>
+          <td class="f-desc">Personal or portfolio website URL. 1 member (syedtahapasha) — contains an Instagram link entered in the website field. Migrated faithfully as-is.</td>
+          <td class="f-loc">user_social_handles<br>(platform='WEBSITE')</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">FLICKR</td>
+          <td class="f-desc">Flickr portfolio URL. ENUM value exists in V3 schema; 0 rows — universally empty in legacy.</td>
+          <td class="f-loc">user_social_handles<br>(platform='FLICKR')</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">FIVE_HUNDRED_PX</td>
+          <td class="f-desc">500px portfolio URL. ENUM value exists; 0 rows — universally empty in legacy.</td>
+          <td class="f-loc">user_social_handles<br>(platform='FIVE_HUNDRED_PX')</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">YOUTUBE</td>
+          <td class="f-desc">YouTube channel URL. ENUM value exists; 0 rows — universally empty in legacy.</td>
+          <td class="f-loc">user_social_handles<br>(platform='YOUTUBE')</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">FACEBOOK</td>
+          <td class="f-desc">Facebook URL. Present in legacy social_links JSON. 13 of 17 members have values. No V3 ENUM target — requires ALTER TABLE to add platform value.</td>
+          <td class="f-loc">— no ENUM value<br><span style="font-size:10.5px;color:var(--text-t)">Phase C: discarded (no V3 target)</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">LINKEDIN</td>
+          <td class="f-desc">LinkedIn URL. 9 of 17 members have values in legacy. No V3 ENUM target.</td>
+          <td class="f-loc">— no ENUM value</td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">X (Twitter)</td>
+          <td class="f-desc">X / Twitter URL. 9 of 17 members have values (key "x" in legacy JSON). No V3 ENUM target.</td>
+          <td class="f-loc">— no ENUM value</td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">TIKTOK</td>
+          <td class="f-desc">TikTok URL. 0 members have values in legacy ("tiktok" key present but empty for all). No V3 ENUM target.</td>
+          <td class="f-loc">— no ENUM value</td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 08 EQUIPMENT & GEAR                        -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Equipment &amp; Gear</h2>
+      <span class="cat-n">6 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">camera_bodies</td>
+          <td class="f-desc">List of camera body models. Structured JSON array in legacy (equipment.cameras). Batch D3 pending — data quality pass required first (identical placeholder strings appear for 5+ members).</td>
+          <td class="f-loc">user_gear (gear_type='BODY')</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d3">Batch D3</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">lenses</td>
+          <td class="f-desc">List of lens models. Legacy: equipment.lenses (JSON array). Genuine data confirmed for kshitijpatle, prakashhatvalne, robindutta. Batch D3 pending.</td>
+          <td class="f-loc">user_gear (gear_type='LENS')</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d3">Batch D3</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">accessories</td>
+          <td class="f-desc">Other gear items (tripods, flashes, bags). Legacy: equipment.other (JSON array). Batch D3 pending.</td>
+          <td class="f-loc">user_gear (gear_type='ACCESSORY')</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d3">Batch D3</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">preferred_camera_system</td>
+          <td class="f-desc">Brand or system affiliation (e.g. "Nikon Z Series", "Sony Alpha 7Miv"). Short free-text. Many members have NULL or empty string. Legacy: bcc_photographers.preferred_camera_system.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Blueprint §6.1: deferred</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">gear_bag</td>
+          <td class="f-desc">Free-text gear summary — a comma-separated string covering all equipment in one field. Supplementary to the structured equipment JSON. Legacy: bcc_photographers.gear_bag.</td>
+          <td class="f-loc">— no column<br><span style="font-size:10.5px;color:var(--text-t)">Track A §4.1: gear_bag</span></td>
+          <td><span class="chip none">No V3 Schema</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-sch">Schema req.</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">drones</td>
+          <td class="f-desc">Drone equipment. Legacy: equipment.drones (always empty array for all members). No migration value.</td>
+          <td class="f-loc">— discarded</td>
+          <td><span class="chip discard">Discarded</span></td>
+          <td><span class="lbl lbl-none">—</span></td>
+          <td><span class="lbl lbl-none">—</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 09 DISTINCTIONS                            -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Distinctions</h2>
+      <span class="cat-sub">— international photographic body title codes</span>
+      <span class="cat-n">4 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">body_code</td>
+          <td class="f-desc">The awarding federation: FIP (Fédération Internationale de la Photographie), PSA, FIAP, GPU, or OTHER. ENUM — covers the principal international photographic bodies.</td>
+          <td class="f-loc">user_photo_titles.body_code</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">title_code</td>
+          <td class="f-desc">The exact credential code as awarded (e.g. EFIP, PPSA, AFIAP, GPU-CR3, GPU VIP-3). Free text — not constrained to ENUM because bodies issue new grades over time. Batch D2: Shukla 11 rows, Patle 1 row.</td>
+          <td class="f-loc">user_photo_titles.title_code</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">body_name</td>
+          <td class="f-desc">Full name of the awarding body — required when body_code = OTHER (e.g. "FRPA", "PESGSPC", "WPAI"). NULL for FIP/PSA/FIAP/GPU (internationally recognised).</td>
+          <td class="f-loc">user_photo_titles.body_name</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">title_sort_order</td>
+          <td class="f-desc">Display sequence for titles within the Distinctions section. Planned order: FIP=10, PSA=20, FIAP=30, GPU=40, OTHER=50+. Admin-overridable.</td>
+          <td class="f-loc">user_photo_titles.sort_order</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 10 AWARDS & ACHIEVEMENTS                   -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Awards &amp; Achievements</h2>
+      <span class="cat-n">5 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">award_name</td>
+          <td class="f-desc">Name of the award or competition prize (e.g. "Smithsonian Grand Prize", "First Prize"). Batch D2: Hatvalne 4 rows, Patle 1 narrative row.</td>
+          <td class="f-loc">user_awards.award_name</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">awarding_body</td>
+          <td class="f-desc">Organisation that conferred the award (e.g. "Smithsonian Institution", "UNDP", "Friends of Earth International"). Nullable — not required for narrative entries.</td>
+          <td class="f-loc">user_awards.awarding_body</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">award_year</td>
+          <td class="f-desc">Year received (MySQL YEAR type, 1901–2155). NULL when the row is a narrative entry without individual year attribution.</td>
+          <td class="f-loc">user_awards.award_year</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">description</td>
+          <td class="f-desc">Long narrative text. Used when the award data is a paragraph (e.g. Kshitij Patle's narrative about competition wins and magazine features) rather than a structured entry.</td>
+          <td class="f-loc">user_awards.description (TEXT)</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+        <tr>
+          <td class="f-field">award_sort_order</td>
+          <td class="f-desc">Display sequence. Migration plan: reverse-chronological (newest = lowest sort_order). Admin-overridable.</td>
+          <td class="f-loc">user_awards.sort_order</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-pub">Public</span></td>
+          <td><span class="chip mig-d2">Batch D2</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 11 MEMBERSHIP                              -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Membership</h2>
+      <span class="cat-sub">— read-only for members; admin-controlled</span>
+      <span class="cat-n">8 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">membership_class</td>
+          <td class="f-desc">The member's class (Basic, Full, Life, Patron, Founding, Student, Individual). Per MEM-006: constitutional class names are hidden on public pages. Only admin can change this.</td>
+          <td class="f-loc">memberships→membership_classes.name</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-adm">Admin</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">lifecycle_state</td>
+          <td class="f-desc">Membership lifecycle: PENDING / APPROVED / ACTIVE / SUSPENDED / EXPIRED / TERMINATED / REJECTED. All 17 migrated active members: ACTIVE.</td>
+          <td class="f-loc">memberships.lifecycle_state</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-adm">Admin</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">join_year / join_month</td>
+          <td class="f-desc">Year and month the member joined. Immutable once set per MEM-007. Shown in member hub as "Member since". Founding members: 2016; others range 2017–2023.</td>
+          <td class="f-loc">memberships.join_year,<br>memberships.join_month</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-ro">Read-only</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">membership_number</td>
+          <td class="f-desc">Permanent BCC identifier: BCC{YYYY}{MM}{SSSSS}. Write-once, immutable per MEM-007. Founding members: permanent numbers assigned. Operational members: NULL — awaiting sequential allocation.</td>
+          <td class="f-loc">memberships.membership_number</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-ro">Read-only</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">temp_identifier</td>
+          <td class="f-desc">BCCTempXXXXX — issued during migration until permanent number assigned. BCCTemp00001–00016 active for 16 operational members.</td>
+          <td class="f-loc">membership_temp_identifiers.temp_identifier</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-sys">System</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">recognition_code</td>
+          <td class="f-desc">Governance or auto recognition title: SENIOR_MEMBER / HONORARY_SENIOR_MEMBER / HONORARY_MEMBER / HONORARY_MENTOR / HONORARY_GRANDMASTER. 0 rows — no recognitions yet awarded.</td>
+          <td class="f-loc">member_recognitions.recognition_code</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-adm">Admin</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">applied_at / activated_at</td>
+          <td class="f-desc">Membership lifecycle timestamps — when the member applied and when activated. Populated with approximate historical dates for all migrated members.</td>
+          <td class="f-loc">memberships.applied_at,<br>activated_at</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-ro">Read-only</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">expires_at</td>
+          <td class="f-desc">Membership expiry timestamp. NULL for all current members — expiry dates were not set during migration (governance decision pending re: valid_until for active members).</td>
+          <td class="f-loc">memberships.expires_at</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-adm">Admin</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 12 PRIVACY & VISIBILITY SETTINGS           -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Privacy &amp; Visibility Settings</h2>
+      <span class="cat-n">4 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">profile_visibility</td>
+          <td class="f-desc">Who can view the member's profile page: PUBLIC / MEMBERS_ONLY / PRIVATE. Default: PUBLIC. Constitutional constraint: founding members 2–7 are permanently PRIVATE — this cannot be changed without explicit written instruction.</td>
+          <td class="f-loc">users.profile_visibility</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">portfolio_visibility</td>
+          <td class="f-desc">Who can view the member's photo gallery: PUBLIC / MEMBERS_ONLY / PRIVATE. Default: PUBLIC for all migrated members.</td>
+          <td class="f-loc">users.portfolio_visibility</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">activity_visibility</td>
+          <td class="f-desc">Who can view the member's activity feed (event attendance, comments, etc.): PUBLIC / MEMBERS_ONLY / PRIVATE. Default: MEMBERS_ONLY for all migrated members.</td>
+          <td class="f-loc">users.activity_visibility</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">photo_visibility (per-photo)</td>
+          <td class="f-desc">Per-photo visibility override: PUBLIC / MEMBERS_ONLY / PRIVATE / UNLISTED. UNLISTED = accessible only via direct UUID link, excluded from all listings. All 312 migrated photos: PUBLIC.</td>
+          <td class="f-loc">photos.visibility</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 13 ACCOUNT & PLATFORM SETTINGS             -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="cat">
+    <div class="cat-head">
+      <span class="cat-bar"></span>
+      <h2 class="cat-title">Account &amp; Platform Settings</h2>
+      <span class="cat-sub">— authentication, status, account management</span>
+      <span class="cat-n">7 fields</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:160px">Field</th><th>Description</th>
+        <th style="width:185px">V3 Location</th><th style="width:115px">Schema</th>
+        <th style="width:80px">Edits</th><th style="width:74px">Display</th>
+        <th style="width:88px">Migration</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="f-field">language_pref</td>
+          <td class="f-desc">Interface language preference: EN (English) or HI (Hindi). Controls UI locale in Member Hub. Default EN for all migrated members.</td>
+          <td class="f-loc">users.language_pref</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">account_status</td>
+          <td class="f-desc">Whether the account is ACTIVE, SUSPENDED, or DEACTIVATED. All 19 users: ACTIVE. Admin-controlled — member cannot change their own status.</td>
+          <td class="f-loc">users.status</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-adm">Admin</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">email_verified_at</td>
+          <td class="f-desc">Timestamp when the email address was confirmed via verification link. NULL for all migrated members — email verification was not part of the migration workflow.</td>
+          <td class="f-loc">users.email_verified_at</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-sys">System</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">phone_verified_at</td>
+          <td class="f-desc">Timestamp when the phone number was confirmed via OTP. NULL for all migrated members.</td>
+          <td class="f-loc">users.phone_verified_at</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-sys">System</span></td>
+          <td><span class="lbl lbl-hub">Hub</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">password_hash</td>
+          <td class="f-desc">Argon2id password hash. Never exposed via any API or profile endpoint. Populated with a temporary default hash for all migrated members — they must reset on first login.</td>
+          <td class="f-loc">users.password_hash</td>
+          <td><span class="chip done">Schema + Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-none">—</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">deletion_requested_at</td>
+          <td class="f-desc">Timestamp when a member formally requests account deletion. NULL for all members — no deletion requests received. Triggers an admin review and retention workflow.</td>
+          <td class="f-loc">users.deletion_requested_at</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-mem">Member</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="f-field">deleted_at</td>
+          <td class="f-desc">Soft-delete timestamp — set when an account is fully deactivated by an admin after a deletion request. NULL for all members.</td>
+          <td class="f-loc">users.deleted_at</td>
+          <td><span class="chip pending">Schema, No Data</span></td>
+          <td><span class="lbl lbl-adm">Admin</span></td>
+          <td><span class="lbl lbl-int">Internal</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</div>
+
+</body></html>

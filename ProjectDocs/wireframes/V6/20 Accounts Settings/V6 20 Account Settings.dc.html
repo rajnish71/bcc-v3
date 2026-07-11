@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#F2EFE9;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#EFE3C8}
+a{color:#A8843C;text-decoration:none}
+a:hover{color:#8C6830}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+img{display:block}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#F2EFE9;padding:0 0 160px;" data-screen-label="V6 20 Account Settings">
+
+<!-- ═══ COVER ═══ -->
+<header style="background:linear-gradient(180deg,#FFFFFF 0%,#FAF8F4 100%);border-bottom:1px solid #E7E1D6;padding:96px 0 72px;">
+  <div style="max-width:1140px;margin:0 auto;padding:0 48px;">
+    <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:64px;width:auto;margin-bottom:48px;"/>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <span style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#A8843C;font-weight:600;">V6 · Step 11 · July 2026</span>
+      <span style="background:#141210;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">V6 20 ACCOUNT SETTINGS</span>
+      <span style="background:#3E5A48;color:#FFFFFF;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">AUTHORITATIVE WIREFRAME</span>
+      <span style="background:#F4F0E8;color:#57514B;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;border:1px solid #D8D2C6;">INHERITS V6 00 · V6 91 · V6 92</span>
+    </div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(44px,5.5vw,72px);font-weight:700;letter-spacing:-0.03em;line-height:1.0;margin-bottom:28px;">Account<br/>Settings</h1>
+    <p style="font-size:18px;line-height:1.7;color:#57514B;max-width:700px;font-weight:300;margin-bottom:12px;">The only place on the platform where a user can change their name or email. These fields are read-only everywhere else — profile editor, consent form, renewal form. Password is also managed here. Three sections, each saving independently. No HubSidebar — centered content only.</p>
+    <p style="font-size:13px;line-height:1.6;color:#8B8378;max-width:560px;margin-bottom:40px;font-style:italic;">Design reference only — no implementation, no tokens, no CSS. Username is permanent and shown as read-only reference only. MEM-007 identity lock. RBAC: all authenticated roles — USER and above. Entry: avatar dropdown → Account Settings.</p>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;border-top:1px solid #E7E1D6;padding-top:28px;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Route</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;">/hub/account-settings</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Shell</div><div style="font-size:14px;font-weight:500;">SiteHeader · centered 640px · SiteFooter · no HubSidebar</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Sections</div><div style="font-size:14px;font-weight:500;">3 — Name &amp; Title · Email Address · Password</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Gold CTAs</div><div style="font-size:14px;font-weight:500;">2 — Save Name · Update Password (each section saves independently)</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">RBAC</div><div style="font-size:14px;font-weight:500;">All authenticated roles — USER and above</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════
+     01 — DESKTOP ACCOUNT SETTINGS (INTERACTIVE)
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:96px 48px 0;" data-screen-label="01 Desktop Account Settings">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:8px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">01</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Desktop — Account Settings</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:700px;margin-bottom:36px;">Three independent sections on a single centered page. No sidebar. Each section has its own save action. Toggle states below to inspect all specified form states at full fidelity — resting, editing, saved, email flow, password filling, and error.</p>
+
+  <!-- State switcher -->
+  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+    <button onClick="{{ setRest }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 16px;border:1px solid {{ brO }};background:{{ brB }};color:{{ brC }};transition:all 0.15s;">Resting</button>
+    <button onClick="{{ setName }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 16px;border:1px solid {{ bnO }};background:{{ bnB }};color:{{ bnC }};transition:all 0.15s;">Name — Editing</button>
+    <button onClick="{{ setNameOk }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 16px;border:1px solid {{ bnoO }};background:{{ bnoB }};color:{{ bnoC }};transition:all 0.15s;">Name — Saved</button>
+    <button onClick="{{ setEmail }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 16px;border:1px solid {{ beO }};background:{{ beB }};color:{{ beC }};transition:all 0.15s;">Email — Change Open</button>
+    <button onClick="{{ setPass }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 16px;border:1px solid {{ bpO }};background:{{ bpB }};color:{{ bpC }};transition:all 0.15s;">Password — Filling</button>
+    <button onClick="{{ setPassErr }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 16px;border:1px solid {{ bpeO }};background:{{ bpeB }};color:{{ bpeC }};transition:all 0.15s;">Password — Error</button>
+  </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;margin-bottom:20px;letter-spacing:0.04em;">↑ Toggle state · Showing: {{ stateLabel }}</div>
+
+  <!-- FRAME -->
+  <div style="width:960px;height:1020px;overflow:hidden;border:1px solid #D8D2C6;box-shadow:0 8px 32px rgba(20,18,16,0.07);background:#FAF8F4;">
+    <div style="width:1200px;transform:scale(0.8);transform-origin:top left;background:#FAF8F4;">
+
+      <!-- SITE HEADER -->
+      <div style="height:72px;background:rgba(255,255,255,0.96);border-bottom:1px solid #E7E1D6;display:flex;align-items:center;">
+        <div style="max-width:1160px;width:100%;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:32px;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:52px;width:auto;justify-self:start;"/>
+          <div style="display:flex;gap:32px;font-size:15px;font-weight:500;color:#57514B;">
+            <span>Home</span><span>About</span><span>Activities</span><span>Showcase</span><span>Journal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:20px;justify-self:end;">
+            <span style="font-size:14px;font-weight:600;color:#A8843C;border:1px solid #C9A961;background:rgba(201,169,97,0.14);padding:9px 20px;border-radius:2px;">Member Hub</span>
+            <div style="position:relative;">
+              <span style="width:36px;height:36px;border-radius:999px;background:linear-gradient(135deg,#3E5A48,#2A3E32);color:#FFFFFF;font-family:'Outfit',sans-serif;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;outline:1px solid #E7E1D6;">RK</span>
+              <!-- Avatar dropdown — entry point annotation -->
+              <div style="position:absolute;right:0;top:44px;background:#FFFFFF;border:1px solid #D8D2C6;box-shadow:0 8px 24px rgba(20,18,16,0.12);padding:6px 0;min-width:200px;z-index:10;">
+                <div style="padding:10px 16px;font-size:12px;color:#8B8378;border-bottom:1px solid #F0EBE0;font-family:'JetBrains Mono',monospace;">rajnish.khare@gmail.com</div>
+                <div style="padding:11px 16px;font-size:13px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;gap:8px;"><span>Account Settings</span><span style="font-size:10px;background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:2px;">← here</span></div>
+                <div style="padding:10px 16px;font-size:13px;color:#57514B;">Member Hub</div>
+                <div style="padding:10px 16px;font-size:13px;color:#57514B;">My Profile</div>
+                <div style="padding:10px 16px;font-size:13px;color:#A3493B;border-top:1px solid #F0EBE0;">Sign Out</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE CONTENT — centered 640px -->
+      <div style="max-width:640px;margin:0 auto;padding:52px 0 80px;">
+
+        <!-- Page heading -->
+        <div style="margin-bottom:40px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#8B8378;margin-bottom:8px;">/hub/account-settings</div>
+          <h1 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;color:#141210;line-height:1.1;margin-bottom:10px;">Account Settings</h1>
+          <p style="font-size:14px;color:#8B8378;line-height:1.6;">Name and email can only be changed here. These fields are read-only on all other pages.</p>
+        </div>
+
+        <!-- ─── SECTION 1 — NAME & TITLE ─────────────────── -->
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;margin-bottom:48px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #F0EBE0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#A8843C;font-weight:600;">01</span>
+            <h3 style="font-family:'Outfit',sans-serif;font-size:19px;font-weight:700;color:#141210;letter-spacing:-0.01em;">Name &amp; Title</h3>
+            <span style="font-size:11px;color:#8B8378;font-style:italic;margin-left:auto;">Saves independently</span>
+          </div>
+
+          <!-- Row 1: Title + First Name -->
+          <div style="display:grid;grid-template-columns:116px 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">TITLE</div>
+              <div style="height:44px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:14px;color:#141210;border-radius:8px;"><span>Dr.</span><span style="font-size:11px;color:#8B8378;">▾</span></div>
+              <div style="font-size:10px;color:#8B8378;margin-top:4px;line-height:1.4;">Mr. / Ms. / Mrs. / Dr. / Prof. / Er. / CA / Adv.</div>
+            </div>
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">FIRST NAME <span style="color:#C4473A;">*</span></div>
+              <div style="height:44px;border:{{ fnBorder }};background:#FFFFFF;display:flex;align-items:center;padding:0 12px;font-size:14px;color:#141210;border-radius:8px;">Rajnish<sc-if value="{{ isNameEdit }}" hint-placeholder-val="{{ false }}"><span style="display:inline-block;width:2px;height:16px;background:#A8843C;margin-left:2px;vertical-align:text-bottom;"></span></sc-if></div>
+            </div>
+          </div>
+
+          <!-- Row 2: Middle + Last -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">MIDDLE NAME <span style="font-style:italic;font-size:9px;text-transform:none;">optional</span></div>
+              <div style="height:44px;border:1px solid #E7E1D6;background:#FFFFFF;display:flex;align-items:center;padding:0 12px;font-size:14px;color:#B8B0A4;border-radius:8px;">optional</div>
+            </div>
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">LAST NAME <span style="color:#C4473A;">*</span></div>
+              <div style="height:44px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;padding:0 12px;font-size:14px;color:#141210;border-radius:8px;">Khare</div>
+            </div>
+          </div>
+
+          <!-- Display Name Preview -->
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:8px;">DISPLAY NAME PREVIEW</div>
+            <div style="background:#F4F0E8;border:1px solid #E7E1D6;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-family:'Outfit',sans-serif;font-size:18px;color:#141210;font-weight:400;">Dr. Rajnish Khare</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;letter-spacing:0.08em;">auto-updates as you type</span>
+            </div>
+          </div>
+
+          <!-- Username — read-only -->
+          <div style="margin-bottom:28px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;">USERNAME</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:0.1em;padding:2px 7px;background:#F4F0E8;border:1px solid #E7E1D6;color:#57514B;">PERMANENT · MEM-007</span>
+            </div>
+            <div style="height:44px;border:1px solid #F0EBE0;background:#F4F0E8;display:flex;align-items:center;padding:0 14px;font-size:14px;color:#8B8378;font-family:'JetBrains Mono',monospace;border-radius:8px;">@rajnishkhare</div>
+            <div style="font-size:11px;color:#8B8378;margin-top:5px;">Username is permanent and cannot be changed. It is a read-only reference only.</div>
+          </div>
+
+          <!-- Gold CTA + success state -->
+          <div style="display:flex;align-items:center;gap:16px;">
+            <span style="font-size:14px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:13px 26px;border-radius:2px;box-shadow:0 2px 10px rgba(168,132,60,0.3),inset 0 1px 0 rgba(255,255,255,0.25);">Save Name</span>
+            <sc-if value="{{ isNameOk }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:13px;color:#3E5A48;font-weight:600;">✓ Name updated.</span>
+            </sc-if>
+          </div>
+        </div>
+
+        <!-- ─── SECTION 2 — EMAIL ADDRESS ─────────────────── -->
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;margin-bottom:48px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #F0EBE0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#A8843C;font-weight:600;">02</span>
+            <h3 style="font-family:'Outfit',sans-serif;font-size:19px;font-weight:700;color:#141210;letter-spacing:-0.01em;">Email Address</h3>
+            <span style="font-size:11px;color:#8B8378;font-style:italic;margin-left:auto;">Verification required to change</span>
+          </div>
+
+          <!-- Current email — read-only -->
+          <div style="margin-bottom:20px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">CURRENT EMAIL</div>
+            <div style="height:44px;border:1px solid #F0EBE0;background:#F4F0E8;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:14px;color:#57514B;border-radius:8px;">
+              <span>rajnish.khare@gmail.com</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;padding:3px 8px;background:#E7E1D6;color:#57514B;border-radius:2px;">READ ONLY</span>
+            </div>
+          </div>
+
+          <!-- Change email — collapsed -->
+          <sc-if value="{{ isEmailClosed }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:13px;color:#A8843C;border-bottom:1px solid rgba(168,132,60,0.35);cursor:pointer;padding-bottom:1px;">Change email address ↓</span>
+          </sc-if>
+
+          <!-- Change email — expanded with status panel -->
+          <sc-if value="{{ isEmailOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid #E7E1D6;background:#FAF8F4;padding:20px;border-radius:8px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:16px;">CHANGE EMAIL ADDRESS</div>
+
+              <!-- New email input -->
+              <div style="margin-bottom:16px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">NEW EMAIL ADDRESS</div>
+                <div style="height:44px;border:2px solid #A8843C;background:#FFFFFF;display:flex;align-items:center;padding:0 12px;font-size:14px;color:#141210;border-radius:8px;">rajnish.khare@outlook.com<span style="display:inline-block;width:2px;height:16px;background:#A8843C;margin-left:2px;vertical-align:text-bottom;"></span></div>
+              </div>
+
+              <!-- Send button — secondary, NOT gold -->
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                <span style="font-size:13px;font-weight:600;color:#141210;border:1px solid #D8D2C6;padding:11px 20px;border-radius:2px;background:#FFFFFF;white-space:nowrap;">Send Verification Link</span>
+                <span style="font-size:11px;color:#8B8378;font-style:italic;line-height:1.4;">Secondary — not gold. Sends email, not a save.</span>
+              </div>
+
+              <!-- Verification status panel -->
+              <div style="background:#FFFFFF;border:1px solid #D8D2C6;border-left:3px solid #A8843C;padding:18px 20px;border-radius:8px;">
+                <div style="font-size:13px;color:#141210;line-height:1.75;margin-bottom:12px;">Verification email sent to <strong style="font-weight:600;">rajnish.khare@outlook.com</strong>.<br/>Click the link to confirm. Your current email stays active until verified.</div>
+                <div style="display:flex;align-items:center;gap:16px;">
+                  <span style="font-size:12px;color:#8B8378;font-style:italic;">Resend available in 60 s</span>
+                  <span style="width:1px;height:12px;background:#D8D2C6;flex-shrink:0;display:flex;"></span>
+                  <span style="font-size:12px;color:#A8843C;border-bottom:1px solid rgba(168,132,60,0.4);cursor:pointer;padding-bottom:1px;">Resend</span>
+                  <span style="font-size:12px;color:#57514B;border-bottom:1px solid #D8D2C6;cursor:pointer;padding-bottom:1px;">Cancel</span>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- ─── SECTION 3 — PASSWORD ─────────────────────── -->
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #F0EBE0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#A8843C;font-weight:600;">03</span>
+            <h3 style="font-family:'Outfit',sans-serif;font-size:19px;font-weight:700;color:#141210;letter-spacing:-0.01em;">Password</h3>
+            <span style="font-size:11px;color:#8B8378;font-style:italic;margin-left:auto;">Saves independently</span>
+          </div>
+
+          <!-- Current password -->
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">CURRENT PASSWORD <span style="color:#C4473A;">*</span></div>
+            <div style="height:44px;border:{{ currPwdBorder }};background:{{ currPwdBg }};display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-radius:8px;">
+              <span style="font-size:15px;color:#141210;letter-spacing:0.18em;">••••••••</span>
+              <span style="font-size:12px;color:#8B8378;cursor:pointer;">Show</span>
+            </div>
+            <sc-if value="{{ isPassErr }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11px;color:#C4473A;margin-top:5px;font-weight:500;">Current password is incorrect.</div>
+            </sc-if>
+          </div>
+
+          <!-- New password + strength bar -->
+          <div style="margin-bottom:4px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">NEW PASSWORD <span style="color:#C4473A;">*</span> <span style="font-style:italic;font-size:9px;text-transform:none;color:#8B8378;">min 8 chars</span></div>
+            <div style="height:44px;border:{{ newPwdBorder }};background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-radius:8px;">
+              <span style="font-size:15px;color:#141210;letter-spacing:0.18em;">••••••••</span>
+              <span style="font-size:12px;color:#8B8378;cursor:pointer;">Show</span>
+            </div>
+          </div>
+          <!-- Strength bar — 4px -->
+          <div style="height:4px;background:#F0EBE0;border-radius:2px;overflow:hidden;margin-bottom:5px;">
+            <div style="height:4px;width:{{ strengthW }};background:{{ strengthColor }};border-radius:2px;"></div>
+          </div>
+          <div style="font-size:11px;color:#8B8378;margin-bottom:16px;min-height:16px;">{{ strengthLabel }}</div>
+
+          <!-- Confirm password -->
+          <div style="margin-bottom:28px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">CONFIRM NEW PASSWORD <span style="color:#C4473A;">*</span></div>
+            <div style="height:44px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-radius:8px;">
+              <span style="font-size:15px;color:#141210;letter-spacing:0.18em;">••••••••</span>
+              <span style="font-size:12px;color:#8B8378;cursor:pointer;">Show</span>
+            </div>
+            <sc-if value="{{ confirmMatch }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11px;color:#3E5A48;margin-top:5px;font-weight:600;">Passwords match ✓</div>
+            </sc-if>
+            <sc-if value="{{ confirmMismatch }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11px;color:#C4473A;margin-top:5px;">Passwords don't match</div>
+            </sc-if>
+          </div>
+
+          <!-- Gold CTA -->
+          <div style="display:flex;align-items:center;gap:16px;">
+            <span style="font-size:14px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:13px 26px;border-radius:2px;box-shadow:0 2px 10px rgba(168,132,60,0.3),inset 0 1px 0 rgba(255,255,255,0.25);">Update Password</span>
+          </div>
+        </div>
+
+      </div><!-- /PAGE CONTENT -->
+
+      <!-- SITE FOOTER (abbreviated) -->
+      <div style="background:#141210;padding:36px 48px;margin-top:80px;">
+        <div style="max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:36px;width:auto;filter:invert(1);opacity:0.7;"/>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.1em;">SiteFooter · inherited V6 92</span>
+        </div>
+      </div>
+
+    </div><!-- /inner scale -->
+  </div><!-- /frame -->
+  <p style="font-size:13px;color:#57514B;line-height:1.65;max-width:960px;margin-top:12px;">Avatar dropdown in the header shows the entry path — "Account Settings" highlighted. Section 1 and Section 3 each have one gold CTA that saves only that section. Section 2 uses a secondary button to send a verification email — gold is reserved for save actions only. The avatar dropdown open state is shown to document the entry path; it is not shown open on page load.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     02 — FIELD STATES
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="02 Field States">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">02</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Field States &amp; Interaction Rules</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">All three sections share the same field token vocabulary. Read-only fields use the ivory background to visually distinguish them from editable fields. Validate on blur — never on keystroke. Password fields always have a show/hide toggle.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+
+    <!-- Field state catalogue -->
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:18px;">EDITABLE FIELD STATES</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:4px;">EMPTY (placeholder)</div>
+          <div style="height:44px;border:1px solid #E7E1D6;background:#FFFFFF;display:flex;align-items:center;padding:0 14px;font-size:14px;color:#B8B0A4;border-radius:8px;">e.g. optional field placeholder</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:4px;">FILLED</div>
+          <div style="height:44px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;padding:0 14px;font-size:14px;color:#141210;border-radius:8px;">Rajnish</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:4px;">FOCUSED</div>
+          <div style="height:44px;border:2px solid #A8843C;background:#FFFFFF;display:flex;align-items:center;padding:0 13px;font-size:14px;color:#141210;border-radius:8px;">Rajnish<span style="display:inline-block;width:2px;height:16px;background:#A8843C;margin-left:2px;vertical-align:text-bottom;"></span></div>
+          <div style="font-size:11px;color:#8B8378;margin-top:4px;">2px solid #A8843C on focus.</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:4px;">ERROR</div>
+          <div style="height:44px;border:2px solid #C4473A;background:#FDF8F7;display:flex;align-items:center;padding:0 13px;font-size:14px;color:#141210;border-radius:8px;">••••••••</div>
+          <div style="font-size:11px;color:#C4473A;margin-top:4px;">Current password is incorrect.</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:4px;">READ-ONLY</div>
+          <div style="height:44px;border:1px solid #F0EBE0;background:#F4F0E8;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:14px;color:#57514B;border-radius:8px;cursor:not-allowed;"><span>rajnish.khare@gmail.com</span><span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;padding:3px 8px;background:#E7E1D6;color:#57514B;border-radius:2px;">READ ONLY</span></div>
+          <div style="font-size:11px;color:#8B8378;margin-top:4px;">Ivory background (#F4F0E8). cursor:not-allowed. Never an input.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Password-specific states -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:18px;">PASSWORD STRENGTH BAR</div>
+        <div style="font-size:13px;line-height:1.9;color:#57514B;margin-bottom:16px;">4px height bar below the New Password field. Appears when the field has focus and content. Three levels:</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#C4473A;margin-bottom:5px;">WEAK</div>
+            <div style="height:4px;background:#F0EBE0;border-radius:2px;overflow:hidden;"><div style="height:4px;width:25%;background:#C4473A;border-radius:2px;"></div></div>
+            <div style="font-size:11px;color:#8B8378;margin-top:4px;">Red · #C4473A · width 25%</div>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#C9A961;margin-bottom:5px;">MEDIUM</div>
+            <div style="height:4px;background:#F0EBE0;border-radius:2px;overflow:hidden;"><div style="height:4px;width:50%;background:#C9A961;border-radius:2px;"></div></div>
+            <div style="font-size:11px;color:#8B8378;margin-top:4px;">Amber · #C9A961 · width 50%</div>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#3E5A48;margin-bottom:5px;">STRONG</div>
+            <div style="height:4px;background:#F0EBE0;border-radius:2px;overflow:hidden;"><div style="height:4px;width:100%;background:#3E5A48;border-radius:2px;"></div></div>
+            <div style="font-size:11px;color:#8B8378;margin-top:4px;">Green · #3E5A48 · width 100%</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:14px;">INLINE FEEDBACK</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#F0F5F1;border-left:3px solid #3E5A48;">
+            <span style="font-size:13px;color:#3E5A48;font-weight:600;">✓ Passwords match</span>
+            <span style="font-size:11px;color:#8B8378;margin-left:auto;">Below Confirm field</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#FDF8F7;border-left:3px solid #C4473A;">
+            <span style="font-size:13px;color:#C4473A;">Passwords don't match</span>
+            <span style="font-size:11px;color:#8B8378;margin-left:auto;">Below Confirm field</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#FDF8F7;border-left:3px solid #C4473A;">
+            <span style="font-size:13px;color:#C4473A;">Current password is incorrect.</span>
+            <span style="font-size:11px;color:#8B8378;margin-left:auto;">Below Current pwd</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#F0F5F1;border-left:3px solid #3E5A48;">
+            <span style="font-size:13px;color:#3E5A48;font-weight:600;">✓ Name updated.</span>
+            <span style="font-size:11px;color:#8B8378;margin-left:auto;">After Save Name · no redirect</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#F0F5F1;border-left:3px solid #3E5A48;">
+            <span style="font-size:13px;color:#3E5A48;font-weight:600;">✓ Password updated.</span>
+            <span style="font-size:11px;color:#8B8378;margin-left:auto;">After Update Password · no redirect</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email change flow detail -->
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:20px;">EMAIL CHANGE FLOW — DETAILED STATES</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;">
+      <!-- State A: Collapsed -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:12px;">A — RESTING / COLLAPSED</div>
+        <div style="border:1px solid #E7E1D6;padding:20px;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">CURRENT EMAIL</div>
+          <div style="height:40px;border:1px solid #F0EBE0;background:#F4F0E8;display:flex;align-items:center;padding:0 12px;font-size:13px;color:#57514B;margin-bottom:14px;border-radius:6px;">rajnish.khare@gmail.com</div>
+          <span style="font-size:13px;color:#A8843C;border-bottom:1px solid rgba(168,132,60,0.35);padding-bottom:1px;">Change email address ↓</span>
+        </div>
+        <div style="font-size:11px;color:#8B8378;margin-top:8px;">Text link. Expands the change block inline. No page navigation.</div>
+      </div>
+      <!-- State B: New email input + button -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:12px;">B — EXPANDED, NOT SENT</div>
+        <div style="border:1px solid #E7E1D6;padding:20px;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">NEW EMAIL ADDRESS</div>
+          <div style="height:40px;border:2px solid #A8843C;background:#FFFFFF;display:flex;align-items:center;padding:0 12px;font-size:13px;color:#141210;margin-bottom:12px;border-radius:6px;">rajnish@outlook.com<span style="display:inline-block;width:2px;height:14px;background:#A8843C;margin-left:2px;vertical-align:text-bottom;"></span></div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:12px;font-weight:600;color:#141210;border:1px solid #D8D2C6;padding:9px 14px;border-radius:2px;background:#FFFFFF;white-space:nowrap;">Send Verification Link</span>
+            <span style="font-size:12px;color:#57514B;cursor:pointer;padding-bottom:1px;border-bottom:1px solid #D8D2C6;">Cancel</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#8B8378;margin-top:8px;">"Send Verification Link" is secondary (border button). NOT gold. Gold is only for save actions.</div>
+      </div>
+      <!-- State C: Status panel shown -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:12px;">C — EMAIL SENT · STATUS PANEL</div>
+        <div style="border:1px solid #E7E1D6;padding:20px;background:#FAF8F4;">
+          <div style="background:#FFFFFF;border:1px solid #D8D2C6;border-left:3px solid #A8843C;padding:14px 16px;border-radius:6px;margin-bottom:10px;">
+            <div style="font-size:12px;color:#141210;line-height:1.7;margin-bottom:10px;">Verification email sent to <strong style="font-weight:600;">rajnish@outlook.com</strong>. Click the link to confirm. Your current email stays active until verified.</div>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <span style="font-size:11px;color:#8B8378;font-style:italic;">Resend in 60 s</span>
+              <span style="font-size:11px;color:#A8843C;border-bottom:1px solid rgba(168,132,60,0.4);cursor:pointer;padding-bottom:1px;">Resend</span>
+              <span style="font-size:11px;color:#57514B;border-bottom:1px solid #D8D2C6;cursor:pointer;padding-bottom:1px;">Cancel</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#8B8378;margin-top:8px;">Resend text link appears after 60 seconds (timer-gated). Cancel collapses the block. Current email remains active until the verification link is clicked.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     03 — MOBILE ≤640px
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="03 Mobile">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:8px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">03</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Mobile — ≤640px</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:36px;">Full-width stacked layout. No sidebar to collapse — Account Settings has no sidebar at any breakpoint. Section cards go edge-to-edge with 16px side padding. HubMobileBar at bottom. No sticky save bar — each section's gold CTA is always at the end of its card.</p>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+    <span style="font-family:'Outfit',sans-serif;font-weight:600;font-size:15px;">Account Settings — mobile · 390px · shown at 75%</span>
+  </div>
+
+  <div style="width:293px;height:760px;overflow:hidden;border:1px solid #D8D2C6;box-shadow:0 8px 32px rgba(20,18,16,0.07);background:#FAF8F4;position:relative;">
+    <div style="width:390px;transform:scale(0.75);transform-origin:top left;background:#FAF8F4;position:relative;">
+
+      <!-- SiteHeader mobile -->
+      <div style="height:60px;background:rgba(255,255,255,0.96);border-bottom:1px solid #E7E1D6;display:flex;align-items:center;padding:0 20px;justify-content:space-between;">
+        <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:34px;width:auto;"/>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:12px;font-weight:600;color:#A8843C;border:1px solid #C9A961;background:rgba(201,169,97,0.1);padding:7px 14px;border-radius:2px;">Hub</span>
+          <span style="width:32px;height:32px;border-radius:999px;background:linear-gradient(135deg,#3E5A48,#2A3E32);color:#FFFFFF;font-family:'Outfit',sans-serif;font-weight:600;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;outline:1px solid #E7E1D6;">RK</span>
+        </div>
+      </div>
+
+      <!-- Page content -->
+      <div style="padding:28px 16px 140px;">
+
+        <!-- Heading -->
+        <div style="margin-bottom:24px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;margin-bottom:6px;">/hub/account-settings</div>
+          <h1 style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.02em;color:#141210;line-height:1.1;margin-bottom:6px;">Account Settings</h1>
+          <p style="font-size:12px;color:#8B8378;line-height:1.55;">Name and email can only be changed here.</p>
+        </div>
+
+        <!-- Section 1 — mobile -->
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px;margin-bottom:28px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0EBE0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#A8843C;font-weight:600;">01</span>
+            <span style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#141210;">Name &amp; Title</span>
+          </div>
+          <div style="display:grid;grid-template-columns:96px 1fr;gap:12px;margin-bottom:12px;">
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">TITLE</div><div style="height:42px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:13px;color:#141210;border-radius:6px;"><span>Dr.</span><span style="font-size:10px;color:#8B8378;">▾</span></div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">FIRST NAME *</div><div style="height:42px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;padding:0 10px;font-size:13px;color:#141210;border-radius:6px;">Rajnish</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">MIDDLE</div><div style="height:42px;border:1px solid #E7E1D6;background:#FFFFFF;display:flex;align-items:center;padding:0 10px;font-size:13px;color:#B8B0A4;border-radius:6px;">optional</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">LAST NAME *</div><div style="height:42px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;padding:0 10px;font-size:13px;color:#141210;border-radius:6px;">Khare</div></div>
+          </div>
+          <div style="background:#F4F0E8;border:1px solid #E7E1D6;padding:12px 14px;margin-bottom:12px;">
+            <span style="font-family:'Outfit',sans-serif;font-size:16px;color:#141210;">Dr. Rajnish Khare</span>
+          </div>
+          <div style="height:40px;border:1px solid #F0EBE0;background:#F4F0E8;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#8B8378;font-family:'JetBrains Mono',monospace;border-radius:6px;margin-bottom:16px;">@rajnishkhare</div>
+          <span style="font-size:13px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:11px 20px;border-radius:2px;display:inline-block;">Save Name</span>
+        </div>
+
+        <!-- Section 2 — mobile -->
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px;margin-bottom:28px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0EBE0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#A8843C;font-weight:600;">02</span>
+            <span style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#141210;">Email Address</span>
+          </div>
+          <div style="height:42px;border:1px solid #F0EBE0;background:#F4F0E8;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12px;color:#57514B;border-radius:6px;margin-bottom:14px;"><span>rajnish.khare@gmail.com</span><span style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;padding:2px 6px;background:#E7E1D6;color:#57514B;border-radius:2px;">READ ONLY</span></div>
+          <span style="font-size:13px;color:#A8843C;border-bottom:1px solid rgba(168,132,60,0.35);cursor:pointer;padding-bottom:1px;">Change email address ↓</span>
+        </div>
+
+        <!-- Section 3 — mobile -->
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0EBE0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#A8843C;font-weight:600;">03</span>
+            <span style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#141210;">Password</span>
+          </div>
+          <div style="margin-bottom:12px;"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">CURRENT PASSWORD *</div><div style="height:42px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:6px;"><span style="font-size:14px;color:#141210;letter-spacing:0.15em;">••••••••</span><span style="font-size:11px;color:#8B8378;">Show</span></div></div>
+          <div style="margin-bottom:4px;"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">NEW PASSWORD *</div><div style="height:42px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:6px;"><span style="font-size:14px;color:#141210;letter-spacing:0.15em;">••••••••</span><span style="font-size:11px;color:#8B8378;">Show</span></div></div>
+          <div style="height:4px;background:#F0EBE0;border-radius:2px;overflow:hidden;margin-bottom:10px;"><div style="height:4px;width:50%;background:#C9A961;border-radius:2px;"></div></div>
+          <div style="margin-bottom:16px;"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#8B8378;margin-bottom:5px;">CONFIRM NEW PASSWORD *</div><div style="height:42px;border:1px solid #D8D2C6;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:6px;"><span style="font-size:14px;color:#141210;letter-spacing:0.15em;">••••••••</span><span style="font-size:11px;color:#8B8378;">Show</span></div><div style="font-size:10px;color:#3E5A48;margin-top:4px;font-weight:600;">Passwords match ✓</div></div>
+          <span style="font-size:13px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,#C9A961,#A8843C);padding:11px 20px;border-radius:2px;display:inline-block;">Update Password</span>
+        </div>
+
+      </div>
+
+      <!-- HubMobileBar -->
+      <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,0.97);border-top:1px solid #E7E1D6;">
+        <div style="height:68px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;align-items:center;padding-bottom:10px;">
+          <div style="text-align:center;"><div style="font-size:18px;color:#8B8378;line-height:1;">⌂</div><div style="font-size:9px;font-weight:500;color:#8B8378;margin-top:2px;">Home</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;color:#8B8378;line-height:1;">⊡</div><div style="font-size:9px;font-weight:500;color:#8B8378;margin-top:2px;">Portfolio</div></div>
+          <div style="text-align:center;position:relative;"><div style="width:46px;height:46px;margin:-30px auto 0 auto;border-radius:999px;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;font-size:18px;display:flex;align-items:center;justify-content:center;">⬆</div><div style="font-size:9px;font-weight:500;color:#8B8378;margin-top:2px;">Upload</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;color:#8B8378;line-height:1;">▿</div><div style="font-size:9px;font-weight:500;color:#8B8378;margin-top:2px;">Club</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;color:#141210;line-height:1;">⊙</div><div style="font-size:9px;font-weight:600;color:#141210;margin-top:2px;">More</div><div style="width:14px;height:2px;background:#C9A961;margin:2px auto 0 auto;"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <p style="font-size:13px;color:#57514B;line-height:1.65;max-width:293px;margin-top:12px;">≤640px: All three section cards stack full-width with 16px horizontal padding. Each section saves independently — gold CTA at the end of each card. Account Settings accessed from "More" overflow sheet in HubMobileBar. No sticky save bar — no need since each section saves on its own CTA.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     04 — SPECIFICATION
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="04 Specification">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">04</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Specification</h2>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+
+    <!-- Component tree -->
+    <div style="background:#FAF8F4;border:1px solid #E7E1D6;padding:28px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#A8843C;margin-bottom:16px;">COMPONENT TREE</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2.0;color:#57514B;">
+        SiteHeader {session}<br/>
+        AccountSettingsPage<br/>
+        &nbsp;&nbsp;├ PageHeading "Account Settings"<br/>
+        &nbsp;&nbsp;├ SectionNameTitle<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├ NameFields {title, firstName, middleName, lastName}<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├ DisplayNamePreview (live — Outfit 18px, #F4F0E8)<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├ UsernameDisplay (read-only — MEM-007)<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;└ SaveNameButton ← GOLD CTA<br/>
+        &nbsp;&nbsp;├ SectionEmailChange<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├ CurrentEmailDisplay (read-only)<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;└ ChangeEmailFlow<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ NewEmailInput<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ SendVerificationButton (secondary, NOT gold)<br/>
+        &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ VerificationStatusPanel<br/>
+        &nbsp;&nbsp;└ SectionPasswordChange<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ CurrentPasswordInput (show/hide)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ NewPasswordInput (show/hide) + StrengthBar<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ ConfirmPasswordInput (show/hide + match indicator)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ UpdatePasswordButton ← GOLD CTA<br/>
+        SiteFooter
+      </div>
+    </div>
+
+    <!-- Design tokens + rules -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#A8843C;margin-bottom:14px;">DESIGN TOKENS</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.3;color:#57514B;">
+          section card bg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#FFFFFF<br/>
+          section card border&nbsp;&nbsp;&nbsp;&nbsp;1px #E7E1D6<br/>
+          section card padding&nbsp;&nbsp;&nbsp;28px<br/>
+          sections gap&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;48px<br/>
+          field height&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;44px<br/>
+          field radius&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8px<br/>
+          field label&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;10px JetBrains Mono / uppercase<br/>
+          field gap (row)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;16px<br/>
+          display name preview bg&nbsp;#F4F0E8 (ivory)<br/>
+          display name font&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Outfit 18px / weight 400<br/>
+          read-only bg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#F4F0E8<br/>
+          max content width&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;640px centered<br/>
+          strength bar height&nbsp;&nbsp;&nbsp;&nbsp;4px<br/>
+          verification panel&nbsp;&nbsp;&nbsp;&nbsp;border-left 3px #A8843C
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#A8843C;margin-bottom:14px;">BEHAVIOURAL RULES</div>
+        <div style="font-size:13px;line-height:1.9;color:#57514B;">
+          <strong style="color:#141210;font-weight:600;">Independent saves:</strong> Each of the 3 sections saves independently. No global save. No auto-save.<br/><br/>
+          <strong style="color:#141210;font-weight:600;">Success feedback:</strong> Inline text only — "Name updated." / "Password updated." No toast, no redirect.<br/><br/>
+          <strong style="color:#141210;font-weight:600;">Validation:</strong> On blur (field exit), not on keystroke. Error clears when value becomes valid.<br/><br/>
+          <strong style="color:#141210;font-weight:600;">Email change:</strong> Two-step. Send → verify. Current email stays active until link is clicked. Resend timer-gated at 60 s.<br/><br/>
+          <strong style="color:#141210;font-weight:600;">Gold CTA rule:</strong> Send Verification Link is NOT gold. Gold = save action only. (Section 2 has no gold CTA by design.)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#A8843C;margin-bottom:12px;">AUTH GATE</div>
+      <div style="font-size:13px;line-height:1.9;color:#57514B;">Route <span style="font-family:'JetBrains Mono',monospace;font-size:12px;background:#F4F0E8;padding:1px 5px;">/hub/account-settings</span> requires authenticated session with role ≥ USER. Unauthenticated redirect → /auth/signin with return-url preserved.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#A8843C;margin-bottom:12px;">USERNAME LOCK</div>
+      <div style="font-size:13px;line-height:1.9;color:#57514B;">Username is permanent — MEM-007 identity lock. It is displayed as a read-only reference below the Display Name Preview. It is NEVER an editable field on any page of the platform.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#A8843C;margin-bottom:12px;">DOWNSTREAM IMPACT</div>
+      <div style="font-size:13px;line-height:1.9;color:#57514B;">Name changes propagate to: Public Profile, Membership Card, Member Directory, Showcase credits, Upload Module, Consent Form. Changes are reflected on next render of downstream consumers.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="max-width:1140px;margin:96px auto 0 auto;padding:40px 48px;border-top:2px solid #141210;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+  <div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;letter-spacing:0.14em;margin-bottom:6px;">BCC UNIFIED PLATFORM V6 · STEP 11 · JULY 2026</div>
+    <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.015em;">V6 20 Account Settings</div>
+    <div style="font-size:13px;color:#8B8378;margin-top:4px;">Authoritative wireframe · inherits V6 00 · V6 91 · V6 92 · Design reference only.</div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 10px;background:#141210;color:#C9A961;">STEP 11 COMPLETE</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 10px;background:#3E5A48;color:#FFFFFF;">DO NOT REDESIGN</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 10px;background:#F4F0E8;border:1px solid #D8D2C6;color:#57514B;">2 GOLD CTAs — SAVE NAME · UPDATE PASSWORD</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 10px;background:#F4F0E8;border:1px solid #D8D2C6;color:#57514B;">USERNAME PERMANENT · MEM-007</span>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { s: 'rest' };
+
+  renderVals() {
+    const { s } = this.state;
+    const a = (id) => s === id;
+    const set = (id) => () => this.setState({ s: id });
+
+    const bB = (id) => a(id) ? '#141210' : '#FFFFFF';
+    const bC = (id) => a(id) ? '#FAF8F4' : '#57514B';
+    const bO = (id) => a(id) ? '#141210' : '#D8D2C6';
+
+    const labels = {
+      rest:     'All sections resting (default)',
+      name:     'Section 1 — Name editing + live preview',
+      name_ok:  'Section 1 — Name saved',
+      email:    'Section 2 — Change email expanded + status panel',
+      pass:     'Section 3 — Password filling + strength bar',
+      pass_err: 'Section 3 — Error: current password incorrect',
+    };
+
+    const isPass    = a('pass');
+    const isPassErr = a('pass_err');
+
+    return {
+      stateLabel: labels[s] || s,
+
+      setRest:    set('rest'),
+      setName:    set('name'),
+      setNameOk:  set('name_ok'),
+      setEmail:   set('email'),
+      setPass:    set('pass'),
+      setPassErr: set('pass_err'),
+
+      // Switcher button styles
+      brB: bB('rest'),     brC: bC('rest'),     brO: bO('rest'),
+      bnB: bB('name'),     bnC: bC('name'),     bnO: bO('name'),
+      bnoB: bB('name_ok'), bnoC: bC('name_ok'), bnoO: bO('name_ok'),
+      beB: bB('email'),    beC: bC('email'),    beO: bO('email'),
+      bpB: bB('pass'),     bpC: bC('pass'),     bpO: bO('pass'),
+      bpeB: bB('pass_err'),bpeC: bC('pass_err'),bpeO: bO('pass_err'),
+
+      // Section 1 — name fields
+      isNameEdit:  a('name'),
+      isNameOk:    a('name_ok'),
+      fnBorder:    a('name') ? '2px solid #A8843C' : '1px solid #D8D2C6',
+
+      // Section 2 — email
+      isEmailOpen:   a('email'),
+      isEmailClosed: !a('email'),
+
+      // Section 3 — password fields
+      isPassErr:  isPassErr,
+      isPassFill: isPass,
+
+      currPwdBorder: isPassErr ? '2px solid #C4473A' : '1px solid #D8D2C6',
+      currPwdBg:     isPassErr ? '#FDF8F7'           : '#FFFFFF',
+      newPwdBorder:  isPass    ? '2px solid #A8843C' : '1px solid #D8D2C6',
+
+      strengthW:     isPass    ? '50%'     : isPassErr ? '100%'   : '0%',
+      strengthColor: isPass    ? '#C9A961' : isPassErr ? '#3E5A48': 'transparent',
+      strengthLabel: isPass    ? 'Medium strength' : isPassErr ? 'Strong password' : '',
+
+      confirmMatch:    isPassErr,
+      confirmMismatch: isPass,
+    };
+  }
+}
+</script>
+</body>
+</html>

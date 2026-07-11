@@ -502,10 +502,12 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 
     <div class="ps-row">
       <div class="ps-field-group ps-field-group--full">
-        <label class="ps-label" for="field-awards">Awards &amp; Recognition</label>
-        <textarea class="form-textarea" id="field-awards" name="awardsHtml" rows="8"
-          placeholder="List your awards, contest wins, and other recognitions…"></textarea>
-        <div class="ps-hint">Rich text editor (Tiptap v2) to be wired. Plain text stored for now.</div>
+        <label class="ps-label">Awards &amp; Recognition</label>
+        <TiptapBio
+          fieldId="awardsHtml"
+          maxChars={5000}
+          placeholder="List your awards, contest wins, and other recognitions…"
+        />
       </div>
     </div>
   </section>
@@ -1129,7 +1131,8 @@ async function loadProfile() {
   setInpVal('field-website', p.websiteUrl ?? '');
   setSelVal('field-camera-system', p.preferredCameraSystem ?? '');
   setRO('ro-year-joined', p.yearJoinedBcc ? String(p.yearJoinedBcc) : '—');
-  (window as any).tiptapBioSetContent?.(p.bio ?? '');
+  (window as any).tiptapSetContent_bio?.(p.bio ?? '');
+  (window as any).tiptapSetContent_awardsHtml?.(p.awardsHtml ?? '');
   renderGenreGrid(Array.isArray(p.photographyGenres) ? p.photographyGenres : []);
 
   // Chips
@@ -1155,7 +1158,6 @@ async function loadProfile() {
   setInpVal('field-fip', p.photoTitles?.fip ?? '');
   setInpVal('field-psa', p.photoTitles?.psa ?? '');
   setInpVal('field-other-titles', p.photoTitles?.other ?? '');
-  setTxtArea('field-awards', p.awardsHtml ?? '');
 
   // Internal roles
   ['coordinator','mentor','instructor','volunteer'].forEach(role => {
@@ -1273,7 +1275,7 @@ async function saveAll() {
       fip: getInp('field-fip') || undefined,
       psa: getInp('field-psa') || undefined,
       other: getInp('field-other-titles') || undefined,
-      awardsHtml: getTxtArea('field-awards') || undefined,
+      awardsHtml: getTxtArea('tiptap-hidden-awardsHtml') || undefined,
     }),
   }));
 
@@ -1477,7 +1479,7 @@ listenDirty([
   'field-blood','field-ec-name','field-ec-phone','field-ec-rel',
   'field-tagline','field-website','field-camera-system','tiptap-hidden-bio',
 ], 'main');
-listenDirty(['field-fiap','field-fip','field-psa','field-other-titles','field-awards'], 'distinctions');
+listenDirty(['field-fiap','field-fip','field-psa','field-other-titles','tiptap-hidden-awardsHtml'], 'distinctions');
 document.querySelectorAll('[data-platform]').forEach(el => {
   el.addEventListener('input', () => markDirty('social'));
 });

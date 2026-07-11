@@ -1,19 +1,31 @@
 ---
 interface Props {
   maxChars?: number;
+  fieldId?: string;
+  placeholder?: string;
 }
-const { maxChars = 3000 } = Astro.props;
+const {
+  maxChars = 3000,
+  fieldId = 'bio',
+  placeholder = 'Tell your story as a photographer…',
+} = Astro.props;
 ---
 
-<div class="tiptap-bio-wrap" data-max-chars={maxChars} id="tiptap-bio-root">
+<div
+  class="tiptap-bio-wrap"
+  data-max-chars={maxChars}
+  data-field-id={fieldId}
+  data-placeholder={placeholder}
+  id={`tiptap-${fieldId}-root`}
+>
   <div class="tiptap-toolbar" role="toolbar" aria-label="Text formatting">
-    <button type="button" data-action="bold" class="tiptap-btn" id="tiptap-btn-bold" title="Bold">B</button>
-    <button type="button" data-action="italic" class="tiptap-btn" id="tiptap-btn-italic" title="Italic"><em>I</em></button>
-    <button type="button" data-action="bullet" class="tiptap-btn" id="tiptap-btn-bullet" title="Bullet list">•</button>
-    <span class="tiptap-charcount" id="tiptap-charcount-bio">0 / {maxChars}</span>
+    <button type="button" data-action="bold" class="tiptap-btn" id={`tiptap-btn-bold-${fieldId}`} title="Bold">B</button>
+    <button type="button" data-action="italic" class="tiptap-btn" id={`tiptap-btn-italic-${fieldId}`} title="Italic"><em>I</em></button>
+    <button type="button" data-action="bullet" class="tiptap-btn" id={`tiptap-btn-bullet-${fieldId}`} title="Bullet list">•</button>
+    <span class="tiptap-charcount" id={`tiptap-charcount-${fieldId}`}>0 / {maxChars}</span>
   </div>
-  <div id="tiptap-editor-bio" class="tiptap-editor-area"></div>
-  <textarea name="bio" hidden id="tiptap-hidden-bio" aria-hidden="true"></textarea>
+  <div id={`tiptap-editor-${fieldId}`} class="tiptap-editor-area"></div>
+  <textarea name={fieldId} hidden id={`tiptap-hidden-${fieldId}`} aria-hidden="true"></textarea>
 </div>
 
 <style>
@@ -97,8 +109,9 @@ const { maxChars = 3000 } = Astro.props;
 .tiptap-editor-area .ProseMirror li {
   margin-bottom: 0.2em;
 }
+/* Placeholder driven by data-placeholder on the ProseMirror div */
 .tiptap-editor-area .ProseMirror p.is-editor-empty:first-child::before {
-  content: 'Tell your story as a photographer\2026';
+  content: attr(data-placeholder);
   color: #A8A09A;
   pointer-events: none;
   float: left;
@@ -110,16 +123,20 @@ const { maxChars = 3000 } = Astro.props;
   import { Editor } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
 
-  const root = document.getElementById('tiptap-bio-root');
-  const editorEl = document.getElementById('tiptap-editor-bio');
-  const hiddenTextarea = document.getElementById('tiptap-hidden-bio') as HTMLTextAreaElement | null;
-  const charCountEl = document.getElementById('tiptap-charcount-bio');
-  const boldBtn = document.getElementById('tiptap-btn-bold');
-  const italicBtn = document.getElementById('tiptap-btn-italic');
-  const bulletBtn = document.getElementById('tiptap-btn-bullet');
+  // Astro deduplicates component scripts — initialise every instance on the page.
+  document.querySelectorAll<HTMLElement>('.tiptap-bio-wrap').forEach((root) => {
+    const fieldId   = root.dataset.fieldId ?? 'bio';
+    const maxChars  = parseInt(root.dataset.maxChars ?? '3000', 10);
+    const placeholder = root.dataset.placeholder ?? '';
 
-  if (editorEl) {
-    const maxChars = parseInt(root?.getAttribute('data-max-chars') ?? '3000', 10);
+    const editorEl      = root.querySelector<HTMLElement>(`#tiptap-editor-${fieldId}`);
+    const hiddenTextarea = root.querySelector<HTMLTextAreaElement>(`#tiptap-hidden-${fieldId}`);
+    const charCountEl   = root.querySelector<HTMLElement>(`#tiptap-charcount-${fieldId}`);
+    const boldBtn       = root.querySelector<HTMLButtonElement>(`#tiptap-btn-bold-${fieldId}`);
+    const italicBtn     = root.querySelector<HTMLButtonElement>(`#tiptap-btn-italic-${fieldId}`);
+    const bulletBtn     = root.querySelector<HTMLButtonElement>(`#tiptap-btn-bullet-${fieldId}`);
+
+    if (!editorEl) return;
 
     function updateToolbarState(ed: Editor) {
       boldBtn?.classList.toggle('is-active', ed.isActive('bold'));
@@ -148,6 +165,11 @@ const { maxChars = 3000 } = Astro.props;
           strike: false,
         }),
       ],
+      editorProps: {
+        attributes: {
+          'data-placeholder': placeholder,
+        },
+      },
       content: '',
       onUpdate({ editor }) {
         if (hiddenTextarea) {
@@ -162,8 +184,9 @@ const { maxChars = 3000 } = Astro.props;
       },
     });
 
-    // Expose setter — profile loadProfile() calls this after API data arrives
-    (window as any).tiptapBioSetContent = (html: string) => {
+    // Expose setter — profile loadProfile() calls this after API data arrives.
+    // Key: window.tiptapSetContent_bio, window.tiptapSetContent_awardsHtml, etc.
+    (window as any)[`tiptapSetContent_${fieldId}`] = (html: string) => {
       editor.commands.setContent(html || '');
       if (hiddenTextarea) hiddenTextarea.value = html || '';
       updateCharCount(editor);
@@ -180,5 +203,5 @@ const { maxChars = 3000 } = Astro.props;
     bulletBtn?.addEventListener('click', () => {
       editor.chain().focus().toggleBulletList().run();
     });
-  }
+  });
 </script>

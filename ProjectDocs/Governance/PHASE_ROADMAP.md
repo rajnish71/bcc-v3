@@ -1,8 +1,8 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
 **Status:** AUTHORITATIVE — Living Roadmap
-**Version:** 2.1
-**Last Updated:** 2026-07-10 — Phase A complete; Member Hub implementation validated and deployed
+**Version:** 2.2
+**Last Updated:** 2026-07-11 — Phase D complete; V6 19, V6 20 implemented; V6 13 profile editor implemented
 
 ---
 
@@ -239,6 +239,8 @@ Known limitations (non-blocking — future phases):
 
 ## PHASE B — Legacy Profile Migration Audit
 
+**Status:** ✅ COMPLETE
+
 Audit all legacy member profile fields before designing the new Member Profile.
 
 Includes (but is not limited to):
@@ -267,6 +269,11 @@ Deliverable:
 
 ## PHASE C — Legacy Data Reconciliation
 
+**Status:** ✅ COMPLETE
+
+- ✅ 0035 members migrated
+- ✅ 0038 social handles migrated
+
 Compare
 
 Legacy Database
@@ -285,6 +292,8 @@ Resolve missing fields before Member Profile implementation.
 
 ## PHASE D — Member Profile
 
+**Status:** ✅ COMPLETE
+
 Design and implement
 
 V6 13 — Member Profile
@@ -300,7 +309,78 @@ including
 
 ---
 
+### D1 ✅ Schema Migrations 0039–0051 Applied
+
+- `users`: tagline, awards_html, photography_genres, areas_of_expertise, favourite_subjects, preferred_camera_system, year_joined_bcc, date_of_birth, gender, name_title, first_name, middle_name, last_name, address fields, blood_group, emergency_contact fields, website_url
+- `user_cover_photos` table
+- `user_photo_titles` table
+- `user_awards` table
+- `membership_consent_log` table
+- `pending_email_changes` table (0052)
+- MySQL 8.0.46 note: VIRTUAL generated columns required (STORED + FK rejected in same CREATE TABLE)
+
+---
+
+### D2 ✅ Legacy Data Population Migrations 0042–0050
+
+- 6 taglines populated
+- 10 cover photos migrated
+- 12 photo titles + 5 awards migrated
+- 17 members: name parts split from full_name
+
+---
+
+### D3 ✅ Registration Extended
+
+Name parts captured at signup.
+
+---
+
+### D4 ✅ V6 13 — Member Profile Editor Implemented
+
+- 10 sections: Identity, Personal, Address, Public Profile, Social, Equipment, Distinctions, Internal BCC, Account, Statistics
+- Avatar + cover upload via R2/ImageKit
+- 2 RTF editors (bio, awards)
+- One gold CTA (Save Changes), sticky on scroll
+
+---
+
+### D5 ✅ V6 19 — Membership Application & Renewal Form
+
+- Variant A: application (`/hub/membership/apply`)
+- Variant B: renewal (`/hub/membership/renew`)
+- 3-step flow: Personal → T&C → Review
+- MEM-006 + MEM-007 constitutional constraints enforced
+- `membership_consent_log` populated on each submission
+
+---
+
+### D6 ✅ V6 20 — Account Settings
+
+- Name & Title (editable — single source of truth)
+- Email change (verification flow)
+- Password change
+- Username: read-only (MEM-007 permanent)
+- Route: `/hub/account-settings`
+- Shell: no HubSidebar (accessible to all roles)
+
+---
+
+### Phase D Implementation Authority
+
+#### Design Authority Files
+
+| # | Component | File | Path |
+|---|---|---|---|
+| 7 | Member Profile Editor | `V6 13 Members Hub Profile.dc.html` | `ProjectDocs/Wireframes/V6/13 Hub Member Profile/` |
+| 8 | Membership Application & Renewal Form | `V6 19 Membership Consent Form.dc.html` | `ProjectDocs/Wireframes/V6/19 Consent Form/` |
+| 9 | Account Settings | `V6 20 Account Settings.dc.html` | `ProjectDocs/Wireframes/V6/20 Accounts Settings/` |
+
+---
+
 ## PHASE E — Production Cutover
+
+**Status:** ⏳ PLANNED
 
 Deploy
 

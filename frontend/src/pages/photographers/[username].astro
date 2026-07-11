@@ -3,28 +3,30 @@
  * photographers/[username].astro
  * Dynamic Route: /photographers/[username]/
  *
- * Profile data is fetched client-side on page load.
- * getStaticPaths() builds paths for all active photographers from the API.
+ * Design authority: V6 05 Photographer Profile.dc.html
+ * Layout: BaseLayout · Cover banner · Profile hero · 4-tab (Portfolio · About · Contests · Activity)
+ *
+ * MEM-006 constraints enforced here:
+ *   1. PRIVATE profiles excluded at API layer — never in getStaticPaths.
+ *   2. 'basic' memberClass: no class badge.
+ *   3. No membership CTA anywhere on this page.
+ *   4. Founding member badge only when isFoundingMember === true.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SectionHeader from '../../components/ui/SectionHeader.astro';
-import MemberBadge from '../../components/ui/MemberBadge.astro';
 import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
   let photographers: any[] = [];
   try {
-    const res = await fetch(`${BUILD_API_URL}/photographers?limit=100`);
+    const res = await fetch(`${BUILD_API_URL}/photographers?limit=200`);
     if (res.ok) {
       const json = await res.json();
       photographers = json.data || [];
     }
   } catch {
-    // Backend unavailable at build time -- fall through to hardcoded paths below.
+    // Backend unavailable at build time — fall through to hardcoded paths below.
   }
 
-  // Hardcoded safety-net paths using real DB usernames (no hyphens).
-  // These are overridden/extended by the live API list above.
   const paths: { params: { username: string } }[] = [
     { params: { username: 'rajnishkhare' } },
     { params: { username: 'ankittiwari' } },
@@ -34,7 +36,6 @@ export async function getStaticPaths() {
     { params: { username: 'anupamkharegupta' } },
   ];
 
-  // Add every active photographer returned by the API.
   photographers.forEach((p: any) => {
     if (p.username && !paths.some(path => path.params.username === p.username)) {
       paths.push({ params: { username: p.username } });
@@ -45,338 +46,1268 @@ export async function getStaticPaths() {
 }
 
 const { username } = Astro.params;
-
-// Minimal fallback shown for the SSG snapshot while the client-side fetch runs.
-const fallbackPhotographers: Record<string, any> = {
-  'ankittiwari': {
-    displayName: 'Ankit Tiwari',
-    memberClass: 'basic',
-    joined: '2020',
-    bio: 'Travel and documentary photographer capturing the quiet landscapes and cultural heritage of Central India.',
-    photoCount: 0,
-    photos: [],
-  },
-  'rahilkhan': {
-    displayName: 'Rahil Khan',
-    memberClass: 'basic',
-    joined: '2016',
-    bio: 'Contemporary street visual artist capturing dynamic urban moments in old Bhopal markets.',
-    photoCount: 0,
-    photos: [],
-  },
-};
-
-const defaultPhotographer = fallbackPhotographers[username] ?? {
-  displayName: 'Club Photographer',
-  memberClass: 'basic',
-  joined: '2026',
-  bio: 'A member photographer of the Bhopal Camera Club.',
-  photoCount: 0,
-  photos: [],
-};
 ---
 
 <BaseLayout
-  title={`${defaultPhotographer.displayName} · Profile`}
-  description={`Explore photography portfolios and member details for ${defaultPhotographer.displayName} on Bhopal Camera Club.`}
+  title={`Photographer · Bhopal Camera Club`}
+  description={`Photography portfolio and profile on Bhopal Camera Club.`}
 >
-  <!-- Profile Header Card (Viewfinder Editorial themed) -->
-  <header class="profile-header surface-white">
-    <div class="container profile-card-layout">
-      <div class="avatar-col">
-        <div class="avatar-ring">
-          <div id="ph-avatar-circle" class="avatar-circle">
-            {(defaultPhotographer.displayName ?? '?').slice(0,2).toUpperCase()}
-          </div>
-        </div>
-      </div>
 
-      <div class="info-col">
-        <div class="title-row">
-          <h1 id="ph-name" class="photographer-name">{defaultPhotographer.displayName}</h1>
-          <div id="ph-badge-wrap">
-            <MemberBadge memberClass={defaultPhotographer.memberClass as any} size="md" />
-          </div>
-        </div>
+<!-- ── COVER BANNER ────────────────────────────────────────────────────────── -->
+<div class="cover-banner" id="cover-banner">
+  <div class="cover-default" id="cover-default"></div>
+  <img id="cover-img" class="cover-img" src="" alt="" hidden />
+</div>
 
-        <p id="ph-bio" class="photographer-bio">{defaultPhotographer.bio}</p>
+<!-- ── PROFILE HERO ───────────────────────────────────────────────────────── -->
+<div class="profile-hero" id="profile-hero">
+  <div class="ph-inner">
 
-        <div class="stats-row">
-          <div class="stat-box">
-            <span class="stat-lbl">Member Since</span>
-            <span id="ph-joined" class="stat-val">{defaultPhotographer.joined}</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-lbl">Showcase Photos</span>
-            <span id="ph-photos-count" class="stat-val">{defaultPhotographer.photoCount}</span>
-          </div>
-        </div>
+    <!-- Avatar -->
+    <div class="ph-avatar-wrap">
+      <div class="ph-avatar" id="ph-avatar">
+        <span class="ph-avatar-initials" id="ph-initials">—</span>
+        <img class="ph-avatar-img" id="ph-avatar-img" src="" alt="" hidden />
       </div>
     </div>
-    <div class="hairline"></div>
-  </header>
 
-  <!-- Photographer Photos Grid -->
-  <section class="section portfolio-section" aria-label="Photographer portfolio">
-    <div class="container">
-      <SectionHeader
-        eyebrow="Portfolio"
-        title="Showcase Contributions"
-        align="left"
-      />
-
-      <div id="portfolio-grid" class="portfolio-grid" data-gsap="stagger">
-        <p id="no-photos-msg" class="empty-msg">Loading portfolio…</p>
+    <!-- Identity -->
+    <div class="ph-identity">
+      <h1 class="ph-name" id="ph-name">—</h1>
+      <div class="ph-username" id="ph-username">@—</div>
+      <p class="ph-tagline" id="ph-tagline" hidden></p>
+      <div class="ph-location-row" id="ph-location-row" hidden>
+        <span id="ph-location"></span>
+        <span class="ph-dot" aria-hidden="true"></span>
+        <span id="ph-since"></span>
+      </div>
+      <div class="ph-badges" id="ph-badges">
+        <span class="ph-class-badge" id="ph-class-badge" hidden></span>
+        <span class="ph-founding-badge" id="ph-founding-badge" hidden>★ FOUNDING MEMBER</span>
       </div>
     </div>
-  </section>
+
+    <!-- Stats -->
+    <div class="ph-stats">
+      <div class="ph-stat">
+        <div class="ph-stat-val" id="ph-photo-count">0</div>
+        <div class="ph-stat-label">Photos</div>
+      </div>
+    </div>
+
+  </div><!-- /.ph-inner -->
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav" role="tablist" aria-label="Photographer sections">
+    <div class="tab-nav-inner">
+      <button class="tab-btn tab-btn--active" data-tab="portfolio" role="tab" aria-selected="true">Portfolio</button>
+      <button class="tab-btn" data-tab="about" role="tab" aria-selected="false">About</button>
+      <button class="tab-btn" data-tab="contests" role="tab" aria-selected="false">Contests</button>
+      <button class="tab-btn" data-tab="activity" role="tab" aria-selected="false">Activity</button>
+    </div>
+  </nav>
+</div>
+
+<!-- ── TAB CONTENT ────────────────────────────────────────────────────────── -->
+<div class="tab-content-area">
+
+  <!-- § PORTFOLIO TAB -->
+  <div id="tab-portfolio" class="tab-panel" role="tabpanel">
+    <div class="portfolio-layout">
+
+      <!-- Left Rail: Profile at a Glance (sticky) -->
+      <aside class="left-rail" id="left-rail">
+        <div class="rail-section-head">Profile at a Glance</div>
+
+        <div class="rail-row" id="rail-since-row" hidden>
+          <div class="rail-label">Member Since</div>
+          <div class="rail-val" id="rail-since">—</div>
+        </div>
+
+        <div class="rail-row" id="rail-class-row" hidden>
+          <div class="rail-label">Membership Class</div>
+          <div class="rail-badge-wrap" id="rail-class-badge"></div>
+        </div>
+
+        <div class="rail-row" id="rail-system-row" hidden>
+          <div class="rail-label">Camera System</div>
+          <div class="rail-val" id="rail-camera-system">—</div>
+        </div>
+
+        <div class="rail-row" id="rail-genres-row" hidden>
+          <div class="rail-label">Genres</div>
+          <div class="rail-genres" id="rail-genres"></div>
+        </div>
+
+        <div class="rail-row" id="rail-social-row" hidden>
+          <div class="rail-label">Links</div>
+          <div class="rail-social" id="rail-social"></div>
+        </div>
+      </aside>
+
+      <!-- Main: bio snippet + photo grid -->
+      <main class="portfolio-main">
+
+        <div class="bio-snippet" id="bio-snippet" hidden>
+          <p id="bio-text"></p>
+          <a class="bio-more-link" data-tab-trigger="about">Full biography →</a>
+        </div>
+
+        <div class="photo-grid-header" id="photo-grid-header" hidden>
+          <span class="photo-grid-count" id="photo-grid-count"></span>
+        </div>
+
+        <div id="portfolio-grid" class="photo-grid">
+          <div class="grid-empty" id="grid-loading">Loading portfolio…</div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- § ABOUT TAB -->
+  <div id="tab-about" class="tab-panel" hidden role="tabpanel">
+    <div class="about-layout">
+
+      <!-- Main left (2/3) -->
+      <div class="about-main">
+
+        <!-- Full biography -->
+        <div class="about-card">
+          <div class="about-card-head">Full Biography</div>
+          <div class="about-bio" id="about-bio">
+            <p class="about-no-bio">No biography provided yet.</p>
+          </div>
+          <div class="about-bio-meta" id="about-bio-meta" hidden>
+            <span class="about-class-badge" id="about-class-badge"></span>
+            <span class="about-since" id="about-since"></span>
+          </div>
+          <div class="about-social-links" id="about-social-links" hidden></div>
+        </div>
+
+      </div>
+
+      <!-- Right rail (1/3) -->
+      <aside class="about-rail">
+
+        <!-- Camera Gear -->
+        <div class="about-card" id="about-gear-card" hidden>
+          <div class="about-card-head">Camera Gear</div>
+          <div class="about-gear" id="about-gear"></div>
+          <p class="about-gear-note">Self-declared · unverified.</p>
+        </div>
+
+        <!-- Photography Genres -->
+        <div class="about-card" id="about-genres-card" hidden>
+          <div class="about-card-head">Photography Genres</div>
+          <div class="about-genres" id="about-genres"></div>
+        </div>
+
+        <!-- Areas of expertise -->
+        <div class="about-card" id="about-expertise-card" hidden>
+          <div class="about-card-head">Areas of Expertise</div>
+          <div class="about-genres" id="about-expertise"></div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+  <!-- § CONTESTS TAB -->
+  <div id="tab-contests" class="tab-panel" hidden role="tabpanel">
+    <div class="placeholder-panel">
+      <div class="placeholder-inner">
+        <div class="placeholder-icon">🏆</div>
+        <div class="placeholder-title">Contest History</div>
+        <p class="placeholder-desc">Contest participation and awards for this photographer will be available in a future update.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- § ACTIVITY TAB -->
+  <div id="tab-activity" class="tab-panel" hidden role="tabpanel">
+    <div class="placeholder-panel">
+      <div class="placeholder-inner">
+        <div class="placeholder-icon">📅</div>
+        <div class="placeholder-title">Activity Log</div>
+        <p class="placeholder-desc">Event attendance and club activity history will be available in a future update.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.tab-content-area -->
+
+<!-- ── PHOTO LIGHTBOX ─────────────────────────────────────────────────────── -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+  <div class="lightbox-panel">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
+    <button class="lightbox-arrow lightbox-prev" id="lightbox-prev" aria-label="Previous photo">‹</button>
+    <button class="lightbox-arrow lightbox-next" id="lightbox-next" aria-label="Next photo">›</button>
+    <div class="lightbox-image-wrap">
+      <img class="lightbox-img" id="lightbox-img" src="" alt="" />
+    </div>
+    <div class="lightbox-info">
+      <div class="lightbox-title" id="lightbox-title"></div>
+      <div class="lightbox-counter" id="lightbox-counter"></div>
+    </div>
+  </div>
+</div>
+
 </BaseLayout>
 
 <style>
-.profile-header {
-  padding-top: calc(var(--nav-h) + var(--s-8));
-  padding-bottom: var(--s-8);
-}
-.profile-card-layout {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: var(--s-6);
-  align-items: flex-start;
-}
-.avatar-col {
-  display: flex;
-  justify-content: center;
-}
-.avatar-ring {
-  padding: 4px;
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--r-full);
-}
-.avatar-circle {
-  width: 110px;
-  height: 110px;
-  border-radius: var(--r-full);
-  background: var(--forest-gradient);
-  color: var(--surface-0);
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid var(--surface-0);
-  box-shadow: var(--e-1);
-}
-.avatar-circle img {
+/* ── Cover Banner ────────────────────────────────────────────────────────── */
+.cover-banner {
   width: 100%;
-  height: 100%;
-  border-radius: var(--r-full);
-  object-fit: cover;
-}
-.info-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
-}
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  flex-wrap: wrap;
-}
-.photographer-name {
-  font-family: var(--font-display);
-  font-size: var(--text-h2);
-  font-weight: 700;
-  color: var(--ink-900);
-  letter-spacing: -0.015em;
-}
-.photographer-bio {
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--ink-600);
-  max-width: 720px;
-}
-.stats-row {
-  display: flex;
-  gap: var(--s-6);
-  margin-top: var(--s-2);
-}
-.stat-box {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.stat-lbl {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--ink-400);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.stat-val {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ink-900);
-}
-
-/* Portfolio grid */
-.portfolio-section {
-  background: var(--surface-1);
-}
-.portfolio-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--s-4);
-  margin-top: var(--s-6);
-}
-.portfolio-card {
+  height: 400px;
   position: relative;
-  aspect-ratio: 3/2;
   overflow: hidden;
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  display: block;
+  background: #1A1614;
+  margin-top: var(--nav-h, 64px);
 }
-.portfolio-img {
+.cover-default {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform var(--m-fast) ease-in-out;
+  background: repeating-linear-gradient(
+    135deg, #2A2420 0px, #2A2420 28px, #241E1A 28px, #241E1A 56px
+  );
 }
-.portfolio-card:hover .portfolio-img {
-  transform: scale(1.03);
-}
-.card-overlay {
+.cover-img {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 60%);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Profile Hero ────────────────────────────────────────────────────────── */
+.profile-hero {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E7E1D6;
+}
+.ph-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 40px 28px;
   display: flex;
   align-items: flex-end;
-  padding: var(--s-3);
-  opacity: 0;
-  transition: opacity var(--m-fast) ease-in-out;
-  z-index: 5;
+  gap: 24px;
+  flex-wrap: wrap;
 }
-.portfolio-card:hover .card-overlay {
-  opacity: 1;
+
+/* Avatar */
+.ph-avatar-wrap { flex-shrink: 0; margin-top: -60px; }
+.ph-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3E5A48, #2A3E32);
+  border: 4px solid #FFFFFF;
+  box-shadow: 0 4px 20px rgba(20,18,16,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
-.card-title {
-  color: #fff;
-  font-family: var(--font-display);
+.ph-avatar-initials {
+  font-family: 'Outfit', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+}
+.ph-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Identity */
+.ph-identity { flex: 1; padding-bottom: 4px; min-width: 200px; }
+.ph-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #141210;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.ph-username {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
-  font-weight: 600;
+  color: #A8843C;
+  margin-bottom: 6px;
 }
-.empty-msg {
+.ph-tagline {
+  font-size: 15px;
+  color: #57514B;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.ph-location-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #8B8378;
+  margin-bottom: 10px;
+}
+.ph-dot {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #D8D2C6;
+}
+.ph-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ph-class-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #3E5A48;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.ph-class-badge::before {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #C9A961;
+}
+.ph-class-badge--basic { display: none; }
+.ph-founding-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #C9A961;
+  background: #141210;
+  border: 1px solid #C9A961;
+  padding: 4px 12px;
+}
+
+/* Stats */
+.ph-stats { flex-shrink: 0; padding-bottom: 8px; }
+.ph-stat { text-align: center; }
+.ph-stat-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #141210;
+  line-height: 1;
+}
+.ph-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8B8378;
+  margin-top: 4px;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  border-top: 1px solid #F0EBE0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-nav-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  gap: 0;
+}
+.tab-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8B8378;
+  background: none;
+  border: none;
+  padding: 12px 18px;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: #141210; }
+.tab-btn--active { color: #141210; font-weight: 700; border-bottom-color: #C9A961; }
+
+/* ── Tab Content Area ────────────────────────────────────────────────────── */
+.tab-content-area {
+  background: #F2EFE9;
+  min-height: 60vh;
+}
+.tab-panel { display: block; }
+.tab-panel[hidden] { display: none; }
+
+/* ── PORTFOLIO TAB ───────────────────────────────────────────────────────── */
+.portfolio-layout {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* Left Rail */
+.left-rail {
+  width: 260px;
+  flex-shrink: 0;
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  position: sticky;
+  top: calc(var(--nav-h, 64px) + 16px);
+  max-height: calc(100vh - var(--nav-h, 64px) - 48px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.rail-section-head {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #A8843C;
+  padding: 14px 18px;
+  border-bottom: 1px solid #F0EBE0;
+  background: #FAF8F4;
+}
+.rail-row {
+  padding: 12px 18px;
+  border-bottom: 1px solid #F0EBE0;
+}
+.rail-row:last-child { border-bottom: none; }
+.rail-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8B8378;
+  margin-bottom: 5px;
+}
+.rail-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: #141210;
+}
+.rail-badge-wrap .rail-class-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #3E5A48;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.rail-genres { display: flex; flex-wrap: wrap; gap: 5px; }
+.rail-genre-tag {
+  font-size: 11px;
+  color: #57514B;
+  background: #F4F0E8;
+  border: 1px solid #E7E1D6;
+  padding: 3px 8px;
+}
+.rail-social { display: flex; flex-wrap: wrap; gap: 6px; }
+.rail-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #F4F0E8;
+  border: 1px solid #E7E1D6;
+  font-size: 9px;
+  font-weight: 700;
+  color: #57514B;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.rail-social-link:hover { border-color: #C9A961; color: #A8843C; }
+
+/* Portfolio Main */
+.portfolio-main { flex: 1; min-width: 0; }
+.bio-snippet {
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+.bio-snippet p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #37322C;
+  margin-bottom: 10px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.bio-more-link {
+  font-size: 12px;
+  color: #A8843C;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+}
+.bio-more-link:hover { text-decoration: underline; }
+
+.photo-grid-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.photo-grid-count {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8B8378;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.grid-empty {
   grid-column: 1 / -1;
   text-align: center;
-  padding: var(--s-12) 0;
-  font-family: var(--font-body);
+  padding: 60px 24px;
   font-size: 14px;
-  color: var(--ink-400);
-  background: var(--surface-0);
-  border: 1px solid var(--hairline-soft);
+  color: #8B8378;
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+}
+.photo-card {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #141210;
+  cursor: pointer;
+  display: block;
+  border: none;
+  padding: 0;
+}
+.photo-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.photo-card:hover .photo-card-img { transform: scale(1.04); }
+.photo-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.photo-card:hover .photo-card-overlay { opacity: 1; }
+.photo-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+/* ── ABOUT TAB ───────────────────────────────────────────────────────────── */
+.about-layout {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.about-main { flex: 2; min-width: 0; }
+.about-rail { flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.about-card {
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.about-rail .about-card { margin-bottom: 0; }
+.about-card-head {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #A8843C;
+  margin-bottom: 14px;
+}
+.about-bio {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #37322C;
+  margin-bottom: 14px;
+}
+.about-no-bio { font-size: 13px; color: #8B8378; font-style: italic; }
+.about-bio-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #F0EBE0;
+  padding-top: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.about-class-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #3E5A48;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.about-since { font-size: 13px; color: #8B8378; }
+
+.about-social-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.about-social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #F4F0E8;
+  border: 1px solid #E7E1D6;
+  font-size: 9px;
+  font-weight: 700;
+  color: #57514B;
+  text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+  transition: border-color 0.15s, color 0.15s;
+}
+.about-social-icon:hover { border-color: #C9A961; color: #A8843C; }
+.about-website-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #A8843C;
+  text-decoration: none;
+}
+.about-website-link:hover { text-decoration: underline; }
+
+/* Gear */
+.about-gear { display: flex; flex-direction: column; gap: 12px; }
+.gear-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8B8378;
+  margin-bottom: 4px;
+}
+.gear-items {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #57514B;
+}
+.about-gear-note {
+  font-size: 11px;
+  color: #8B8378;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* Genres / Expertise in About */
+.about-genres { display: flex; flex-wrap: wrap; gap: 6px; }
+.about-genre-tag {
+  font-size: 12px;
+  color: #57514B;
+  background: #F4F0E8;
+  border: 1px solid #E7E1D6;
+  padding: 4px 10px;
+}
+
+/* ── PLACEHOLDER PANELS ──────────────────────────────────────────────────── */
+.placeholder-panel {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 80px 40px;
+  display: flex;
+  justify-content: center;
+}
+.placeholder-inner {
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  padding: 60px 48px;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+.placeholder-icon { font-size: 32px; margin-bottom: 16px; }
+.placeholder-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #141210;
+  margin-bottom: 12px;
+}
+.placeholder-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #8B8378;
+}
+
+/* ── LIGHTBOX ────────────────────────────────────────────────────────────── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox[hidden] { display: none; }
+.lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20,18,16,0.92);
+  cursor: pointer;
+}
+.lightbox-panel {
+  position: relative;
+  z-index: 1;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.lightbox-close {
+  position: absolute;
+  top: -48px;
+  right: -8px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #FFFFFF;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.2); }
+.lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #FFFFFF;
+  font-size: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 2;
+}
+.lightbox-arrow:hover { background: rgba(255,255,255,0.2); }
+.lightbox-prev { left: -60px; }
+.lightbox-next { right: -60px; }
+.lightbox-image-wrap {
+  max-width: 80vw;
+  max-height: 78vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-img {
+  max-width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  display: block;
+}
+.lightbox-info { text-align: center; }
+.lightbox-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #FAF8F4;
+  margin-bottom: 4px;
+}
+.lightbox-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #8B8378;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .portfolio-layout { padding: 24px 24px 60px; }
+  .about-layout { padding: 24px 24px 60px; }
+  .left-rail { width: 220px; position: relative; top: auto; max-height: none; }
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .profile-card-layout {
-    grid-template-columns: 1fr;
-    gap: var(--s-4);
-  }
-  .portfolio-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .ph-inner { padding: 0 16px 24px; gap: 12px; }
+  .ph-name { font-size: 24px; }
+  .cover-banner { height: 240px; }
+  .ph-avatar { width: 96px; height: 96px; }
+  .ph-avatar-wrap { margin-top: -48px; }
+  .ph-avatar-initials { font-size: 24px; }
+  .tab-nav-inner { padding: 0 16px; }
+
+  .portfolio-layout { flex-direction: column; padding: 16px 16px 60px; }
+  .left-rail { width: 100%; position: relative; top: auto; max-height: none; }
+  .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+  .about-layout { flex-direction: column; padding: 16px 16px 60px; }
+  .about-rail { order: -1; }
+
+  .placeholder-panel { padding: 40px 16px; }
+  .placeholder-inner { padding: 40px 24px; }
+
+  .lightbox-prev { left: -52px; }
+  .lightbox-next { right: -52px; }
 }
+
 @media (max-width: 480px) {
-  .portfolio-grid {
-    grid-template-columns: 1fr;
-  }
+  .photo-grid { grid-template-columns: 1fr; }
+  .lightbox-arrow { display: none; }
 }
 </style>
 
 <script>
-  // The last URL segment is the username (e.g. "rajnishkhare").
-  const username = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
+// ── Data ──────────────────────────────────────────────────────────────────
+const username = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
 
-  async function loadPhotographerProfile() {
-    if (!username) return;
-    try {
-      // 1. Fetch profile by username
-      const profileRes = await fetch(`/api/v1/photographers/${username}`);
-      if (!profileRes.ok) throw new Error(`HTTP ${profileRes.status}`);
-      const { data: profile } = await profileRes.json();
-      if (!profile) throw new Error('Empty profile response');
+interface PhotoEntry { uuid: string; title: string; urls: { medium?: string; original?: string } }
+let allPhotos: PhotoEntry[] = [];
+let lightboxIdx = 0;
 
-      // Update page title
-      document.title = `${profile.displayName} · Profile · Bhopal Camera Club`;
+// ── Social link helpers ────────────────────────────────────────────────────
+const SOCIAL_META: Record<string, { abbr: string; baseUrl: string; prefix: string }> = {
+  instagram:      { abbr: 'IG',  baseUrl: 'https://instagram.com/', prefix: '' },
+  facebook:       { abbr: 'FB',  baseUrl: 'https://facebook.com/', prefix: '' },
+  x_twitter:      { abbr: 'X',   baseUrl: 'https://x.com/', prefix: '' },
+  youtube:        { abbr: 'YT',  baseUrl: 'https://youtube.com/@', prefix: '' },
+  tiktok:         { abbr: 'TK',  baseUrl: 'https://tiktok.com/@', prefix: '' },
+  linkedin:       { abbr: 'LI',  baseUrl: 'https://linkedin.com/in/', prefix: '' },
+  flickr:         { abbr: 'FL',  baseUrl: 'https://flickr.com/', prefix: '' },
+  five_hundred_px:{ abbr: '500', baseUrl: 'https://500px.com/', prefix: '' },
+};
 
-      // Update header fields
-      (document.getElementById('ph-name') as HTMLElement).textContent = profile.displayName;
-      (document.getElementById('ph-bio') as HTMLElement).textContent =
-        profile.bio || 'No bio provided yet.';
-      (document.getElementById('ph-joined') as HTMLElement).textContent =
-        String(profile.memberSince ?? '—');
-      (document.getElementById('ph-photos-count') as HTMLElement).textContent =
-        String(profile.photoCount ?? 0);
+function socialUrl(platform: string, handle: string): string {
+  if (platform === 'website') return handle.startsWith('http') ? handle : `https://${handle}`;
+  const m = SOCIAL_META[platform];
+  return m ? `${m.baseUrl}${handle}` : '#';
+}
 
-      // Avatar
-      const avatarCircle = document.getElementById('ph-avatar-circle') as HTMLElement;
-      if (profile.avatarUrl) {
-        avatarCircle.innerHTML = `<img src="${profile.avatarUrl}" alt="${profile.displayName}" width="110" height="110" />`;
-      } else {
-        avatarCircle.textContent = (profile.displayName ?? '?').slice(0, 2).toUpperCase();
-      }
+function socialAbbr(platform: string): string {
+  return SOCIAL_META[platform]?.abbr ?? platform.slice(0, 3).toUpperCase();
+}
 
-      // Membership badge
-      const badgeWrap = document.getElementById('ph-badge-wrap') as HTMLElement;
-      badgeWrap.innerHTML = '';
-      const memberClass: string = profile.memberClass ?? 'basic';
-      const badgeSpan = document.createElement('span');
-      badgeSpan.className = `tag tag-${memberClass}`;
-      badgeSpan.style.cssText = 'text-transform:uppercase;font-size:9px;font-weight:700;';
-      badgeSpan.textContent = memberClass.replace(/_/g, ' ');
-      badgeWrap.appendChild(badgeSpan);
+// ── Badge helpers ─────────────────────────────────────────────────────────
+function classBadgeHtml(memberClass: string): string {
+  if (!memberClass || memberClass === 'basic') return '';
+  const label = memberClass.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return `<span class="about-class-badge">${label}</span>`;
+}
 
-      // 2. Fetch photos using the numeric user id returned by the profile endpoint
-      const numericId: number | undefined = profile.id;
-      if (!numericId) return;
+function railBadgeHtml(memberClass: string): string {
+  if (!memberClass || memberClass === 'basic') return '';
+  const label = memberClass.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return `<span class="rail-class-badge">${label}</span>`;
+}
 
-      const photosRes = await fetch(`/api/v1/gallery/photographer/${numericId}?limit=100`);
-      if (!photosRes.ok) return;
-      const { photos } = await photosRes.json();
+// ── Load photographer profile ─────────────────────────────────────────────
+async function loadProfile() {
+  if (!username) return;
 
-      const grid = document.getElementById('portfolio-grid') as HTMLElement;
-      if (!Array.isArray(photos) || photos.length === 0) {
-        grid.innerHTML = `<p class="empty-msg">No photographs uploaded to the showcase yet.</p>`;
-        return;
-      }
+  let profile: Record<string, any>;
+  try {
+    const res = await fetch(`/api/v1/photographers/${username}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    profile = json.data;
+    if (!profile) throw new Error('Empty profile');
+  } catch {
+    setTxt('ph-name', 'Photographer');
+    setTxt('grid-loading', 'Unable to load profile. Please try again later.');
+    return;
+  }
 
-      grid.innerHTML = '';
-      photos.forEach((photo: any) => {
-        const imgSrc: string = photo.urls?.medium ?? photo.urls?.original ?? '';
-        const card = document.createElement('a');
-        card.href = `/showcase/${photo.uuid}/`;
-        card.className = 'portfolio-card vf-card';
-        card.innerHTML = `
-          <img src="${imgSrc}" alt="${photo.title ?? ''}" class="portfolio-img" loading="lazy" />
-          <div class="card-overlay">
-            <span class="card-title">${photo.title ?? ''}</span>
-          </div>
-          <span class="vf-br" aria-hidden="true"></span>
-          <span class="vf-bl" aria-hidden="true"></span>
-        `;
-        grid.appendChild(card);
-      });
+  // Page title
+  document.title = `${profile.displayName} · Photographer · Bhopal Camera Club`;
 
-    } catch {
-      // Keep static fallback content visible
-      const grid = document.getElementById('portfolio-grid') as HTMLElement;
-      grid.innerHTML = `<p class="empty-msg">Unable to load portfolio. Please try again later.</p>`;
+  // Cover
+  if (profile.coverUrl) {
+    const coverImg = document.getElementById('cover-img') as HTMLImageElement | null;
+    const coverDefault = document.getElementById('cover-default');
+    if (coverImg) { coverImg.src = profile.coverUrl; coverImg.hidden = false; }
+    if (coverDefault) coverDefault.style.display = 'none';
+  }
+
+  // Avatar
+  const initials = (profile.displayName ?? '?').trim().split(/\s+/).map((w: string) => w[0] ?? '').join('').slice(0, 2).toUpperCase();
+  setTxt('ph-initials', initials);
+  if (profile.avatarUrl) {
+    const img = document.getElementById('ph-avatar-img') as HTMLImageElement | null;
+    const fallback = document.getElementById('ph-initials');
+    if (img) { img.src = profile.avatarUrl; img.hidden = false; }
+    if (fallback) (fallback as HTMLElement).style.display = 'none';
+  }
+
+  // Name + username
+  setTxt('ph-name', profile.displayName ?? '—');
+  setTxt('ph-username', `@${profile.username ?? ''}`);
+
+  // Tagline
+  if (profile.tagline) {
+    const tagEl = document.getElementById('ph-tagline');
+    if (tagEl) { tagEl.textContent = profile.tagline; tagEl.hidden = false; }
+  }
+
+  // Location + Since
+  const locationParts: string[] = [];
+  if (profile.city) locationParts.push(profile.city);
+  if (profile.state) locationParts.push(profile.state);
+  const since = profile.memberSince ? `Since ${profile.memberSince}` : null;
+
+  if (locationParts.length || since) {
+    const locRow = document.getElementById('ph-location-row');
+    if (locRow) locRow.hidden = false;
+    if (locationParts.length) setTxt('ph-location', locationParts.join(', '));
+    if (since) setTxt('ph-since', since);
+    // If no location but since, hide the dot
+    if (!locationParts.length) {
+      const dot = document.querySelector('.ph-dot') as HTMLElement | null;
+      if (dot) dot.style.display = 'none';
     }
   }
 
-  loadPhotographerProfile();
+  // Class badge
+  if (profile.memberClass && profile.memberClass !== 'basic') {
+    const badge = document.getElementById('ph-class-badge');
+    if (badge) {
+      const label = profile.memberClass.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+      badge.textContent = label;
+      badge.hidden = false;
+    }
+  }
+
+  // Founding member badge (MEM-006 constraint 4)
+  if (profile.isFoundingMember) {
+    const fb = document.getElementById('ph-founding-badge');
+    if (fb) fb.hidden = false;
+  }
+
+  // Photo count
+  setTxt('ph-photo-count', String(profile.photoCount ?? 0));
+
+  // ── Left Rail ──────────────────────────────────────────────────────────
+  // Member Since
+  if (profile.memberSince) {
+    const row = document.getElementById('rail-since-row');
+    if (row) row.hidden = false;
+    setTxt('rail-since', String(profile.memberSince));
+  }
+
+  // Membership class
+  if (profile.memberClass && profile.memberClass !== 'basic') {
+    const row = document.getElementById('rail-class-row');
+    const wrap = document.getElementById('rail-class-badge');
+    if (row) row.hidden = false;
+    if (wrap) wrap.innerHTML = railBadgeHtml(profile.memberClass);
+  }
+
+  // Preferred camera system
+  if (profile.preferredCameraSystem) {
+    const row = document.getElementById('rail-system-row');
+    if (row) row.hidden = false;
+    setTxt('rail-camera-system', profile.preferredCameraSystem);
+  }
+
+  // Genres
+  const genres: string[] = Array.isArray(profile.photographyGenres) ? profile.photographyGenres : [];
+  if (genres.length) {
+    const row = document.getElementById('rail-genres-row');
+    const container = document.getElementById('rail-genres');
+    if (row) row.hidden = false;
+    if (container) {
+      container.innerHTML = genres.map(g => `<span class="rail-genre-tag">${esc(g)}</span>`).join('');
+    }
+  }
+
+  // Social links in rail
+  const handles = profile.socialHandles ?? {};
+  const socialPlatforms = Object.keys(handles).filter(p => p !== 'website');
+  if (socialPlatforms.length) {
+    const row = document.getElementById('rail-social-row');
+    const container = document.getElementById('rail-social');
+    if (row) row.hidden = false;
+    if (container) {
+      container.innerHTML = socialPlatforms.map(p =>
+        `<a class="rail-social-link" href="${socialUrl(p, handles[p])}" target="_blank" rel="noopener noreferrer" title="${p}">${socialAbbr(p)}</a>`
+      ).join('');
+    }
+  }
+
+  // ── Bio Snippet (portfolio tab) ────────────────────────────────────────
+  if (profile.bio) {
+    const snippetEl = document.getElementById('bio-snippet');
+    const bioTextEl = document.getElementById('bio-text');
+    const stripTags = (html: string) => html.replace(/<[^>]*>/g, '');
+    if (snippetEl) snippetEl.hidden = false;
+    if (bioTextEl) bioTextEl.textContent = stripTags(profile.bio).trim();
+  }
+
+  // ── About tab ─────────────────────────────────────────────────────────
+  // Bio
+  const aboutBioEl = document.getElementById('about-bio');
+  if (aboutBioEl) {
+    if (profile.bio) {
+      aboutBioEl.innerHTML = profile.bio;
+    } else {
+      aboutBioEl.innerHTML = '<p class="about-no-bio">No biography provided yet.</p>';
+    }
+  }
+
+  // Bio meta (class badge + since)
+  if (profile.memberClass && profile.memberClass !== 'basic' && profile.memberSince) {
+    const metaEl = document.getElementById('about-bio-meta');
+    const cbEl = document.getElementById('about-class-badge');
+    const sinceEl = document.getElementById('about-since');
+    if (metaEl) metaEl.hidden = false;
+    if (cbEl) {
+      const label = profile.memberClass.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+      cbEl.textContent = label;
+    }
+    if (sinceEl) sinceEl.textContent = `Member Since ${profile.memberSince}`;
+  }
+
+  // Social links in About tab
+  const allPlatforms = Object.keys(handles);
+  if (allPlatforms.length) {
+    const socialEl = document.getElementById('about-social-links');
+    if (socialEl) {
+      socialEl.hidden = false;
+      const parts: string[] = [];
+      allPlatforms.forEach(p => {
+        const url = socialUrl(p, handles[p]);
+        if (p === 'website') {
+          const display = handles[p].replace(/^https?:\/\//, '').replace(/\/$/, '');
+          parts.push(`<a class="about-website-link" href="${url}" target="_blank" rel="noopener noreferrer">${esc(display)}</a>`);
+        } else {
+          parts.push(`<a class="about-social-icon" href="${url}" target="_blank" rel="noopener noreferrer" title="${p}">${socialAbbr(p)}</a>`);
+        }
+      });
+      socialEl.innerHTML = parts.join('');
+    }
+  }
+
+  // Gear in About rail
+  const gear = profile.gear ?? {};
+  const gearItems: string[] = [];
+  if (gear.bodies?.length) {
+    gearItems.push(`<div class="gear-group-label">Camera Bodies</div><div class="gear-items">${gear.bodies.map(esc).join('<br/>')}</div>`);
+  }
+  if (gear.lenses?.length) {
+    gearItems.push(`<div class="gear-group-label">Lenses</div><div class="gear-items">${gear.lenses.map(esc).join('<br/>')}</div>`);
+  }
+  if (gear.accessories?.length) {
+    gearItems.push(`<div class="gear-group-label">Other Equipment</div><div class="gear-items">${gear.accessories.map(esc).join('<br/>')}</div>`);
+  }
+  if (gearItems.length) {
+    const gearCard = document.getElementById('about-gear-card');
+    const gearEl = document.getElementById('about-gear');
+    if (gearCard) gearCard.hidden = false;
+    if (gearEl) gearEl.innerHTML = gearItems.join('');
+  }
+
+  // Genres in About rail
+  if (genres.length) {
+    const card = document.getElementById('about-genres-card');
+    const el = document.getElementById('about-genres');
+    if (card) card.hidden = false;
+    if (el) el.innerHTML = genres.map(g => `<span class="about-genre-tag">${esc(g)}</span>`).join('');
+  }
+
+  // Areas of expertise in About rail
+  const expertise: string[] = Array.isArray(profile.areasOfExpertise) ? profile.areasOfExpertise : [];
+  if (expertise.length) {
+    const card = document.getElementById('about-expertise-card');
+    const el = document.getElementById('about-expertise');
+    if (card) card.hidden = false;
+    if (el) el.innerHTML = expertise.map(g => `<span class="about-genre-tag">${esc(g)}</span>`).join('');
+  }
+
+  // Now load photos
+  await loadPhotos(profile.id);
+}
+
+// ── Load photos ───────────────────────────────────────────────────────────
+async function loadPhotos(userId: number) {
+  const grid = document.getElementById('portfolio-grid') as HTMLElement | null;
+  if (!grid) return;
+
+  try {
+    const res = await fetch(`/api/v1/gallery/photographer/${userId}?limit=200`);
+    if (!res.ok) throw new Error('Photos fetch failed');
+    const { photos } = await res.json();
+
+    if (!Array.isArray(photos) || photos.length === 0) {
+      grid.innerHTML = `<div class="grid-empty">No photographs uploaded to the showcase yet.</div>`;
+      return;
+    }
+
+    allPhotos = photos;
+
+    // Update photo count stat
+    setTxt('ph-photo-count', String(photos.length));
+
+    // Photo grid count header
+    const header = document.getElementById('photo-grid-header');
+    const countEl = document.getElementById('photo-grid-count');
+    if (header) header.hidden = false;
+    if (countEl) countEl.textContent = `${photos.length} ${photos.length === 1 ? 'photograph' : 'photographs'}`;
+
+    grid.innerHTML = '';
+    photos.forEach((photo: PhotoEntry, idx: number) => {
+      const src = photo.urls?.medium ?? photo.urls?.original ?? '';
+      const btn = document.createElement('button');
+      btn.className = 'photo-card';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', photo.title || `Photo ${idx + 1}`);
+      btn.innerHTML = `
+        <img class="photo-card-img" src="${src}" alt="${esc(photo.title ?? '')}" loading="lazy" />
+        <div class="photo-card-overlay">
+          <span class="photo-card-title">${esc(photo.title ?? '')}</span>
+        </div>
+      `;
+      btn.addEventListener('click', () => openLightbox(idx));
+      grid.appendChild(btn);
+    });
+
+  } catch {
+    if (grid) grid.innerHTML = `<div class="grid-empty">Unable to load portfolio. Please try again later.</div>`;
+  }
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────────────
+function openLightbox(idx: number) {
+  lightboxIdx = idx;
+  updateLightbox();
+  const lb = document.getElementById('lightbox');
+  if (lb) lb.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (lb) lb.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function updateLightbox() {
+  const photo = allPhotos[lightboxIdx];
+  if (!photo) return;
+  const img = document.getElementById('lightbox-img') as HTMLImageElement | null;
+  const title = document.getElementById('lightbox-title');
+  const counter = document.getElementById('lightbox-counter');
+  if (img) img.src = photo.urls?.original ?? photo.urls?.medium ?? '';
+  if (title) title.textContent = photo.title ?? '';
+  if (counter) counter.textContent = `${lightboxIdx + 1} / ${allPhotos.length}`;
+
+  const prev = document.getElementById('lightbox-prev') as HTMLButtonElement | null;
+  const next = document.getElementById('lightbox-next') as HTMLButtonElement | null;
+  if (prev) prev.style.display = allPhotos.length <= 1 ? 'none' : '';
+  if (next) next.style.display = allPhotos.length <= 1 ? 'none' : '';
+}
+
+document.getElementById('lightbox-backdrop')?.addEventListener('click', closeLightbox);
+document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
+document.getElementById('lightbox-prev')?.addEventListener('click', () => {
+  lightboxIdx = (lightboxIdx - 1 + allPhotos.length) % allPhotos.length;
+  updateLightbox();
+});
+document.getElementById('lightbox-next')?.addEventListener('click', () => {
+  lightboxIdx = (lightboxIdx + 1) % allPhotos.length;
+  updateLightbox();
+});
+document.addEventListener('keydown', (e: KeyboardEvent) => {
+  const lb = document.getElementById('lightbox');
+  if (!lb || lb.hidden) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') { lightboxIdx = (lightboxIdx - 1 + allPhotos.length) % allPhotos.length; updateLightbox(); }
+  if (e.key === 'ArrowRight') { lightboxIdx = (lightboxIdx + 1) % allPhotos.length; updateLightbox(); }
+});
+
+// ── Tab navigation ────────────────────────────────────────────────────────
+function activateTab(tabKey: string) {
+  document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach(btn => {
+    const active = btn.dataset.tab === tabKey;
+    btn.classList.toggle('tab-btn--active', active);
+    btn.setAttribute('aria-selected', String(active));
+  });
+  document.querySelectorAll<HTMLElement>('.tab-panel').forEach(panel => {
+    panel.hidden = panel.id !== `tab-${tabKey}`;
+  });
+}
+
+document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => activateTab(btn.dataset.tab ?? 'portfolio'));
+});
+
+// "Full biography →" link in bio snippet triggers About tab
+document.querySelector<HTMLElement>('.bio-more-link')?.addEventListener('click', () => {
+  activateTab('about');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function setTxt(id: string, val: string) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function esc(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+loadProfile().catch(() => {
+  setTxt('ph-name', 'Photographer');
+  const grid = document.getElementById('portfolio-grid');
+  if (grid) grid.innerHTML = `<div class="grid-empty">Unable to load profile. Please try again later.</div>`;
+});
 </script>

@@ -29,7 +29,13 @@ export interface UsersTable {
   state: string | null;
   address_line1: Nullable<string>;
   address_line2: Nullable<string>;
+  address_line3: Nullable<string>;
   pin_code: Nullable<string>;
+  blood_group: Nullable<'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-'>;
+  emergency_contact_name: Nullable<string>;
+  emergency_contact_phone: Nullable<string>;
+  emergency_contact_relationship: Nullable<'SPOUSE' | 'PARENT' | 'SIBLING' | 'CHILD' | 'FRIEND' | 'OTHER'>;
+  website_url: Nullable<string>;
   country: Generated<string>;
   date_of_birth: ColumnType<Date | null, string | null, string | null>;
   gender: Nullable<'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY'>;
@@ -787,6 +793,15 @@ export interface JournalPostsTable {
   updated_at:           ColumnType<Date, string, string>;
 }
 
+export interface PendingEmailChangesTable {
+  id: Generated<number>;
+  user_id: number;
+  new_email: string;
+  token_hash: string;
+  expires_at: ColumnType<Date, string, string>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
 export interface ContactMessagesTable {
   id:           Generated<number>;
   name:         string;
@@ -805,6 +820,7 @@ export interface ContactMessagesTable {
 // ============================================================================
 
 export interface DB {
+  pending_email_changes: PendingEmailChangesTable;
   contact_messages: ContactMessagesTable;
   users: UsersTable;
   user_avatars: UserAvatarsTable;

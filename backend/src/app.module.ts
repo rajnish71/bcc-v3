@@ -4,6 +4,7 @@ import { AuthModule } from './modules/identity/auth/auth.module';
 import { RbacModule } from './modules/identity/rbac/rbac.module';
 import { RegistrationModule } from './modules/identity/registration/registration.module';
 import { UsersModule } from './modules/identity/users/users.module';
+import { AccountSettingsModule } from './modules/identity/account-settings/account-settings.module';
 import { MembershipModule } from './modules/membership/membership.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { EventsModule } from './modules/events/events.module';
@@ -18,6 +19,7 @@ import { ContactModule } from './modules/contact/contact.module';
     RbacModule,
     RegistrationModule,
     UsersModule,
+    AccountSettingsModule,
     MembershipModule,
     NotificationModule,
     EventsModule,

@@ -1,0 +1,147 @@
+---
+/**
+ * /hub/account-settings/verify — Email change verification landing page
+ *
+ * Called via the link sent to the new email address.
+ * Query param: token (opaque raw token)
+ *
+ * On load: calls GET /api/v1/hub/account-settings/email/verify?token=...
+ *   Success → show "Email updated successfully"
+ *   Failed/expired → show "Link expired or invalid"
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Verify Email Change" description="Confirming your new email address.">
+  <main class="verify-shell">
+
+    <div class="verify-card" id="verify-loading">
+      <div class="verify-dots">
+        <span class="verify-dot"></span>
+        <span class="verify-dot"></span>
+        <span class="verify-dot"></span>
+      </div>
+      <p class="verify-msg">Verifying your new email address…</p>
+    </div>
+
+    <div class="verify-card" id="verify-success" hidden>
+      <div class="verify-icon verify-icon--ok">✓</div>
+      <h1 class="verify-title">Email updated successfully</h1>
+      <p class="verify-body">Your email address has been changed. Sign in again if prompted.</p>
+      <a href="/hub/account-settings/" class="verify-btn">Back to Account Settings</a>
+    </div>
+
+    <div class="verify-card" id="verify-error" hidden>
+      <div class="verify-icon verify-icon--err">✕</div>
+      <h1 class="verify-title">Link expired or invalid</h1>
+      <p class="verify-body" id="verify-error-msg">This verification link has expired or has already been used. Please request a new one from Account Settings.</p>
+      <a href="/hub/account-settings/" class="verify-btn">Back to Account Settings</a>
+    </div>
+
+  </main>
+</BaseLayout>
+
+<style>
+.verify-shell {
+  min-height: 100vh;
+  padding-top: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-0, #FAF8F4);
+  padding-bottom: 80px;
+}
+.verify-card {
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  padding: 48px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+.verify-dots {
+  display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 16px;
+}
+.verify-dot {
+  width: 8px; height: 8px; background: #D8D2C6; border-radius: 999px;
+  animation: vdot 1.2s ease-in-out infinite both;
+}
+.verify-dot:nth-child(2) { animation-delay: .2s; }
+.verify-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes vdot {
+  0%,80%,100% { transform:scale(.6); opacity:.4; }
+  40%          { transform:scale(1);  opacity:1; }
+}
+.verify-msg { font-size: 14px; color: #8B8378; margin: 0; }
+.verify-icon {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+.verify-icon--ok  { color: #2E6B45; }
+.verify-icon--err { color: #C0392B; }
+.verify-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: #141210;
+  margin: 0 0 12px;
+}
+.verify-body { font-size: 14px; color: #8B8378; margin: 0 0 28px; line-height: 1.6; }
+.verify-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 28px;
+  background: linear-gradient(135deg, #C9A961, #A8843C);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 2px;
+  text-decoration: none;
+  transition: opacity .15s;
+}
+.verify-btn:hover { opacity: .9; }
+</style>
+
+<script>
+  const API = '/api/v1';
+
+  async function verifyToken() {
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('token');
+
+    if (!token) {
+      showError('No verification token found in the URL.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/hub/account-settings/email/verify?token=${encodeURIComponent(token)}`);
+      if (res.ok) {
+        document.getElementById('verify-loading')?.setAttribute('hidden', '');
+        document.getElementById('verify-success')?.removeAttribute('hidden');
+        // Clear cached email in localStorage
+        try {
+          const stored = JSON.parse(localStorage.getItem('bcc_user') ?? '{}') as Record<string, unknown>;
+          delete stored.email;
+          localStorage.setItem('bcc_user', JSON.stringify(stored));
+        } catch { /* non-critical */ }
+      } else {
+        const err = await res.json().catch(() => ({})) as { message?: string };
+        showError(err.message ?? 'Verification failed.');
+      }
+    } catch {
+      showError('Network error. Please try again.');
+    }
+  }
+
+  function showError(msg: string) {
+    document.getElementById('verify-loading')?.setAttribute('hidden', '');
+    const errEl = document.getElementById('verify-error-msg');
+    if (errEl) errEl.textContent = msg;
+    document.getElementById('verify-error')?.removeAttribute('hidden');
+  }
+
+  verifyToken();
+</script>

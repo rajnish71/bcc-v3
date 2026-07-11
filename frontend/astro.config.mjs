@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://v3bcc.bhopal.info',
+  site: 'https://bcc.bhopal.info',
   output: 'static',
   integrations: [sitemap()],
   vite: {

@@ -7,7 +7,8 @@
  *
  * OVERRIDES (take precedence over wireframe):
  *   1. Name fields (Title/First/Middle/Last) are READ-ONLY — edit via Account Settings.
- *   2. year_joined_bcc is READ-ONLY — admin-set.
+ *   2. year_joined_bcc is TEMPORARILY USER-EDITABLE (V6 13 Amendment 002).
+ *      Will revert to membership application date after full platform launch.
  *   3. Public URL prefix: v3bcc.bhopal.info/photographers/{username}
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
@@ -336,9 +337,10 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
         </select>
       </div>
       <div class="ps-field-group">
-        <label class="ps-label">Year Joined BCC</label>
-        <div class="form-input form-input--readonly" id="ro-year-joined">—</div>
-        <div class="ps-hint">Set by BCC administration.</div>
+        <label class="ps-label" for="field-year-joined">Year Joined BCC</label>
+        <input class="form-input" type="number" id="field-year-joined" name="yearJoinedBcc"
+          min="2016" max="2030" placeholder="e.g. 2019" />
+        <div class="ps-hint">Temporary — will be replaced by membership application date after full launch.</div>
       </div>
     </div>
 
@@ -1130,7 +1132,7 @@ async function loadProfile() {
   updateCounter('field-tagline', 'tagline-count', 120);
   setInpVal('field-website', p.websiteUrl ?? '');
   setSelVal('field-camera-system', p.preferredCameraSystem ?? '');
-  setRO('ro-year-joined', p.yearJoinedBcc ? String(p.yearJoinedBcc) : '—');
+  setInpVal('field-year-joined', p.yearJoinedBcc ? String(p.yearJoinedBcc) : '');
   (window as any).tiptapSetContent_bio?.(p.bio ?? '');
   (window as any).tiptapSetContent_awardsHtml?.(p.awardsHtml ?? '');
   renderGenreGrid(Array.isArray(p.photographyGenres) ? p.photographyGenres : []);
@@ -1235,6 +1237,7 @@ async function saveAll() {
     preferredCameraSystem: (getSel('field-camera-system') || null),
     photographyGenres: selectedGenres,
     bio: (getTxtArea('tiptap-hidden-bio') || null),
+    yearJoinedBcc: getInp('field-year-joined') ? Number(getInp('field-year-joined')) : null,
   };
   promises.push(apiFetch(API, {
     method: 'PUT',
@@ -1477,7 +1480,7 @@ listenDirty([
   'field-phone','field-gender','field-dob',
   'field-addr1','field-addr2','field-addr3','field-city','field-state','field-pin',
   'field-blood','field-ec-name','field-ec-phone','field-ec-rel',
-  'field-tagline','field-website','field-camera-system','tiptap-hidden-bio',
+  'field-tagline','field-website','field-camera-system','field-year-joined','tiptap-hidden-bio',
 ], 'main');
 listenDirty(['field-fiap','field-fip','field-psa','field-other-titles','tiptap-hidden-awardsHtml'], 'distinctions');
 document.querySelectorAll('[data-platform]').forEach(el => {

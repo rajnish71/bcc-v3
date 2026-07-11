@@ -1,6 +1,7 @@
 import {
   IsOptional, IsString, MaxLength, IsUrl,
   IsArray, ArrayMaxSize, IsIn, IsDateString, Matches,
+  IsInt, Min,
 } from 'class-validator';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
@@ -36,4 +37,7 @@ export class UpdateProfileDto {
   @IsOptional() @IsString() @IsIn(CAMERA_SYSTEMS) preferredCameraSystem?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(10) @IsString({ each: true }) photographyGenres?: string[];
   @IsOptional() @IsString() @MaxLength(3000) bio?: string;
+
+  // Temporarily user-editable — will be replaced by membership application date on full launch
+  @IsOptional() @IsInt() @Min(2016) yearJoinedBcc?: number;
 }

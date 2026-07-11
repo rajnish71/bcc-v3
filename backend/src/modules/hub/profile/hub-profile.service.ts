@@ -15,7 +15,7 @@ import type { UpdateDistinctionsDto } from './dto/update-distinctions.dto';
 // Fields that must never be modified via the profile PUT endpoint
 const PROTECTED_FIELDS = new Set([
   'username', 'email', 'full_name', 'name_title', 'first_name',
-  'middle_name', 'last_name', 'year_joined_bcc',
+  'middle_name', 'last_name',
   'membership_number', 'membership_tier',
 ]);
 
@@ -260,6 +260,13 @@ export class HubProfileService {
     if (dto.preferredCameraSystem !== undefined) updateData.preferred_camera_system = dto.preferredCameraSystem ?? null;
     if (dto.photographyGenres !== undefined) updateData.photography_genres = JSON.stringify(dto.photographyGenres ?? []);
     if (dto.bio !== undefined) updateData.bio = dto.bio ?? null;
+
+    if (dto.yearJoinedBcc !== undefined) {
+      if (dto.yearJoinedBcc !== null && dto.yearJoinedBcc > new Date().getFullYear()) {
+        throw new BadRequestException('Year joined BCC cannot be in the future');
+      }
+      updateData.year_joined_bcc = dto.yearJoinedBcc ?? null;
+    }
 
     // Strip any protected fields that somehow slipped through
     for (const key of PROTECTED_FIELDS) delete updateData[key];

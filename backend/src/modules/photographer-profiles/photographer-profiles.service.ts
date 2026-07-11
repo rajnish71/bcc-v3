@@ -265,8 +265,14 @@ export class PhotographerProfilesService {
         'u.state',
         'u.experience_level',
         'u.profile_visibility',
+        'u.tagline',
+        'u.website_url',
+        'u.photography_genres',
+        'u.areas_of_expertise',
+        'u.preferred_camera_system',
         'm.id as membership_id',
         'm.join_year',
+        'm.membership_number',
         'mc.code as class_code',
         'av.imagekit_url as avatar_url',
       ])
@@ -295,6 +301,21 @@ export class PhotographerProfilesService {
       socialHandles[h.platform.toLowerCase()] = h.handle_or_url;
     }
 
+    // Cover photo
+    const cover = await db
+      .selectFrom('user_cover_photos')
+      .select(['imagekit_url'])
+      .where('user_id', '=', user.id)
+      .where('is_active', '=', true)
+      .executeTakeFirst();
+
+    // Gear
+    const gearRows = await db
+      .selectFrom('user_gear')
+      .select(['gear_type', 'label'])
+      .where('user_id', '=', user.id)
+      .execute();
+
     // Photo count
     const countRow = await db
       .selectFrom('photos')
@@ -304,20 +325,37 @@ export class PhotographerProfilesService {
       .select(eb => eb.fn.count<number>('id').as('cnt'))
       .executeTakeFirst();
 
+    // Founding member: serials 00001–00007 in BCC201911SSSSS format
+    const mNum = user.membership_number ?? '';
+    const serial = mNum.slice(9);
+    const isFoundingMember = mNum.length >= 14 && serial >= '00001' && serial <= '00007';
+
     return {
       data: {
-        id:              user.id,
-        username:        user.username!,
-        displayName:     user.full_name,
-        bio:             user.bio ?? null,
-        city:            user.city ?? null,
-        state:           user.state ?? null,
-        experienceLevel: user.experience_level ?? null,
-        memberClass:     maskClass(user.class_code),
-        memberSince:     user.join_year ?? null,
-        photoCount:      Number(countRow?.cnt ?? 0),
-        avatarUrl:       user.avatar_url ?? null,
-        recognition:     recognition
+        id:                    user.id,
+        username:              user.username!,
+        displayName:           user.full_name,
+        tagline:               user.tagline ?? null,
+        bio:                   user.bio ?? null,
+        city:                  user.city ?? null,
+        state:                 user.state ?? null,
+        experienceLevel:       user.experience_level ?? null,
+        memberClass:           maskClass(user.class_code),
+        memberSince:           user.join_year ?? null,
+        photoCount:            Number(countRow?.cnt ?? 0),
+        avatarUrl:             user.avatar_url ?? null,
+        coverUrl:              cover?.imagekit_url ?? null,
+        websiteUrl:            user.website_url ?? null,
+        photographyGenres:     (user.photography_genres as unknown as string[] | null) ?? [],
+        areasOfExpertise:      (user.areas_of_expertise as unknown as string[] | null) ?? [],
+        preferredCameraSystem: user.preferred_camera_system ?? null,
+        isFoundingMember,
+        gear: {
+          bodies:      gearRows.filter(g => g.gear_type === 'BODY').map(g => g.label),
+          lenses:      gearRows.filter(g => g.gear_type === 'LENS').map(g => g.label),
+          accessories: gearRows.filter(g => g.gear_type === 'ACCESSORY').map(g => g.label),
+        },
+        recognition: recognition
           ? {
               code:  recognition.recognition_code,
               label: RECOGNITION_LABELS[recognition.recognition_code] ?? recognition.recognition_code,

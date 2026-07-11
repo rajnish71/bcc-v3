@@ -40,17 +40,61 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       <!-- Form -->
       <div id="auth-form-wrap">
-        <div class="auth-field">
-          <label class="auth-label" for="fullName">Full name</label>
-          <input
-            id="fullName"
-            type="text"
-            name="fullName"
-            class="auth-input"
-            placeholder="Your full name"
-            autocomplete="name"
-            required
-          />
+        <!-- Name: Title + First Name -->
+        <div class="auth-name-row">
+          <div class="auth-field auth-field--title">
+            <label class="auth-label" for="nameTitle">Title</label>
+            <select id="nameTitle" name="nameTitle" class="auth-input auth-select" autocomplete="honorific-prefix">
+              <option value="">—</option>
+              <option value="Mr.">Mr.</option>
+              <option value="Ms.">Ms.</option>
+              <option value="Mrs.">Mrs.</option>
+              <option value="Dr.">Dr.</option>
+              <option value="Prof.">Prof.</option>
+              <option value="Er.">Er.</option>
+              <option value="CA">CA</option>
+              <option value="Adv.">Adv.</option>
+            </select>
+          </div>
+          <div class="auth-field auth-field--first">
+            <label class="auth-label" for="firstName">First name <span class="auth-required" aria-hidden="true">*</span></label>
+            <input
+              id="firstName"
+              type="text"
+              name="firstName"
+              class="auth-input"
+              placeholder="First name"
+              autocomplete="given-name"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Name: Middle + Last -->
+        <div class="auth-name-row">
+          <div class="auth-field auth-field--half">
+            <label class="auth-label" for="middleName">Middle name</label>
+            <input
+              id="middleName"
+              type="text"
+              name="middleName"
+              class="auth-input"
+              placeholder="Optional"
+              autocomplete="additional-name"
+            />
+          </div>
+          <div class="auth-field auth-field--half">
+            <label class="auth-label" for="lastName">Last name <span class="auth-required" aria-hidden="true">*</span></label>
+            <input
+              id="lastName"
+              type="text"
+              name="lastName"
+              class="auth-input"
+              placeholder="Last name"
+              autocomplete="family-name"
+              required
+            />
+          </div>
         </div>
 
         <div class="auth-field">
@@ -194,6 +238,33 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 }
 
 .auth-field { display: flex; flex-direction: column; gap: 6px; }
+
+.auth-name-row {
+  display: flex;
+  gap: var(--s-2);
+  align-items: flex-end;
+}
+.auth-field--title { flex: 0 0 140px; }
+.auth-field--first { flex: 1; }
+.auth-field--half  { flex: 1; }
+
+.auth-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
+.auth-required { color: var(--gold-600); font-size: 11px; }
+
+@media (max-width: 480px) {
+  .auth-name-row { flex-direction: column; }
+  .auth-field--title,
+  .auth-field--first,
+  .auth-field--half { flex: none; width: 100%; }
+}
 
 .auth-label {
   font-size: 13px;
@@ -347,18 +418,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   /* -- Email + password registration ------------------------------------ */
   qs<HTMLButtonElement>('register-btn')?.addEventListener('click', async () => {
     hideError();
-    const nameEl  = qs<HTMLInputElement>('fullName');
-    const emailEl = qs<HTMLInputElement>('email');
-    const passEl  = qs<HTMLInputElement>('password');
-    const termsEl = qs<HTMLInputElement>('terms');
-    const btn     = qs<HTMLButtonElement>('register-btn');
-    if (!nameEl || !emailEl || !passEl || !termsEl || !btn) return;
+    const titleEl  = qs<HTMLSelectElement>('nameTitle');
+    const firstEl  = qs<HTMLInputElement>('firstName');
+    const middleEl = qs<HTMLInputElement>('middleName');
+    const lastEl   = qs<HTMLInputElement>('lastName');
+    const emailEl  = qs<HTMLInputElement>('email');
+    const passEl   = qs<HTMLInputElement>('password');
+    const termsEl  = qs<HTMLInputElement>('terms');
+    const btn      = qs<HTMLButtonElement>('register-btn');
+    if (!titleEl || !firstEl || !middleEl || !lastEl || !emailEl || !passEl || !termsEl || !btn) return;
 
-    const fullName = nameEl.value.trim();
-    const email    = emailEl.value.trim();
-    const password = passEl.value;
+    const nameTitle  = titleEl.value.trim() || undefined;
+    const firstName  = firstEl.value.trim();
+    const middleName = middleEl.value.trim() || undefined;
+    const lastName   = lastEl.value.trim();
+    const email      = emailEl.value.trim();
+    const password   = passEl.value;
 
-    if (!fullName)         { showError('Please enter your full name.'); nameEl.focus();  return; }
+    if (!firstName)        { showError('Please enter your first name.'); firstEl.focus(); return; }
+    if (!lastName)         { showError('Please enter your last name.'); lastEl.focus(); return; }
     if (!email)            { showError('Please enter your email address.'); emailEl.focus(); return; }
     if (password.length < 8) { showError('Password must be at least 8 characters.'); passEl.focus(); return; }
     if (!termsEl.checked) { showError('Please agree to the Terms of Use and Code of Conduct.'); return; }
@@ -369,7 +447,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const res = await fetch(`${API}/registration/email-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, fullName }),
+        body: JSON.stringify({ email, password, nameTitle, firstName, middleName, lastName }),
       });
 
       if (!res.ok) {
@@ -384,7 +462,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
 
       const data = await res.json() as { user: { fullName?: string }; tokens: { accessToken: string; refreshToken: string } };
-      storeSession(data.tokens.accessToken, data.tokens.refreshToken, data.user.fullName || fullName);
+      storeSession(data.tokens.accessToken, data.tokens.refreshToken, data.user.fullName || firstName);
 
       // Registration sends a verification email automatically.
       // Send user to verify-email page to prompt them to check inbox.

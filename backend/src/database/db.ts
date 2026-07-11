@@ -16,6 +16,10 @@ export interface UsersTable {
   phone: string | null;
   password_hash: string | null;
   full_name: string;
+  name_title: Nullable<string>;
+  first_name: Nullable<string>;
+  middle_name: Nullable<string>;
+  last_name: Nullable<string>;
   email_verified_at: ColumnType<Date | null, string | null, string | null>;
   phone_verified_at: ColumnType<Date | null, string | null, string | null>;
   status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';

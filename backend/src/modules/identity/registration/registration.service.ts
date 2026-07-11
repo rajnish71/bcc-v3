@@ -104,10 +104,18 @@ export class RegistrationService {
     }
 
     const passwordHash = await argon2.hash(dto.password);
+    const fullName = [dto.nameTitle, dto.firstName, dto.middleName, dto.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
     const { id, uuid } = await this.createBaselineUser({
       email: dto.email,
       phone: null,
-      fullName: dto.fullName,
+      fullName,
+      nameTitle: dto.nameTitle ?? null,
+      firstName: dto.firstName,
+      middleName: dto.middleName ?? null,
+      lastName: dto.lastName,
       passwordHash,
       registrationMethod: 'EMAIL_PASSWORD',
       createdBy: null,
@@ -618,6 +626,10 @@ export class RegistrationService {
     email: string | null;
     phone: string | null;
     fullName: string;
+    nameTitle?: string | null;
+    firstName?: string | null;
+    middleName?: string | null;
+    lastName?: string | null;
     passwordHash: string | null;
     registrationMethod: RegistrationMethod;
     createdBy: number | null;
@@ -635,6 +647,10 @@ export class RegistrationService {
         phone: params.phone,
         password_hash: params.passwordHash,
         full_name: params.fullName,
+        name_title: params.nameTitle ?? null,
+        first_name: params.firstName ?? null,
+        middle_name: params.middleName ?? null,
+        last_name: params.lastName ?? null,
         status: 'ACTIVE',
         email_verified_at: params.emailVerifiedNow ? now : null,
         phone_verified_at: params.phoneVerifiedNow ? now : null,

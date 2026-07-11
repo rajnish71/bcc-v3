@@ -9,10 +9,9 @@
  *   1. Name fields (Title/First/Middle/Last) are READ-ONLY — edit via Account Settings.
  *   2. year_joined_bcc is READ-ONLY — admin-set.
  *   3. Public URL prefix: v3bcc.bhopal.info/photographers/{username}
- *
- * Tiptap v2 NOT installed — bio/awards use textarea with note.
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
+import TiptapBio from '../../../components/hub/TiptapBio.astro';
 ---
 
 <HubLayout title="My Profile" description="Edit your Bhopal Camera Club member profile.">
@@ -352,12 +351,8 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
     <div class="ps-row">
       <div class="ps-field-group ps-field-group--full">
-        <label class="ps-label" for="field-bio">
-          Biography <span class="ps-counter" id="bio-count">0/3000</span>
-        </label>
-        <textarea class="form-textarea" id="field-bio" name="bio" rows="8"
-          maxlength="3000" placeholder="Tell your story as a photographer…"></textarea>
-        <div class="ps-hint">Rich text editor (Tiptap v2) to be wired. Plain text stored for now.</div>
+        <label class="ps-label">Biography</label>
+        <TiptapBio maxChars={3000} />
       </div>
     </div>
   </section>
@@ -1134,8 +1129,7 @@ async function loadProfile() {
   setInpVal('field-website', p.websiteUrl ?? '');
   setSelVal('field-camera-system', p.preferredCameraSystem ?? '');
   setRO('ro-year-joined', p.yearJoinedBcc ? String(p.yearJoinedBcc) : '—');
-  setTxtArea('field-bio', p.bio ?? '');
-  updateCounter('field-bio', 'bio-count', 3000);
+  (window as any).tiptapBioSetContent?.(p.bio ?? '');
   renderGenreGrid(Array.isArray(p.photographyGenres) ? p.photographyGenres : []);
 
   // Chips
@@ -1238,7 +1232,7 @@ async function saveAll() {
     favouriteSubjects: chipData.favouriteSubjects,
     preferredCameraSystem: (getSel('field-camera-system') || null),
     photographyGenres: selectedGenres,
-    bio: (getTxtArea('field-bio') || null),
+    bio: (getTxtArea('tiptap-hidden-bio') || null),
   };
   promises.push(apiFetch(API, {
     method: 'PUT',
@@ -1439,8 +1433,6 @@ function listenDirty(ids: string[], section: string) {
 function initCounters() {
   const tagline = document.getElementById('field-tagline') as HTMLInputElement | null;
   tagline?.addEventListener('input', () => updateCounter('field-tagline', 'tagline-count', 120));
-  const bio = document.getElementById('field-bio') as HTMLTextAreaElement | null;
-  bio?.addEventListener('input', () => updateCounter('field-bio', 'bio-count', 3000));
 }
 
 function updateCounter(fieldId: string, counterId: string, max: number) {
@@ -1483,7 +1475,7 @@ listenDirty([
   'field-phone','field-gender','field-dob',
   'field-addr1','field-addr2','field-addr3','field-city','field-state','field-pin',
   'field-blood','field-ec-name','field-ec-phone','field-ec-rel',
-  'field-tagline','field-website','field-camera-system','field-bio',
+  'field-tagline','field-website','field-camera-system','tiptap-hidden-bio',
 ], 'main');
 listenDirty(['field-fiap','field-fip','field-psa','field-other-titles','field-awards'], 'distinctions');
 document.querySelectorAll('[data-platform]').forEach(el => {

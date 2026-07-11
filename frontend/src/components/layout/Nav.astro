@@ -212,7 +212,7 @@ const NAV_LINKS = [
                   <span class="nav-avatar-panel__dot"></span>
                 </a>
                 <!-- Account Settings -->
-                <a href="/hub/account-settings/" class="nav-avatar-panel__item nav-avatar-panel__item--user" id="nav-menu-account-settings">Account Settings</a>
+                <a href="/hub/account-settings/" class="nav-avatar-panel__item" id="nav-menu-account-settings">Account Settings</a>
                 <!-- Renewals -->
                 <a href="/hub/membership/" class="nav-avatar-panel__item" id="nav-menu-renewals">Renewals</a>
               </div>
@@ -1284,7 +1284,7 @@ const NAV_LINKS = [
           if (menuGallery)         menuGallery.style.display = 'block';
           if (menuJournalCms)      menuJournalCms.style.display = 'flex';
           if (menuModeration)      menuModeration.style.display = 'none';
-          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'block';
           if (menuRenewals)        menuRenewals.style.display = 'block';
         } else if (portalState === 'MODERATOR') {
           // Configure Right Rail for MODERATOR state
@@ -1301,7 +1301,7 @@ const NAV_LINKS = [
           if (menuGallery)         menuGallery.style.display = 'block';
           if (menuJournalCms)      menuJournalCms.style.display = 'none';
           if (menuModeration)      menuModeration.style.display = 'flex';
-          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'block';
           if (menuRenewals)        menuRenewals.style.display = 'block';
         } else if (portalState === 'ADMIN') {
           // Configure Right Rail for ADMIN state
@@ -1319,7 +1319,7 @@ const NAV_LINKS = [
           if (menuGallery)         menuGallery.style.display = 'block';
           if (menuJournalCms)      menuJournalCms.style.display = 'none';
           if (menuModeration)      menuModeration.style.display = 'none';
-          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'block';
           if (menuRenewals)        menuRenewals.style.display = 'block';
         } else if (portalState === 'MEMBER') {
           // Configure Right Rail for MEMBER state
@@ -1336,7 +1336,7 @@ const NAV_LINKS = [
           if (menuGallery)         menuGallery.style.display = 'block';
           if (menuJournalCms)      menuJournalCms.style.display = 'none';
           if (menuModeration)      menuModeration.style.display = 'none';
-          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'block';
           if (menuRenewals)        menuRenewals.style.display = 'block';
         } else {
           // Configure Right Rail for default V3 state (behaving as MEMBER)
@@ -1353,7 +1353,7 @@ const NAV_LINKS = [
           if (menuGallery)         menuGallery.style.display = 'block';
           if (menuJournalCms)      menuJournalCms.style.display = 'none';
           if (menuModeration)      menuModeration.style.display = 'none';
-          if (menuAccountSettings) menuAccountSettings.style.display = 'none';
+          if (menuAccountSettings) menuAccountSettings.style.display = 'block';
           if (menuRenewals)        menuRenewals.style.display = 'block';
         }
 
@@ -1457,7 +1457,7 @@ const NAV_LINKS = [
 
           if (actProfile)  actProfile.style.display = 'block';
           if (actGallery)  actGallery.style.display = 'block';
-          if (actSettings) actSettings.style.display = 'none';
+          if (actSettings) actSettings.style.display = 'block';
           if (actRenewals) actRenewals.style.display = 'block';
 
           if (btnHub)   btnHub.style.display = 'block';
@@ -1471,7 +1471,7 @@ const NAV_LINKS = [
 
           if (actProfile)  actProfile.style.display = 'block';
           if (actGallery)  actGallery.style.display = 'block';
-          if (actSettings) actSettings.style.display = 'none';
+          if (actSettings) actSettings.style.display = 'block';
           if (actRenewals) actRenewals.style.display = 'block';
 
           if (btnHub)   btnHub.style.display = 'block';
@@ -1486,7 +1486,7 @@ const NAV_LINKS = [
 
           if (actProfile)  actProfile.style.display = 'none';
           if (actGallery)  actGallery.style.display = 'none';
-          if (actSettings) actSettings.style.display = 'none';
+          if (actSettings) actSettings.style.display = 'block';
           if (actRenewals) actRenewals.style.display = 'none';
 
           if (btnHub)   btnHub.style.display = 'none';
@@ -1501,7 +1501,7 @@ const NAV_LINKS = [
 
           if (actProfile)  actProfile.style.display = 'block';
           if (actGallery)  actGallery.style.display = 'block';
-          if (actSettings) actSettings.style.display = 'none';
+          if (actSettings) actSettings.style.display = 'block';
           if (actRenewals) actRenewals.style.display = 'block';
 
           if (btnHub)   btnHub.style.display = 'block';

@@ -1,0 +1,184 @@
+---
+interface Props {
+  maxChars?: number;
+}
+const { maxChars = 3000 } = Astro.props;
+---
+
+<div class="tiptap-bio-wrap" data-max-chars={maxChars} id="tiptap-bio-root">
+  <div class="tiptap-toolbar" role="toolbar" aria-label="Text formatting">
+    <button type="button" data-action="bold" class="tiptap-btn" id="tiptap-btn-bold" title="Bold">B</button>
+    <button type="button" data-action="italic" class="tiptap-btn" id="tiptap-btn-italic" title="Italic"><em>I</em></button>
+    <button type="button" data-action="bullet" class="tiptap-btn" id="tiptap-btn-bullet" title="Bullet list">•</button>
+    <span class="tiptap-charcount" id="tiptap-charcount-bio">0 / {maxChars}</span>
+  </div>
+  <div id="tiptap-editor-bio" class="tiptap-editor-area"></div>
+  <textarea name="bio" hidden id="tiptap-hidden-bio" aria-hidden="true"></textarea>
+</div>
+
+<style>
+.tiptap-bio-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.tiptap-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #FAF8F4;
+  border: 1px solid #D8D2C6;
+  border-bottom: none;
+}
+.tiptap-btn {
+  background: #FAF8F4;
+  border: 1px solid #E7E1D6;
+  border-radius: 4px;
+  padding: 5px 11px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  color: #141210;
+  line-height: 1.4;
+  min-width: 30px;
+  text-align: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.tiptap-btn:hover {
+  background: #F0EBE0;
+  border-color: #C9A961;
+}
+.tiptap-btn.is-active {
+  background: #141210;
+  color: #FFFFFF;
+  border-color: #141210;
+}
+.tiptap-charcount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #8B8378;
+  margin-left: auto;
+}
+.tiptap-editor-area {
+  border: 1px solid #D8D2C6;
+  background: #FFFFFF;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.tiptap-editor-area:focus-within {
+  border-color: #A8843C;
+  box-shadow: 0 0 0 3px rgba(201,169,97,0.12);
+}
+</style>
+
+<!-- Tiptap creates .ProseMirror at runtime — must be :global to apply -->
+<style is:global>
+.tiptap-editor-area .ProseMirror {
+  font-family: var(--font-body, Inter, sans-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 200px;
+  padding: 12px 14px;
+  outline: none;
+  color: #141210;
+  box-sizing: border-box;
+}
+.tiptap-editor-area .ProseMirror p {
+  margin: 0 0 0.6em;
+}
+.tiptap-editor-area .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+.tiptap-editor-area .ProseMirror ul {
+  padding-left: 1.4em;
+  margin: 0 0 0.6em;
+}
+.tiptap-editor-area .ProseMirror li {
+  margin-bottom: 0.2em;
+}
+.tiptap-editor-area .ProseMirror p.is-editor-empty:first-child::before {
+  content: 'Tell your story as a photographer\2026';
+  color: #A8A09A;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+</style>
+
+<script>
+  import { Editor } from '@tiptap/core';
+  import StarterKit from '@tiptap/starter-kit';
+
+  const root = document.getElementById('tiptap-bio-root');
+  const editorEl = document.getElementById('tiptap-editor-bio');
+  const hiddenTextarea = document.getElementById('tiptap-hidden-bio') as HTMLTextAreaElement | null;
+  const charCountEl = document.getElementById('tiptap-charcount-bio');
+  const boldBtn = document.getElementById('tiptap-btn-bold');
+  const italicBtn = document.getElementById('tiptap-btn-italic');
+  const bulletBtn = document.getElementById('tiptap-btn-bullet');
+
+  if (editorEl) {
+    const maxChars = parseInt(root?.getAttribute('data-max-chars') ?? '3000', 10);
+
+    function updateToolbarState(ed: Editor) {
+      boldBtn?.classList.toggle('is-active', ed.isActive('bold'));
+      italicBtn?.classList.toggle('is-active', ed.isActive('italic'));
+      bulletBtn?.classList.toggle('is-active', ed.isActive('bulletList'));
+    }
+
+    function updateCharCount(ed: Editor) {
+      const count = ed.getText().length;
+      if (charCountEl) {
+        charCountEl.textContent = `${count} / ${maxChars}`;
+        (charCountEl as HTMLElement).style.color = count > maxChars ? '#882828' : '#8B8378';
+      }
+    }
+
+    const editor = new Editor({
+      element: editorEl,
+      extensions: [
+        StarterKit.configure({
+          heading: false,
+          blockquote: false,
+          codeBlock: false,
+          code: false,
+          horizontalRule: false,
+          orderedList: false,
+          strike: false,
+        }),
+      ],
+      content: '',
+      onUpdate({ editor }) {
+        if (hiddenTextarea) {
+          hiddenTextarea.value = editor.getHTML();
+          hiddenTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        updateCharCount(editor);
+        updateToolbarState(editor);
+      },
+      onSelectionUpdate({ editor }) {
+        updateToolbarState(editor);
+      },
+    });
+
+    // Expose setter — profile loadProfile() calls this after API data arrives
+    (window as any).tiptapBioSetContent = (html: string) => {
+      editor.commands.setContent(html || '');
+      if (hiddenTextarea) hiddenTextarea.value = html || '';
+      updateCharCount(editor);
+    };
+
+    boldBtn?.addEventListener('click', () => {
+      editor.chain().focus().toggleBold().run();
+    });
+
+    italicBtn?.addEventListener('click', () => {
+      editor.chain().focus().toggleItalic().run();
+    });
+
+    bulletBtn?.addEventListener('click', () => {
+      editor.chain().focus().toggleBulletList().run();
+    });
+  }
+</script>

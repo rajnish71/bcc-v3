@@ -799,9 +799,7 @@ async function uploadItem(item: FileItem): Promise<void> {
       body: JSON.stringify({
         mime_type: item.file.type || 'image/jpeg',
         file_size_bytes: item.file.size,
-        original_filename: item.file.name,
-        title: item.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(),
-        visibility: 'PRIVATE',
+        filename: item.file.name,
       }),
       signal: ac.signal,
     });
@@ -814,7 +812,7 @@ async function uploadItem(item: FileItem): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', presign_url);
-      xhr.setRequestHeader('Content-Type', item.file.type || 'application/octet-stream');
+      xhr.setRequestHeader('Content-Type', item.file.type || 'image/jpeg');
       xhr.upload.addEventListener('progress', e => {
         if (e.lengthComputable) {
           updateItemState(item.id, { progress: Math.round((e.loaded / e.total) * 88) + 7 });
@@ -913,16 +911,18 @@ async function confirmItems(selectedIds: string[], visibility: string): Promise<
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
         body: JSON.stringify({
           title: title || item.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(),
-          description: location ? `Location: ${location}` : undefined,
+          caption: location ? `Location: ${location}` : undefined,
           visibility,
-          camera_make: item.exif?.cameraMake,
-          camera_model: item.exif?.cameraModel,
-          lens_model: item.exif?.lensModel,
-          iso: item.exif?.iso,
-          aperture: item.exif?.aperture,
-          shutter_speed: item.exif?.shutterSpeed,
-          focal_length_mm: item.exif?.focalLengthMm,
-          date_taken: item.exif?.dateTaken,
+          exif: {
+            camera_make:   item.exif?.cameraMake,
+            camera_model:  item.exif?.cameraModel,
+            lens_model:    item.exif?.lensModel,
+            iso:           item.exif?.iso,
+            aperture:      item.exif?.aperture ? parseFloat(item.exif.aperture.replace('f/', '')) : undefined,
+            shutter_speed: item.exif?.shutterSpeed,
+            focal_length:  item.exif?.focalLengthMm,
+            taken_at:      item.exif?.dateTaken,
+          },
         }),
       });
       if (res.ok || res.status === 202) {

@@ -183,7 +183,7 @@ const activeContest = {
         <!-- Card 1: Photowalks -->
         <a href="/activities?type=photowalk" class="club-card active-card" aria-label="Photowalks: Walk the city with us">
           <div class="club-card__image-area">
-            <div class="club-card__gradient" style="background: repeating-linear-gradient(135deg, #1A1816 0px, #1A1816 20px, #201E1C 20px, #201E1C 40px);"></div>
+            <div class="club-card__gradient" style="background: linear-gradient(160deg, #0D1B2A 0%, #1A2D4A 50%, #0A1520 100%);"></div>
           </div>
           <div class="club-card__body">
             <div class="club-card__kicker">Photowalks</div>
@@ -196,7 +196,7 @@ const activeContest = {
         <!-- Card 2: Photo Contests -->
         <a href="/activities/contests" class="club-card active-card" aria-label="Photo Contests: Compete and be seen">
           <div class="club-card__image-area">
-            <div class="club-card__gradient" style="background: repeating-linear-gradient(135deg, #1C1A18 0px, #1C1A18 20px, #222020 20px, #222020 40px);"></div>
+            <div class="club-card__gradient" style="background: linear-gradient(160deg, #2A1A06 0%, #4A2E10 50%, #1E1208 100%);"></div>
           </div>
           <div class="club-card__body">
             <div class="club-card__kicker">Photo Contests</div>
@@ -209,7 +209,7 @@ const activeContest = {
         <!-- Card 3: Exhibitions -->
         <a href="/activities/exhibitions" class="club-card active-card" aria-label="Exhibitions: Print and exhibit your work">
           <div class="club-card__image-area">
-            <div class="club-card__gradient" style="background: repeating-linear-gradient(135deg, #181614 0px, #181614 20px, #1E1C1A 20px, #1E1C1A 40px);"></div>
+            <div class="club-card__gradient" style="background: linear-gradient(160deg, #141210 0%, #221E1A 50%, #0E0C0A 100%);"></div>
           </div>
           <div class="club-card__body">
             <div class="club-card__kicker">Exhibitions</div>
@@ -222,7 +222,7 @@ const activeContest = {
         <!-- Card 4: Photography School (Coming Soon) -->
         <div class="club-card disabled-card" aria-label="Photography School: Learn with the club (Coming Soon)">
           <div class="club-card__image-area">
-            <div class="club-card__gradient" style="background: repeating-linear-gradient(135deg, #2A2826 0px, #2A2826 20px, #2E2C2A 20px, #2E2C2A 40px);"></div>
+            <div class="club-card__gradient" style="background: linear-gradient(160deg, #1A1E28 0%, #262C3A 50%, #141820 100%);"></div>
             <div class="club-card__badge-overlay">
               <span class="badge">COMING SOON</span>
             </div>
@@ -305,11 +305,6 @@ const activeContest = {
        ══════════════════════════════════════════════════ -->
   <section class="section" id="photo-series" aria-label="Photo Series">
     <div class="container">
-      <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
-        <span style="font-family:var(--font-mono);font-size:13px;color:#A8843C;">09</span>
-        <h2 style="font-family:var(--font-display);font-size:40px;font-weight:700;letter-spacing:-0.025em;color:var(--ink-900);">Photo Series — The City Is Our Muse</h2>
-      </div>
-      <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:32px;">Editorial storytelling band. Full-bleed image-led section with parallax-soft scroll effect. Provides visual rhythm break between UpcomingActivities and Membership. No interactive elements.</p>
 
       <div class="photo-series-card-wrapper">
         <div class="photo-series-card">
@@ -331,11 +326,6 @@ const activeContest = {
        ══════════════════════════════════════════════════ -->
   <section class="section" id="membership" aria-label="Membership tiers">
     <div class="container">
-      <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
-        <span style="font-family:var(--font-mono);font-size:13px;color:#A8843C;">10</span>
-        <h2 style="font-family:var(--font-display);font-size:40px;font-weight:700;letter-spacing:-0.025em;color:var(--ink-900);">Membership — Three-Step Educational Flow</h2>
-      </div>
-      <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:32px;">Three-step educational flow communicating the membership journey. Registration, Application, and Membership Active are presented as distinct milestones. Do not collapse into a single CTA.</p>
 
       <div class="membership-box">
         <div class="membership-box__inner">
@@ -469,11 +459,6 @@ const activeContest = {
        ══════════════════════════════════════════════════ -->
   <section class="section" id="journal" aria-label="From the journal">
     <div class="container">
-      <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
-        <span style="font-family:var(--font-mono);font-size:13px;color:#A8843C;">12</span>
-        <h2 style="font-family:var(--font-display);font-size:40px;font-weight:700;letter-spacing:-0.025em;color:var(--ink-900);">Journal — Latest From The Journal</h2>
-      </div>
-      <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:32px;">Three JournalCard components in standard layout. Final editorial section before the footer. All Stories → links to /journal.</p>
 
       <div class="journal-header">
         <div>
@@ -1141,6 +1126,14 @@ const activeContest = {
 .event-row__thumb-gradient {
   position: absolute;
   inset: 0;
+}
+.event-row__thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .event-row__thumb-tag {
   position: absolute;
@@ -1974,22 +1967,21 @@ const activeContest = {
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
-  /* ── 1. Spotlight (TEMPORARY EDITORIAL FREEZE) ── */
-  // TODO: Replace this temporary editorial freeze with the Admin-selected Hero Spotlight system.
+  /* ── 1. Spotlight (Editorial Freeze — admin-curated override) ── */
   (() => {
-    const imageUrl = 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1920&q=85';
+    const imageUrl = '/images/hero.jpg';
     const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
     if (img) {
       img.src = imageUrl;
-      img.alt = 'Twilight Hours by Dr. Anil Bhati';
+      img.alt = 'Serene Morning around Tajul Masajid by Kshitij Patle · Bhopal Camera Club';
       img.onload = () => img.classList.add('loaded');
     }
 
     const title = document.getElementById('spotlight-title');
-    if (title) title.textContent = 'Twilight Hours';
+    if (title) title.textContent = 'Serene Morning around Tajul Masajid';
 
     const credit = document.getElementById('spotlight-credit');
-    if (credit) credit.textContent = 'Dr. Anil Bhati';
+    if (credit) credit.textContent = 'Photo by Kshitij Patle';
 
     const activity = document.getElementById('spotlight-activity');
     if (activity) activity.style.display = 'none';
@@ -2077,7 +2069,11 @@ const activeContest = {
         });
 
         const img = document.createElement('img');
-        img.src = p.imageUrl ?? ''; img.alt = p.title ?? ''; img.loading = 'lazy'; img.decoding = 'async';
+        img.src = p.imageUrl ?? '';
+        img.alt = p.photographer
+          ? `${p.title || 'Untitled'} by ${p.photographer.name} · Bhopal Camera Club`
+          : (p.title ? `${p.title} · Bhopal Camera Club` : 'Bhopal Camera Club member photograph');
+        img.loading = 'lazy'; img.decoding = 'async';
         img.onload = () => img.classList.add('loaded');
 
         const cap = document.createElement('div');
@@ -2116,8 +2112,9 @@ const activeContest = {
         list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
         return;
       }
-      const { data } = await res.json();
-      const events = Array.isArray(data) ? data : [];
+      const evRes = await res.json();
+      // Backend returns { items, total } — handle both key names for safety
+      const events = Array.isArray(evRes.data ?? evRes.items) ? (evRes.data ?? evRes.items) : [];
       if (!events.length) {
         list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
         return;
@@ -2152,7 +2149,13 @@ const activeContest = {
 
         const isMembersOnly = ev.eligibility_mode === 'MEMBERS_ONLY';
 
-        const row = document.createElement('div');
+        const bannerUrl: string | null = (ev as any).banner_url ?? null;
+        const thumbContent = bannerUrl
+          ? `<img class="event-row__thumb-img" src="${bannerUrl}?tr=w-188,h-112,fo-auto" alt="${typeLabel}: ${ev.title ?? ''}" loading="lazy" />`
+          : `<div class="event-row__thumb-gradient" style="background: linear-gradient(160deg, ${sA} 0%, ${sB} 100%);"></div>`;
+
+        const row = document.createElement('a');
+        row.href = `/activities/${ev.slug ?? ev.id}/`;
         row.className = 'event-row';
         row.innerHTML = `
           <div class="event-row__date">
@@ -2160,7 +2163,7 @@ const activeContest = {
             <div class="event-row__month">${monthText}</div>
           </div>
           <div class="event-row__thumb">
-            <div class="event-row__thumb-gradient" style="background: repeating-linear-gradient(135deg, ${sA} 0px, ${sA} 12px, ${sB} 12px, ${sB} 24px);"></div>
+            ${thumbContent}
             <div class="event-row__thumb-tag ${tagClass}">${typeLabel}</div>
           </div>
           <div class="event-row__info">
@@ -2171,7 +2174,7 @@ const activeContest = {
             <h4 class="event-row__title">${ev.title ?? 'Upcoming Activity'}</h4>
             <div class="event-row__venue">${ev.location_name ?? 'BCC Venue'}</div>
           </div>
-          <a href="/activities/${ev.slug ?? ev.id}/" class="event-row__btn">Register →</a>
+          <span class="event-row__btn">Register →</span>
         `;
         list.appendChild(row);
       });

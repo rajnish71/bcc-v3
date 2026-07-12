@@ -1,8 +1,8 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
 **Status:** AUTHORITATIVE — Living Roadmap
-**Version:** 2.3
-**Last Updated:** 2026-07-11 — Phase D complete; V6 19, V6 20 implemented; V6 13 profile editor implemented, PHOTO-ARCH-001 v1.0 frozen (Batch 1 & 2); Phase E current
+**Version:** 2.5
+**Last Updated:** 2026-07-12 — Feedback Stage 5 tasks F5.1–F5.4 implemented by Claude Code; P0 release blockers identified (mobile nav, homepage links) and fixed by Claude Code
 
 ---
 
@@ -395,6 +395,8 @@ v3bcc.bhopal.info
         ↓
 bcc.bhopal.info
 
+✅ **COMPLETE** — bcc.bhopal.info is the canonical production domain.
+
 Soft Launch Activities
 
 - Internal testing
@@ -410,25 +412,84 @@ Soft Launch Activities
 
 ### Public Pages
 
-- V6 04 — Photographers Directory (Reconciliation)
-- V6 05 — Photographer Profile
-- V6 21 — Canonical Photo / Showcase
+- ✅ V6 04 — Photographers Directory (Reconciliation) — implemented by Claude Code, 2026-07-12
+- ✅ V6 05 — Photographer Profile — implemented by Claude Code, 2026-07-12
+- ✅ V6 21 — Canonical Photo / Showcase — implemented by Claude Code, 2026-07-12
 
 ---
 
 ### Design Authority Reconciliation
 
-- Membership Card widget reconciliation
-- Responsive canonical Membership Card rendering
-- Remove independent dark card implementation
-- General Design Authority reconciliation
+- ⬜ Membership Card widget reconciliation
+- ⬜ Responsive canonical Membership Card rendering
+- ⬜ Remove independent dark card implementation
+- ⬜ General Design Authority reconciliation
 
 ---
 
 ### System Deliverables
 
-- V6 98 — token.css
-- V6 99 — systemdesign.md
+- ⬜ V6 98 — token.css
+- ⬜ V6 99 — systemdesign.md
+
+---
+
+## FEEDBACK STAGE 5 — Pre-Soft-Launch Polish
+
+**Status:** 🚧 P0 BLOCKERS OUTSTANDING — F5.1–F5.4 complete; P0 issues must be resolved before soft launch
+
+**Priority:** Highest. This block gates the Public Soft Launch. All items below must be resolved before any soft-launch announcement.
+
+### F5.1 — Home Page Completeness — ✅ COMPLETE (Claude Code, 2026-07-12)
+
+- ✅ Seed 3 demo activities: Monsoon Photowalk, Composition Workshop, Annual Print Exhibition — `database/migrations/0054_seed_demo_activities.sql`
+- ✅ Populate "One Community. Four Ways to Participate." section — 4 club cards with real copy and gradients
+- ✅ Replace hero editorial feature with `frontend/public/images/hero.jpg` ("Serene Morning around Tajul Masajid" — Photo by Kshitij Patle)
+- ✅ Replace all remaining placeholder/editorial specification text with production-quality copy
+- ✅ Restore Activity thumbnails — backend exposes `banner_url` via `ikUrl()`, frontend renders or falls back to gradient
+
+### F5.2 — Photographer Profile Data Recovery — ✅ COMPLETE (Claude Code, 2026-07-12)
+
+- ✅ Audit conducted — full field-by-field report at `ProjectDocs/SessionSummaries/2026-07-12 - Photographer Profile Data Audit.md`
+- ✅ Awards (`user_awards`) and photography society titles (`user_photo_titles`) recovered and exposed in API + profile About tab
+- ✅ `users.awards_html` field recovered to API
+- ✅ Private fields (address, blood group, emergency contact) confirmed correctly excluded from public profile
+
+### F5.3 — Photographer Profile Gallery — ✅ COMPLETE (Claude Code, 2026-07-12)
+
+- ✅ Photographer profile gallery converted to canonical justified layout (`buildProfileRows()` with `flush(true)` to show all photos including partial last row)
+
+### F5.4 — SEO Alt-Text — ✅ COMPLETE (Claude Code, 2026-07-12)
+
+- ✅ Canonical SEO alt-text format `"${title} by ${photographerName} · Bhopal Camera Club"` applied to: gallery wall, photographer profile grid, profile lightbox
+
+---
+
+## FEEDBACK STAGE 5 — P0 Release Blockers
+
+**Status:** 🚧 MUST RESOLVE BEFORE SOFT LAUNCH
+
+These are confirmed production defects. Implementation complete in code; pending production deployment.
+
+### P0-9 — Homepage Mobile Navigation — ✅ FIXED (Claude Code, 2026-07-12)
+
+**Symptom:** Hamburger menu does not open on mobile. All page interactions broken on narrow viewports.
+
+**Root cause:** `Nav.astro` — the `.drawer` element is `position:fixed; inset:0; z-index:950; display:block` at mobile widths even when closed. Its invisible overlay (`opacity:0`) still intercepts all pointer events, blocking the hamburger button and every other interactive element on the page.
+
+**Fix:** Added `pointer-events: none` to `.drawer[aria-hidden="true"]` in `Nav.astro`. When closed the drawer does not intercept clicks; when open (`aria-hidden="false"`) pointer events are restored normally.
+
+### P0-10 — Homepage Links Not Working — ✅ FIXED (Claude Code, 2026-07-12)
+
+**Symptom:** Photo links, gallery cards, CTAs, activity links unresponsive.
+
+**Root cause (primary):** Same as P0-9 — drawer overlay intercepts all clicks at mobile.
+
+**Root cause (secondary):** Upcoming Activities rows were `<div>` elements, not `<a>` elements. Only the inner "Register →" button was a link; clicking the row body had no effect.
+
+**Fix:**
+- Primary: Same pointer-events fix as P0-9.
+- Secondary: Changed event rows from `createElement('div')` to `createElement('a')` with `href` set to the event URL. Changed inner button from `<a>` to `<span>` to avoid invalid nested links.
 
 ---
 

@@ -272,6 +272,7 @@ export class PhotographerProfilesService {
         'u.photography_genres',
         'u.areas_of_expertise',
         'u.preferred_camera_system',
+        'u.awards_html',
         'm.id as membership_id',
         'm.join_year',
         'm.membership_number',
@@ -316,6 +317,22 @@ export class PhotographerProfilesService {
       .selectFrom('user_gear')
       .select(['gear_type', 'label'])
       .where('user_id', '=', user.id)
+      .execute();
+
+    // Awards
+    const awardRows = await db
+      .selectFrom('user_awards')
+      .select(['award_name', 'awarding_body', 'award_year', 'description'])
+      .where('user_id', '=', user.id)
+      .orderBy('sort_order', 'asc')
+      .execute();
+
+    // Photography society titles (FIP, PSA, FIAP, GPU, OTHER)
+    const titleRows = await db
+      .selectFrom('user_photo_titles')
+      .select(['body_code', 'title_code', 'body_name'])
+      .where('user_id', '=', user.id)
+      .orderBy('sort_order', 'asc')
       .execute();
 
     // Photo count
@@ -365,6 +382,18 @@ export class PhotographerProfilesService {
             }
           : null,
         socialHandles,
+        awards: awardRows.map(a => ({
+          name:         a.award_name,
+          awardingBody: a.awarding_body ?? null,
+          year:         a.award_year ?? null,
+          description:  a.description ?? null,
+        })),
+        awardsHtml: (user as any).awards_html ?? null,
+        photoTitles: titleRows.map(t => ({
+          bodyCode: t.body_code,
+          bodyName: t.body_name ?? t.body_code,
+          titleCode: t.title_code,
+        })),
       },
     };
   }

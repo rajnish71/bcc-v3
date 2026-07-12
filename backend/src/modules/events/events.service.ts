@@ -40,6 +40,7 @@ import {
 import { randomUUID } from 'crypto';
 import { db } from '../../database/db';
 import { toMysqlDatetime } from '../identity/shared/token-hash.util';
+import { ikUrl } from '../shared/storage/imagekit.util';
 import { CommunicationService } from '../shared/communication/communication.service';
 import type { CreateEventDto } from './dto/create-event.dto';
 import type { UpdateEventDto } from './dto/update-event.dto';
@@ -96,6 +97,7 @@ export interface EventSummary {
   waitlist_enabled: boolean;
   state: string;
   registration_count: number;
+  banner_url: string | null;
   created_at: string;
 }
 
@@ -1015,6 +1017,7 @@ export class EventsService {
       waitlist_enabled: Boolean(row.waitlist_enabled),
       state: row.state,
       registration_count: registrationCount,
+      banner_url: row.banner_r2_key ? ikUrl(row.banner_r2_key, 'w-400,h-225,fo-auto') : null,
       created_at: toDate(row.created_at).toISOString(),
     };
   }

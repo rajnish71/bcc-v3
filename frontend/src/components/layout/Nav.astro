@@ -1120,6 +1120,14 @@ const NAV_LINKS = [
     gap: 10px;
   }
 }
+
+/* Critical: the drawer is display:block on mobile even when closed.
+   Without this rule its invisible overlay (opacity:0 but pointer-events:auto)
+   covers the full viewport at z-index:950 and intercepts every click —
+   including the hamburger button itself. */
+.drawer[aria-hidden="true"] {
+  pointer-events: none;
+}
 </style>
 
 

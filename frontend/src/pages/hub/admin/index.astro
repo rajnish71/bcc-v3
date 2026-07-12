@@ -1,0 +1,578 @@
+---
+/**
+ * hub/admin/index.astro — Admin Console
+ * Route: /hub/admin/
+ *
+ * Requires admin role (enforced client-side; backend guards enforce server-side).
+ * Sections:
+ *   1. Pending membership applications — approve / reject
+ *   2. Member search + password reset
+ */
+import HubLayout from '../../../layouts/HubLayout.astro';
+---
+
+<HubLayout title="Admin Console" description="Bhopal Camera Club admin console.">
+
+  <div class="admin-console">
+
+    <!-- ① PENDING APPLICATIONS ──────────────────────────────────────────── -->
+    <section class="admin-section" id="section-pending">
+      <div class="section-kicker"><span class="kicker-rule"></span>Membership Applications</div>
+      <h2 class="section-title">Pending Approvals</h2>
+
+      <div id="pending-loading" class="state-loading">Loading applications…</div>
+      <div id="pending-empty"   class="state-empty"   hidden>No pending applications.</div>
+      <div id="pending-error"   class="state-error"   hidden></div>
+
+      <div id="pending-list" class="pending-list" hidden></div>
+    </section>
+
+    <!-- ② MEMBER SEARCH + PASSWORD RESET ──────────────────────────────── -->
+    <section class="admin-section" id="section-members">
+      <div class="section-kicker"><span class="kicker-rule"></span>Member Management</div>
+      <h2 class="section-title">Password Reset</h2>
+
+      <form class="search-form" id="search-form" autocomplete="off">
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="Search by username, name or email…"
+          minlength="2"
+          required
+        />
+        <button type="submit" class="btn-search">Search</button>
+      </form>
+
+      <div id="search-loading" class="state-loading" hidden>Searching…</div>
+      <div id="search-empty"   class="state-empty"   hidden>No members found.</div>
+      <div id="search-error"   class="state-error"   hidden></div>
+      <div id="search-results" class="search-results" hidden></div>
+
+      <!-- Inline reset form (revealed when a member is selected) -->
+      <div id="reset-panel" class="reset-panel" hidden>
+        <h3 class="reset-title" id="reset-target-name"></h3>
+        <p class="reset-hint">Set a temporary password. The member will be forced to change it on next login.</p>
+        <form id="reset-form" class="reset-form">
+          <input type="hidden" id="reset-user-id" />
+          <div class="field-row">
+            <input
+              type="password"
+              id="reset-password"
+              class="field-input"
+              placeholder="New temporary password (min 8 chars)"
+              minlength="8"
+              required
+            />
+            <button type="submit" class="btn-reset">Set Password</button>
+          </div>
+          <div id="reset-feedback" class="reset-feedback" hidden></div>
+        </form>
+      </div>
+    </section>
+
+  </div>
+
+</HubLayout>
+
+<style>
+/* ─── Layout ─────────────────────────────────────────────────── */
+.admin-console {
+  padding: 32px 0 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+/* ─── Section ────────────────────────────────────────────────── */
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #A8843C;
+}
+.kicker-rule {
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: #A8843C;
+}
+.section-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #141210;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* ─── State messages ──────────────────────────────────────────── */
+.state-loading,
+.state-empty {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #7A7469;
+  padding: 12px 0;
+}
+.state-error {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #C0392B;
+  padding: 12px 0;
+}
+
+/* ─── Pending list ────────────────────────────────────────────── */
+.pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pending-card {
+  background: #fff;
+  border: 1px solid #E7E1D6;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.pending-card__info {
+  flex: 1 1 auto;
+  min-width: 160px;
+}
+.pending-card__name {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #141210;
+}
+.pending-card__meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #7A7469;
+  margin-top: 3px;
+}
+.pending-card__class {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: #F5F0E8;
+  color: #5A4E38;
+  padding: 2px 8px;
+  border: 1px solid #E7E1D6;
+  align-self: center;
+  white-space: nowrap;
+}
+.pending-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.btn-approve,
+.btn-reject {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-approve {
+  background: #1A7A40;
+  color: #fff;
+}
+.btn-reject {
+  background: transparent;
+  border: 1px solid #C0392B;
+  color: #C0392B;
+}
+.btn-approve:disabled,
+.btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-approve:hover:not(:disabled) { opacity: 0.85; }
+.btn-reject:hover:not(:disabled)  { opacity: 0.75; }
+
+.pending-card__status {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-style: italic;
+  color: #7A7469;
+}
+
+/* ─── Search form ─────────────────────────────────────────────── */
+.search-form {
+  display: flex;
+  gap: 8px;
+  max-width: 520px;
+}
+.search-input {
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 9px 14px;
+  border: 1px solid #D8D2C6;
+  color: #141210;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: #A8843C; }
+.btn-search {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 20px;
+  background: #141210;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-search:hover { opacity: 0.8; }
+
+/* ─── Search results ──────────────────────────────────────────── */
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 520px;
+}
+.result-row {
+  background: #fff;
+  border: 1px solid #E7E1D6;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.result-row:hover { background: #FAF8F4; }
+.result-row__name {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #141210;
+  flex: 1;
+}
+.result-row__meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #7A7469;
+}
+
+/* ─── Reset panel ─────────────────────────────────────────────── */
+.reset-panel {
+  max-width: 520px;
+  background: #FAF8F4;
+  border: 1px solid #E7E1D6;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.reset-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #141210;
+  margin: 0;
+}
+.reset-hint {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #7A7469;
+  margin: 0;
+}
+.reset-form { display: flex; flex-direction: column; gap: 10px; }
+.field-row {
+  display: flex;
+  gap: 8px;
+}
+.field-input {
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 9px 14px;
+  border: 1px solid #D8D2C6;
+  background: #fff;
+  color: #141210;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field-input:focus { border-color: #A8843C; }
+.btn-reset {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 20px;
+  background: #C9A961;
+  color: #141210;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btn-reset:hover:not(:disabled) { opacity: 0.85; }
+.btn-reset:disabled { opacity: 0.5; cursor: not-allowed; }
+.reset-feedback {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+.reset-feedback.ok    { background: #E8F5E9; color: #1A7A40; }
+.reset-feedback.error { background: #FDECEA; color: #C0392B; }
+</style>
+
+<script>
+  const API = '/api/v1';
+
+  /* ── Auth helper ───────────────────────────────────────────── */
+  function getToken(): string | null {
+    return localStorage.getItem('bcc_token');
+  }
+
+  function authHeaders(): Record<string, string> {
+    const t = getToken();
+    return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : {};
+  }
+
+  /* ── Helpers ────────────────────────────────────────────────── */
+  function show(el: HTMLElement | null) { if (el) el.hidden = false; }
+  function hide(el: HTMLElement | null) { if (el) el.hidden = true; }
+
+  function fmtDate(val: string | null | undefined): string {
+    if (!val) return '—';
+    try { return new Date(val).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+    catch { return val; }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     SECTION 1 — PENDING APPLICATIONS
+  ════════════════════════════════════════════════════════════ */
+  interface PendingRow {
+    id: number;
+    user_id: number;
+    username: string | null;
+    full_name: string | null;
+    email: string | null;
+    class_name: string | null;
+    class_code: string | null;
+    applied_at: string | null;
+    owner_type: string;
+  }
+
+  async function loadPending() {
+    const loading = document.getElementById('pending-loading');
+    const empty   = document.getElementById('pending-empty');
+    const errorEl = document.getElementById('pending-error');
+    const list    = document.getElementById('pending-list');
+    if (!loading || !empty || !errorEl || !list) return;
+
+    try {
+      const res = await fetch(`${API}/membership/admin/pending`, { headers: authHeaders() });
+      hide(loading);
+      if (!res.ok) {
+        errorEl.textContent = `Error ${res.status}: unable to load pending applications.`;
+        show(errorEl);
+        return;
+      }
+      const rows: PendingRow[] = await res.json() as PendingRow[];
+      if (!rows.length) { show(empty); return; }
+
+      list.innerHTML = rows.map(r => `
+        <div class="pending-card" data-id="${r.id}">
+          <div class="pending-card__info">
+            <div class="pending-card__name">${r.full_name ?? r.username ?? 'Unknown'}</div>
+            <div class="pending-card__meta">
+              ${r.username ? `@${r.username} · ` : ''}${r.email ?? '—'}
+              ${r.applied_at ? ` · Applied ${fmtDate(r.applied_at)}` : ''}
+            </div>
+          </div>
+          ${r.class_name ? `<span class="pending-card__class">${r.class_name}</span>` : ''}
+          <div class="pending-card__actions">
+            <button class="btn-approve" data-action="approve" data-id="${r.id}">Approve</button>
+            <button class="btn-reject"  data-action="reject"  data-id="${r.id}">Reject</button>
+          </div>
+          <span class="pending-card__status" id="status-${r.id}" hidden></span>
+        </div>
+      `).join('');
+
+      show(list);
+
+      list.addEventListener('click', async (e) => {
+        const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action as 'approve' | 'reject';
+        const id = btn.dataset.id!;
+        const card = list.querySelector<HTMLElement>(`.pending-card[data-id="${id}"]`);
+        const statusEl = document.getElementById(`status-${id}`);
+        const approveBtn = card?.querySelector<HTMLButtonElement>('[data-action="approve"]');
+        const rejectBtn  = card?.querySelector<HTMLButtonElement>('[data-action="reject"]');
+
+        if (approveBtn) approveBtn.disabled = true;
+        if (rejectBtn)  rejectBtn.disabled  = true;
+
+        let note = '';
+        if (action === 'reject') {
+          note = prompt('Reason for rejection (optional):') ?? '';
+        }
+
+        try {
+          const body = action === 'reject' ? JSON.stringify({ reason: note }) : '{}';
+          const res = await fetch(`${API}/membership/${id}/${action}`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body,
+          });
+          if (res.ok) {
+            if (statusEl) { statusEl.textContent = action === 'approve' ? '✓ Approved' : '✗ Rejected'; show(statusEl); }
+            if (card) card.style.opacity = '0.5';
+          } else {
+            const err = await res.json().catch(() => ({})) as { message?: string };
+            if (statusEl) {
+              statusEl.textContent = `Error: ${err.message ?? res.status}`;
+              show(statusEl);
+            }
+            if (approveBtn) approveBtn.disabled = false;
+            if (rejectBtn)  rejectBtn.disabled  = false;
+          }
+        } catch {
+          if (statusEl) { statusEl.textContent = 'Network error'; show(statusEl); }
+          if (approveBtn) approveBtn.disabled = false;
+          if (rejectBtn)  rejectBtn.disabled  = false;
+        }
+      });
+    } catch {
+      hide(loading);
+      if (errorEl) { errorEl.textContent = 'Failed to load pending applications.'; show(errorEl); }
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     SECTION 2 — MEMBER SEARCH + PASSWORD RESET
+  ════════════════════════════════════════════════════════════ */
+  interface MemberRow {
+    id: number;
+    username: string | null;
+    full_name: string | null;
+    email: string | null;
+  }
+
+  const searchForm    = document.getElementById('search-form')    as HTMLFormElement | null;
+  const searchInput   = document.getElementById('search-input')   as HTMLInputElement | null;
+  const searchLoading = document.getElementById('search-loading');
+  const searchEmpty   = document.getElementById('search-empty');
+  const searchError   = document.getElementById('search-error');
+  const searchResults = document.getElementById('search-results');
+  const resetPanel    = document.getElementById('reset-panel');
+  const resetTargetName = document.getElementById('reset-target-name');
+  const resetUserId   = document.getElementById('reset-user-id') as HTMLInputElement | null;
+  const resetForm     = document.getElementById('reset-form')    as HTMLFormElement | null;
+  const resetPassword = document.getElementById('reset-password') as HTMLInputElement | null;
+  const resetFeedback = document.getElementById('reset-feedback');
+
+  function clearSearchState() {
+    hide(searchLoading); hide(searchEmpty); hide(searchError); hide(searchResults); hide(resetPanel);
+    if (searchResults) searchResults.innerHTML = '';
+    if (searchError) searchError.textContent = '';
+  }
+
+  searchForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = searchInput?.value.trim() ?? '';
+    if (q.length < 2) return;
+
+    clearSearchState();
+    show(searchLoading);
+
+    try {
+      const res = await fetch(`${API}/users/admin/search?q=${encodeURIComponent(q)}`, { headers: authHeaders() });
+      hide(searchLoading);
+
+      if (!res.ok) {
+        if (searchError) { searchError.textContent = `Search failed (${res.status}).`; show(searchError); }
+        return;
+      }
+      const members: MemberRow[] = await res.json() as MemberRow[];
+      if (!members.length) { show(searchEmpty); return; }
+
+      if (searchResults) {
+        searchResults.innerHTML = members.map(m => `
+          <div class="result-row" data-uid="${m.id}" data-name="${(m.full_name ?? m.username ?? 'Member').replace(/"/g, '&quot;')}">
+            <div class="result-row__name">${m.full_name ?? m.username ?? 'Unknown'}</div>
+            <div class="result-row__meta">${m.username ? `@${m.username}` : ''} ${m.email ?? ''}</div>
+          </div>
+        `).join('');
+        show(searchResults);
+
+        searchResults.addEventListener('click', (ev) => {
+          const row = (ev.target as HTMLElement).closest<HTMLElement>('[data-uid]');
+          if (!row) return;
+          const uid  = row.dataset.uid!;
+          const name = row.dataset.name!;
+          if (resetUserId) resetUserId.value = uid;
+          if (resetTargetName) resetTargetName.textContent = `Reset password for: ${name}`;
+          if (resetFeedback) { resetFeedback.textContent = ''; resetFeedback.className = 'reset-feedback'; hide(resetFeedback); }
+          if (resetPassword) resetPassword.value = '';
+          show(resetPanel);
+          resetPassword?.focus();
+        }, { once: true });
+      }
+    } catch {
+      hide(searchLoading);
+      if (searchError) { searchError.textContent = 'Network error during search.'; show(searchError); }
+    }
+  });
+
+  resetForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uid = resetUserId?.value;
+    const pwd = resetPassword?.value ?? '';
+    if (!uid || pwd.length < 8) return;
+
+    const submitBtn = resetForm.querySelector<HTMLButtonElement>('[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    if (resetFeedback) { resetFeedback.hidden = true; }
+
+    try {
+      const res = await fetch(`${API}/membership/admin/users/${uid}/reset-password`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ newPassword: pwd }),
+      });
+      if (resetFeedback) {
+        if (res.ok) {
+          resetFeedback.textContent = 'Password reset. Member will be prompted to set a new one on next login.';
+          resetFeedback.className = 'reset-feedback ok';
+        } else {
+          const err = await res.json().catch(() => ({})) as { message?: string };
+          resetFeedback.textContent = `Error: ${err.message ?? res.status}`;
+          resetFeedback.className = 'reset-feedback error';
+        }
+        show(resetFeedback);
+      }
+    } catch {
+      if (resetFeedback) {
+        resetFeedback.textContent = 'Network error. Please try again.';
+        resetFeedback.className = 'reset-feedback error';
+        show(resetFeedback);
+      }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (resetPassword) resetPassword.value = '';
+    }
+  });
+
+  /* ── Init ────────────────────────────────────────────────── */
+  loadPending();
+</script>

@@ -143,7 +143,7 @@ export class PhotographerProfilesService {
       .leftJoin('user_avatars as av', join =>
         join
           .onRef('av.user_id', '=', 'u.id')
-          .on('av.size_variant', '=', 'MEDIUM'),
+          .on('av.size_variant', '=', 'ORIGINAL'),
       )
       .where('u.status', '=', 'ACTIVE')
       .where('u.deleted_at', 'is', null)
@@ -251,7 +251,7 @@ export class PhotographerProfilesService {
       .leftJoin('user_avatars as av', join =>
         join
           .onRef('av.user_id', '=', 'u.id')
-          .on('av.size_variant', '=', 'MEDIUM'),
+          .on('av.size_variant', '=', 'ORIGINAL'),
       )
       .where('u.username', '=', username)
       .where('u.status', '=', 'ACTIVE')

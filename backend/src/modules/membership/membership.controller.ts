@@ -10,7 +10,8 @@
 // completes the transition; for constitutional-class applications it records
 // the stage and returns the next required stage.
 
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import * as argon2 from 'argon2';
 import { db } from '../../database/db';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { CurrentUser } from '../identity/auth/current-user.decorator';
@@ -180,11 +181,45 @@ export class MembershipController {
   @RequirePermissions('membership.record.view')
   async pendingApplications() {
     return db
-      .selectFrom('memberships')
-      .selectAll()
-      .where('lifecycle_state', '=', 'PENDING')
-      .orderBy('applied_at', 'asc')
+      .selectFrom('memberships as m')
+      .leftJoin('users as u', 'u.id', 'm.user_id')
+      .leftJoin('membership_classes as mc', 'mc.id', 'm.membership_class_id')
+      .select([
+        'm.id',
+        'm.user_id',
+        'm.lifecycle_state',
+        'm.owner_type',
+        'm.applied_at',
+        'm.membership_class_id',
+        'u.username',
+        'u.full_name',
+        'u.email',
+        'mc.name as class_name',
+        'mc.code as class_code',
+      ])
+      .where('m.lifecycle_state', '=', 'PENDING')
+      .orderBy('m.applied_at', 'asc')
       .execute();
+  }
+
+  @Post('admin/users/:userId/reset-password')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.application.approve')
+  async adminResetPassword(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() body: { newPassword: string },
+  ) {
+    if (!body.newPassword || body.newPassword.length < 8) {
+      throw new BadRequestException('newPassword must be at least 8 characters');
+    }
+    const hash = await argon2.hash(body.newPassword);
+    await db
+      .updateTable('users')
+      .set({ password_hash: hash, force_password_reset: true })
+      .where('id', '=', userId)
+      .execute();
+    return { ok: true };
   }
 
   @Get('mine')

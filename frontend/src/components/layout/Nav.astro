@@ -852,6 +852,20 @@ const NAV_LINKS = [
 .nav-dropdown {
   position: relative;
 }
+/* Transparent bridge: fills the 14px gap between trigger and panel so
+   the CSS :hover never breaks mid-mouse-move when moving into the panel. */
+@media (min-width: 901px) {
+  .nav-dropdown::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: -8px;
+    right: -8px;
+    height: 14px;
+    background: transparent;
+    z-index: 299;
+  }
+}
 .nav-dropdown-trigger {
   background: none;
   border: none;

@@ -1645,26 +1645,27 @@ const activeContest = {
 .journal-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--hairline);
-  border-top: none;
+  gap: 20px;
+  border: none;
   margin-bottom: 14px;
-  background: #FFFFFF;
+  background: transparent;
 }
 
 .journal-card {
   background: #FFFFFF;
-  border-right: 1px solid var(--hairline);
+  border: 1px solid var(--hairline);
   text-decoration: none;
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: background var(--m-fast);
+  transition: background var(--m-fast), box-shadow var(--m-fast);
 }
 .journal-card:last-child {
-  border-right: none;
+  border-right: 1px solid var(--hairline);
 }
 .journal-card:hover {
   background: #FAF8F4;
+  box-shadow: 0 4px 20px rgba(20,18,16,0.08);
 }
 
 .journal-card__img {

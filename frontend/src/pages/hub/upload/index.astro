@@ -896,43 +896,122 @@ function addFiles(files: FileList | File[]): void {
 /* ════════════════════════════════════════════════════════
    PUBLISH
 ════════════════════════════════════════════════════════ */
-async function confirmItems(selectedIds: string[], visibility: string): Promise<number> {
-  const title = (qid('meta-title') as HTMLInputElement).value.trim();
-  const location = (qid('meta-location') as HTMLInputElement).value.trim();
-  const copyright = (qid('meta-copyright') as HTMLInputElement).value.trim();
+
+// Attempt silent token refresh; returns true if a new access token was stored.
+async function tryRefreshToken(): Promise<boolean> {
+  const refresh = localStorage.getItem('bcc_refresh');
+  if (!refresh) return false;
+  try {
+    const res = await fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refresh }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json() as { accessToken?: string; refreshToken?: string };
+    if (data.accessToken) {
+      localStorage.setItem('bcc_token', data.accessToken);
+      if (data.refreshToken) localStorage.setItem('bcc_refresh', data.refreshToken);
+      return true;
+    }
+    return false;
+  } catch { return false; }
+}
+
+function showPubError(msg: string): void {
+  let banner = document.getElementById('pub-error-banner') as HTMLElement | null;
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'pub-error-banner';
+    banner.style.cssText = 'background:#FDF4F3;border:1px solid #E7C6BE;color:#A3493B;font-size:13px;padding:12px 16px;margin-bottom:16px;line-height:1.5;';
+    const insp = qid('insp-scroll');
+    insp.insertBefore(banner, insp.firstChild);
+  }
+  banner.textContent = msg;
+  (banner as HTMLElement).hidden = false;
+}
+
+function clearPubError(): void {
+  const banner = document.getElementById('pub-error-banner');
+  if (banner) banner.hidden = true;
+}
+
+async function confirmItems(
+  selectedIds: string[],
+  visibility: string,
+): Promise<{ confirmed: number; errorMsg: string | null }> {
+  const title    = (qid('meta-title')     as HTMLInputElement).value.trim();
+  const location = (qid('meta-location')  as HTMLInputElement).value.trim();
 
   let confirmed = 0;
+  let errorMsg: string | null = null;
+
   for (const id of selectedIds) {
     const item = items.find(i => i.id === id);
-    if (!item || !item.photoUuid) continue;
+    if (!item) continue;
+    if (!item.photoUuid) {
+      console.error('[BCC Upload] confirm skipped — photoUuid not set for', item.file.name, '(item id:', id, ')');
+      errorMsg = 'Upload reference missing — please re-upload this photo.';
+      continue;
+    }
+
+    const body = JSON.stringify({
+      title: title || item.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(),
+      caption: location ? `Location: ${location}` : undefined,
+      visibility,
+      exif: {
+        camera_make:   item.exif?.cameraMake,
+        camera_model:  item.exif?.cameraModel,
+        lens_model:    item.exif?.lensModel,
+        iso:           item.exif?.iso,
+        aperture:      item.exif?.aperture ? parseFloat(item.exif.aperture.replace('f/', '')) : undefined,
+        shutter_speed: item.exif?.shutterSpeed,
+        focal_length:  item.exif?.focalLengthMm,
+        taken_at:      item.exif?.dateTaken,
+      },
+    });
+
     try {
-      const res = await fetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
+      let res = await fetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
-        body: JSON.stringify({
-          title: title || item.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(),
-          caption: location ? `Location: ${location}` : undefined,
-          visibility,
-          exif: {
-            camera_make:   item.exif?.cameraMake,
-            camera_model:  item.exif?.cameraModel,
-            lens_model:    item.exif?.lensModel,
-            iso:           item.exif?.iso,
-            aperture:      item.exif?.aperture ? parseFloat(item.exif.aperture.replace('f/', '')) : undefined,
-            shutter_speed: item.exif?.shutterSpeed,
-            focal_length:  item.exif?.focalLengthMm,
-            taken_at:      item.exif?.dateTaken,
-          },
-        }),
+        body,
       });
-      if (res.ok || res.status === 202) {
+
+      // Token expired — attempt silent refresh and retry once
+      if (res.status === 401) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          res = await fetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
+            body,
+          });
+        }
+      }
+
+      if (res.ok) {
         item.confirmedAs = visibility === 'PRIVATE' ? 'drafted' : 'published';
         item.selected = false;
         confirmed++;
+      } else {
+        let msg = `Server error (${res.status})`;
+        try {
+          const errBody = await res.json() as { message?: string | string[] };
+          const raw = errBody.message;
+          msg = Array.isArray(raw) ? raw.join('; ') : (raw ?? msg);
+        } catch { /**/ }
+        console.error(`[BCC Upload] confirm failed for "${item.file.name}" — HTTP ${res.status}:`, msg);
+        errorMsg = msg;
       }
-    } catch { /**/ }
+    } catch (err) {
+      const msg = (err as Error).message || 'Network error';
+      console.error(`[BCC Upload] confirm network error for "${item.file.name}":`, msg);
+      errorMsg = msg;
+    }
   }
-  return confirmed;
+
+  return { confirmed, errorMsg };
 }
 
 async function handlePublish(asDraft: boolean): Promise<void> {
@@ -942,12 +1021,20 @@ async function handlePublish(asDraft: boolean): Promise<void> {
   const btnP = qid('btn-publish') as HTMLButtonElement;
   const btnD = qid('btn-draft') as HTMLButtonElement;
   btnP.disabled = true; btnD.disabled = true;
+  clearPubError();
 
   const visibility = asDraft ? 'PRIVATE' : (qid('meta-visibility') as HTMLSelectElement).value;
-  const confirmed = await confirmItems(sel, visibility);
+  const { confirmed, errorMsg } = await confirmItems(sel, visibility);
 
   if (asDraft) draftCount += confirmed;
   else publishedCount += confirmed;
+
+  if (errorMsg && confirmed === 0) {
+    // All failed — keep inspector open, show error
+    showPubError(errorMsg);
+    btnP.disabled = false; btnD.disabled = false;
+    return;
+  }
 
   // Close inspector
   qid('upload-inspector').classList.remove('is-open');
@@ -959,7 +1046,7 @@ async function handlePublish(asDraft: boolean): Promise<void> {
   if (unconfirmed.length === 0) {
     // Transition to complete
     const totalPublished = items.filter(i => i.confirmedAs === 'published').length;
-    const totalDrafted = items.filter(i => i.confirmedAs === 'drafted').length;
+    const totalDrafted   = items.filter(i => i.confirmedAs === 'drafted').length;
     let headline = '';
     if (totalPublished && totalDrafted) headline = `${totalPublished} photograph${totalPublished !== 1 ? 's' : ''} published, ${totalDrafted} saved as draft${totalDrafted !== 1 ? 's' : ''}.`;
     else if (totalPublished) headline = `${totalPublished} photograph${totalPublished !== 1 ? 's' : ''} published.`;
@@ -967,6 +1054,7 @@ async function handlePublish(asDraft: boolean): Promise<void> {
     qid('complete-headline').textContent = headline;
     setPhase('complete');
   } else {
+    if (errorMsg) showPubError(`Some photographs could not be published: ${errorMsg}`);
     renderPhotoWall();
     btnP.disabled = false; btnD.disabled = false;
   }

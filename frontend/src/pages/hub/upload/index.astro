@@ -969,7 +969,10 @@ async function confirmItems(
         aperture:      item.exif?.aperture ? parseFloat(item.exif.aperture.replace('f/', '')) : undefined,
         shutter_speed: item.exif?.shutterSpeed,
         focal_length:  item.exif?.focalLengthMm,
-        taken_at:      item.exif?.dateTaken,
+        // EXIF date is "YYYY:MM:DD HH:MM:SS" — replace date colons so Date() can parse it
+        taken_at: item.exif?.dateTaken
+          ? item.exif.dateTaken.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
+          : undefined,
       },
     });
 

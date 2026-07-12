@@ -277,10 +277,12 @@ export class GalleryService {
 
     // 5. Parse EXIF from payload
     const exif = dto.exif ?? {};
-    // EXIF taken_at: ISO 8601 string from EXIF DateTimeOriginal.
-    // toMysqlDatetime() converts to "YYYY-MM-DD HH:mm:ss" for MySQL DATETIME.
-    const takenAt = exif.taken_at
-      ? toMysqlDatetime(new Date(exif.taken_at))
+    // EXIF taken_at: client sends "YYYY-MM-DD HH:MM:SS" (EXIF format after
+    // the frontend normalises the colon date-separators). Guard against any
+    // invalid date strings that would make toMysqlDatetime produce "NaN-…".
+    const takenAtDate = exif.taken_at ? new Date(exif.taken_at) : null;
+    const takenAt = takenAtDate && !isNaN(takenAtDate.getTime())
+      ? toMysqlDatetime(takenAtDate)
       : null;
 
     // 6. Activate photo

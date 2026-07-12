@@ -486,8 +486,12 @@ function readRational(v: DataView, o: number, le: boolean): number {
   return d ? n / d : 0;
 }
 function readAsciiTag(v: DataView, base: number, vOff: number, count: number, le: boolean): string {
-  if (count <= 4) return readStr(v, base + vOff, count);
-  return readStr(v, base + readU32(v, base + vOff, le), count);
+  if (count === 0 || count > 512) return '';
+  // vOff is an absolute DataView offset — do NOT add base to it
+  if (count <= 4) return readStr(v, vOff, count);
+  const strPos = base + readU32(v, vOff, le);
+  if (strPos < 0 || strPos >= v.byteLength) return '';
+  return readStr(v, strPos, count);
 }
 function parseIFD(v: DataView, base: number, ifdOffset: number, le: boolean, res: ExifData): void {
   if (ifdOffset + 2 > v.byteLength) return;
@@ -504,15 +508,16 @@ function parseIFD(v: DataView, base: number, ifdOffset: number, le: boolean, res
         if (tag === 0xA434) res.lensModel = s;
         if (tag === 0x9003 || tag === 0x0132) res.dateTaken = s;
       } else if (type === 5 || type === 10) {
-        const rO = base + readU32(v, vOff, le), val = readRational(v, rO, le);
-        if (tag === 0x920A) res.focalLengthMm = Math.round(val);
-        if (tag === 0x829D) res.aperture = `f/${val.toFixed(1)}`;
+        const rO = base + readU32(v, vOff, le);
+        if (tag === 0x920A) { const val = readRational(v, rO, le); res.focalLengthMm = Math.round(val); }
+        else if (tag === 0x829D) { const val = readRational(v, rO, le); res.aperture = `f/${val.toFixed(1)}`; }
+        else if (tag === 0x9201 && type === 10) {
+          const num = v.getInt32(rO, le), den = v.getInt32(rO + 4, le);
+          if (den) { const ss = Math.pow(2, -(num / den)); res.shutterSpeed = ss >= 1 ? `${ss.toFixed(0)}s` : `1/${Math.round(1 / ss)}`; }
+        }
       } else if (type === 3) {
         const val = readU16(v, vOff, le);
         if (tag === 0x8827) res.iso = val;
-      } else if (type === 7 && tag === 0x9201) {
-        const rO = base + readU32(v, vOff, le), num = v.getInt32(rO, le), den = v.getInt32(rO + 4, le);
-        if (den) { const ss = Math.pow(2, -(num / den)); res.shutterSpeed = ss >= 1 ? `${ss.toFixed(0)}s` : `1/${Math.round(1 / ss)}`; }
       }
       if (tag === 0x8769 && type === 4) parseIFD(v, base, base + readU32(v, vOff, le), le, res);
     } catch { /**/ }

@@ -281,6 +281,17 @@ export class HubProfileService {
       .where('id', '=', userId)
       .execute();
 
+    // Sync yearJoinedBcc → memberships.join_year (temporary amendment — Phase E migration window).
+    // memberships.join_year is what the public photographer profile displays as "Member since YYYY".
+    if (dto.yearJoinedBcc !== undefined && dto.yearJoinedBcc !== null) {
+      await db
+        .updateTable('memberships')
+        .set({ join_year: dto.yearJoinedBcc } as any)
+        .where('user_id', '=', userId)
+        .where('lifecycle_state', '=', 'ACTIVE')
+        .execute();
+    }
+
     return { saved: true, savedAt: new Date().toISOString() };
   }
 

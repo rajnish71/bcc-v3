@@ -1,18 +1,15 @@
 ---
 /**
  * showcase.astro — Showcase Page
- *
- * Justified photo grid of all publicly visible member photos.
- * Filter bar: All / by photographer / by tag
- * Phase 1: data fetched client-side from /api/v1/photos
- * Phase 2a (Module 05) will add server-side pagination and full tagging.
+ * V6 02 — All approved member photos, justified layout, no per-photographer limit.
+ * Design authority: V6 02 Showcase.dc.html
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
   title="Showcase"
-  description="The Bhopal Camera Club member portfolio — photography from Bhopal and beyond. Justified gallery preserving each photo's original aspect ratio."
+  description="Every approved photograph from every BCC member, displayed at its natural proportions. No cropping. No ranking."
 >
 
   <!-- Page hero -->
@@ -21,104 +18,77 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <div class="showcase-hero-content">
         <div class="showcase-kicker">
           <span class="showcase-kicker-line"></span>
-          Showcase
+          Member Showcase · /showcase
         </div>
-        <h1 class="showcase-title">Member Portfolio</h1>
-        <p class="showcase-lead">Photographs by BCC members. Every image displayed at its original aspect ratio — as the photographer intended.</p>
+        <h1 class="showcase-title">Our members,<br/>on the wall.</h1>
+        <p class="showcase-lead">Every approved photograph from every member, displayed at its natural proportions. No cropping. No ranking. Photography as it was taken.</p>
       </div>
     </div>
   </div>
 
-  <!-- Filter bar -->
-  <div class="filter-bar sticky" id="filter-bar">
-    <div class="container">
-      <div class="filter-inner">
-
-        <!-- Category filters -->
-        <div class="filter-chips" id="filter-chips" role="group" aria-label="Filter by type">
-          <button class="filter-chip active" data-filter="all" aria-pressed="true">All</button>
-          <button class="filter-chip" data-filter="landscape" aria-pressed="false">Landscape</button>
-          <button class="filter-chip" data-filter="portrait" aria-pressed="false">Portrait</button>
-          <button class="filter-chip" data-filter="street" aria-pressed="false">Street</button>
-          <button class="filter-chip" data-filter="wildlife" aria-pressed="false">Wildlife</button>
-          <button class="filter-chip" data-filter="macro" aria-pressed="false">Macro</button>
-          <button class="filter-chip" data-filter="architecture" aria-pressed="false">Architecture</button>
-        </div>
-
-        <!-- Sort + photographer filter -->
-        <div class="filter-right">
-          <select class="filter-select" id="sort-select" aria-label="Sort photographs">
-            <option value="recent">Most Recent</option>
-            <option value="popular">Most Liked</option>
-            <option value="random">Shuffle</option>
-          </select>
-          <select class="filter-select" id="photographer-select" aria-label="Filter by photographer">
-            <option value="">All Photographers</option>
-            <!-- Populated by JS -->
-          </select>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Photo count + status -->
+  <!-- Gallery Wall: filter strip + justified grid in unified container -->
   <div class="container">
-    <div class="photo-count" id="photo-count" aria-live="polite" aria-atomic="true">
-      <span id="count-number">—</span> photographs
+
+    <!-- Filter strip -->
+    <div class="filter-strip" id="filter-strip">
+      <span class="filter-label">Filter</span>
+      <div class="filter-chips" id="filter-chips" role="group" aria-label="Filter by genre">
+        <button class="filter-chip active" data-filter="all" aria-pressed="true">All</button>
+        <button class="filter-chip" data-filter="photowalks" aria-pressed="false">Photowalks</button>
+        <button class="filter-chip" data-filter="heritage" aria-pressed="false">Heritage</button>
+        <button class="filter-chip" data-filter="wildlife" aria-pressed="false">Wildlife</button>
+        <button class="filter-chip" data-filter="portraits" aria-pressed="false">Portraits</button>
+        <button class="filter-chip" data-filter="monsoon" aria-pressed="false">Monsoon</button>
+        <button class="filter-chip" data-filter="architecture" aria-pressed="false">Architecture</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Justified grid -->
-  <div class="container">
-    <div class="justified-grid" id="showcase-grid" data-target-height="260" data-gap="8" aria-label="Photo showcase grid">
+    <!-- Justified grid -->
+    <div class="gallery-wrap">
+      <div class="justified-grid" id="showcase-grid" data-target-height="240" data-gap="8" aria-label="Photo showcase grid">
 
-      <!-- Loading skeleton -->
-      <div id="showcase-skeleton" aria-busy="true">
-        {[
-          [3.2, 1.5, 4.0, 1.0],
-          [1.0, 2.5, 1.2, 2.0, 1.8],
-          [2.4, 1.5, 3.0, 1.0],
-          [1.5, 3.5, 1.0, 2.8],
-          [2.0, 1.2, 4.2, 1.6],
-        ].map((row) => (
-          <div class="grid-row">
-            {row.map((flex) => (
-              <div class="skel-photo" style={`flex:${flex};height:260px;`}></div>
-            ))}
-          </div>
-        ))}
+        <!-- Loading skeleton -->
+        <div id="showcase-skeleton" class="skeleton-wrap" aria-busy="true">
+          {[
+            [1.78, 0.78, 1.5, 0.85, 1.2],
+            [2.4, 1.4, 0.8, 1.6],
+            [1.0, 1.5, 0.75, 1.3, 0.9],
+          ].map((row) => (
+            <div class="grid-row">
+              {row.map((flex) => (
+                <div class="skel-photo" style={`flex:${flex};height:220px;`}></div>
+              ))}
+            </div>
+          ))}
+        </div>
+
       </div>
 
-    </div>
-
-    <!-- Load more -->
-    <div class="load-more-wrap" id="load-more-wrap" hidden>
-      <button class="btn btn-ghost" id="load-more-btn">
-        Load more photographs
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M7 2v10M2 9l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Empty state -->
-    <div id="showcase-empty" hidden class="gallery-empty" style="padding:var(--s-12) 0;">
-      <div class="gallery-empty__icon">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="22.5" stroke="rgba(20,18,16,0.1)" stroke-width="1.5"/>
-          <circle cx="24" cy="24" r="8" stroke="rgba(168,132,60,0.4)" stroke-width="1.5"/>
-          <circle cx="24" cy="24" r="2" fill="rgba(168,132,60,0.6)"/>
-        </svg>
+      <!-- Load more -->
+      <div class="load-more-wrap" id="load-more-wrap" hidden>
+        <button class="load-more-btn" id="load-more-btn">
+          Load More Photographs
+        </button>
       </div>
-      <p class="gallery-empty__text">No photographs match this filter.</p>
-      <button class="btn btn-outline btn-md" id="clear-filter-btn">Clear filter</button>
+
+      <!-- Empty state -->
+      <div id="showcase-empty" hidden class="gallery-empty">
+        <div class="gallery-empty__icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22.5" stroke="rgba(20,18,16,0.1)" stroke-width="1.5"/>
+            <circle cx="24" cy="24" r="8" stroke="rgba(168,132,60,0.4)" stroke-width="1.5"/>
+            <circle cx="24" cy="24" r="2" fill="rgba(168,132,60,0.6)"/>
+          </svg>
+        </div>
+        <p class="gallery-empty__text">No photographs match this filter.</p>
+        <button class="btn btn-outline btn-md" id="clear-filter-btn">Clear filter</button>
+      </div>
     </div>
 
   </div>
 
   <!-- Photographer Profiles Section -->
-  <section class="photographers-section container" data-gsap="reveal" style="margin-top: 120px; padding: 0 var(--s-12) var(--s-16);">
+  <section class="photographers-section container" style="margin-top: 120px; padding: 0 var(--s-12) var(--s-16);">
     <div class="photographers-header">
       <div class="photographers-kicker">The Photographers</div>
       <h3 class="photographers-title">Meet the members behind the wall.</h3>
@@ -162,14 +132,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   display: block;
   width: 28px;
   height: 1px;
-  background: #C9A961;
+  background: var(--gold-600);
 }
 .showcase-title {
   font-family: var(--font-display);
   font-size: clamp(40px, 5vw, 64px);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.0;
+  line-height: 1.05;
   color: var(--ink-900);
   margin-bottom: 20px;
 }
@@ -182,115 +152,126 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 }
 
 @media (max-width: 1024px) {
-  .showcase-hero-content {
-    padding: 48px var(--gutter-mob);
-  }
+  .showcase-hero-content { padding: 48px var(--gutter-mob); }
 }
 @media (max-width: 768px) {
-  .showcase-hero-content {
-    padding: 32px var(--gutter-mob);
-  }
+  .showcase-hero-content { padding: 32px var(--gutter-mob); }
 }
 
-/* ── Filter bar ── */
-.filter-bar {
-  position: sticky;
-  top: var(--nav-h);
-  z-index: 100;
-  background: rgba(250, 248, 244, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--hairline);
-  padding: var(--s-2) 0;
-  margin-bottom: var(--s-8);
-}
-
-.filter-inner {
+/* ── Filter strip (inline, not sticky) ── */
+.filter-strip {
+  background: #FFFFFF;
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  padding: 18px 32px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s-4);
+  gap: 12px;
   flex-wrap: wrap;
+  margin-bottom: 0;
 }
-
+.filter-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-400);
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
 .filter-chips {
   display: flex;
   align-items: center;
-  gap: var(--s-2);
+  gap: 8px;
   flex-wrap: wrap;
 }
 .filter-chip {
-  padding: 4px 12px;
+  padding: 6px 16px;
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--ink-600);
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  transition: border-color var(--m-fast), color var(--m-fast);
-}
-.filter-chip:hover { border-color: var(--hairline-strong); color: var(--ink-900); }
-.filter-chip.active {
-  border-color: var(--gold-500);
-  color: var(--gold-600);
-  border-top: 3px solid var(--gold-500);
-  padding-top: 2px;
-}
-
-.filter-right {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  flex-shrink: 0;
-}
-.filter-select {
-  padding: 8px 12px;
-  background: var(--surface-0);
+  background: #FFFFFF;
   border: 1px solid var(--hairline-strong);
-  border-radius: var(--r-2);
-  color: var(--ink-900);
-  font-size: var(--text-small);
-  font-family: var(--font-body);
-  outline: none;
+  border-radius: 0;
   cursor: pointer;
-  transition: border-color var(--m-fast);
-  -webkit-appearance: none;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
-.filter-select:focus { border-color: var(--gold-500); }
-
-/* ── Photo count ── */
-.photo-count {
-  font-size: var(--text-small);
-  color: var(--ink-600);
-  margin-bottom: var(--s-4);
-  letter-spacing: 0.02em;
+.filter-chip:hover {
+  border-color: var(--gold-500);
+  color: var(--ink-900);
 }
-#count-number { font-weight: 600; color: var(--ink-900); }
+.filter-chip.active {
+  background: linear-gradient(135deg, #C9A961, #A8843C);
+  border-color: #A8843C;
+  color: #FFFFFF;
+}
 
-/* ── Grid + skeleton (shared via global.css) ── */
-:global(.grid-row)   { display: flex; gap: 8px; margin-bottom: 8px; }
-:global(.grid-row:last-child) { margin-bottom: 0; }
-.skel-photo { background: var(--surface-2); border-radius: 0; animation: shimmer 1.6s ease-in-out infinite; }
+@media (max-width: 768px) {
+  .filter-strip {
+    padding: 14px var(--gutter-mob);
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .filter-chips { flex-wrap: nowrap; }
+}
+
+/* ── Gallery wrap (unified border) ── */
+.gallery-wrap {
+  border: 1px solid var(--hairline);
+  border-top: none;
+  margin-bottom: var(--s-8);
+}
+
+/* ── Justified grid ── */
+.justified-grid {
+  padding: 8px 8px 0;
+}
+
+/* ── Skeleton ── */
+.skeleton-wrap { padding: 0; }
+.skel-photo {
+  background: var(--surface-2);
+  border-radius: 0;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
 @keyframes shimmer { 0%,100% { opacity:.4; } 50% { opacity:.7; } }
 
+/* ── Grid rows (global: applied to runtime-created nodes) ── */
+:global(.grid-row) { display: flex; gap: 8px; margin-bottom: 8px; }
+:global(.grid-row:last-child) { margin-bottom: 0; }
+
 /* ── Load more ── */
-.load-more-wrap { display: flex; justify-content: center; padding: var(--s-8) 0 var(--s-12); }
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  background: #181614;
+  border-top: 1px solid #2C2820;
+  padding: 12px 24px;
+}
+.load-more-btn {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #C9A961;
+  border: 1px solid rgba(201, 169, 97, 0.4);
+  padding: 10px 32px;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.load-more-btn:hover { border-color: #C9A961; }
 
 /* ── Gallery empty ── */
-.gallery-empty { text-align: center; color: var(--ink-600); }
+.gallery-empty {
+  text-align: center;
+  color: var(--ink-600);
+  padding: var(--s-12) 0;
+}
 .gallery-empty__icon { margin-bottom: var(--s-3); display: flex; justify-content: center; }
 .gallery-empty__text { font-size: var(--text-body); color: var(--ink-900); margin-bottom: var(--s-4); }
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .filter-inner { flex-direction: column; align-items: flex-start; }
-  .filter-right { width: 100%; }
-  .filter-select { flex: 1; }
-}
 
 /* ── Photographer Profiles ── */
 .photographers-section {
@@ -386,14 +367,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 }
 
 @media (max-width: 900px) {
-  .photographers-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .photographers-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 600px) {
-  .photographers-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .photographers-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 
@@ -405,17 +382,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   /* ── State ── */
   let allPhotos: any[] = [];
-  let photoBuffer: any[] = []; // Incomplete row memory buffer
+  let photoBuffer: any[] = [];
   let currentFilter = 'all';
-  let currentSort = 'recent';
-  let currentPhotographer = '';
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 24;
 
   /* ── Justified layout ── */
   function buildJustifiedLayout(
     photos: Array<{ aspect: number; id: string; title: string; photographer: string; photographerUsername: string; imageUrl: string }>,
     containerWidth: number,
-    targetHeight = 240, // Match target height 240px from V6 spec
+    targetHeight = 240,
     gap = 8
   ) {
     const rows: Array<{ height: number; photos: typeof photos }> = [];
@@ -441,28 +416,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       }
     }
 
-    // Return completed rows and the leftover photos forming the incomplete final row
-    return {
-      rows,
-      leftovers: row
-    };
+    return { rows, leftovers: row };
   }
 
   function renderGrid(newPhotos: any[], append = false) {
     const grid = document.getElementById('showcase-grid')!;
     if (!append) {
-      // Remove old rows, keep skeleton/empty elements
       grid.querySelectorAll('.grid-row').forEach(el => el.remove());
       photoBuffer = [];
       allPhotos = [];
     }
 
-    // Prepend buffered photographers to newly fetched ones
     const candidates = [...photoBuffer, ...newPhotos];
     const containerWidth = grid.clientWidth;
     const { rows, leftovers } = buildJustifiedLayout(candidates, containerWidth);
-
-    // Save the new leftovers back to the buffer
     photoBuffer = leftovers;
 
     const fragment = document.createDocumentFragment();
@@ -484,7 +451,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         img.loading = 'lazy';
         img.decoding = 'async';
         img.className = 'photo-card__img';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        img.style.cssText = 'width:100%;height:100%;display:block;';
         img.onload = () => img.classList.add('loaded');
 
         const overlay = document.createElement('div');
@@ -511,7 +478,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         link.appendChild(bl);
         rowEl.appendChild(link);
 
-        // Track rendered photo
         allPhotos.push(p);
       });
       fragment.appendChild(rowEl);
@@ -536,16 +502,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const params = new URLSearchParams({
       limit: String(PAGE_SIZE),
       offset: String(offset),
-      shuffle: 'false' // Deterministic editorial ordering for Showcase
     });
     if (currentFilter !== 'all') params.set('tag', currentFilter);
-    if (currentSort) params.set('sort', currentSort);
-    if (currentPhotographer) params.set('photographer', currentPhotographer);
 
     const skel = document.getElementById('showcase-skeleton');
     const emptyEl = document.getElementById('showcase-empty');
     const loadMore = document.getElementById('load-more-wrap');
-    const countEl = document.getElementById('count-number');
 
     if (reset) {
       skel?.removeAttribute('hidden');
@@ -561,7 +523,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const raw: any[] = Array.isArray(payload.photos) ? payload.photos : [];
       const total: number = payload.total ?? raw.length;
 
-      // Normalize gallery feed shape to what renderGrid expects
       const photos = raw.map((p: any) => ({
         id:                   p.uuid,
         title:                p.title ?? '',
@@ -575,15 +536,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       if (photos.length === 0 && allPhotos.length === 0 && photoBuffer.length === 0) {
         emptyEl?.removeAttribute('hidden');
-        if (countEl) countEl.textContent = '0';
         return;
       }
 
       renderGrid(photos, !reset);
 
-      if (countEl) countEl.textContent = total.toLocaleString('en-IN');
-      
-      // Determine if more photographers are available on the backend
       const hasMore = (allPhotos.length + photoBuffer.length) < total;
       if (hasMore) {
         loadMore?.removeAttribute('hidden');
@@ -591,7 +548,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         loadMore?.setAttribute('hidden', '');
       }
 
-    } catch (err) {
+    } catch {
       skel?.setAttribute('hidden', '');
       if (allPhotos.length === 0 && photoBuffer.length === 0) emptyEl?.removeAttribute('hidden');
     }
@@ -611,18 +568,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     });
   });
 
-  /* ── Sort ── */
-  document.getElementById('sort-select')?.addEventListener('change', (e) => {
-    currentSort = (e.target as HTMLSelectElement).value;
-    fetchPhotos(true);
-  });
-
-  /* ── Photographer filter ── */
-  document.getElementById('photographer-select')?.addEventListener('change', (e) => {
-    currentPhotographer = (e.target as HTMLSelectElement).value;
-    fetchPhotos(true);
-  });
-
   /* ── Load more ── */
   document.getElementById('load-more-btn')?.addEventListener('click', () => fetchPhotos(false));
 
@@ -636,35 +581,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     fetchPhotos(true);
   });
 
-  /* ── Photographer map (id -> displayName) ──
-     Loaded FIRST so photo cards can show photographer names on first render. */
+  /* ── Photographer map (id -> displayName) ── */
   const photographerMap: Record<number, string> = {};
   async function loadPhotographers(): Promise<void> {
     try {
       const res = await fetch('/api/v1/photographers?limit=100&hasApprovedPhotos=true');
       if (!res.ok) return;
       const { data } = await res.json();
-      const sel = document.getElementById('photographer-select') as HTMLSelectElement | null;
       const grid = document.getElementById('photographers-grid');
-      
+
       if (!Array.isArray(data)) return;
 
       const fragment = document.createDocumentFragment();
 
       data.forEach((ph: any) => {
         if (ph.id != null) photographerMap[ph.id] = ph.displayName ?? '';
-        
-        // Populate select option
-        if (sel) {
-          const opt = document.createElement('option');
-          opt.value = ph.id ?? ph.username;
-          opt.textContent = ph.displayName;
-          sel.appendChild(opt);
-        }
 
-        // Render card in photographer directory grid
         if (grid) {
-          const initials = ph.displayName ? ph.displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : '??';
+          const initials = ph.displayName
+            ? ph.displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+            : '??';
           const card = document.createElement('a');
           card.href = `/photographers/${ph.username}/`;
           card.className = 'photographer-card';
@@ -693,7 +629,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
           const bioDiv = document.createElement('div');
           bioDiv.className = 'photographer-bio';
-          // Truncate bio to 80 chars max
           const rawBio = ph.bio || '';
           bioDiv.textContent = rawBio.length > 80 ? rawBio.slice(0, 77) + '...' : rawBio;
 
@@ -701,18 +636,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           card.appendChild(nameDiv);
           card.appendChild(metaDiv);
           card.appendChild(bioDiv);
-
           fragment.appendChild(card);
         }
       });
 
-      if (grid) {
-        grid.appendChild(fragment);
-      }
+      if (grid) grid.appendChild(fragment);
     } catch { /* silent */ }
   }
 
-  /* ── Initial load: photographers first, then photos ── */
+  /* ── Initial load ── */
   loadPhotographers().then(() => fetchPhotos(true));
 
   /* ── Recompute grid on resize ── */
@@ -721,13 +653,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       if (allPhotos.length > 0) {
-        // Redraw full set by concatenating displayed + buffer and passing as new reset render
         const fullSet = [...allPhotos, ...photoBuffer];
         renderGrid(fullSet, false);
       }
     }, 200);
   });
 
-  /* ── GSAP page entrance ── */
-  gsap.from('.showcase-hero .showcase-hero-content', { opacity: 0, y: 24, duration: 0.6, ease: 'power3.out', delay: 0.1 });
+  /* ── GSAP entrance ── */
+  gsap.from('.showcase-hero .showcase-hero-content', {
+    opacity: 0, y: 24, duration: 0.6, ease: 'power3.out', delay: 0.1,
+  });
 </script>

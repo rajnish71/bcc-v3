@@ -308,12 +308,13 @@ const activeContest = {
 
       <div class="photo-series-card-wrapper">
         <div class="photo-series-card">
-          <div class="photo-series-card__gradient"></div>
+          <div class="photo-series-card__bg" aria-hidden="true"></div>
           <div class="photo-series-card__overlay"></div>
           <div class="photo-series-card__content">
             <div class="photo-series-card__kicker">Photo Series</div>
             <h2 class="photo-series-card__title">The City Is Our Muse.</h2>
             <p class="photo-series-card__desc">Lakes, forts, mosques and markets — our members document the extraordinary visual richness of Bhopal and beyond.</p>
+            <p class="photo-series-card__credit">Serene Morning around Tajul Masajid · Photo by Kshitij Patle</p>
           </div>
         </div>
       </div>
@@ -1200,6 +1201,21 @@ const activeContest = {
   font-size: 12px;
   color: #8B8378;
 }
+.event-row__desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #A8A098;
+  margin-top: 6px;
+}
+.event-row__free-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  background: #E8F0E8;
+  color: #3E5A48;
+  padding: 2px 8px;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
 
 .event-row__btn {
   font-family: var(--font-body);
@@ -1242,15 +1258,17 @@ const activeContest = {
   background: #181614;
   overflow: hidden;
 }
-.photo-series-card__gradient {
+.photo-series-card__bg {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(165deg, #181614 0px, #181614 40px, #1C1A18 40px, #1C1A18 80px);
+  background-image: url('/images/hero.jpg');
+  background-size: cover;
+  background-position: center 35%;
 }
 .photo-series-card__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(20, 18, 16, 0.62) 0%, rgba(20, 18, 16, 0.12) 55%, rgba(20, 18, 16, 0) 100%);
+  background: linear-gradient(90deg, rgba(14, 12, 10, 0.78) 0%, rgba(14, 12, 10, 0.35) 55%, rgba(14, 12, 10, 0.12) 100%);
 }
 .photo-series-card__content {
   position: relative;
@@ -1285,6 +1303,14 @@ const activeContest = {
   color: rgba(255, 255, 255, 0.8);
   max-width: 390px;
   font-weight: 300;
+  margin: 0 0 20px 0;
+}
+.photo-series-card__credit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
   margin: 0;
 }
 
@@ -1968,21 +1994,51 @@ const activeContest = {
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
-  /* ── 1. Spotlight (Editorial Freeze — admin-curated override) ── */
-  (() => {
-    const imageUrl = '/images/hero.jpg';
-    const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
-    if (img) {
-      img.src = imageUrl;
-      img.alt = 'Serene Morning around Tajul Masajid by Kshitij Patle · Bhopal Camera Club';
-      img.onload = () => img.classList.add('loaded');
+  /* ── 1. Spotlight — admin-curated editorial override ── */
+  // TODO: Replace with Dr Anil Bhati "Twilight Hours, Maldives" when the photo
+  //       URL is confirmed. Pass the ImageKit URL as imageUrl below.
+  (async () => {
+    const OVERRIDE: { imageUrl: string; title: string; credit: string } | null = null;
+    // ↑ Set to { imageUrl, title, credit } to freeze the spotlight on a specific photo.
+
+    let photoUrl = '';
+    let photoTitle = 'Light, Frame, Moment.';
+    let photoCredit = '';
+
+    if (OVERRIDE) {
+      photoUrl   = OVERRIDE.imageUrl;
+      photoTitle = OVERRIDE.title;
+      photoCredit = OVERRIDE.credit;
+    } else {
+      // Load the most recent public gallery photo for the spotlight.
+      try {
+        const res = await fetch('/api/v1/gallery/feed?limit=1');
+        if (res.ok) {
+          const { photos } = await res.json();
+          const p = Array.isArray(photos) ? photos[0] : null;
+          if (p) {
+            photoUrl    = p.urls?.original ?? p.urls?.medium ?? '';
+            photoTitle  = p.title ?? 'Light, Frame, Moment.';
+            photoCredit = p.photographer ? `Photo by ${p.photographer.name}` : '';
+          }
+        }
+      } catch { /* keep defaults */ }
     }
 
-    const title = document.getElementById('spotlight-title');
-    if (title) title.textContent = 'Serene Morning around Tajul Masajid';
+    if (photoUrl) {
+      const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
+      if (img) {
+        img.src = photoUrl;
+        img.alt = `${photoTitle}${photoCredit ? ' · ' + photoCredit : ''} · Bhopal Camera Club`;
+        img.onload = () => img.classList.add('loaded');
+      }
+    }
 
-    const credit = document.getElementById('spotlight-credit');
-    if (credit) credit.textContent = 'Photo by Kshitij Patle';
+    const titleEl = document.getElementById('spotlight-title');
+    if (titleEl && photoTitle !== 'Light, Frame, Moment.') titleEl.textContent = photoTitle;
+
+    const creditEl = document.getElementById('spotlight-credit');
+    if (creditEl) creditEl.textContent = photoCredit;
 
     const activity = document.getElementById('spotlight-activity');
     if (activity) activity.style.display = 'none';
@@ -2133,19 +2189,23 @@ const activeContest = {
         const typeNorm = (ev.event_type ?? '').toUpperCase();
         let typeLabel = 'Event';
         let tagClass = 'tag-default';
-        let sA = '#1A1816', sB = '#201E1C'; // fallback gradients
+        let sA = '#0D1520', sB = '#1A2840'; // fallback gradients — deep slate
         if (typeNorm === 'PHOTOWALK') {
           typeLabel = 'Photowalk';
           tagClass = 'tag-photowalk';
-          sA = '#1A1816'; sB = '#201E1C';
+          sA = '#0C1E30'; sB = '#1B3F5A'; // deep lake blue
         } else if (typeNorm === 'WORKSHOP') {
           typeLabel = 'Workshop';
           tagClass = 'tag-workshop';
-          sA = '#1C1A18'; sB = '#222020';
-        } else if (typeNorm === 'EXHIBITION') {
+          sA = '#1E1200'; sB = '#3A2400'; // warm amber-dark
+        } else if (typeNorm === 'EXHIBITION' || typeNorm === 'EXHIBITION_EVENT') {
           typeLabel = 'Exhibition';
           tagClass = 'tag-exhibition';
-          sA = '#181614'; sB = '#1E1C1A';
+          sA = '#1A0D0D'; sB = '#321515'; // deep gallery burgundy
+        } else if (typeNorm === 'COMPETITION' || typeNorm === 'CONTEST') {
+          typeLabel = 'Contest';
+          tagClass = 'tag-default';
+          sA = '#0A1A14'; sB = '#0F2E22'; // forest green
         }
 
         const isMembersOnly = ev.eligibility_mode === 'MEMBERS_ONLY';
@@ -2171,9 +2231,11 @@ const activeContest = {
             <div class="event-row__time-row">
               <span class="event-row__time">${time}</span>
               ${isMembersOnly ? `<span class="event-row__members-badge">MEMBERS ONLY</span>` : ''}
+              ${ev.fee_type === 'FREE' ? `<span class="event-row__free-badge">FREE</span>` : ''}
             </div>
             <h4 class="event-row__title">${ev.title ?? 'Upcoming Activity'}</h4>
             <div class="event-row__venue">${ev.location_name ?? 'BCC Venue'}</div>
+            ${ev.description ? `<div class="event-row__desc">${(ev.description as string).slice(0, 90)}${ev.description.length > 90 ? '…' : ''}</div>` : ''}
           </div>
           <span class="event-row__btn">Register →</span>
         `;

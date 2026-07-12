@@ -1058,9 +1058,21 @@ const username = window.location.pathname.split('/').filter(Boolean).pop() ?? ''
 interface PhotoEntry {
   uuid: string;
   title: string;
+  caption?: string | null;
+  genre?: string | null;
   urls: { medium?: string; original?: string };
   width_px?: number | null;
   height_px?: number | null;
+  exif?: {
+    taken_at?: string | null;
+    aperture?: string | null;
+    shutter_speed?: string | null;
+    iso?: number | null;
+    camera_make?: string | null;
+    camera_model?: string | null;
+    lens_model?: string | null;
+    focal_length?: string | null;
+  } | null;
 }
 let allPhotos: PhotoEntry[] = [];
 let profileDisplayName = '';
@@ -1528,14 +1540,30 @@ function updateLightbox() {
   }
   if (metaEl) {
     const rows: string[] = [];
-    const genre = (photo as any).genre;
-    if (genre) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Genre</div><div class="lightbox-meta-val">${esc(genre)}</div></div>`);
-    const shot = (photo as any).shot_at || (photo as any).taken_at;
+    const exif = photo.exif;
+
+    if (photo.genre) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Genre</div><div class="lightbox-meta-val">${esc(photo.genre)}</div></div>`);
+
+    const shot = exif?.taken_at;
     if (shot) {
       const d = new Date(shot);
       if (!isNaN(d.getTime())) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Taken</div><div class="lightbox-meta-val">${d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>`);
     }
+
+    const camera = [exif?.camera_make, exif?.camera_model].filter(Boolean).join(' ');
+    if (camera) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Camera</div><div class="lightbox-meta-val">${esc(camera)}</div></div>`);
+
+    if (exif?.lens_model) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Lens</div><div class="lightbox-meta-val">${esc(exif.lens_model)}</div></div>`);
+
+    const settings: string[] = [];
+    if (exif?.focal_length) settings.push(`${exif.focal_length}mm`);
+    if (exif?.aperture) settings.push(`f/${exif.aperture}`);
+    if (exif?.shutter_speed) settings.push(exif.shutter_speed);
+    if (exif?.iso) settings.push(`ISO ${exif.iso}`);
+    if (settings.length) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Settings</div><div class="lightbox-meta-val">${settings.join(' · ')}</div></div>`);
+
     if (photo.width_px && photo.height_px) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Dimensions</div><div class="lightbox-meta-val">${photo.width_px} × ${photo.height_px}</div></div>`);
+
     metaEl.innerHTML = rows.join('');
   }
 

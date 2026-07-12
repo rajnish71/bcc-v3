@@ -236,7 +236,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 /* ── Justified grid ── */
 .justified-grid {
-  padding: 8px 8px 0;
+  padding: 8px;
 }
 
 /* ── Skeleton ── */
@@ -617,6 +617,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const params = new URLSearchParams({
       limit: String(PAGE_SIZE),
       offset: String(offset),
+      shuffle: 'false',
     });
     if (currentFilter !== 'all') params.set('tag', currentFilter);
 

@@ -1527,9 +1527,16 @@ function updateLightbox() {
   const captionEl = document.getElementById('lightbox-caption');
   const metaEl = document.getElementById('lightbox-meta');
   if (img) {
-    img.src = photo.urls?.original ?? photo.urls?.medium ?? '';
+    const originalUrl = photo.urls?.original ?? '';
+    const mediumUrl   = photo.urls?.medium ?? '';
+    img.src = originalUrl || mediumUrl;
     const altCredit = profileDisplayName ? ` by ${profileDisplayName}` : '';
     img.alt = `${photo.title || 'Untitled'}${altCredit} · Bhopal Camera Club`;
+    // Fall back to medium if original returns a 4xx (common for pre-migration photos
+    // where only the transformed variant was stored, not the unadorned R2 original).
+    img.onerror = () => {
+      if (img.src !== mediumUrl && mediumUrl) { img.src = mediumUrl; img.onerror = null; }
+    };
   }
   if (title) title.textContent = photo.title ?? 'Untitled';
   if (counter) counter.textContent = `${lightboxIdx + 1} of ${allPhotos.length}`;

@@ -139,7 +139,13 @@
       "Bash(ssh BCC-AWS \"ls /var/www/bcc-v3/frontend/dist/ | head -5 && cat /var/www/bcc-v3/deploy.log | tail -5\")",
       "Bash(ssh BCC-AWS \"export MYSQL_PWD=zAkuexH3yylvsguMNXwfeFXf && mysql -h 127.0.0.1 -P 3306 -u bcc_v3_app bcc_v3 -e \\\\\"SHOW COLUMNS FROM users LIKE 'year_joined%'; SHOW COLUMNS FROM memberships LIKE 'join%';\\\\\"\")",
       "Bash(curl -s \"http://localhost:3001/api/v1/gallery/feed?limit=3\")",
-      "Bash(curl -sv \"http://localhost:3001/api/v1/gallery/feed?limit=3\")"
+      "Bash(curl -sv \"http://localhost:3001/api/v1/gallery/feed?limit=3\")",
+      "PowerShell(ssh ubuntu@v3bcc.bhopal.info \"mysql -u bcc_v3_app -p$\\(grep DB_PASSWORD /var/www/bcc-v3/backend/.env | cut -d= -f2\\) bcc_v3 -e \\\\\"SELECT p.id, p.uuid, p.title, p.status, p.visibility, p.r2_key, p.thumbnail_r2_key, p.width_px, p.height_px FROM photos p JOIN users u ON u.id = p.owner_user_id WHERE u.username = 'sauvikacharyya' ORDER BY p.id;\\\\\"\" 2>&1)",
+      "PowerShell(ssh ubuntu@v3bcc.bhopal.info \"DB_PASS=\\\\$\\(grep DB_PASSWORD /var/www/bcc-v3/backend/.env | cut -d= -f2\\) && mysql -u bcc_v3_app -p\\\\\"\\\\$DB_PASS\\\\\" bcc_v3 -e \\\\\"SELECT p.id, p.uuid, p.title, p.status, p.visibility, p.r2_key, p.thumbnail_r2_key, p.width_px, p.height_px FROM photos p JOIN users u ON u.id = p.owner_user_id WHERE u.username = 'sauvikacharyya' ORDER BY p.id;\\\\\"\")",
+      "Bash(ssh ubuntu@v3bcc.bhopal.info 'DB_PASS=$\\(grep DB_PASSWORD /var/www/bcc-v3/backend/.env | cut -d= -f2\\) && mysql -u bcc_v3_app -p\"$DB_PASS\" bcc_v3 -e \"SELECT p.id, p.uuid, p.title, p.status, p.visibility, p.r2_key, p.thumbnail_r2_key, p.width_px, p.height_px FROM photos p JOIN users u ON u.id = p.owner_user_id WHERE u.username = '\\\\''sauvikacharyya'\\\\'' ORDER BY p.id;\"')",
+      "Bash(ssh ubuntu@v3bcc.bhopal.info 'DB_PASS=$\\(grep DB_PASSWORD /var/www/bcc-v3/backend/.env | cut -d= -f2\\) && mysql -u bcc_v3_app -p\"$DB_PASS\" bcc_v3 --table -e \"SELECT p.id, p.uuid, p.title, p.status, p.visibility, LEFT\\(p.r2_key,40\\) AS r2_key, LEFT\\(p.thumbnail_r2_key,40\\) AS thumb_key, p.width_px, p.height_px FROM photos p JOIN users u ON u.id = p.owner_user_id WHERE u.username = '\\\\''sauvikacharyya'\\\\'' ORDER BY p.id;\"')",
+      "PowerShell(ssh -o StrictHostKeyChecking=no ubuntu@v3bcc.bhopal.info \"echo 'SSH OK'\" 2>&1)",
+      "PowerShell(Get-Content \"C:\\\\Users\\\\rkhar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--WebProjects-BCC-V3\\\\ac1e3002-1566-45d9-bc69-1da9afe021d6\\\\tasks\\\\b1dzx5460.output\" -Wait -Tail 5)"
     ]
   }
 }

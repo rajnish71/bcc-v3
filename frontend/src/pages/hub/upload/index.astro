@@ -91,7 +91,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       </button>
     </div>
 
-    <div class="insp-scroll">
+    <div class="insp-scroll" id="insp-scroll">
       <div class="insp-field">
         <label class="insp-label" for="meta-title">Title</label>
         <input class="insp-input" type="text" id="meta-title" maxlength="200" autocomplete="off" />
@@ -923,12 +923,14 @@ function showPubError(msg: string): void {
   if (!banner) {
     banner = document.createElement('div');
     banner.id = 'pub-error-banner';
-    banner.style.cssText = 'background:#FDF4F3;border:1px solid #E7C6BE;color:#A3493B;font-size:13px;padding:12px 16px;margin-bottom:16px;line-height:1.5;';
-    const insp = qid('insp-scroll');
-    insp.insertBefore(banner, insp.firstChild);
+    banner.style.cssText = 'background:#FDF4F3;border:1px solid #E7C6BE;color:#A3493B;font-size:13px;padding:12px 16px;margin:0 28px 12px;line-height:1.5;';
+    const pubCtrl = qid('upload-inspector');
+    const pubControl = pubCtrl?.querySelector('.pub-control');
+    if (pubControl) pubControl.parentNode!.insertBefore(banner, pubControl);
+    else pubCtrl?.appendChild(banner);
   }
   banner.textContent = msg;
-  (banner as HTMLElement).hidden = false;
+  banner.hidden = false;
 }
 
 function clearPubError(): void {
@@ -1185,8 +1187,18 @@ qid('activity-pills').addEventListener('click', e => {
 });
 
 // Publish / Draft
-qid('btn-publish').addEventListener('click', () => handlePublish(false).catch(() => {}));
-qid('btn-draft').addEventListener('click', () => handlePublish(true).catch(() => {}));
+qid('btn-publish').addEventListener('click', () => handlePublish(false).catch((err: unknown) => {
+  console.error('[BCC Upload] handlePublish crashed:', err);
+  showPubError('Unexpected error — please try again. (Check console for details.)');
+  (qid('btn-publish') as HTMLButtonElement).disabled = false;
+  (qid('btn-draft') as HTMLButtonElement).disabled = false;
+}));
+qid('btn-draft').addEventListener('click', () => handlePublish(true).catch((err: unknown) => {
+  console.error('[BCC Upload] handlePublish crashed:', err);
+  showPubError('Unexpected error — please try again. (Check console for details.)');
+  (qid('btn-publish') as HTMLButtonElement).disabled = false;
+  (qid('btn-draft') as HTMLButtonElement).disabled = false;
+}));
 
 // Upload More
 qid('btn-upload-more').addEventListener('click', () => {

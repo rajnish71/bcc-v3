@@ -1,7 +1,7 @@
 ---
 /**
  * showcase/photos/[id].astro
- * Route: /showcase/photos/{photoUuid}
+ * Route: /showcase/photos/{id}
  *
  * V6 21 Canonical Photo Page — governed by PHOTO-ARCH-001 v1.0.
  * Every photograph resolves to this page via its permanent Canonical URL.
@@ -40,25 +40,12 @@ const { id } = Astro.params;
         <span class="crumb-sep">›</span>
         <span class="crumb crumb-current" id="vc-photo-title">Loading…</span>
       </div>
-      <div class="vcbar-right">
-        <span class="vcbar-pos" id="vc-position"></span>
-        <div class="canonical-badge">
-          <span class="canonical-url" id="canonical-url-bar">/showcase/photos/{id}</span>
-          <span class="canonical-label">CANONICAL · PERMANENT</span>
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- ══ PHOTO HERO ══ -->
   <div class="photo-zone" id="photo-zone">
     <div class="photo-zone-inner">
-      <!-- Prev arrow -->
-      <button class="nav-arrow nav-prev" id="nav-prev" aria-label="Previous photo" style="display:none;">
-        <span class="arrow-icon">←</span>
-        <span class="arrow-label" id="prev-label"></span>
-      </button>
-
       <!-- Photo container — natural aspect ratio, no crop -->
       <div class="photo-box" id="photo-box">
         <div class="photo-skeleton" id="photo-skeleton">
@@ -71,23 +58,28 @@ const { id } = Astro.params;
           class="photo-img"
           style="display:none;"
         />
-        <!-- Bottom caption overlay -->
-        <div class="photo-caption" id="photo-caption" style="display:none;">
-          <div class="caption-title" id="caption-title"></div>
-          <div class="caption-meta" id="caption-meta"></div>
-        </div>
-        <!-- ARCH badge -->
-        <div class="arch-badge">PHOTO-ARCH-001 · NATURAL RATIO · NO CROP</div>
       </div>
 
-      <!-- Next arrow -->
+      <!-- Nav arrows after photo-box so they render above it -->
+      <button class="nav-arrow nav-prev" id="nav-prev" aria-label="Previous photo" style="display:none;">
+        <span class="arrow-icon">←</span>
+        <span class="arrow-label" id="prev-label"></span>
+      </button>
       <button class="nav-arrow nav-next" id="nav-next" aria-label="Next photo" style="display:none;">
         <span class="arrow-icon">→</span>
         <span class="arrow-label" id="next-label"></span>
       </button>
     </div>
 
-    <!-- Position bar -->
+    <!-- Caption below the image, aligned to image width -->
+    <div class="caption-area" id="caption-area" style="display:none;">
+      <div class="caption-area-inner" id="caption-area-inner">
+        <div class="caption-title" id="caption-title"></div>
+        <div class="caption-meta" id="caption-meta"></div>
+      </div>
+    </div>
+
+    <!-- Position bar (Entry Context Line) -->
     <div class="photo-pos-bar" id="photo-pos-bar"></div>
   </div>
 
@@ -121,17 +113,17 @@ const { id } = Astro.params;
       <div class="tab-pane" id="pane-info">
         <p class="photo-caption-text" id="caption-text">Loading description…</p>
         <div class="containers-section">
-          <div class="section-label">Appears in Containers — PHOTO-ARCH-001 Principle 2</div>
-          <p class="containers-note">This photograph appears in the following Containers. Containers reference it — they do not own it.</p>
+          <div class="section-label">Appears In</div>
+          <p class="containers-note">This photograph is featured in the following collections and activities.</p>
           <div class="containers-list" id="containers-list">
-            <div class="container-loading">Loading containers…</div>
+            <div class="container-loading">Loading…</div>
           </div>
         </div>
       </div>
 
       <!-- EXIF tab -->
       <div class="tab-pane" id="pane-exif" style="display:none;">
-        <div class="section-label">EXIF Data — owned by Canonical Photo · PHOTO-ARCH-001 Principle 4</div>
+        <div class="section-label">EXIF Data</div>
         <div class="exif-table" id="exif-table">
           <div class="exif-loading">Loading EXIF…</div>
         </div>
@@ -139,7 +131,7 @@ const { id } = Astro.params;
 
       <!-- TAGS tab -->
       <div class="tab-pane" id="pane-tags" style="display:none;">
-        <div class="section-label">Tags &amp; Keywords — owned by Canonical Photo · PHOTO-ARCH-001 Principle 4</div>
+        <div class="section-label">Tags &amp; Keywords</div>
         <div class="tags-cloud" id="tags-cloud">
           <span class="tag-item">Loading…</span>
         </div>
@@ -152,22 +144,24 @@ const { id } = Astro.params;
 
     <!-- RIGHT — Interaction Panel (35%, sticky) -->
     <aside class="interaction-panel" id="interaction-panel">
-      <div class="arch-note-small">INTERACTION PANEL · PHOTO-ARCH-001 PRINCIPLE 9</div>
 
       <!-- Reaction buttons -->
       <div class="reaction-row">
-        <button class="reaction-btn" id="btn-like" onclick="toggleReaction('LIKE')">
+        <button class="reaction-btn" id="btn-like" onclick="toggleReaction('LIKE')" title="Like this photo">
+          <span class="reaction-icon">👍</span>
           <span class="reaction-count" id="count-like">0</span>
           <span class="reaction-label">Like</span>
         </button>
-        <button class="reaction-btn" id="btn-fav" onclick="toggleReaction('FAVOURITE')">
+        <button class="reaction-btn" id="btn-fav" onclick="toggleReaction('FAVOURITE')" title="Add to favourites">
+          <span class="reaction-icon">❤️</span>
           <span class="reaction-count" id="count-fav">0</span>
           <span class="reaction-label">Favourite</span>
         </button>
-        <button class="reaction-btn" id="btn-bm" onclick="toggleReaction('BOOKMARK')">
-          <span class="reaction-count" id="count-bm">0</span>
-          <span class="reaction-label">Bookmark</span>
-        </button>
+        <div class="reaction-btn reaction-views" id="views-display" title="Total views">
+          <span class="reaction-icon">👁</span>
+          <span class="reaction-count" id="count-views">—</span>
+          <span class="reaction-label">Views</span>
+        </div>
       </div>
 
       <!-- Guest sign-in prompt -->
@@ -194,18 +188,9 @@ const { id } = Astro.params;
         <button class="btn-admin-delete" onclick="adminDelete()">Delete Photo (irreversible)</button>
       </div>
 
-      <!-- Canonical URL display -->
-      <div class="canonical-card">
-        <div class="canonical-card-label">Canonical URL</div>
-        <div class="canonical-card-url" id="canonical-url-card">/showcase/photos/{id}</div>
-        <div class="canonical-card-note">Permanent · PHOTO-ARCH-001 Principle 5<br/>This URL never changes regardless of Container.</div>
-        <button class="btn-copy" onclick="copyCanonical()">Copy Link</button>
-      </div>
-
       <!-- Photo stats -->
       <div class="stats-panel">
-        <div class="stats-label">Photo Statistics</div>
-        <div class="stat-row"><span class="stat-key">Views</span><span class="stat-val" id="stat-views">—</span></div>
+        <div class="stats-label">Photo Details</div>
         <div class="stat-row"><span class="stat-key">Downloads</span><span class="stat-val" id="stat-downloads">—</span></div>
         <div class="stat-row"><span class="stat-key">Uploaded</span><span class="stat-val" id="stat-uploaded">—</span></div>
       </div>
@@ -216,7 +201,6 @@ const { id } = Astro.params;
   <div class="comments-section" id="comments-section">
     <div class="comments-header">
       <h3 class="comments-heading"><span id="comment-count">0</span> Comments</h3>
-      <span class="comments-arch-note">PHOTO-ARCH-001 P9 · Owned by Canonical Photo · Never duplicated per Container</span>
     </div>
 
     <!-- Authenticated comment input -->
@@ -247,8 +231,6 @@ const { id } = Astro.params;
 
   <!-- ══ RELATED CONTENT ══ -->
   <div class="related-section">
-    <div class="related-arch-note">RELATED CONTENT · PHOTO-ARCH-001 Related Content Contract — References only · No duplication</div>
-
     <div class="related-block" id="related-photographer-block">
       <div class="related-block-header">
         <h4 class="related-block-title" id="related-ph-title">More from this Photographer</h4>
@@ -287,9 +269,7 @@ const { id } = Astro.params;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 52px;
-  gap: 16px;
 }
 .vcbar-crumbs {
   display: flex;
@@ -316,38 +296,6 @@ const { id } = Astro.params;
   font-size: 10px;
   flex-shrink: 0;
 }
-.vcbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-.vcbar-pos {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--ink-light);
-  white-space: nowrap;
-}
-.canonical-badge {
-  background: var(--warm-card);
-  border: 1px solid var(--gold);
-  padding: 5px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.canonical-url {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--ink-dark);
-  font-weight: 500;
-}
-.canonical-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
-  color: var(--gold-dark);
-  letter-spacing: 0.08em;
-}
 
 /* ── Photo Zone ── */
 .photo-zone {
@@ -364,6 +312,7 @@ const { id } = Astro.params;
 }
 .photo-box {
   position: relative;
+  z-index: 1;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -393,42 +342,8 @@ const { id } = Astro.params;
   display: block;
   object-fit: contain;
 }
-.photo-caption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
-  padding: 48px 24px 20px;
-}
-.caption-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 6px;
-}
-.caption-meta {
-  font-size: 12px;
-  color: rgba(255,255,255,0.55);
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.arch-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(10,9,8,0.85);
-  border: 1px solid rgba(201,169,97,0.25);
-  padding: 4px 10px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
-  color: rgba(201,169,97,0.7);
-  letter-spacing: 0.1em;
-}
 
-/* Nav arrows */
+/* Nav arrows — placed after photo-box in DOM, so they stack above it */
 .nav-arrow {
   position: absolute;
   top: 50%;
@@ -437,7 +352,7 @@ const { id } = Astro.params;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  z-index: 2;
+  z-index: 10;
   background: none;
   border: none;
   cursor: pointer;
@@ -464,9 +379,33 @@ const { id } = Astro.params;
   max-width: 72px;
   line-height: 1.4;
 }
+
+/* Caption below the photograph */
+.caption-area {
+  padding: 20px 80px 0;
+}
+.caption-area-inner {
+  margin: 0 auto;
+  /* width set dynamically via JS to match rendered image width */
+}
+.caption-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 5px;
+}
+.caption-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .photo-pos-bar {
   text-align: center;
-  padding: 8px 0 16px;
+  padding: 12px 0 20px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   color: rgba(255,255,255,0.25);
@@ -627,16 +566,6 @@ const { id } = Astro.params;
   max-height: 100vh;
   overflow-y: auto;
 }
-.arch-note-small {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  color: var(--gold-dark);
-  letter-spacing: 0.1em;
-  background: var(--warm-card);
-  border: 1px solid var(--warm-rule);
-  padding: 4px 10px;
-  text-align: center;
-}
 
 /* Reactions */
 .reaction-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -644,21 +573,26 @@ const { id } = Astro.params;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   padding: 14px 8px;
   border: 1px solid var(--warm-rule);
   background: var(--warm-card);
   cursor: pointer;
   transition: all 0.15s;
 }
-.reaction-btn:hover { border-color: var(--gold-dark); }
+.reaction-btn:not(.reaction-views):hover { border-color: var(--gold-dark); }
 .reaction-btn.active {
   border-color: var(--gold-dark);
   background: #FEF9EE;
-  color: var(--gold-dark);
 }
-.reaction-count { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; }
-.reaction-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+.reaction-btn.active .reaction-icon { filter: saturate(1.5); }
+.reaction-views {
+  cursor: default;
+  opacity: 0.85;
+}
+.reaction-icon { font-size: 20px; line-height: 1; }
+.reaction-count { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; color: var(--ink-dark); }
+.reaction-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); }
 
 /* Guest prompt */
 .guest-prompt {
@@ -756,24 +690,6 @@ const { id } = Astro.params;
   cursor: pointer;
 }
 
-/* Canonical card */
-.canonical-card { background: var(--warm-card); border: 1px solid var(--gold); padding: 16px; }
-.canonical-card-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-dark); font-weight: 600; margin-bottom: 8px; }
-.canonical-card-url { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-dark); font-weight: 500; margin-bottom: 6px; word-break: break-all; }
-.canonical-card-note { font-size: 11px; color: var(--ink-light); line-height: 1.6; margin-bottom: 10px; }
-.btn-copy {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid var(--warm-rule);
-  background: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-mid);
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-.btn-copy:hover { border-color: var(--ink-dark); }
-
 /* Stats */
 .stats-panel { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--warm-rule); padding-top: 16px; }
 .stats-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-light); font-weight: 600; margin-bottom: 4px; }
@@ -793,9 +709,8 @@ const { id } = Astro.params;
   border-left: 1px solid var(--warm-rule);
   border-right: 1px solid var(--warm-rule);
 }
-.comments-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 8px; }
+.comments-header { display: flex; align-items: baseline; margin-bottom: 28px; }
 .comments-heading { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; color: var(--ink-dark); }
-.comments-arch-note { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
 
 .comment-input-row { display: flex; gap: 12px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--warm-rule); }
 .comment-avatar-sm {
@@ -910,7 +825,6 @@ const { id } = Astro.params;
   border-left: 1px solid var(--warm-rule);
   border-right: 1px solid var(--warm-rule);
 }
-.related-arch-note { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); letter-spacing: 0.1em; margin-bottom: 40px; }
 .related-block { margin-bottom: 40px; }
 .related-block-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
 .related-block-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; color: var(--ink-dark); }
@@ -955,11 +869,12 @@ const { id } = Astro.params;
   .interaction-panel { position: static; max-height: none; }
   .meta-panel { border-right: none; border-bottom: 1px solid var(--warm-rule); }
   .photo-zone-inner { padding: 24px 48px; }
+  .caption-area { padding: 16px 48px 0; }
 }
 @media (max-width: 600px) {
-  .vcbar-inner { flex-wrap: wrap; height: auto; padding: 10px 0; gap: 8px; }
-  .canonical-badge { display: none; }
+  .vcbar-inner { height: auto; padding: 10px 0; }
   .photo-zone-inner { padding: 16px; }
+  .caption-area { padding: 12px 16px 0; }
   .reaction-row { gap: 4px; }
   .reaction-btn { padding: 10px 4px; }
   .content-area, .comments-section, .related-section { padding: 24px 16px; }
@@ -980,7 +895,7 @@ const { id } = Astro.params;
 
   let currentRole = 'guest'; // guest | user | member | admin
   let photoData = null;
-  let reactionsData = { likes: 0, favourites: 0, bookmarks: 0, userReactions: { liked: false, favourited: false, bookmarked: false } };
+  let reactionsData = { likes: 0, favourites: 0, userReactions: { liked: false, favourited: false } };
   let commentOffset = 0;
   const COMMENT_LIMIT = 20;
   let totalComments = 0;
@@ -1007,12 +922,12 @@ const { id } = Astro.params;
     const nextId = params.get('nextId') || null;
 
     const MAP = {
-      showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                                                      prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
-      portfolio:  { label: 'Portfolio',   crumbs: ['Home', 'Photographers', ctxId],                                          prevLabel: '← Previous in Portfolio', nextLabel: 'Next in Portfolio →'  },
-      story:      { label: 'Story',       crumbs: ['Home', 'Stories', ctxId],                                                prevLabel: '← Previous in Story',     nextLabel: 'Next in Story →'      },
-      collection: { label: 'Collection',  crumbs: ['Home', 'Collections', ctxId],                                            prevLabel: '← Previous',              nextLabel: 'Next →'               },
-      activity:   { label: 'Activity',    crumbs: ['Home', 'Activities', ctxId],                                             prevLabel: '← Previous Photo',        nextLabel: 'Next Photo →'         },
-      contest:    { label: 'Contest',     crumbs: ['Home', 'Contests', ctxId],                                               prevLabel: '← Previous Entry',        nextLabel: 'Next Entry →'         },
+      showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                   prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
+      portfolio:  { label: 'Portfolio',   crumbs: ['Home', 'Photographers', ctxId],       prevLabel: '← Previous in Portfolio', nextLabel: 'Next in Portfolio →'  },
+      story:      { label: 'Story',       crumbs: ['Home', 'Stories', ctxId],             prevLabel: '← Previous in Story',     nextLabel: 'Next in Story →'      },
+      collection: { label: 'Collection',  crumbs: ['Home', 'Collections', ctxId],         prevLabel: '← Previous',              nextLabel: 'Next →'               },
+      activity:   { label: 'Activity',    crumbs: ['Home', 'Activities', ctxId],          prevLabel: '← Previous Photo',        nextLabel: 'Next Photo →'         },
+      contest:    { label: 'Contest',     crumbs: ['Home', 'Contests', ctxId],            prevLabel: '← Previous Entry',        nextLabel: 'Next Entry →'         },
     };
 
     const def = MAP[ctx] || MAP.showcase;
@@ -1029,6 +944,7 @@ const { id } = Astro.params;
   }
 
   function renderViewingContext() {
+    // Breadcrumb bar — dynamic crumbs only, no counter or badge
     const crumbsEl = document.getElementById('vc-crumbs');
     if (crumbsEl) {
       let html = '';
@@ -1039,11 +955,9 @@ const { id } = Astro.params;
       crumbsEl.innerHTML = html;
     }
 
-    const posEl = document.getElementById('vc-position');
-    if (posEl) posEl.textContent = viewCtx.position;
-
-    const prevBtn = document.getElementById('nav-prev');
-    const nextBtn = document.getElementById('nav-next');
+    // Prev/Next navigation arrows
+    const prevBtn   = document.getElementById('nav-prev');
+    const nextBtn   = document.getElementById('nav-next');
     const prevLabel = document.getElementById('prev-label');
     const nextLabel = document.getElementById('next-label');
 
@@ -1058,6 +972,7 @@ const { id } = Astro.params;
       nextBtn.onclick = () => navigateToPhoto(viewCtx.nextId);
     }
 
+    // Position bar (Entry Context Line — leave as-is per Item 4)
     const posBar = document.getElementById('photo-pos-bar');
     if (posBar && viewCtx.position) {
       posBar.textContent = `${viewCtx.position} · ${viewCtx.label}`;
@@ -1093,24 +1008,39 @@ const { id } = Astro.params;
     const titleMain = document.getElementById('photo-title-main');
     if (titleMain) titleMain.textContent = photoData.title || 'Untitled';
 
-    // Photo image
-    const imgUrl = photoData.urls?.original || photoData.urls?.medium || '';
-    if (imgUrl) {
+    // Photo image — use large (ImageKit-transformed) for display; original for download only.
+    // Fallback chain: large → medium → show error. This handles pre-migration photos where
+    // the direct R2 original is inaccessible but ImageKit variants remain available.
+    const displayUrl = photoData.urls?.large || photoData.urls?.medium || '';
+    const fallbackUrl = photoData.urls?.medium || '';
+
+    if (displayUrl) {
       const img = document.getElementById('photo-img');
       const skeleton = document.getElementById('photo-skeleton');
       if (img && skeleton) {
+        img.onerror = () => {
+          // Primary display URL failed — try medium as fallback
+          if (fallbackUrl && img.src !== fallbackUrl) {
+            img.src = fallbackUrl;
+          } else {
+            // All URLs exhausted — show error in skeleton
+            skeleton.style.display = 'flex';
+            img.style.display = 'none';
+            skeleton.querySelector('.skeleton-label').textContent = 'Unable to load photograph.';
+          }
+        };
         img.onload = () => {
           skeleton.style.display = 'none';
           img.style.display = 'block';
-          const captionEl = document.getElementById('photo-caption');
-          if (captionEl) captionEl.style.display = 'block';
+          showCaptionBelow();
+          updateCaptionWidth();
         };
-        img.src = imgUrl;
+        img.src = displayUrl;
         img.alt = photoData.title || 'Photograph';
       }
     }
 
-    // Caption overlay
+    // Caption below (title, photographer, date)
     const captionTitle = document.getElementById('caption-title');
     const captionMeta  = document.getElementById('caption-meta');
     if (captionTitle) captionTitle.textContent = photoData.title || '';
@@ -1157,18 +1087,41 @@ const { id } = Astro.params;
     // Tags
     renderTags();
 
-    // Stats
+    // Uploaded date in stats
     const uploadedEl = document.getElementById('stat-uploaded');
     if (uploadedEl && photoData.confirmed_at) {
       uploadedEl.textContent = new Date(photoData.confirmed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    // Views count in interaction panel (from photoData if available)
+    const viewsEl = document.getElementById('count-views');
+    if (viewsEl) viewsEl.textContent = photoData.view_count != null ? String(photoData.view_count) : '—';
+
     // Download button role-based
     updateDownloadButton();
 
-    // Viewing context photo title
+    // Viewing context
     renderViewingContext();
   }
+
+  function showCaptionBelow() {
+    const area = document.getElementById('caption-area');
+    if (area) area.style.display = 'block';
+  }
+
+  function updateCaptionWidth() {
+    const img = document.getElementById('photo-img');
+    const inner = document.getElementById('caption-area-inner');
+    if (!img || !inner || img.style.display === 'none') return;
+    const rect = img.getBoundingClientRect();
+    if (rect.width > 0) {
+      inner.style.maxWidth = rect.width + 'px';
+      inner.style.margin = '0 auto';
+    }
+  }
+
+  // Update caption width on resize
+  window.addEventListener('resize', updateCaptionWidth);
 
   function showPhotoError() {
     const skeleton = document.getElementById('photo-skeleton');
@@ -1224,7 +1177,6 @@ const { id } = Astro.params;
       currentRole = 'guest';
       return;
     }
-    // Default to 'user'; check for admin or member
     currentRole = 'user';
     try {
       const res = await fetch(`${API}/membership/hub/status`, { headers: { 'Authorization': `Bearer ${tok()}` } });
@@ -1233,7 +1185,6 @@ const { id } = Astro.params;
         if (data.lifecycle_state === 'ACTIVE') currentRole = 'member';
       }
     } catch { /* keep 'user' */ }
-    // Admin check — attempt admin endpoint
     try {
       const res = await fetch(`${API}/membership/admin/pending?limit=1`, { headers: { 'Authorization': `Bearer ${tok()}` } });
       if (res.ok) currentRole = 'admin';
@@ -1245,8 +1196,7 @@ const { id } = Astro.params;
     const guestComment    = document.getElementById('guest-comment-prompt');
     const commentInput    = document.getElementById('comment-input-row');
     const adminPanel      = document.getElementById('admin-panel');
-    const dlBtn           = document.getElementById('download-btn');
-    const reactionBtns    = document.querySelectorAll('.reaction-btn');
+    const reactionBtns    = document.querySelectorAll('.reaction-btn:not(.reaction-views)');
 
     if (currentRole === 'guest') {
       if (guestPrompt)  guestPrompt.style.display  = 'flex';
@@ -1258,7 +1208,6 @@ const { id } = Astro.params;
       if (guestComment) guestComment.style.display = 'none';
       if (commentInput) {
         commentInput.style.display = 'flex';
-        // Set avatar initials from stored user
         try {
           const user = JSON.parse(localStorage.getItem('bcc_user') || '{}');
           const avatar = document.getElementById('comment-avatar-me');
@@ -1314,18 +1263,14 @@ const { id } = Astro.params;
   function renderReactions() {
     const countLike = document.getElementById('count-like');
     const countFav  = document.getElementById('count-fav');
-    const countBm   = document.getElementById('count-bm');
     const btnLike   = document.getElementById('btn-like');
     const btnFav    = document.getElementById('btn-fav');
-    const btnBm     = document.getElementById('btn-bm');
 
     if (countLike) countLike.textContent = String(reactionsData.likes);
     if (countFav)  countFav.textContent  = String(reactionsData.favourites);
-    if (countBm)   countBm.textContent   = String(reactionsData.bookmarks);
 
     if (reactionsData.userReactions.liked)      btnLike?.classList.add('active');    else btnLike?.classList.remove('active');
     if (reactionsData.userReactions.favourited) btnFav?.classList.add('active');     else btnFav?.classList.remove('active');
-    if (reactionsData.userReactions.bookmarked) btnBm?.classList.add('active');      else btnBm?.classList.remove('active');
   }
 
   async function toggleReaction(type) {
@@ -1341,10 +1286,8 @@ const { id } = Astro.params;
       });
       if (!res.ok) return;
       const data = await res.json();
-      // Optimistic update
       if (type === 'LIKE')      { reactionsData.likes      = data.count; reactionsData.userReactions.liked      = data.active; }
       if (type === 'FAVOURITE') { reactionsData.favourites = data.count; reactionsData.userReactions.favourited = data.active; }
-      if (type === 'BOOKMARK')  { reactionsData.bookmarks  = data.count; reactionsData.userReactions.bookmarked = data.active; }
       renderReactions();
     } catch {}
   }
@@ -1473,17 +1416,6 @@ const { id } = Astro.params;
     }
   }
   window.sharePhoto = sharePhoto;
-
-  function copyCanonical() {
-    const url = window.location.origin + CANONICAL;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        const btn = document.querySelector('.btn-copy');
-        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Link'; }, 1500); }
-      });
-    }
-  }
-  window.copyCanonical = copyCanonical;
 
   function reportPhoto() {
     alert('Thank you. Your report has been received and will be reviewed by our moderation team.');

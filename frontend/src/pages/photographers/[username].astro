@@ -250,46 +250,6 @@ const { username } = Astro.params;
 
 </div><!-- /.tab-content-area -->
 
-<!-- ── PHOTO LIGHTBOX ─────────────────────────────────────────────────────── -->
-<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
-  <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
-  <div class="lightbox-panel">
-
-    <!-- Close -->
-    <button class="lightbox-close" id="lightbox-close" aria-label="Close lightbox">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-    </button>
-
-    <!-- Left: image + nav arrows -->
-    <div class="lightbox-left">
-      <button class="lightbox-arrow lightbox-prev" id="lightbox-prev" aria-label="Previous photo">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M13 4l-6 6 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <div class="lightbox-image-wrap">
-        <img class="lightbox-img" id="lightbox-img" src="" alt="" />
-      </div>
-      <button class="lightbox-arrow lightbox-next" id="lightbox-next" aria-label="Next photo">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Right: metadata rail -->
-    <div class="lightbox-rail">
-      <div class="lightbox-counter" id="lightbox-counter"></div>
-      <div class="lightbox-title" id="lightbox-title"></div>
-      <div class="lightbox-caption" id="lightbox-caption" hidden></div>
-      <div class="lightbox-meta" id="lightbox-meta"></div>
-    </div>
-
-  </div>
-</div>
-
 </BaseLayout>
 
 <style>
@@ -846,176 +806,6 @@ const { username } = Astro.params;
   color: #8B8378;
 }
 
-/* ── LIGHTBOX ────────────────────────────────────────────────────────────── */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-}
-.lightbox[hidden] { display: none; }
-.lightbox-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(14,12,10,0.95);
-  cursor: pointer;
-}
-/* 2-column panel: image left, metadata right */
-.lightbox-panel {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  width: min(1200px, 100vw);
-  max-height: 100vh;
-}
-.lightbox-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 36px;
-  height: 36px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
-  color: rgba(255,255,255,0.7);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-  z-index: 10;
-}
-.lightbox-close:hover { background: rgba(255,255,255,0.18); color: #FFFFFF; }
-
-/* Left column: image + prev/next */
-.lightbox-left {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 48px 16px;
-}
-.lightbox-image-wrap {
-  max-width: 100%;
-  max-height: calc(100vh - 96px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.lightbox-img {
-  max-width: 100%;
-  max-height: calc(100vh - 96px);
-  object-fit: contain;
-  display: block;
-  user-select: none;
-}
-.lightbox-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
-  color: rgba(255,255,255,0.7);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-  z-index: 2;
-}
-.lightbox-arrow:hover { background: rgba(255,255,255,0.18); color: #FFFFFF; }
-.lightbox-prev { left: 12px; }
-.lightbox-next { right: 12px; }
-
-/* Right column: metadata rail */
-.lightbox-rail {
-  width: 280px;
-  flex-shrink: 0;
-  background: #141210;
-  border-left: 1px solid rgba(255,255,255,0.08);
-  display: flex;
-  flex-direction: column;
-  padding: 60px 24px 24px;
-  overflow-y: auto;
-}
-.lightbox-counter {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: #8B8378;
-  text-transform: uppercase;
-  margin-bottom: 14px;
-}
-.lightbox-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #FAF8F4;
-  line-height: 1.3;
-  margin-bottom: 10px;
-}
-.lightbox-caption {
-  font-size: 13px;
-  line-height: 1.7;
-  color: #A8A098;
-  margin-bottom: 16px;
-}
-.lightbox-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-}
-.lightbox-meta-row {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.lightbox-meta-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #57514B;
-}
-.lightbox-meta-val {
-  font-size: 12px;
-  color: #C8C0B8;
-}
-
-/* Mobile: stack vertically, hide rail, show bottom bar */
-@media (max-width: 768px) {
-  .lightbox-panel {
-    flex-direction: column;
-    width: 100vw;
-  }
-  .lightbox-rail {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    padding: 16px 20px 24px;
-    flex-shrink: 0;
-    max-height: 35vh;
-  }
-  .lightbox-left {
-    flex: 1;
-    padding: 48px 56px 12px;
-  }
-  .lightbox-img {
-    max-height: 55vh;
-  }
-  .lightbox-image-wrap {
-    max-height: 55vh;
-  }
-  .lightbox-prev { left: 8px; }
-  .lightbox-next { right: 8px; }
-}
-
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .portfolio-layout { padding: 24px 24px 60px; }
@@ -1042,12 +832,6 @@ const { username } = Astro.params;
   .placeholder-panel { padding: 40px 16px; }
   .placeholder-inner { padding: 40px 24px; }
 
-  .lightbox-prev { left: -52px; }
-  .lightbox-next { right: -52px; }
-}
-
-@media (max-width: 480px) {
-  .lightbox-arrow { display: none; }
 }
 </style>
 
@@ -1104,7 +888,6 @@ function buildProfileRows(
   flush(true); // include partial last row for profile (show all photos)
   return rows;
 }
-let lightboxIdx = 0;
 
 // ── Social link helpers ────────────────────────────────────────────────────
 const SOCIAL_BASE: Record<string, string> = {
@@ -1491,7 +1274,17 @@ async function loadPhotos(userId: number) {
 
         btn.appendChild(img);
         btn.appendChild(overlay);
-        btn.addEventListener('click', () => openLightbox(currentIdx));
+        btn.addEventListener('click', () => {
+          const prev = allPhotos[currentIdx - 1]?.uuid ?? '';
+          const next = allPhotos[currentIdx + 1]?.uuid ?? '';
+          const params = new URLSearchParams({
+            ctx: 'portfolio', ctxId: username,
+            pos: String(currentIdx + 1), total: String(allPhotos.length),
+          });
+          if (prev) params.set('prevId', prev);
+          if (next) params.set('nextId', next);
+          window.location.href = `/showcase/photos/${p.uuid}?${params}`;
+        });
         rowEl.appendChild(btn);
       });
 
@@ -1501,117 +1294,6 @@ async function loadPhotos(userId: number) {
   } catch {
     if (grid) grid.innerHTML = `<div class="grid-empty">Unable to load portfolio. Please try again later.</div>`;
   }
-}
-
-// ── Lightbox ──────────────────────────────────────────────────────────────
-function openLightbox(idx: number) {
-  lightboxIdx = idx;
-  updateLightbox();
-  const lb = document.getElementById('lightbox');
-  if (lb) lb.hidden = false;
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLightbox() {
-  const lb = document.getElementById('lightbox');
-  if (lb) lb.hidden = true;
-  document.body.style.overflow = '';
-}
-
-function updateLightbox() {
-  const photo = allPhotos[lightboxIdx];
-  if (!photo) return;
-  const img = document.getElementById('lightbox-img') as HTMLImageElement | null;
-  const title = document.getElementById('lightbox-title');
-  const counter = document.getElementById('lightbox-counter');
-  const captionEl = document.getElementById('lightbox-caption');
-  const metaEl = document.getElementById('lightbox-meta');
-  if (img) {
-    const originalUrl = photo.urls?.original ?? '';
-    const mediumUrl   = photo.urls?.medium ?? '';
-    img.src = originalUrl || mediumUrl;
-    const altCredit = profileDisplayName ? ` by ${profileDisplayName}` : '';
-    img.alt = `${photo.title || 'Untitled'}${altCredit} · Bhopal Camera Club`;
-    // Fall back to medium if original returns a 4xx (common for pre-migration photos
-    // where only the transformed variant was stored, not the unadorned R2 original).
-    img.onerror = () => {
-      if (img.src !== mediumUrl && mediumUrl) { img.src = mediumUrl; img.onerror = null; }
-    };
-  }
-  if (title) title.textContent = photo.title ?? 'Untitled';
-  if (counter) counter.textContent = `${lightboxIdx + 1} of ${allPhotos.length}`;
-  if (captionEl) {
-    const cap = (photo as any).caption;
-    if (cap) { captionEl.textContent = cap; captionEl.hidden = false; }
-    else captionEl.hidden = true;
-  }
-  if (metaEl) {
-    const rows: string[] = [];
-    const exif = photo.exif;
-
-    if (photo.genre) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Genre</div><div class="lightbox-meta-val">${esc(photo.genre)}</div></div>`);
-
-    const shot = exif?.taken_at;
-    if (shot) {
-      const d = new Date(shot);
-      if (!isNaN(d.getTime())) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Taken</div><div class="lightbox-meta-val">${d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>`);
-    }
-
-    const camera = [exif?.camera_make, exif?.camera_model].filter(Boolean).join(' ');
-    if (camera) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Camera</div><div class="lightbox-meta-val">${esc(camera)}</div></div>`);
-
-    if (exif?.lens_model) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Lens</div><div class="lightbox-meta-val">${esc(exif.lens_model)}</div></div>`);
-
-    const settings: string[] = [];
-    if (exif?.focal_length) settings.push(`${exif.focal_length}mm`);
-    if (exif?.aperture) settings.push(`f/${exif.aperture}`);
-    if (exif?.shutter_speed) settings.push(exif.shutter_speed);
-    if (exif?.iso) settings.push(`ISO ${exif.iso}`);
-    if (settings.length) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Settings</div><div class="lightbox-meta-val">${settings.join(' · ')}</div></div>`);
-
-    if (photo.width_px && photo.height_px) rows.push(`<div class="lightbox-meta-row"><div class="lightbox-meta-label">Dimensions</div><div class="lightbox-meta-val">${photo.width_px} × ${photo.height_px}</div></div>`);
-
-    metaEl.innerHTML = rows.join('');
-  }
-
-  const single = allPhotos.length <= 1;
-  const prev = document.getElementById('lightbox-prev') as HTMLButtonElement | null;
-  const next = document.getElementById('lightbox-next') as HTMLButtonElement | null;
-  if (prev) prev.style.display = single ? 'none' : '';
-  if (next) next.style.display = single ? 'none' : '';
-}
-
-document.getElementById('lightbox-backdrop')?.addEventListener('click', closeLightbox);
-document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
-document.getElementById('lightbox-prev')?.addEventListener('click', () => {
-  lightboxIdx = (lightboxIdx - 1 + allPhotos.length) % allPhotos.length;
-  updateLightbox();
-});
-document.getElementById('lightbox-next')?.addEventListener('click', () => {
-  lightboxIdx = (lightboxIdx + 1) % allPhotos.length;
-  updateLightbox();
-});
-document.addEventListener('keydown', (e: KeyboardEvent) => {
-  const lb = document.getElementById('lightbox');
-  if (!lb || lb.hidden) return;
-  if (e.key === 'Escape') closeLightbox();
-  if (e.key === 'ArrowLeft') { lightboxIdx = (lightboxIdx - 1 + allPhotos.length) % allPhotos.length; updateLightbox(); }
-  if (e.key === 'ArrowRight') { lightboxIdx = (lightboxIdx + 1) % allPhotos.length; updateLightbox(); }
-});
-
-// Touch swipe support for mobile
-let touchStartX = 0;
-const lbPanel = document.getElementById('lightbox');
-if (lbPanel) {
-  lbPanel.addEventListener('touchstart', (e: TouchEvent) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-  lbPanel.addEventListener('touchend', (e: TouchEvent) => {
-    if (lbPanel.hidden) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) < 40) return;
-    if (dx < 0) { lightboxIdx = (lightboxIdx + 1) % allPhotos.length; }
-    else         { lightboxIdx = (lightboxIdx - 1 + allPhotos.length) % allPhotos.length; }
-    updateLightbox();
-  }, { passive: true });
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────

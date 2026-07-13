@@ -263,6 +263,8 @@ const { id } = Astro.params;
   background: #fff;
   border-bottom: 1px solid var(--warm-rule);
   padding: 0 32px;
+  /* Offset the fixed site header (96px) so the breadcrumb isn't hidden behind it */
+  margin-top: var(--nav-h, 96px);
 }
 .vcbar-inner {
   max-width: 1360px;
@@ -923,7 +925,7 @@ const { id } = Astro.params;
     // navigation keeps working across canonical page hops.
     const idsStr    = params.get('ids') || '';
     const idsList   = idsStr ? idsStr.split(',').map(n => parseInt(n, 10)).filter(Boolean) : [];
-    const idxInList = idsList.indexOf(photoId);
+    const idxInList = idsList.indexOf(Number(photoId));   // photoId is a string param; coerce to match numeric ids
 
     let prevId = params.get('prevId') || null;
     let nextId = params.get('nextId') || null;
@@ -1356,10 +1358,17 @@ const { id } = Astro.params;
         headers: authHeaders(),
         body: JSON.stringify({ body }),
       });
-      if (!res.ok) { alert('Failed to post comment. Please try again.'); return; }
+      if (!res.ok) {
+        let detail = '';
+        try { const j = await res.json(); detail = j.message || ''; } catch {}
+        alert(`Failed to post comment (${res.status}). ${detail}`.trim());
+        return;
+      }
       ta.value = '';
       await loadComments(true);
-    } catch {}
+    } catch (e) {
+      alert('Failed to post comment. Network error.');
+    }
   }
   window.postComment = postComment;
 

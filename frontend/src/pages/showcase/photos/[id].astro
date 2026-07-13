@@ -913,21 +913,22 @@ const { id } = Astro.params;
 
   // ── Viewing Context from URL ──
   function resolveViewingContext() {
-    const params = new URLSearchParams(window.location.search);
-    const ctx    = params.get('ctx') || 'showcase';
-    const ctxId  = params.get('ctxId') || '';
-    const pos    = parseInt(params.get('pos') || '0', 10);
-    const total  = parseInt(params.get('total') || '0', 10);
-    const prevId = params.get('prevId') || null;
-    const nextId = params.get('nextId') || null;
+    const params   = new URLSearchParams(window.location.search);
+    const ctx      = params.get('ctx') || 'showcase';
+    const ctxId    = params.get('ctxId') || '';
+    const ctxLabel = params.get('ctxLabel') || ctxId;
+    const pos      = parseInt(params.get('pos') || '0', 10);
+    const total    = parseInt(params.get('total') || '0', 10);
+    const prevId   = params.get('prevId') || null;
+    const nextId   = params.get('nextId') || null;
 
     const MAP = {
-      showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                   prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
-      portfolio:  { label: 'Portfolio',   crumbs: ['Home', 'Photographers', ctxId],       prevLabel: '← Previous in Portfolio', nextLabel: 'Next in Portfolio →'  },
-      story:      { label: 'Story',       crumbs: ['Home', 'Stories', ctxId],             prevLabel: '← Previous in Story',     nextLabel: 'Next in Story →'      },
-      collection: { label: 'Collection',  crumbs: ['Home', 'Collections', ctxId],         prevLabel: '← Previous',              nextLabel: 'Next →'               },
-      activity:   { label: 'Activity',    crumbs: ['Home', 'Activities', ctxId],          prevLabel: '← Previous Photo',        nextLabel: 'Next Photo →'         },
-      contest:    { label: 'Contest',     crumbs: ['Home', 'Contests', ctxId],            prevLabel: '← Previous Entry',        nextLabel: 'Next Entry →'         },
+      showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                        prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
+      portfolio:  { label: 'Portfolio',   crumbs: ['Home', 'Photographers', ctxLabel],         prevLabel: '← Previous in Portfolio', nextLabel: 'Next in Portfolio →'  },
+      story:      { label: 'Story',       crumbs: ['Home', 'Stories', ctxLabel],               prevLabel: '← Previous in Story',     nextLabel: 'Next in Story →'      },
+      collection: { label: 'Collection',  crumbs: ['Home', 'Collections', ctxLabel],           prevLabel: '← Previous',              nextLabel: 'Next →'               },
+      activity:   { label: 'Activity',    crumbs: ['Home', 'Activities', ctxLabel],            prevLabel: '← Previous Photo',        nextLabel: 'Next Photo →'         },
+      contest:    { label: 'Contest',     crumbs: ['Home', 'Contests', ctxLabel],              prevLabel: '← Previous Entry',        nextLabel: 'Next Entry →'         },
     };
 
     const def = MAP[ctx] || MAP.showcase;
@@ -1008,22 +1009,24 @@ const { id } = Astro.params;
     const titleMain = document.getElementById('photo-title-main');
     if (titleMain) titleMain.textContent = photoData.title || 'Untitled';
 
-    // Photo image — use large (ImageKit-transformed) for display; original for download only.
-    // Fallback chain: large → medium → show error. This handles pre-migration photos where
-    // the direct R2 original is inaccessible but ImageKit variants remain available.
-    const displayUrl = photoData.urls?.large || photoData.urls?.medium || '';
-    const fallbackUrl = photoData.urls?.medium || '';
+    // Photo image — fallback chain: original → large → medium → error state.
+    // original = direct R2 (best quality). large/medium = ImageKit transforms.
+    // Pre-migration photos may have inaccessible R2 originals but working ImageKit variants.
+    const urlOriginal = photoData.urls?.original || '';
+    const urlLarge    = photoData.urls?.large    || '';
+    const urlMedium   = photoData.urls?.medium   || '';
+    const displayUrl  = urlOriginal || urlLarge || urlMedium;
 
     if (displayUrl) {
       const img = document.getElementById('photo-img');
       const skeleton = document.getElementById('photo-skeleton');
       if (img && skeleton) {
+        let fallbackStep = 0;
+        const fallbacks = [urlLarge, urlMedium].filter(Boolean);
         img.onerror = () => {
-          // Primary display URL failed — try medium as fallback
-          if (fallbackUrl && img.src !== fallbackUrl) {
-            img.src = fallbackUrl;
+          if (fallbackStep < fallbacks.length) {
+            img.src = fallbacks[fallbackStep++];
           } else {
-            // All URLs exhausted — show error in skeleton
             skeleton.style.display = 'flex';
             img.style.display = 'none';
             skeleton.querySelector('.skeleton-label').textContent = 'Unable to load photograph.';
@@ -1274,6 +1277,7 @@ const { id } = Astro.params;
   }
 
   async function toggleReaction(type) {
+    if (!photoData) return;
     if (!isAuthenticated()) {
       window.location.href = '/auth/signin';
       return;
@@ -1436,10 +1440,25 @@ const { id } = Astro.params;
   // ── Boot ──
   async function boot() {
     resolveViewingContext();
+    renderViewingContext();   // render breadcrumb + arrows immediately from URL params
     await Promise.all([resolveRole(), loadPhoto()]);
     applyRoleUI();
     updateDownloadButton();
     await Promise.all([loadReactions(), loadComments(true), loadContainers(), loadRelated()]);
+    recordPageView();
+  }
+
+  function recordPageView() {
+    if (!photoData?.uuid) return;
+    fetch(`${API}/gallery/photos/${photoData.uuid}/view`, { method: 'POST' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.view_count != null) {
+          const el = document.getElementById('count-views');
+          if (el) el.textContent = String(data.view_count);
+        }
+      })
+      .catch(() => {});
   }
 
   boot();

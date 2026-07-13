@@ -39,6 +39,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { sql } from 'kysely';
 import { db } from '../../database/db';
 import { toMysqlDatetime } from '../identity/shared/token-hash.util';
 import { R2Service } from '../shared/storage/r2.service';
@@ -103,6 +104,7 @@ function formatPhoto(row: Record<string, unknown>) {
     owner_user_id:   row.owner_user_id,
     source_event_id: row.source_event_id ?? null,
     urls:            variants,
+    view_count:      Number(row.view_count ?? 0),
     confirmed_at:    isoOrNull(row.confirmed_at),
     created_at:      isoOrNull(row.created_at),
     updated_at:      isoOrNull(row.updated_at),
@@ -1276,6 +1278,31 @@ export class GalleryService {
       .execute();
 
     return rows.map(r => formatPhoto(r as Record<string, unknown>));
+  }
+
+  // =========================================================================
+  // View tracking — increments view_count on each canonical page load
+  // =========================================================================
+
+  async recordView(photoUuid: string): Promise<{ view_count: number }> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '!=', 'DELETED')
+      .select('id')
+      .executeTakeFirst();
+    if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
+
+    // Atomic increment — avoids read-modify-write race
+    await sql`UPDATE photos SET view_count = view_count + 1 WHERE id = ${photo.id}`.execute(db);
+
+    const updated = await db
+      .selectFrom('photos')
+      .where('id', '=', photo.id as number)
+      .select('view_count')
+      .executeTakeFirstOrThrow();
+
+    return { view_count: Number(updated.view_count) };
   }
 
   async getPhotoContainers(

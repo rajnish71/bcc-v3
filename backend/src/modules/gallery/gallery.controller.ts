@@ -174,6 +174,13 @@ export class GalleryController {
     return this.gallery.getPhotoContainers(uuid);
   }
 
+  /** Record a canonical page view — called once per page load. No auth required. */
+  @HttpCode(HttpStatus.OK)
+  @Post('photos/:uuid/view')
+  async recordView(@Param('uuid') uuid: string) {
+    return this.gallery.recordView(uuid);
+  }
+
   // =========================================================================
   // AUTHENTICATED -- photos
   // =========================================================================

@@ -754,6 +754,7 @@ export interface PhotosTable {
   genre:              Nullable<PhotoGenre>;
   visibility:         Generated<PhotoVisibility>;
   source_event_id:    Nullable<number>;
+  view_count:         Generated<number>;
   created_at:         Generated<ColumnType<Date, string | undefined, never>>;
   updated_at:         Generated<ColumnType<Date, string | undefined, string>>;
 }

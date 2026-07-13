@@ -102,6 +102,65 @@ export class GalleryController {
     return this.gallery.getPhoto(requestingUserId, uuid);
   }
 
+  /** Reaction counts + requesting user's own reactions for a photo. */
+  @Get('photos/:uuid/reactions')
+  async getReactions(@Param('uuid') uuid: string, @Req() req: any) {
+    const requestingUserId: number | null = req.user?.sub ?? null;
+    return this.gallery.getReactions(uuid, requestingUserId);
+  }
+
+  /** Toggle a reaction (LIKE, FAVOURITE, BOOKMARK) — authenticated. */
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('photos/:uuid/reactions')
+  async toggleReaction(
+    @Param('uuid') uuid: string,
+    @Body() body: { type: 'LIKE' | 'FAVOURITE' | 'BOOKMARK' },
+    @Req() req: any,
+  ) {
+    return this.gallery.toggleReaction(req.user.sub, uuid, body.type);
+  }
+
+  /** Public comment list for a photo. */
+  @Get('photos/:uuid/comments')
+  async listComments(
+    @Param('uuid') uuid: string,
+    @Query('limit')  limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.gallery.listComments(uuid, {
+      limit:  limit  ? parseInt(limit, 10)  : 20,
+      offset: offset ? parseInt(offset, 10) : 0,
+    });
+  }
+
+  /** Post a comment — authenticated. */
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @Post('photos/:uuid/comments')
+  async addComment(
+    @Param('uuid') uuid: string,
+    @Body() body: { body: string },
+    @Req() req: any,
+  ) {
+    return this.gallery.addComment(req.user.sub, uuid, body.body);
+  }
+
+  /** Photos by same photographer (excluding this photo). */
+  @Get('photos/:uuid/related/photographer')
+  async relatedByPhotographer(
+    @Param('uuid') uuid: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.gallery.getRelatedByPhotographer(uuid, limit ? parseInt(limit, 10) : 6);
+  }
+
+  /** Containers (albums/events) this photo appears in. */
+  @Get('photos/:uuid/containers')
+  async getContainers(@Param('uuid') uuid: string) {
+    return this.gallery.getPhotoContainers(uuid);
+  }
+
   // =========================================================================
   // AUTHENTICATED -- photos
   // =========================================================================

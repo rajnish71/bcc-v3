@@ -803,6 +803,26 @@ export interface PhotoTagAssignmentsTable {
   assigned_at: ColumnType<Date, string, string>;
 }
 
+export type PhotoReactionType = 'LIKE' | 'FAVOURITE' | 'BOOKMARK';
+
+export interface PhotoReactionsTable {
+  id:            Generated<number>;
+  photo_id:      number;
+  user_id:       number;
+  reaction_type: PhotoReactionType;
+  created_at:    Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface PhotoCommentsTable {
+  id:         Generated<number>;
+  photo_id:   number;
+  user_id:    number;
+  body:       string;
+  is_deleted: Generated<boolean>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
 
 // ============================================================================
 // Journal
@@ -927,6 +947,8 @@ export interface DB {
   photo_album_items: PhotoAlbumItemsTable;
   photo_tags: PhotoTagsTable;
   photo_tag_assignments: PhotoTagAssignmentsTable;
+  photo_reactions: PhotoReactionsTable;
+  photo_comments: PhotoCommentsTable;
 
   journal_posts: JournalPostsTable;
 }

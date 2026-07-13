@@ -1,0 +1,1517 @@
+---
+/**
+ * showcase/photos/[id].astro
+ * Route: /showcase/photos/{photoUuid}
+ *
+ * V6 21 Canonical Photo Page — governed by PHOTO-ARCH-001 v1.0.
+ * Every photograph resolves to this page via its permanent Canonical URL.
+ * Viewing Context (breadcrumbs/nav) is transient and URL-param-driven.
+ * Photo identity, EXIF, reactions, comments, and Canonical URL are invariant.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { BUILD_API_URL } from '../../../lib/api';
+
+export async function getStaticPaths() {
+  let photos: any[] = [];
+  try {
+    const res = await fetch(`${BUILD_API_URL}/gallery/feed?limit=200`);
+    if (res.ok) {
+      const json = await res.json();
+      photos = json.photos || [];
+    }
+  } catch { /* silent */ }
+
+  const paths = photos.map((p: any) => ({ params: { id: String(p.uuid || p.id) } }));
+  if (!paths.length) paths.push({ params: { id: 'placeholder' } });
+  return paths;
+}
+
+const { id } = Astro.params;
+---
+
+<BaseLayout
+  title="Canonical Photo — Bhopal Camera Club"
+  description="Photograph detail page — Bhopal Camera Club Showcase"
+>
+  <!-- ══ VIEWING CONTEXT BAR ══ -->
+  <div class="vcbar" id="vc-bar">
+    <div class="vcbar-inner">
+      <div class="vcbar-crumbs" id="vc-crumbs">
+        <span class="crumb">Home</span>
+        <span class="crumb-sep">›</span>
+        <span class="crumb">Showcase</span>
+        <span class="crumb-sep">›</span>
+        <span class="crumb crumb-current" id="vc-photo-title">Loading…</span>
+      </div>
+      <div class="vcbar-right">
+        <span class="vcbar-pos" id="vc-position"></span>
+        <div class="canonical-badge">
+          <span class="canonical-url" id="canonical-url-bar">/showcase/photos/{id}</span>
+          <span class="canonical-label">CANONICAL · PERMANENT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PHOTO HERO ══ -->
+  <div class="photo-zone" id="photo-zone">
+    <div class="photo-zone-inner">
+      <!-- Prev arrow -->
+      <button class="nav-arrow nav-prev" id="nav-prev" aria-label="Previous photo" style="display:none;">
+        <span class="arrow-icon">←</span>
+        <span class="arrow-label" id="prev-label"></span>
+      </button>
+
+      <!-- Photo container — natural aspect ratio, no crop -->
+      <div class="photo-box" id="photo-box">
+        <div class="photo-skeleton" id="photo-skeleton">
+          <div class="skeleton-label">Loading photograph…</div>
+        </div>
+        <img
+          id="photo-img"
+          src=""
+          alt=""
+          class="photo-img"
+          style="display:none;"
+        />
+        <!-- Bottom caption overlay -->
+        <div class="photo-caption" id="photo-caption" style="display:none;">
+          <div class="caption-title" id="caption-title"></div>
+          <div class="caption-meta" id="caption-meta"></div>
+        </div>
+        <!-- ARCH badge -->
+        <div class="arch-badge">PHOTO-ARCH-001 · NATURAL RATIO · NO CROP</div>
+      </div>
+
+      <!-- Next arrow -->
+      <button class="nav-arrow nav-next" id="nav-next" aria-label="Next photo" style="display:none;">
+        <span class="arrow-icon">→</span>
+        <span class="arrow-label" id="next-label"></span>
+      </button>
+    </div>
+
+    <!-- Position bar -->
+    <div class="photo-pos-bar" id="photo-pos-bar"></div>
+  </div>
+
+  <!-- ══ CONTENT AREA: META + INTERACTION ══ -->
+  <div class="content-area">
+
+    <!-- LEFT — Photo Meta Panel (65%) -->
+    <div class="meta-panel">
+
+      <!-- Title -->
+      <h1 class="photo-title" id="photo-title-main">Loading…</h1>
+
+      <!-- Photographer row -->
+      <div class="photographer-row" id="photographer-row">
+        <div class="photographer-avatar" id="ph-avatar">—</div>
+        <div class="photographer-info">
+          <div class="photographer-name" id="ph-name">—</div>
+          <a class="photographer-link" id="ph-link" href="#">—</a>
+        </div>
+        <div class="photographer-meta" id="ph-meta"></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-row">
+        <button class="tab tab-active" id="tab-info"  onclick="setTab('info')">Info</button>
+        <button class="tab"            id="tab-exif"  onclick="setTab('exif')">EXIF</button>
+        <button class="tab"            id="tab-tags"  onclick="setTab('tags')">Tags</button>
+      </div>
+
+      <!-- INFO tab -->
+      <div class="tab-pane" id="pane-info">
+        <p class="photo-caption-text" id="caption-text">Loading description…</p>
+        <div class="containers-section">
+          <div class="section-label">Appears in Containers — PHOTO-ARCH-001 Principle 2</div>
+          <p class="containers-note">This photograph appears in the following Containers. Containers reference it — they do not own it.</p>
+          <div class="containers-list" id="containers-list">
+            <div class="container-loading">Loading containers…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXIF tab -->
+      <div class="tab-pane" id="pane-exif" style="display:none;">
+        <div class="section-label">EXIF Data — owned by Canonical Photo · PHOTO-ARCH-001 Principle 4</div>
+        <div class="exif-table" id="exif-table">
+          <div class="exif-loading">Loading EXIF…</div>
+        </div>
+      </div>
+
+      <!-- TAGS tab -->
+      <div class="tab-pane" id="pane-tags" style="display:none;">
+        <div class="section-label">Tags &amp; Keywords — owned by Canonical Photo · PHOTO-ARCH-001 Principle 4</div>
+        <div class="tags-cloud" id="tags-cloud">
+          <span class="tag-item">Loading…</span>
+        </div>
+        <div class="geo-section" id="geo-section" style="display:none;">
+          <div class="section-label" style="margin-top:20px;">Geolocation</div>
+          <div class="geo-coords" id="geo-coords"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — Interaction Panel (35%, sticky) -->
+    <aside class="interaction-panel" id="interaction-panel">
+      <div class="arch-note-small">INTERACTION PANEL · PHOTO-ARCH-001 PRINCIPLE 9</div>
+
+      <!-- Reaction buttons -->
+      <div class="reaction-row">
+        <button class="reaction-btn" id="btn-like" onclick="toggleReaction('LIKE')">
+          <span class="reaction-count" id="count-like">0</span>
+          <span class="reaction-label">Like</span>
+        </button>
+        <button class="reaction-btn" id="btn-fav" onclick="toggleReaction('FAVOURITE')">
+          <span class="reaction-count" id="count-fav">0</span>
+          <span class="reaction-label">Favourite</span>
+        </button>
+        <button class="reaction-btn" id="btn-bm" onclick="toggleReaction('BOOKMARK')">
+          <span class="reaction-count" id="count-bm">0</span>
+          <span class="reaction-label">Bookmark</span>
+        </button>
+      </div>
+
+      <!-- Guest sign-in prompt -->
+      <div class="guest-prompt" id="guest-prompt" style="display:none;">
+        <p>Sign in to interact with this photograph</p>
+        <a href="/auth/signin" class="btn-signin">Sign In</a>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="action-btns">
+        <a id="download-btn" href="#" class="btn-download" download>
+          <span id="dl-label">Download</span>
+          <span id="dl-note" class="btn-note"></span>
+        </a>
+        <button class="btn-share" onclick="sharePhoto()">Share Photo</button>
+        <div class="report-link"><span onclick="reportPhoto()" class="report-text">Report this photo</span></div>
+      </div>
+
+      <!-- Admin moderation (admin only) -->
+      <div class="admin-panel" id="admin-panel" style="display:none;">
+        <div class="admin-panel-label">Moderation — Admin Only</div>
+        <button class="btn-admin-action" onclick="adminHide()">Hide Photo (remove from public)</button>
+        <button class="btn-admin-action" onclick="adminFlag()">Flag for Review</button>
+        <button class="btn-admin-delete" onclick="adminDelete()">Delete Photo (irreversible)</button>
+      </div>
+
+      <!-- Canonical URL display -->
+      <div class="canonical-card">
+        <div class="canonical-card-label">Canonical URL</div>
+        <div class="canonical-card-url" id="canonical-url-card">/showcase/photos/{id}</div>
+        <div class="canonical-card-note">Permanent · PHOTO-ARCH-001 Principle 5<br/>This URL never changes regardless of Container.</div>
+        <button class="btn-copy" onclick="copyCanonical()">Copy Link</button>
+      </div>
+
+      <!-- Photo stats -->
+      <div class="stats-panel">
+        <div class="stats-label">Photo Statistics</div>
+        <div class="stat-row"><span class="stat-key">Views</span><span class="stat-val" id="stat-views">—</span></div>
+        <div class="stat-row"><span class="stat-key">Downloads</span><span class="stat-val" id="stat-downloads">—</span></div>
+        <div class="stat-row"><span class="stat-key">Uploaded</span><span class="stat-val" id="stat-uploaded">—</span></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ══ COMMENTS ══ -->
+  <div class="comments-section" id="comments-section">
+    <div class="comments-header">
+      <h3 class="comments-heading"><span id="comment-count">0</span> Comments</h3>
+      <span class="comments-arch-note">PHOTO-ARCH-001 P9 · Owned by Canonical Photo · Never duplicated per Container</span>
+    </div>
+
+    <!-- Authenticated comment input -->
+    <div class="comment-input-row" id="comment-input-row" style="display:none;">
+      <div class="comment-avatar-sm" id="comment-avatar-me"></div>
+      <div class="comment-input-area">
+        <textarea id="comment-body" class="comment-textarea" placeholder="Write a comment…" rows="3"></textarea>
+        <div class="comment-input-actions">
+          <button class="btn-post-comment" onclick="postComment()">Post Comment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guest comment prompt -->
+    <div class="guest-comment-prompt" id="guest-comment-prompt">
+      <span>Sign in to join the conversation.</span>
+      <a href="/auth/signin" class="btn-signin-sm">Sign In</a>
+    </div>
+
+    <!-- Comment list -->
+    <div class="comment-list" id="comment-list">
+      <div class="comments-loading">Loading comments…</div>
+    </div>
+    <div class="comments-load-more" id="comments-load-more" style="display:none;">
+      <button onclick="loadMoreComments()" class="btn-load-more">Load More Comments</button>
+    </div>
+  </div>
+
+  <!-- ══ RELATED CONTENT ══ -->
+  <div class="related-section">
+    <div class="related-arch-note">RELATED CONTENT · PHOTO-ARCH-001 Related Content Contract — References only · No duplication</div>
+
+    <div class="related-block" id="related-photographer-block">
+      <div class="related-block-header">
+        <h4 class="related-block-title" id="related-ph-title">More from this Photographer</h4>
+        <a class="related-block-link" id="related-ph-link" href="#">View Portfolio →</a>
+      </div>
+      <div class="related-grid" id="related-ph-grid">
+        <div class="related-loading">Loading…</div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+/* ── CSS Variables (mapping to design tokens) ── */
+:root {
+  --ink-dark:    #141210;
+  --ink-mid:     #57514B;
+  --ink-light:   #8B8378;
+  --gold:        #C9A961;
+  --gold-dark:   #A8843C;
+  --warm-bg:     #F2EFE9;
+  --warm-card:   #FAF8F4;
+  --warm-rule:   #E7E1D6;
+  --dark-zone:   #0A0908;
+  --radius:      2px;
+}
+
+/* ── Viewing Context Bar ── */
+.vcbar {
+  background: #fff;
+  border-bottom: 1px solid var(--warm-rule);
+  padding: 0 32px;
+}
+.vcbar-inner {
+  max-width: 1360px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  gap: 16px;
+}
+.vcbar-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 12px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.crumb {
+  color: var(--ink-light);
+  white-space: nowrap;
+}
+.crumb-current {
+  color: var(--ink-dark);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crumb-sep {
+  color: #D8D2C6;
+  padding: 0 8px;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.vcbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.vcbar-pos {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-light);
+  white-space: nowrap;
+}
+.canonical-badge {
+  background: var(--warm-card);
+  border: 1px solid var(--gold);
+  padding: 5px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.canonical-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-dark);
+  font-weight: 500;
+}
+.canonical-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--gold-dark);
+  letter-spacing: 0.08em;
+}
+
+/* ── Photo Zone ── */
+.photo-zone {
+  background: var(--dark-zone);
+  width: 100%;
+}
+.photo-zone-inner {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 80px;
+  min-height: 280px;
+}
+.photo-box {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 70vh;
+  width: 100%;
+}
+.photo-skeleton {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.skeleton-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.12em;
+}
+.photo-img {
+  max-width: 100%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+.photo-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+  padding: 48px 24px 20px;
+}
+.caption-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.caption-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.arch-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(10,9,8,0.85);
+  border: 1px solid rgba(201,169,97,0.25);
+  padding: 4px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: rgba(201,169,97,0.7);
+  letter-spacing: 0.1em;
+}
+
+/* Nav arrows */
+.nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.nav-prev { left: 16px; }
+.nav-next { right: 16px; }
+.arrow-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+}
+.arrow-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+  max-width: 72px;
+  line-height: 1.4;
+}
+.photo-pos-bar {
+  text-align: center;
+  padding: 8px 0 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.12em;
+}
+
+/* ── Content Area ── */
+.content-area {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  max-width: 1360px;
+  margin: 0 auto;
+  background: var(--warm-bg);
+  border-left: 1px solid var(--warm-rule);
+  border-right: 1px solid var(--warm-rule);
+}
+
+/* ── Meta Panel ── */
+.meta-panel {
+  padding: 40px 36px;
+  border-right: 1px solid var(--warm-rule);
+  min-width: 0;
+}
+.photo-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(24px, 3.5vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+  line-height: 1.1;
+  color: var(--ink-dark);
+}
+
+/* Photographer row */
+.photographer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--warm-rule);
+}
+.photographer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3E5A48, #2A3E32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.photographer-info { display: flex; flex-direction: column; gap: 2px; }
+.photographer-name { font-size: 14px; font-weight: 600; color: var(--ink-dark); }
+.photographer-link { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold-dark); text-decoration: none; }
+.photographer-link:hover { text-decoration: underline; }
+.photographer-meta { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-light); }
+
+/* Tabs */
+.tabs-row {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--warm-rule);
+  margin-bottom: 28px;
+}
+.tab {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--ink-light);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab:hover { color: var(--ink-dark); }
+.tab-active { color: var(--ink-dark); border-bottom-color: var(--gold-dark); }
+
+/* Tab panes */
+.tab-pane { display: block; }
+.section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-light);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.photo-caption-text {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--ink-mid);
+  margin-bottom: 28px;
+}
+
+/* Containers */
+.containers-section { border-top: 1px solid var(--warm-rule); padding-top: 22px; }
+.containers-note { font-size: 11px; font-style: italic; color: var(--ink-light); margin-bottom: 12px; }
+.containers-list { display: flex; flex-direction: column; gap: 8px; }
+.container-loading { font-size: 12px; color: var(--ink-light); padding: 12px 0; }
+.container-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #fff;
+  border: 1px solid var(--warm-rule);
+}
+.container-item-info { display: flex; flex-direction: column; gap: 2px; }
+.container-item-title { font-size: 13px; font-weight: 500; color: var(--ink-dark); }
+.container-item-url { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
+.container-type-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  background: var(--warm-card);
+  border: 1px solid var(--warm-rule);
+  color: var(--gold-dark);
+  padding: 3px 8px;
+}
+.container-empty { font-size: 13px; color: var(--ink-light); font-style: italic; }
+
+/* EXIF */
+.exif-table { background: #fff; border: 1px solid var(--warm-rule); }
+.exif-loading { padding: 16px; font-size: 12px; color: var(--ink-light); }
+.exif-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  padding: 10px 18px;
+  border-bottom: 1px solid #F0EBE0;
+  gap: 12px;
+  align-items: baseline;
+}
+.exif-row:last-child { border-bottom: none; }
+.exif-key { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.1em; }
+.exif-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-dark); font-weight: 500; }
+
+/* Tags */
+.tags-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.tag-item { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: #fff; border: 1px solid var(--warm-rule); color: var(--ink-mid); padding: 6px 12px; }
+.geo-coords { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mid); line-height: 1.7; }
+
+/* ── Interaction Panel ── */
+.interaction-panel {
+  padding: 32px 28px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+.arch-note-small {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--gold-dark);
+  letter-spacing: 0.1em;
+  background: var(--warm-card);
+  border: 1px solid var(--warm-rule);
+  padding: 4px 10px;
+  text-align: center;
+}
+
+/* Reactions */
+.reaction-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.reaction-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 8px;
+  border: 1px solid var(--warm-rule);
+  background: var(--warm-card);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.reaction-btn:hover { border-color: var(--gold-dark); }
+.reaction-btn.active {
+  border-color: var(--gold-dark);
+  background: #FEF9EE;
+  color: var(--gold-dark);
+}
+.reaction-count { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; }
+.reaction-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+
+/* Guest prompt */
+.guest-prompt {
+  background: var(--warm-card);
+  border: 1px solid var(--warm-rule);
+  padding: 14px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.guest-prompt p { font-size: 12px; color: var(--ink-mid); }
+.btn-signin {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--ink-dark);
+  color: var(--ink-dark);
+  padding: 9px 16px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* Action buttons */
+.action-btns { display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--warm-rule); padding-bottom: 16px; }
+.btn-download {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-download:hover { opacity: 0.9; }
+.btn-download.preview {
+  background: none;
+  border: 1px solid var(--warm-rule);
+  color: var(--ink-mid);
+}
+.btn-note { font-size: 10px; opacity: 0.7; }
+.btn-share {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1px solid var(--warm-rule);
+  background: #fff;
+  color: var(--ink-mid);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.btn-share:hover { border-color: var(--ink-dark); color: var(--ink-dark); }
+.report-link { text-align: center; padding-top: 4px; }
+.report-text { font-size: 11px; color: var(--ink-light); cursor: pointer; border-bottom: 1px solid #D8D2C6; }
+
+/* Admin panel */
+.admin-panel {
+  border: 1px solid rgba(163,73,59,0.3);
+  background: #FDF5F5;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-panel-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #A3493B; font-weight: 600; margin-bottom: 6px; }
+.btn-admin-action {
+  padding: 9px 14px;
+  border: 1px solid rgba(163,73,59,0.4);
+  background: #fff;
+  color: #A3493B;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  cursor: pointer;
+}
+.btn-admin-delete {
+  padding: 9px 14px;
+  border: 1px solid #A3493B;
+  background: #A3493B;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Canonical card */
+.canonical-card { background: var(--warm-card); border: 1px solid var(--gold); padding: 16px; }
+.canonical-card-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-dark); font-weight: 600; margin-bottom: 8px; }
+.canonical-card-url { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-dark); font-weight: 500; margin-bottom: 6px; word-break: break-all; }
+.canonical-card-note { font-size: 11px; color: var(--ink-light); line-height: 1.6; margin-bottom: 10px; }
+.btn-copy {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--warm-rule);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-mid);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.btn-copy:hover { border-color: var(--ink-dark); }
+
+/* Stats */
+.stats-panel { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--warm-rule); padding-top: 16px; }
+.stats-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-light); font-weight: 600; margin-bottom: 4px; }
+.stat-row { display: flex; justify-content: space-between; font-size: 12px; }
+.stat-key { color: var(--ink-light); }
+.stat-val { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+
+/* ── Comments ── */
+.comments-section {
+  background: #fff;
+  border-top: 1px solid var(--warm-rule);
+  padding: 40px 36px;
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  border-left: 1px solid var(--warm-rule);
+  border-right: 1px solid var(--warm-rule);
+}
+.comments-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 8px; }
+.comments-heading { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; color: var(--ink-dark); }
+.comments-arch-note { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
+
+.comment-input-row { display: flex; gap: 12px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--warm-rule); }
+.comment-avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3E5A48, #2A3E32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.comment-input-area { flex: 1; }
+.comment-textarea {
+  width: 100%;
+  border: 1px solid #D8D2C6;
+  background: var(--warm-card);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  resize: vertical;
+  min-height: 72px;
+  box-sizing: border-box;
+}
+.comment-textarea:focus { outline: none; border-color: var(--gold-dark); }
+.comment-input-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.btn-post-comment {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.guest-comment-prompt {
+  background: var(--warm-card);
+  border: 1px solid var(--warm-rule);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--ink-mid);
+}
+.btn-signin-sm {
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--ink-dark);
+  color: var(--ink-dark);
+  padding: 8px 16px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.comment-list { display: flex; flex-direction: column; gap: 24px; }
+.comments-loading { font-size: 13px; color: var(--ink-light); padding: 12px 0; }
+.comment-item { display: flex; gap: 14px; }
+.comment-avatar-item {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A5A78, #2C3A55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.comment-body { flex: 1; }
+.comment-meta { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.comment-author { font-size: 13px; font-weight: 600; color: var(--ink-dark); }
+.comment-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
+.comment-text { font-size: 13px; line-height: 1.8; color: var(--ink-mid); }
+.comment-actions { display: flex; gap: 16px; margin-top: 8px; }
+.comment-action { font-size: 11px; color: var(--ink-light); cursor: pointer; background: none; border: none; }
+.comment-action:hover { color: var(--ink-dark); }
+
+.comments-load-more { text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--warm-rule); }
+.btn-load-more {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid #D8D2C6;
+  color: var(--ink-mid);
+  padding: 12px 32px;
+  background: #fff;
+  cursor: pointer;
+}
+.btn-load-more:hover { border-color: var(--ink-dark); color: var(--ink-dark); }
+
+/* ── Related ── */
+.related-section {
+  background: var(--warm-card);
+  border-top: 1px solid var(--warm-rule);
+  padding: 48px 36px;
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  border-left: 1px solid var(--warm-rule);
+  border-right: 1px solid var(--warm-rule);
+}
+.related-arch-note { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); letter-spacing: 0.1em; margin-bottom: 40px; }
+.related-block { margin-bottom: 40px; }
+.related-block-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.related-block-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; color: var(--ink-dark); }
+.related-block-link { font-size: 12px; color: var(--gold-dark); font-weight: 500; text-decoration: none; }
+.related-block-link:hover { text-decoration: underline; }
+.related-grid { display: flex; gap: 2px; background: var(--dark-zone); overflow: hidden; min-height: 160px; }
+.related-loading { display: flex; align-items: center; justify-content: center; width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.15); }
+.related-photo-item {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  background: #1C1A18;
+  min-height: 160px;
+}
+.related-photo-item img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.2s;
+}
+.related-photo-item:hover img { opacity: 0.8; }
+.related-photo-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  padding: 20px 8px 8px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.7);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.related-photo-item:hover .related-photo-label { opacity: 1; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .content-area { grid-template-columns: 1fr; }
+  .interaction-panel { position: static; max-height: none; }
+  .meta-panel { border-right: none; border-bottom: 1px solid var(--warm-rule); }
+  .photo-zone-inner { padding: 24px 48px; }
+}
+@media (max-width: 600px) {
+  .vcbar-inner { flex-wrap: wrap; height: auto; padding: 10px 0; gap: 8px; }
+  .canonical-badge { display: none; }
+  .photo-zone-inner { padding: 16px; }
+  .reaction-row { gap: 4px; }
+  .reaction-btn { padding: 10px 4px; }
+  .content-area, .comments-section, .related-section { padding: 24px 16px; }
+}
+</style>
+
+<script define:vars={{ photoId: id }}>
+  const API = '/api/v1';
+  const CANONICAL = `/showcase/photos/${photoId}`;
+
+  // ── Auth state ──
+  function tok() { return localStorage.getItem('bcc_token') ?? ''; }
+  function authHeaders() {
+    const t = tok();
+    return t ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` } : { 'Content-Type': 'application/json' };
+  }
+  function isAuthenticated() { return !!tok(); }
+
+  let currentRole = 'guest'; // guest | user | member | admin
+  let photoData = null;
+  let reactionsData = { likes: 0, favourites: 0, bookmarks: 0, userReactions: { liked: false, favourited: false, bookmarked: false } };
+  let commentOffset = 0;
+  const COMMENT_LIMIT = 20;
+  let totalComments = 0;
+  let viewCtx = { label: 'Showcase', crumbs: ['Home', 'Showcase'], position: '', prevLabel: '', nextLabel: '', prevId: null, nextId: null, phLink: '/photographers' };
+
+  // ── Tab logic ──
+  function setTab(tab) {
+    ['info','exif','tags'].forEach(t => {
+      document.getElementById(`tab-${t}`)?.classList.toggle('tab-active', t === tab);
+      const pane = document.getElementById(`pane-${t}`);
+      if (pane) pane.style.display = t === tab ? 'block' : 'none';
+    });
+  }
+  window.setTab = setTab;
+
+  // ── Viewing Context from URL ──
+  function resolveViewingContext() {
+    const params = new URLSearchParams(window.location.search);
+    const ctx    = params.get('ctx') || 'showcase';
+    const ctxId  = params.get('ctxId') || '';
+    const pos    = parseInt(params.get('pos') || '0', 10);
+    const total  = parseInt(params.get('total') || '0', 10);
+    const prevId = params.get('prevId') || null;
+    const nextId = params.get('nextId') || null;
+
+    const MAP = {
+      showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                                                      prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
+      portfolio:  { label: 'Portfolio',   crumbs: ['Home', 'Photographers', ctxId],                                          prevLabel: '← Previous in Portfolio', nextLabel: 'Next in Portfolio →'  },
+      story:      { label: 'Story',       crumbs: ['Home', 'Stories', ctxId],                                                prevLabel: '← Previous in Story',     nextLabel: 'Next in Story →'      },
+      collection: { label: 'Collection',  crumbs: ['Home', 'Collections', ctxId],                                            prevLabel: '← Previous',              nextLabel: 'Next →'               },
+      activity:   { label: 'Activity',    crumbs: ['Home', 'Activities', ctxId],                                             prevLabel: '← Previous Photo',        nextLabel: 'Next Photo →'         },
+      contest:    { label: 'Contest',     crumbs: ['Home', 'Contests', ctxId],                                               prevLabel: '← Previous Entry',        nextLabel: 'Next Entry →'         },
+    };
+
+    const def = MAP[ctx] || MAP.showcase;
+    viewCtx = {
+      label:     def.label,
+      crumbs:    def.crumbs,
+      position:  total > 0 ? `Photo ${pos} of ${total}` : '',
+      prevLabel: def.prevLabel,
+      nextLabel: def.nextLabel,
+      prevId,
+      nextId,
+      phLink:    ctx === 'portfolio' ? `/photographers/${ctxId}` : '/photographers',
+    };
+  }
+
+  function renderViewingContext() {
+    const crumbsEl = document.getElementById('vc-crumbs');
+    if (crumbsEl) {
+      let html = '';
+      viewCtx.crumbs.forEach(c => {
+        html += `<span class="crumb">${c}</span><span class="crumb-sep">›</span>`;
+      });
+      html += `<span class="crumb crumb-current" id="vc-photo-title">${photoData?.title || 'Photograph'}</span>`;
+      crumbsEl.innerHTML = html;
+    }
+
+    const posEl = document.getElementById('vc-position');
+    if (posEl) posEl.textContent = viewCtx.position;
+
+    const prevBtn = document.getElementById('nav-prev');
+    const nextBtn = document.getElementById('nav-next');
+    const prevLabel = document.getElementById('prev-label');
+    const nextLabel = document.getElementById('next-label');
+
+    if (viewCtx.prevId && prevBtn) {
+      prevBtn.style.display = 'flex';
+      if (prevLabel) prevLabel.textContent = viewCtx.prevLabel;
+      prevBtn.onclick = () => navigateToPhoto(viewCtx.prevId);
+    }
+    if (viewCtx.nextId && nextBtn) {
+      nextBtn.style.display = 'flex';
+      if (nextLabel) nextLabel.textContent = viewCtx.nextLabel;
+      nextBtn.onclick = () => navigateToPhoto(viewCtx.nextId);
+    }
+
+    const posBar = document.getElementById('photo-pos-bar');
+    if (posBar && viewCtx.position) {
+      posBar.textContent = `${viewCtx.position} · ${viewCtx.label}`;
+    }
+  }
+
+  function navigateToPhoto(targetId) {
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = `/showcase/photos/${targetId}?${params.toString()}`;
+  }
+
+  // ── Load photo data ──
+  async function loadPhoto() {
+    try {
+      const t = tok();
+      const headers = t ? { 'Authorization': `Bearer ${t}` } : {};
+      const res = await fetch(`${API}/gallery/photos/${photoId}`, { headers });
+      if (!res.ok) {
+        showPhotoError();
+        return;
+      }
+      photoData = await res.json();
+      renderPhoto();
+    } catch {
+      showPhotoError();
+    }
+  }
+
+  function renderPhoto() {
+    if (!photoData) return;
+
+    // Title
+    const titleMain = document.getElementById('photo-title-main');
+    if (titleMain) titleMain.textContent = photoData.title || 'Untitled';
+
+    // Photo image
+    const imgUrl = photoData.urls?.original || photoData.urls?.medium || '';
+    if (imgUrl) {
+      const img = document.getElementById('photo-img');
+      const skeleton = document.getElementById('photo-skeleton');
+      if (img && skeleton) {
+        img.onload = () => {
+          skeleton.style.display = 'none';
+          img.style.display = 'block';
+          const captionEl = document.getElementById('photo-caption');
+          if (captionEl) captionEl.style.display = 'block';
+        };
+        img.src = imgUrl;
+        img.alt = photoData.title || 'Photograph';
+      }
+    }
+
+    // Caption overlay
+    const captionTitle = document.getElementById('caption-title');
+    const captionMeta  = document.getElementById('caption-meta');
+    if (captionTitle) captionTitle.textContent = photoData.title || '';
+    if (captionMeta) {
+      const parts = [];
+      if (photoData.photographer?.name) parts.push(photoData.photographer.name);
+      if (photoData.exif?.taken_at) {
+        parts.push(new Date(photoData.exif.taken_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }));
+      }
+      captionMeta.innerHTML = parts.map((p, i) => i > 0 ? `<span style="margin:0 4px;opacity:0.4;">·</span>${p}` : p).join('');
+    }
+
+    // Photographer row
+    const phName = photoData.photographer?.name || 'BCC Member';
+    const phUser = photoData.photographer?.username || '';
+    const initials = phName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+
+    const avatarEl = document.getElementById('ph-avatar');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    const nameEl = document.getElementById('ph-name');
+    if (nameEl) nameEl.textContent = phName;
+
+    const linkEl = document.getElementById('ph-link');
+    if (linkEl) {
+      linkEl.textContent = phUser ? `/photographers/${phUser}` : '/photographers';
+      linkEl.href = phUser ? `/photographers/${phUser}` : '/photographers';
+    }
+
+    const relPhLink = document.getElementById('related-ph-link');
+    if (relPhLink && phUser) {
+      relPhLink.href = `/photographers/${phUser}`;
+    }
+    const relPhTitle = document.getElementById('related-ph-title');
+    if (relPhTitle) relPhTitle.textContent = `More from ${phName}`;
+
+    // Caption text (info tab)
+    const captionText = document.getElementById('caption-text');
+    if (captionText) captionText.textContent = photoData.caption || 'No description provided.';
+
+    // EXIF table
+    renderExif(photoData.exif);
+
+    // Tags
+    renderTags();
+
+    // Stats
+    const uploadedEl = document.getElementById('stat-uploaded');
+    if (uploadedEl && photoData.confirmed_at) {
+      uploadedEl.textContent = new Date(photoData.confirmed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    // Download button role-based
+    updateDownloadButton();
+
+    // Viewing context photo title
+    renderViewingContext();
+  }
+
+  function showPhotoError() {
+    const skeleton = document.getElementById('photo-skeleton');
+    if (skeleton) skeleton.querySelector('.skeleton-label').textContent = 'Photograph not found or access restricted.';
+  }
+
+  function renderExif(exif) {
+    if (!exif) return;
+    const table = document.getElementById('exif-table');
+    if (!table) return;
+
+    const rows = [
+      ['Camera Make',   exif.camera_make],
+      ['Camera Model',  exif.camera_model],
+      ['Lens',          exif.lens_model],
+      ['Focal Length',  exif.focal_length ? `${exif.focal_length}mm` : null],
+      ['Aperture',      exif.aperture ? `f/${exif.aperture}` : null],
+      ['Shutter Speed', exif.shutter_speed],
+      ['ISO',           exif.iso],
+      ['Taken At',      exif.taken_at ? new Date(exif.taken_at).toLocaleString('en-IN') : null],
+      ['GPS',           exif.gps_lat ? `${exif.gps_lat.toFixed(4)}° N, ${exif.gps_lng?.toFixed(4)}° E` : null],
+    ].filter(([, v]) => v != null);
+
+    if (!rows.length) {
+      table.innerHTML = '<div class="exif-loading">No EXIF data available.</div>';
+      return;
+    }
+    table.innerHTML = rows.map(([k, v]) =>
+      `<div class="exif-row"><span class="exif-key">${k}</span><span class="exif-val">${v}</span></div>`
+    ).join('');
+  }
+
+  function renderTags() {
+    const cloud = document.getElementById('tags-cloud');
+    if (!cloud) return;
+    if (photoData?.genre) {
+      cloud.innerHTML = `<span class="tag-item">${photoData.genre}</span>`;
+    } else {
+      cloud.innerHTML = '<span class="tag-item" style="color:var(--ink-light);font-style:italic;">No tags assigned.</span>';
+    }
+
+    const geoSection = document.getElementById('geo-section');
+    const geoCoords  = document.getElementById('geo-coords');
+    if (geoSection && geoCoords && photoData?.exif?.gps_lat) {
+      geoSection.style.display = 'block';
+      geoCoords.textContent = `${photoData.exif.gps_lat.toFixed(4)}° N, ${photoData.exif.gps_lng?.toFixed(4)}° E`;
+    }
+  }
+
+  // ── Role + auth UI ──
+  async function resolveRole() {
+    if (!isAuthenticated()) {
+      currentRole = 'guest';
+      return;
+    }
+    // Default to 'user'; check for admin or member
+    currentRole = 'user';
+    try {
+      const res = await fetch(`${API}/membership/hub/status`, { headers: { 'Authorization': `Bearer ${tok()}` } });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.lifecycle_state === 'ACTIVE') currentRole = 'member';
+      }
+    } catch { /* keep 'user' */ }
+    // Admin check — attempt admin endpoint
+    try {
+      const res = await fetch(`${API}/membership/admin/pending?limit=1`, { headers: { 'Authorization': `Bearer ${tok()}` } });
+      if (res.ok) currentRole = 'admin';
+    } catch { /* not admin */ }
+  }
+
+  function applyRoleUI() {
+    const guestPrompt     = document.getElementById('guest-prompt');
+    const guestComment    = document.getElementById('guest-comment-prompt');
+    const commentInput    = document.getElementById('comment-input-row');
+    const adminPanel      = document.getElementById('admin-panel');
+    const dlBtn           = document.getElementById('download-btn');
+    const reactionBtns    = document.querySelectorAll('.reaction-btn');
+
+    if (currentRole === 'guest') {
+      if (guestPrompt)  guestPrompt.style.display  = 'flex';
+      if (guestComment) guestComment.style.display = 'flex';
+      if (commentInput) commentInput.style.display  = 'none';
+      reactionBtns.forEach(b => b.setAttribute('disabled', 'true'));
+    } else {
+      if (guestPrompt)  guestPrompt.style.display  = 'none';
+      if (guestComment) guestComment.style.display = 'none';
+      if (commentInput) {
+        commentInput.style.display = 'flex';
+        // Set avatar initials from stored user
+        try {
+          const user = JSON.parse(localStorage.getItem('bcc_user') || '{}');
+          const avatar = document.getElementById('comment-avatar-me');
+          if (avatar) avatar.textContent = user.initials || '?';
+        } catch {}
+      }
+    }
+    if (currentRole === 'admin') {
+      if (adminPanel) adminPanel.style.display = 'flex';
+    }
+  }
+
+  function updateDownloadButton() {
+    const btn     = document.getElementById('download-btn');
+    const label   = document.getElementById('dl-label');
+    const note    = document.getElementById('dl-note');
+    const imgUrl  = photoData?.urls?.original || '';
+    const prevUrl = photoData?.urls?.medium   || imgUrl;
+
+    if (!btn || !label || !note) return;
+
+    if (currentRole === 'member' || currentRole === 'admin') {
+      btn.href = imgUrl;
+      btn.classList.remove('preview');
+      label.textContent = 'Download Original';
+      note.textContent  = 'Full resolution · Members only';
+    } else if (currentRole === 'user') {
+      btn.href = prevUrl;
+      btn.classList.add('preview');
+      label.textContent = 'Preview Download';
+      note.textContent  = 'Membership required for full resolution';
+    } else {
+      btn.href = '#';
+      btn.classList.add('preview');
+      btn.setAttribute('download', '');
+      label.textContent = 'Sign in to Download';
+      note.textContent  = '';
+      btn.onclick = (e) => { e.preventDefault(); window.location.href = '/auth/signin'; };
+    }
+  }
+
+  // ── Reactions ──
+  async function loadReactions() {
+    try {
+      const headers = tok() ? { 'Authorization': `Bearer ${tok()}` } : {};
+      const res = await fetch(`${API}/gallery/photos/${photoId}/reactions`, { headers });
+      if (!res.ok) return;
+      reactionsData = await res.json();
+      renderReactions();
+    } catch {}
+  }
+
+  function renderReactions() {
+    const countLike = document.getElementById('count-like');
+    const countFav  = document.getElementById('count-fav');
+    const countBm   = document.getElementById('count-bm');
+    const btnLike   = document.getElementById('btn-like');
+    const btnFav    = document.getElementById('btn-fav');
+    const btnBm     = document.getElementById('btn-bm');
+
+    if (countLike) countLike.textContent = String(reactionsData.likes);
+    if (countFav)  countFav.textContent  = String(reactionsData.favourites);
+    if (countBm)   countBm.textContent   = String(reactionsData.bookmarks);
+
+    if (reactionsData.userReactions.liked)      btnLike?.classList.add('active');    else btnLike?.classList.remove('active');
+    if (reactionsData.userReactions.favourited) btnFav?.classList.add('active');     else btnFav?.classList.remove('active');
+    if (reactionsData.userReactions.bookmarked) btnBm?.classList.add('active');      else btnBm?.classList.remove('active');
+  }
+
+  async function toggleReaction(type) {
+    if (!isAuthenticated()) {
+      window.location.href = '/auth/signin';
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/gallery/photos/${photoId}/reactions`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ type }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      // Optimistic update
+      if (type === 'LIKE')      { reactionsData.likes      = data.count; reactionsData.userReactions.liked      = data.active; }
+      if (type === 'FAVOURITE') { reactionsData.favourites = data.count; reactionsData.userReactions.favourited = data.active; }
+      if (type === 'BOOKMARK')  { reactionsData.bookmarks  = data.count; reactionsData.userReactions.bookmarked = data.active; }
+      renderReactions();
+    } catch {}
+  }
+  window.toggleReaction = toggleReaction;
+
+  // ── Comments ──
+  async function loadComments(reset = false) {
+    if (reset) { commentOffset = 0; document.getElementById('comment-list').innerHTML = '<div class="comments-loading">Loading comments…</div>'; }
+    try {
+      const res = await fetch(`${API}/gallery/photos/${photoId}/comments?limit=${COMMENT_LIMIT}&offset=${commentOffset}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      totalComments = data.total;
+      renderComments(data.comments, reset);
+      document.getElementById('comment-count').textContent = String(totalComments);
+      commentOffset += data.comments.length;
+      const moreBtn = document.getElementById('comments-load-more');
+      if (moreBtn) moreBtn.style.display = commentOffset < totalComments ? 'block' : 'none';
+    } catch {}
+  }
+
+  function renderComments(comments, reset) {
+    const list = document.getElementById('comment-list');
+    if (!list) return;
+    if (reset) list.innerHTML = '';
+
+    if (!comments.length && reset) {
+      list.innerHTML = '<div class="comments-loading" style="font-style:italic;">No comments yet. Be the first to comment.</div>';
+      return;
+    }
+
+    comments.forEach(c => {
+      const initials = (c.author_name || 'M').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+      const timeStr  = c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      const item = document.createElement('div');
+      item.className = 'comment-item';
+      item.innerHTML = `
+        <div class="comment-avatar-item">${initials}</div>
+        <div class="comment-body">
+          <div class="comment-meta">
+            <span class="comment-author">${c.author_name || 'BCC Member'}</span>
+            <span class="comment-time">${timeStr}</span>
+          </div>
+          <p class="comment-text">${escapeHtml(c.body)}</p>
+          <div class="comment-actions">
+            <button class="comment-action">Reply</button>
+            <button class="comment-action">Like</button>
+          </div>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+
+  async function postComment() {
+    const ta = document.getElementById('comment-body');
+    if (!ta || !ta.value.trim()) return;
+    const body = ta.value.trim();
+    try {
+      const res = await fetch(`${API}/gallery/photos/${photoId}/comments`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ body }),
+      });
+      if (!res.ok) { alert('Failed to post comment. Please try again.'); return; }
+      ta.value = '';
+      await loadComments(true);
+    } catch {}
+  }
+  window.postComment = postComment;
+
+  function loadMoreComments() { loadComments(false); }
+  window.loadMoreComments = loadMoreComments;
+
+  // ── Containers ──
+  async function loadContainers() {
+    try {
+      const res = await fetch(`${API}/gallery/photos/${photoId}/containers`);
+      const containers = res.ok ? await res.json() : [];
+      const el = document.getElementById('containers-list');
+      if (!el) return;
+      if (!containers.length) {
+        el.innerHTML = '<span class="container-empty">Not added to any collection yet.</span>';
+        return;
+      }
+      el.innerHTML = containers.map(c => `
+        <div class="container-item">
+          <div class="container-item-info">
+            <div class="container-item-title">${c.title}</div>
+            <div class="container-item-url">${c.url}</div>
+          </div>
+          <span class="container-type-badge">${c.type}</span>
+        </div>`).join('');
+    } catch {}
+  }
+
+  // ── Related photos ──
+  async function loadRelated() {
+    try {
+      const res = await fetch(`${API}/gallery/photos/${photoId}/related/photographer?limit=6`);
+      const photos = res.ok ? await res.json() : [];
+      const grid = document.getElementById('related-ph-grid');
+      if (!grid) return;
+      if (!photos.length) {
+        grid.innerHTML = '<div class="related-loading" style="color:rgba(255,255,255,0.12);font-style:italic;">No other photos from this photographer yet.</div>';
+        return;
+      }
+      grid.innerHTML = photos.map(p => {
+        const url  = p.urls?.medium || p.urls?.original || '';
+        const href = `/showcase/photos/${p.uuid}`;
+        return `
+          <div class="related-photo-item" onclick="window.location.href='${href}'">
+            ${url ? `<img src="${url}" alt="${p.title || ''}" loading="lazy" />` : ''}
+            <div class="related-photo-label">${p.title || ''}</div>
+          </div>`;
+      }).join('');
+    } catch {}
+  }
+
+  // ── Actions ──
+  function sharePhoto() {
+    const url = window.location.origin + CANONICAL;
+    if (navigator.share) {
+      navigator.share({ title: photoData?.title || 'BCC Photo', url });
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => alert('Link copied to clipboard.'));
+    }
+  }
+  window.sharePhoto = sharePhoto;
+
+  function copyCanonical() {
+    const url = window.location.origin + CANONICAL;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Link'; }, 1500); }
+      });
+    }
+  }
+  window.copyCanonical = copyCanonical;
+
+  function reportPhoto() {
+    alert('Thank you. Your report has been received and will be reviewed by our moderation team.');
+  }
+  window.reportPhoto = reportPhoto;
+
+  function adminHide()   { if (confirm('Hide this photo from public view?')) alert('Photo hidden (stub — backend action required).'); }
+  function adminFlag()   { alert('Photo flagged for review (stub).'); }
+  function adminDelete() { if (confirm('Permanently delete this photo? This cannot be undone.')) alert('Photo deletion (stub — backend action required).'); }
+  window.adminHide   = adminHide;
+  window.adminFlag   = adminFlag;
+  window.adminDelete = adminDelete;
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Boot ──
+  async function boot() {
+    resolveViewingContext();
+    await Promise.all([resolveRole(), loadPhoto()]);
+    applyRoleUI();
+    updateDownloadButton();
+    await Promise.all([loadReactions(), loadComments(true), loadContainers(), loadRelated()]);
+  }
+
+  boot();
+</script>

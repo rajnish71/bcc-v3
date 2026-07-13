@@ -1034,4 +1034,237 @@ export class GalleryService {
     }
     return photo;
   }
+
+  // =========================================================================
+  // Reactions — PHOTO-ARCH-001 Principle 9 (owned by Canonical Photo)
+  // =========================================================================
+
+  async getReactions(
+    photoUuid: string,
+    requestingUserId: number | null,
+  ): Promise<{
+    likes: number;
+    favourites: number;
+    bookmarks: number;
+    userReactions: { liked: boolean; favourited: boolean; bookmarked: boolean };
+  }> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '!=', 'DELETED')
+      .select(['id', 'visibility', 'owner_user_id'])
+      .executeTakeFirst();
+    if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
+
+    await this.assertVisibility(requestingUserId, photo.owner_user_id as number, photo.visibility as string);
+
+    const rows = await db
+      .selectFrom('photo_reactions')
+      .where('photo_id', '=', photo.id as number)
+      .select(['reaction_type', 'user_id'])
+      .execute();
+
+    const counts = { likes: 0, favourites: 0, bookmarks: 0 };
+    const userReactions = { liked: false, favourited: false, bookmarked: false };
+
+    for (const r of rows) {
+      if (r.reaction_type === 'LIKE')      { counts.likes++;      if (r.user_id === requestingUserId) userReactions.liked      = true; }
+      if (r.reaction_type === 'FAVOURITE') { counts.favourites++; if (r.user_id === requestingUserId) userReactions.favourited = true; }
+      if (r.reaction_type === 'BOOKMARK')  { counts.bookmarks++;  if (r.user_id === requestingUserId) userReactions.bookmarked = true; }
+    }
+
+    return { ...counts, userReactions };
+  }
+
+  async toggleReaction(
+    userId: number,
+    photoUuid: string,
+    reactionType: 'LIKE' | 'FAVOURITE' | 'BOOKMARK',
+  ): Promise<{ active: boolean; count: number }> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '!=', 'DELETED')
+      .select(['id', 'visibility', 'owner_user_id'])
+      .executeTakeFirst();
+    if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
+    await this.assertVisibility(userId, photo.owner_user_id as number, photo.visibility as string);
+
+    const photoId = photo.id as number;
+
+    const existing = await db
+      .selectFrom('photo_reactions')
+      .where('photo_id', '=', photoId)
+      .where('user_id', '=', userId)
+      .where('reaction_type', '=', reactionType)
+      .select('id')
+      .executeTakeFirst();
+
+    if (existing) {
+      await db.deleteFrom('photo_reactions').where('id', '=', existing.id as number).execute();
+    } else {
+      await db.insertInto('photo_reactions').values({ photo_id: photoId, user_id: userId, reaction_type: reactionType }).execute();
+    }
+
+    const count = await db
+      .selectFrom('photo_reactions')
+      .where('photo_id', '=', photoId)
+      .where('reaction_type', '=', reactionType)
+      .select(db.fn.countAll<number>().as('n'))
+      .executeTakeFirstOrThrow();
+
+    return { active: !existing, count: Number(count.n) };
+  }
+
+  // =========================================================================
+  // Comments — PHOTO-ARCH-001 Principle 9 (owned by Canonical Photo)
+  // =========================================================================
+
+  async listComments(
+    photoUuid: string,
+    opts: { limit?: number; offset?: number } = {},
+  ): Promise<{ comments: unknown[]; total: number }> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '!=', 'DELETED')
+      .select('id')
+      .executeTakeFirst();
+    if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
+
+    const limit  = Math.min(opts.limit  ?? 20, 50);
+    const offset = opts.offset ?? 0;
+
+    const [rows, totalRow] = await Promise.all([
+      db
+        .selectFrom('photo_comments')
+        .leftJoin('users', 'users.id', 'photo_comments.user_id')
+        .where('photo_comments.photo_id', '=', photo.id as number)
+        .where('photo_comments.is_deleted', '=', false as any)
+        .select([
+          'photo_comments.id',
+          'photo_comments.body',
+          'photo_comments.created_at',
+          'users.full_name as author_name',
+          'users.username as author_username',
+        ] as any)
+        .orderBy('photo_comments.created_at', 'desc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      db
+        .selectFrom('photo_comments')
+        .where('photo_id', '=', photo.id as number)
+        .where('is_deleted', '=', false as any)
+        .select(db.fn.countAll<number>().as('n'))
+        .executeTakeFirstOrThrow(),
+    ]);
+
+    const comments = rows.map((r: any) => ({
+      id:             r.id,
+      body:           r.body,
+      created_at:     isoOrNull(r.created_at),
+      author_name:    r.author_name ?? 'BCC Member',
+      author_username: r.author_username ?? null,
+    }));
+
+    return { comments, total: Number(totalRow.n) };
+  }
+
+  async addComment(
+    userId: number,
+    photoUuid: string,
+    body: string,
+  ): Promise<{ id: number }> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '!=', 'DELETED')
+      .select(['id', 'visibility', 'owner_user_id'])
+      .executeTakeFirst();
+    if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
+    await this.assertVisibility(userId, photo.owner_user_id as number, photo.visibility as string);
+
+    if (!body || body.trim().length === 0) {
+      throw new BadRequestException('Comment body cannot be empty.');
+    }
+    if (body.trim().length > 2000) {
+      throw new BadRequestException('Comment exceeds 2000 characters.');
+    }
+
+    const result = await db
+      .insertInto('photo_comments')
+      .values({ photo_id: photo.id as number, user_id: userId, body: body.trim() })
+      .executeTakeFirstOrThrow();
+
+    return { id: Number(result.insertId) };
+  }
+
+  // =========================================================================
+  // Related photos — references only (PHOTO-ARCH-001 Related Content Contract)
+  // =========================================================================
+
+  async getRelatedByPhotographer(
+    photoUuid: string,
+    limit = 6,
+  ): Promise<ReturnType<typeof formatPhoto>[]> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '!=', 'DELETED')
+      .select(['owner_user_id', 'id'])
+      .executeTakeFirst();
+    if (!photo) return [];
+
+    const rows = await db
+      .selectFrom('photos')
+      .leftJoin('users', 'users.id', 'photos.owner_user_id')
+      .where('photos.owner_user_id', '=', photo.owner_user_id as number)
+      .where('photos.status', '=', 'ACTIVE')
+      .where('photos.visibility', '=', 'PUBLIC')
+      .where('photos.id', '!=', photo.id as number)
+      .selectAll('photos')
+      .select(['users.full_name as photographer_name', 'users.username as photographer_username'] as any)
+      .orderBy('photos.created_at', 'desc')
+      .limit(limit)
+      .execute();
+
+    return rows.map(r => formatPhoto(r as Record<string, unknown>));
+  }
+
+  async getPhotoContainers(
+    photoUuid: string,
+  ): Promise<{ type: string; title: string; uuid: string; url: string }[]> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '!=', 'DELETED')
+      .select('id')
+      .executeTakeFirst();
+    if (!photo) return [];
+
+    const rows = await db
+      .selectFrom('photo_album_items')
+      .innerJoin('photo_albums', 'photo_albums.id', 'photo_album_items.album_id')
+      .where('photo_album_items.photo_id', '=', photo.id as number)
+      .where('photo_albums.visibility', '!=', 'PRIVATE')
+      .select([
+        'photo_albums.uuid',
+        'photo_albums.title',
+        'photo_albums.album_type',
+      ] as any)
+      .execute();
+
+    return (rows as any[]).map(r => {
+      const type = r.album_type === 'AUTO_EVENT' ? 'ACTIVITY'
+                 : r.album_type === 'AUTO_CONTEST' ? 'CONTEST'
+                 : 'COLLECTION';
+      return {
+        type,
+        title: r.title,
+        uuid:  r.uuid,
+        url:   `/gallery/albums/${r.uuid}`,
+      };
+    });
+  }
 }

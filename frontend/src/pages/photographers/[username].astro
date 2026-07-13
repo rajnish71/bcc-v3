@@ -1281,10 +1281,8 @@ async function loadPhotos(userId: number) {
           const params = new URLSearchParams({
             ctx: 'portfolio', ctxId: username,
             ctxLabel: profileDisplayName || username,
-            pos: String(currentIdx + 1), total: String(allPhotos.length),
+            ids: allPhotos.map(p => p.id).join(','),
           });
-          if (prev) params.set('prevId', String(prev));
-          if (next) params.set('nextId', String(next));
           window.location.href = `/showcase/photos/${p.id}?${params}`;
         });
         rowEl.appendChild(btn);

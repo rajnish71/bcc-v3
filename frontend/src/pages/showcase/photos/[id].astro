@@ -280,17 +280,17 @@ const { id } = Astro.params;
   flex: 1;
   overflow: hidden;
 }
-.crumb {
+:global(.crumb) {
   color: var(--ink-light);
   white-space: nowrap;
 }
-.crumb-current {
+:global(.crumb-current) {
   color: var(--ink-dark);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.crumb-sep {
+:global(.crumb-sep) {
   color: #D8D2C6;
   padding: 0 8px;
   font-size: 10px;
@@ -512,7 +512,7 @@ const { id } = Astro.params;
 .containers-note { font-size: 11px; font-style: italic; color: var(--ink-light); margin-bottom: 12px; }
 .containers-list { display: flex; flex-direction: column; gap: 8px; }
 .container-loading { font-size: 12px; color: var(--ink-light); padding: 12px 0; }
-.container-item {
+:global(.container-item) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -520,10 +520,10 @@ const { id } = Astro.params;
   background: #fff;
   border: 1px solid var(--warm-rule);
 }
-.container-item-info { display: flex; flex-direction: column; gap: 2px; }
-.container-item-title { font-size: 13px; font-weight: 500; color: var(--ink-dark); }
-.container-item-url { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
-.container-type-badge {
+:global(.container-item-info) { display: flex; flex-direction: column; gap: 2px; }
+:global(.container-item-title) { font-size: 13px; font-weight: 500; color: var(--ink-dark); }
+:global(.container-item-url) { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
+:global(.container-type-badge) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   background: var(--warm-card);
@@ -531,12 +531,12 @@ const { id } = Astro.params;
   color: var(--gold-dark);
   padding: 3px 8px;
 }
-.container-empty { font-size: 13px; color: var(--ink-light); font-style: italic; }
+:global(.container-empty) { font-size: 13px; color: var(--ink-light); font-style: italic; }
 
 /* EXIF */
 .exif-table { background: #fff; border: 1px solid var(--warm-rule); }
-.exif-loading { padding: 16px; font-size: 12px; color: var(--ink-light); }
-.exif-row {
+:global(.exif-loading) { padding: 16px; font-size: 12px; color: var(--ink-light); }
+:global(.exif-row) {
   display: grid;
   grid-template-columns: 160px 1fr;
   padding: 10px 18px;
@@ -544,13 +544,13 @@ const { id } = Astro.params;
   gap: 12px;
   align-items: baseline;
 }
-.exif-row:last-child { border-bottom: none; }
-.exif-key { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.1em; }
-.exif-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-dark); font-weight: 500; }
+:global(.exif-row:last-child) { border-bottom: none; }
+:global(.exif-key) { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.1em; }
+:global(.exif-val) { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-dark); font-weight: 500; }
 
 /* Tags */
 .tags-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-.tag-item { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: #fff; border: 1px solid var(--warm-rule); color: var(--ink-mid); padding: 6px 12px; }
+:global(.tag-item) { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: #fff; border: 1px solid var(--warm-rule); color: var(--ink-mid); padding: 6px 12px; }
 .geo-coords { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mid); line-height: 1.7; }
 
 /* ── Interaction Panel ── */
@@ -775,9 +775,9 @@ const { id } = Astro.params;
 }
 
 .comment-list { display: flex; flex-direction: column; gap: 24px; }
-.comments-loading { font-size: 13px; color: var(--ink-light); padding: 12px 0; }
-.comment-item { display: flex; gap: 14px; }
-.comment-avatar-item {
+:global(.comments-loading) { font-size: 13px; color: var(--ink-light); padding: 12px 0; }
+:global(.comment-item) { display: flex; gap: 14px; }
+:global(.comment-avatar-item) {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -791,14 +791,14 @@ const { id } = Astro.params;
   color: #fff;
   flex-shrink: 0;
 }
-.comment-body { flex: 1; }
-.comment-meta { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
-.comment-author { font-size: 13px; font-weight: 600; color: var(--ink-dark); }
-.comment-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
-.comment-text { font-size: 13px; line-height: 1.8; color: var(--ink-mid); }
-.comment-actions { display: flex; gap: 16px; margin-top: 8px; }
-.comment-action { font-size: 11px; color: var(--ink-light); cursor: pointer; background: none; border: none; }
-.comment-action:hover { color: var(--ink-dark); }
+:global(.comment-body) { flex: 1; }
+:global(.comment-meta) { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+:global(.comment-author) { font-size: 13px; font-weight: 600; color: var(--ink-dark); }
+:global(.comment-time) { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-light); }
+:global(.comment-text) { font-size: 13px; line-height: 1.8; color: var(--ink-mid); }
+:global(.comment-actions) { display: flex; gap: 16px; margin-top: 8px; }
+:global(.comment-action) { font-size: 11px; color: var(--ink-light); cursor: pointer; background: none; border: none; }
+:global(.comment-action:hover) { color: var(--ink-dark); }
 
 .comments-load-more { text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--warm-rule); }
 .btn-load-more {
@@ -831,8 +831,8 @@ const { id } = Astro.params;
 .related-block-link { font-size: 12px; color: var(--gold-dark); font-weight: 500; text-decoration: none; }
 .related-block-link:hover { text-decoration: underline; }
 .related-grid { display: flex; gap: 2px; background: var(--dark-zone); overflow: hidden; min-height: 160px; }
-.related-loading { display: flex; align-items: center; justify-content: center; width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.15); }
-.related-photo-item {
+:global(.related-loading) { display: flex; align-items: center; justify-content: center; width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35); }
+:global(.related-photo-item) {
   flex: 1;
   position: relative;
   cursor: pointer;
@@ -840,28 +840,28 @@ const { id } = Astro.params;
   background: #1C1A18;
   min-height: 160px;
 }
-.related-photo-item img {
+:global(.related-photo-item img) {
   width: 100%;
   height: 160px;
   object-fit: cover;
   display: block;
   transition: opacity 0.2s;
 }
-.related-photo-item:hover img { opacity: 0.8; }
-.related-photo-label {
+:global(.related-photo-item:hover img) { opacity: 0.8; }
+:global(.related-photo-label) {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
   padding: 20px 8px 8px;
   font-size: 10px;
-  color: rgba(255,255,255,0.7);
+  color: #fff;
   font-family: 'JetBrains Mono', monospace;
-  opacity: 0;
-  transition: opacity 0.2s;
+  opacity: 1;
+  transition: none;
 }
-.related-photo-item:hover .related-photo-label { opacity: 1; }
+:global(.related-photo-item:hover .related-photo-label) { opacity: 1; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
@@ -917,10 +917,25 @@ const { id } = Astro.params;
     const ctx      = params.get('ctx') || 'showcase';
     const ctxId    = params.get('ctxId') || '';
     const ctxLabel = params.get('ctxLabel') || ctxId;
-    const pos      = parseInt(params.get('pos') || '0', 10);
-    const total    = parseInt(params.get('total') || '0', 10);
-    const prevId   = params.get('prevId') || null;
-    const nextId   = params.get('nextId') || null;
+
+    // ids: comma-separated photo ID list passed by portfolio/related sources.
+    // When present, derive prevId/nextId/pos/total from the array so multi-step
+    // navigation keeps working across canonical page hops.
+    const idsStr    = params.get('ids') || '';
+    const idsList   = idsStr ? idsStr.split(',').map(n => parseInt(n, 10)).filter(Boolean) : [];
+    const idxInList = idsList.indexOf(photoId);
+
+    let prevId = params.get('prevId') || null;
+    let nextId = params.get('nextId') || null;
+    let pos    = parseInt(params.get('pos')   || '0', 10);
+    let total  = parseInt(params.get('total') || '0', 10);
+
+    if (idsList.length > 0 && idxInList >= 0) {
+      prevId = idxInList > 0                    ? String(idsList[idxInList - 1]) : null;
+      nextId = idxInList < idsList.length - 1   ? String(idsList[idxInList + 1]) : null;
+      pos    = idxInList + 1;
+      total  = idsList.length;
+    }
 
     const MAP = {
       showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                        prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
@@ -1224,32 +1239,18 @@ const { id } = Astro.params;
   }
 
   function updateDownloadButton() {
-    const btn     = document.getElementById('download-btn');
-    const label   = document.getElementById('dl-label');
-    const note    = document.getElementById('dl-note');
-    const imgUrl  = photoData?.urls?.original || '';
-    const prevUrl = photoData?.urls?.medium   || imgUrl;
-
+    const btn   = document.getElementById('download-btn');
+    const label = document.getElementById('dl-label');
+    const note  = document.getElementById('dl-note');
     if (!btn || !label || !note) return;
-
-    if (currentRole === 'member' || currentRole === 'admin') {
-      btn.href = imgUrl;
-      btn.classList.remove('preview');
-      label.textContent = 'Download Original';
-      note.textContent  = 'Full resolution · Members only';
-    } else if (currentRole === 'user') {
-      btn.href = prevUrl;
-      btn.classList.add('preview');
-      label.textContent = 'Preview Download';
-      note.textContent  = 'Membership required for full resolution';
-    } else {
-      btn.href = '#';
-      btn.classList.add('preview');
-      btn.setAttribute('download', '');
-      label.textContent = 'Sign in to Download';
-      note.textContent  = '';
-      btn.onclick = (e) => { e.preventDefault(); window.location.href = '/auth/signin'; };
-    }
+    // Downloads are controlled by the photographer — inactive until the
+    // photographer enables public download (feature in planning).
+    btn.href = '#';
+    btn.classList.add('preview');
+    btn.removeAttribute('download');
+    btn.onclick = (e) => e.preventDefault();
+    label.textContent = 'Download';
+    note.textContent  = 'Photographer controls availability';
   }
 
   // ── Reactions ──
@@ -1389,18 +1390,23 @@ const { id } = Astro.params;
 
   // ── Related photos ──
   async function loadRelated() {
+    if (!photoData) return;
     try {
       const res = await fetch(`${API}/gallery/photos/${photoData.uuid}/related/photographer?limit=6`);
       const photos = res.ok ? await res.json() : [];
       const grid = document.getElementById('related-ph-grid');
       if (!grid) return;
       if (!photos.length) {
-        grid.innerHTML = '<div class="related-loading" style="color:rgba(255,255,255,0.12);font-style:italic;">No other photos from this photographer yet.</div>';
+        grid.innerHTML = '<div class="related-loading">No other photos from this photographer yet.</div>';
         return;
       }
+      const phUsername = photoData.photographer?.username || '';
+      const phName     = photoData.photographer?.name    || '';
+      const relIds     = photos.map(p => p.id).join(',');
       grid.innerHTML = photos.map(p => {
-        const url  = p.urls?.medium || p.urls?.original || '';
-        const href = `/showcase/photos/${p.id}`;
+        const url    = p.urls?.medium || p.urls?.original || '';
+        const params = new URLSearchParams({ ctx: 'portfolio', ctxId: phUsername, ctxLabel: phName, ids: relIds });
+        const href   = `/showcase/photos/${p.id}?${params}`;
         return `
           <div class="related-photo-item" onclick="window.location.href='${href}'">
             ${url ? `<img src="${url}" alt="${p.title || ''}" loading="lazy" />` : ''}

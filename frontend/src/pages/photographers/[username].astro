@@ -840,6 +840,7 @@ const { username } = Astro.params;
 const username = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
 
 interface PhotoEntry {
+  id: number;
   uuid: string;
   title: string;
   caption?: string | null;
@@ -1275,15 +1276,15 @@ async function loadPhotos(userId: number) {
         btn.appendChild(img);
         btn.appendChild(overlay);
         btn.addEventListener('click', () => {
-          const prev = allPhotos[currentIdx - 1]?.uuid ?? '';
-          const next = allPhotos[currentIdx + 1]?.uuid ?? '';
+          const prev = allPhotos[currentIdx - 1]?.id;
+          const next = allPhotos[currentIdx + 1]?.id;
           const params = new URLSearchParams({
             ctx: 'portfolio', ctxId: username,
             pos: String(currentIdx + 1), total: String(allPhotos.length),
           });
-          if (prev) params.set('prevId', prev);
-          if (next) params.set('nextId', next);
-          window.location.href = `/showcase/photos/${p.uuid}?${params}`;
+          if (prev) params.set('prevId', String(prev));
+          if (next) params.set('nextId', String(next));
+          window.location.href = `/showcase/photos/${p.id}?${params}`;
         });
         rowEl.appendChild(btn);
       });

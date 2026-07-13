@@ -95,6 +95,19 @@ export class GalleryController {
     return this.gallery.getTags(category);
   }
 
+  /** All public photo IDs — used by getStaticPaths() at build time. */
+  @Get('photos/all-ids')
+  async getAllPhotoIds() {
+    return this.gallery.getAllPhotoIds();
+  }
+
+  /** Single photo by numeric DB ID (short URL support). */
+  @Get('photos/by-id/:id')
+  async getPhotoById(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    const requestingUserId: number | null = req.user?.sub ?? null;
+    return this.gallery.getPhotoByNumericId(requestingUserId, id);
+  }
+
   /** Single photo by UUID (visibility enforced in service). */
   @Get('photos/:uuid')
   async getPhoto(@Param('uuid') uuid: string, @Req() req: any) {

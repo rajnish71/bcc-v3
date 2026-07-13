@@ -14,14 +14,11 @@ import { BUILD_API_URL } from '../../../lib/api';
 export async function getStaticPaths() {
   let photos: any[] = [];
   try {
-    const res = await fetch(`${BUILD_API_URL}/gallery/feed?limit=200`);
-    if (res.ok) {
-      const json = await res.json();
-      photos = json.photos || [];
-    }
+    const res = await fetch(`${BUILD_API_URL}/gallery/photos/all-ids`);
+    if (res.ok) photos = await res.json();
   } catch { /* silent */ }
 
-  const paths = photos.map((p: any) => ({ params: { id: String(p.uuid || p.id) } }));
+  const paths = photos.map((p: any) => ({ params: { id: String(p.id) } }));
   if (!paths.length) paths.push({ params: { id: 'placeholder' } });
   return paths;
 }
@@ -1077,7 +1074,7 @@ const { id } = Astro.params;
     try {
       const t = tok();
       const headers = t ? { 'Authorization': `Bearer ${t}` } : {};
-      const res = await fetch(`${API}/gallery/photos/${photoId}`, { headers });
+      const res = await fetch(`${API}/gallery/photos/by-id/${photoId}`, { headers });
       if (!res.ok) {
         showPhotoError();
         return;
@@ -1307,7 +1304,7 @@ const { id } = Astro.params;
   async function loadReactions() {
     try {
       const headers = tok() ? { 'Authorization': `Bearer ${tok()}` } : {};
-      const res = await fetch(`${API}/gallery/photos/${photoId}/reactions`, { headers });
+      const res = await fetch(`${API}/gallery/photos/${photoData.uuid}/reactions`, { headers });
       if (!res.ok) return;
       reactionsData = await res.json();
       renderReactions();
@@ -1337,7 +1334,7 @@ const { id } = Astro.params;
       return;
     }
     try {
-      const res = await fetch(`${API}/gallery/photos/${photoId}/reactions`, {
+      const res = await fetch(`${API}/gallery/photos/${photoData.uuid}/reactions`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ type }),
@@ -1357,7 +1354,7 @@ const { id } = Astro.params;
   async function loadComments(reset = false) {
     if (reset) { commentOffset = 0; document.getElementById('comment-list').innerHTML = '<div class="comments-loading">Loading comments…</div>'; }
     try {
-      const res = await fetch(`${API}/gallery/photos/${photoId}/comments?limit=${COMMENT_LIMIT}&offset=${commentOffset}`);
+      const res = await fetch(`${API}/gallery/photos/${photoData.uuid}/comments?limit=${COMMENT_LIMIT}&offset=${commentOffset}`);
       if (!res.ok) return;
       const data = await res.json();
       totalComments = data.total;
@@ -1406,7 +1403,7 @@ const { id } = Astro.params;
     if (!ta || !ta.value.trim()) return;
     const body = ta.value.trim();
     try {
-      const res = await fetch(`${API}/gallery/photos/${photoId}/comments`, {
+      const res = await fetch(`${API}/gallery/photos/${photoData.uuid}/comments`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ body }),
@@ -1424,7 +1421,7 @@ const { id } = Astro.params;
   // ── Containers ──
   async function loadContainers() {
     try {
-      const res = await fetch(`${API}/gallery/photos/${photoId}/containers`);
+      const res = await fetch(`${API}/gallery/photos/${photoData.uuid}/containers`);
       const containers = res.ok ? await res.json() : [];
       const el = document.getElementById('containers-list');
       if (!el) return;
@@ -1446,7 +1443,7 @@ const { id } = Astro.params;
   // ── Related photos ──
   async function loadRelated() {
     try {
-      const res = await fetch(`${API}/gallery/photos/${photoId}/related/photographer?limit=6`);
+      const res = await fetch(`${API}/gallery/photos/${photoData.uuid}/related/photographer?limit=6`);
       const photos = res.ok ? await res.json() : [];
       const grid = document.getElementById('related-ph-grid');
       if (!grid) return;
@@ -1456,7 +1453,7 @@ const { id } = Astro.params;
       }
       grid.innerHTML = photos.map(p => {
         const url  = p.urls?.medium || p.urls?.original || '';
-        const href = `/showcase/photos/${p.uuid}`;
+        const href = `/showcase/photos/${p.id}`;
         return `
           <div class="related-photo-item" onclick="window.location.href='${href}'">
             ${url ? `<img src="${url}" alt="${p.title || ''}" loading="lazy" />` : ''}

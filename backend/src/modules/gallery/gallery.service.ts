@@ -75,6 +75,7 @@ function isoOrNull(v: unknown): string | null {
 function formatPhoto(row: Record<string, unknown>) {
   const variants = photoVariants(row.r2_key as string);
   return {
+    id:                Number(row.id),
     uuid:              row.uuid,
     title:             row.title ?? null,
     caption:           row.caption ?? null,
@@ -327,6 +328,51 @@ export class GalleryService {
       .executeTakeFirstOrThrow();
 
     return formatPhoto(updated as Record<string, unknown>);
+  }
+
+  // =========================================================================
+  // Read: all photo IDs (for static site generation)
+  // =========================================================================
+
+  async getAllPhotoIds(): Promise<{ id: number }[]> {
+    const rows = await db
+      .selectFrom('photos')
+      .where('status', '=', 'ACTIVE')
+      .where('visibility', '=', 'PUBLIC')
+      .select('id')
+      .execute();
+    return rows.map(r => ({ id: Number(r.id) }));
+  }
+
+  // =========================================================================
+  // Read: single photo by numeric ID
+  // =========================================================================
+
+  async getPhotoByNumericId(
+    requestingUserId: number | null,
+    numericId: number,
+  ): Promise<ReturnType<typeof formatPhoto>> {
+    const photo = await db
+      .selectFrom('photos')
+      .leftJoin('users', 'users.id', 'photos.owner_user_id')
+      .where('photos.id', '=', numericId)
+      .where('photos.status', '!=', 'DELETED')
+      .selectAll('photos')
+      .select([
+        'users.full_name as photographer_name',
+        'users.username as photographer_username',
+      ] as any)
+      .executeTakeFirst();
+
+    if (!photo) throw new NotFoundException(`Photo ${numericId} not found.`);
+
+    await this.assertVisibility(
+      requestingUserId,
+      photo.owner_user_id as number,
+      photo.visibility as string,
+    );
+
+    return formatPhoto(photo as Record<string, unknown>);
   }
 
   // =========================================================================

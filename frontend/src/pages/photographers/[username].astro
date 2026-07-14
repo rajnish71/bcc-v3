@@ -1492,7 +1492,7 @@ async function openStory(uuid: string, label: string) {
     const data = await res.json();
     const photos: any[] = data.photos ?? [];
     if (!photos.length) return;
-    const ids = photos.map((p: any) => p.uuid);
+    const ids = photos.map((p: any) => p.id);
     const params = new URLSearchParams({
       ctx: 'collection',
       ctxId: uuid,
@@ -1589,9 +1589,9 @@ function renderProfilePhotoCard(p: any): HTMLElement {
     const params = new URLSearchParams({
       ctx: 'portfolio', ctxId: username,
       ctxLabel: profileDisplayName || username,
-      ids: allPhotos.map(ph => ph.uuid).join(','),
+      ids: allPhotos.map(ph => ph.id).join(','),
     });
-    window.location.href = `/showcase/photos/${p.uuid}?${params}`;
+    window.location.href = `/showcase/photos/${p.id}?${params}`;
   });
 
   return btn;

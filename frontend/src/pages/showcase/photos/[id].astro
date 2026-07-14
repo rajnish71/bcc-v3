@@ -883,7 +883,13 @@ const { id } = Astro.params;
 }
 </style>
 
-<script define:vars={{ photoId: id }}>
+<script define:vars={{ _builtId: id }}>
+  // _builtId is injected at build time per static route. When Nginx serves the
+  // placeholder shell for a photo uploaded after the last build, _builtId is
+  // 'placeholder'. In that case, read the real numeric ID from the URL path.
+  const photoId = (_builtId && _builtId !== 'placeholder')
+    ? _builtId
+    : (window.location.pathname.replace(/\/$/, '').split('/').pop() || _builtId);
   const API = '/api/v1';
   const CANONICAL = `/showcase/photos/${photoId}`;
 

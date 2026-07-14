@@ -153,6 +153,32 @@ export class JournalService {
     };
   }
 
+  // Published posts written by a given author — powers the "Journal articles"
+  // section on a photographer's public profile (item 53). PUBLISHED only.
+  async listByAuthor(authorUserId: number, limit = 12): Promise<{ data: ReturnType<typeof formatList>[]; total: number }> {
+    const cappedLimit = Math.min(limit, 50);
+    const [rows, countRow] = await Promise.all([
+      db
+        .selectFrom('journal_posts')
+        .where('status', '=', 'PUBLISHED')
+        .where('author_user_id', '=', authorUserId)
+        .selectAll()
+        .orderBy('published_at', 'desc')
+        .limit(cappedLimit)
+        .execute(),
+      db
+        .selectFrom('journal_posts')
+        .select((eb) => eb.fn.countAll<number>().as('count'))
+        .where('status', '=', 'PUBLISHED')
+        .where('author_user_id', '=', authorUserId)
+        .executeTakeFirst(),
+    ]);
+    return {
+      data: rows.map(r => formatList(r as Record<string, unknown>)),
+      total: Number(countRow?.count ?? 0),
+    };
+  }
+
   async getPostBySlug(slug: string): Promise<{ data: ReturnType<typeof formatDetail> }> {
     const row = await db
       .selectFrom('journal_posts')

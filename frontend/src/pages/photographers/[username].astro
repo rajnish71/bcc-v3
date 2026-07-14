@@ -85,6 +85,7 @@ const { username } = Astro.params;
       <div class="ph-badges" id="ph-badges">
         <span class="ph-class-badge" id="ph-class-badge" hidden></span>
         <span class="ph-founding-badge" id="ph-founding-badge" hidden>★ FOUNDING MEMBER</span>
+        <span class="ph-recognition-badge" id="ph-recognition-badge" hidden></span>
       </div>
     </div>
 
@@ -146,8 +147,14 @@ const { username } = Astro.params;
         </div>
       </aside>
 
-      <!-- Main: bio snippet + photo grid -->
+      <!-- Main: stories + bio snippet + photo grid -->
       <main class="portfolio-main">
+
+        <!-- Stories / Collections (item 53) — near the top of the profile -->
+        <section class="stories-strip" id="stories-strip" hidden>
+          <div class="stories-head">Stories &amp; Collections</div>
+          <div class="stories-row" id="stories-row"></div>
+        </section>
 
         <div class="bio-snippet" id="bio-snippet" hidden>
           <p id="bio-text"></p>
@@ -184,6 +191,12 @@ const { username } = Astro.params;
             <span class="about-since" id="about-since"></span>
           </div>
           <div class="about-social-links" id="about-social-links" hidden></div>
+        </div>
+
+        <!-- Journal articles by this photographer (item 53) -->
+        <div class="about-card" id="about-journal-card" hidden>
+          <div class="about-card-head">From the Journal</div>
+          <div class="about-journal" id="about-journal"></div>
         </div>
 
       </div>
@@ -254,13 +267,18 @@ const { username } = Astro.params;
 
 <style>
 /* ── Cover Banner ────────────────────────────────────────────────────────── */
+/* Standardised 16:5 banner (item 48). Fixed aspect ratio, never cropped
+   vertically — the whole cover image stays visible (object-fit:contain),
+   letterboxed against the dark surface. Capped to the content container on
+   desktop so ultrawide viewports don't produce excessive letterboxing. */
 .cover-banner {
   width: 100%;
-  height: 400px;
+  max-width: 1140px;
+  margin: var(--nav-h, 64px) auto 0;
+  aspect-ratio: 16 / 5;
   position: relative;
   overflow: hidden;
   background: #1A1614;
-  margin-top: var(--nav-h, 64px);
 }
 .cover-default {
   width: 100%;
@@ -274,7 +292,7 @@ const { username } = Astro.params;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* ── Profile Hero ────────────────────────────────────────────────────────── */
@@ -384,6 +402,19 @@ const { username } = Astro.params;
   background: #141210;
   border: 1px solid #C9A961;
   padding: 4px 12px;
+}
+.ph-recognition-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #A8843C;
+  background: #F4F0E8;
+  border: 1px solid #C9A961;
+  padding: 4px 10px;
 }
 
 /* Stats */
@@ -558,6 +589,101 @@ const { username } = Astro.params;
 }
 .bio-more-link:hover { text-decoration: underline; }
 
+/* ── Stories / Collections strip (item 53) ───────────────────────────────── */
+.stories-strip { margin-bottom: 20px; }
+.stories-head {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #A8843C;
+  margin-bottom: 12px;
+}
+.stories-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+}
+.story-card {
+  flex: 0 0 auto;
+  width: 200px;
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.story-card:hover { border-color: #C9A961; transform: translateY(-2px); }
+.story-cover {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #241E1A repeating-linear-gradient(135deg, #2A2420 0, #2A2420 20px, #241E1A 20px, #241E1A 40px);
+  overflow: hidden;
+}
+.story-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.story-body { padding: 10px 12px 12px; }
+.story-kind {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #A8843C;
+  background: #F4F0E8;
+  border: 1px solid #E7E1D6;
+  padding: 2px 7px;
+  margin-bottom: 6px;
+}
+.story-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #141210;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.story-count {
+  font-size: 11px;
+  color: #8B8378;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Journal articles on profile (item 53) ───────────────────────────────── */
+.about-journal { display: flex; flex-direction: column; gap: 12px; }
+.about-journal-item {
+  display: flex;
+  gap: 12px;
+  text-decoration: none;
+  border-bottom: 1px solid #F0EBE0;
+  padding-bottom: 12px;
+}
+.about-journal-item:last-child { border-bottom: none; padding-bottom: 0; }
+.about-journal-thumb {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  background: #F4F0E8;
+}
+.about-journal-meta { min-width: 0; }
+.about-journal-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #141210;
+  line-height: 1.4;
+  margin-bottom: 3px;
+}
+.about-journal-item:hover .about-journal-title { color: #A8843C; }
+.about-journal-date {
+  font-size: 11px;
+  color: #8B8378;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 .photo-grid-header {
   display: flex;
   align-items: center;
@@ -586,6 +712,8 @@ const { username } = Astro.params;
   border: 1px solid #E7E1D6;
 }
 
+/* Photo card hover — mirrors the homepage gallery-wall effect (item 49):
+   dark overlay fade-in, viewfinder corner brackets, caption slide-up. */
 .profile-photo-card {
   position: relative;
   overflow: hidden;
@@ -601,26 +729,68 @@ const { username } = Astro.params;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.profile-photo-card:hover .profile-photo-img { transform: scale(1.03); }
-.profile-photo-overlay {
+.profile-photo-card:hover .profile-photo-img { transform: scale(1.04); }
+
+/* Dark overlay on hover */
+.profile-photo-card::before {
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
-  display: flex;
-  align-items: flex-end;
-  padding: 10px 12px;
+  background: rgba(20, 18, 16, 0.45);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.25s;
+  z-index: 1;
+  pointer-events: none;
 }
-.profile-photo-card:hover .profile-photo-overlay { opacity: 1; }
+.profile-photo-card:hover::before { opacity: 1; }
+
+/* Viewfinder corner brackets */
+.pf-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+  z-index: 2;
+}
+.pf-corner.tl { top: 10px; left: 10px; border-top: 2px solid #FFFFFF; border-left: 2px solid #FFFFFF; }
+.pf-corner.tr { top: 10px; right: 10px; border-top: 2px solid #FFFFFF; border-right: 2px solid #FFFFFF; }
+.pf-corner.bl { bottom: 10px; left: 10px; border-bottom: 2px solid #FFFFFF; border-left: 2px solid #FFFFFF; }
+.pf-corner.br { bottom: 10px; right: 10px; border-bottom: 2px solid #FFFFFF; border-right: 2px solid #FFFFFF; }
+.profile-photo-card:hover .pf-corner { opacity: 1; }
+
+/* Caption slides up on hover */
+.profile-photo-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 12px;
+  background: rgba(20, 18, 16, 0.65);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.25s, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 3;
+}
+.profile-photo-card:hover .profile-photo-overlay { opacity: 1; transform: translateY(0); }
 .profile-photo-title {
   font-family: 'Outfit', sans-serif;
   font-size: 12px;
   font-weight: 600;
   color: #FFFFFF;
   line-height: 1.3;
+}
+.profile-photo-cap {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ── ABOUT TAB ───────────────────────────────────────────────────────────── */
@@ -761,6 +931,11 @@ const { username } = Astro.params;
 }
 .about-award-year { font-size: 11px; color: #8B8378; }
 .about-award-desc { font-size: 12px; color: #57514B; line-height: 1.6; margin-top: 4px; }
+.about-awards-html { font-size: 13px; line-height: 1.8; color: #37322C; }
+.about-awards-html :is(ul, ol) { padding-left: 18px; margin: 0; }
+.about-awards-html li { margin-bottom: 4px; }
+.about-awards-html p { margin: 0 0 8px; }
+.about-awards-html strong { color: #141210; }
 
 /* Photo titles */
 .about-titles { display: flex; flex-direction: column; gap: 8px; }
@@ -816,7 +991,6 @@ const { username } = Astro.params;
 @media (max-width: 768px) {
   .ph-inner { padding: 0 16px 24px; gap: 12px; }
   .ph-name { font-size: 24px; }
-  .cover-banner { height: 240px; }
   .ph-avatar { width: 96px; height: 96px; }
   .ph-avatar-wrap { margin-top: -48px; }
   .ph-avatar-initials { font-size: 24px; }
@@ -1022,6 +1196,12 @@ async function loadProfile() {
     if (fb) fb.hidden = false;
   }
 
+  // Recognition badge (Senior / Honorary member) — migrated field, previously a UI gap
+  if (profile.recognition && profile.recognition.label) {
+    const rb = document.getElementById('ph-recognition-badge');
+    if (rb) { rb.textContent = `★ ${profile.recognition.label}`; rb.hidden = false; }
+  }
+
   // Photo count
   setTxt('ph-photo-count', String(profile.photoCount ?? 0));
 
@@ -1143,6 +1323,13 @@ async function loadProfile() {
         </div>
       `).join('');
     }
+  } else if (profile.awardsHtml && String(profile.awardsHtml).trim()) {
+    // Fallback: legacy members whose awards were migrated only as rich-text
+    // (users.awards_html) with no structured user_awards rows.
+    const card = document.getElementById('about-awards-card');
+    const el = document.getElementById('about-awards');
+    if (card) card.hidden = false;
+    if (el) el.innerHTML = `<div class="about-awards-html">${profile.awardsHtml}</div>`;
   }
 
   // Photography society titles in About rail
@@ -1198,8 +1385,108 @@ async function loadProfile() {
     if (el) el.innerHTML = expertise.map(g => `<span class="about-genre-tag">${esc(g)}</span>`).join('');
   }
 
+  // Stories / Collections + Journal articles (item 53) — non-blocking
+  loadStories(profile.id).catch(() => {});
+  loadJournal(profile.id).catch(() => {});
+
   // Now load photos
   await loadPhotos(profile.id);
+}
+
+// ── Stories / Collections (item 53) ────────────────────────────────────────
+async function loadStories(userId: number) {
+  const res = await fetch(`/api/v1/gallery/albums/user/${userId}`);
+  if (!res.ok) return;
+  const albums = await res.json();
+  const list: any[] = Array.isArray(albums) ? albums.filter((a: any) => (a.photo_count ?? 0) > 0) : [];
+  if (!list.length) return;
+
+  const strip = document.getElementById('stories-strip');
+  const row = document.getElementById('stories-row');
+  if (!strip || !row) return;
+  strip.hidden = false;
+  row.innerHTML = '';
+
+  list.forEach((a: any) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'story-card';
+
+    const cover = document.createElement('div');
+    cover.className = 'story-cover';
+    if (a.cover_image_url) {
+      const img = document.createElement('img');
+      img.src = a.cover_image_url;
+      img.alt = a.title ?? 'Collection';
+      img.loading = 'lazy';
+      cover.appendChild(img);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'story-body';
+    if (a.kind === 'STORY') {
+      const kindBadge = document.createElement('span');
+      kindBadge.className = 'story-kind';
+      kindBadge.textContent = 'Story';
+      body.appendChild(kindBadge);
+    }
+    const t = document.createElement('div');
+    t.className = 'story-title';
+    t.textContent = a.title ?? 'Untitled';
+    const c = document.createElement('div');
+    c.className = 'story-count';
+    c.textContent = `${a.photo_count} ${a.photo_count === 1 ? 'photo' : 'photos'}`;
+    body.appendChild(t);
+    body.appendChild(c);
+
+    card.appendChild(cover);
+    card.appendChild(body);
+    card.addEventListener('click', () => openStory(a.uuid, a.title));
+    row.appendChild(card);
+  });
+}
+
+async function openStory(uuid: string, label: string) {
+  try {
+    const res = await fetch(`/api/v1/gallery/albums/${uuid}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const photos: any[] = data.photos ?? [];
+    if (!photos.length) return;
+    const ids = photos.map((p: any) => p.id);
+    const params = new URLSearchParams({
+      ctx: 'collection',
+      ctxId: uuid,
+      ctxLabel: label || 'Collection',
+      ids: ids.join(','),
+    });
+    window.location.href = `/showcase/photos/${ids[0]}?${params}`;
+  } catch { /* ignore */ }
+}
+
+// ── Journal articles by this photographer (item 53) ────────────────────────
+async function loadJournal(userId: number) {
+  const res = await fetch(`/api/v1/journal/author/${userId}?limit=8`);
+  if (!res.ok) return;
+  const json = await res.json();
+  const posts: any[] = Array.isArray(json.data) ? json.data : [];
+  if (!posts.length) return;
+
+  const card = document.getElementById('about-journal-card');
+  const el = document.getElementById('about-journal');
+  if (!card || !el) return;
+  card.hidden = false;
+  el.innerHTML = posts.map((p: any) => {
+    const date = p.pubDate ? new Date(p.pubDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '';
+    const thumb = p.heroImage ? `<img class="about-journal-thumb" src="${esc(p.heroImage)}" alt="" loading="lazy" />` : '';
+    return `<a class="about-journal-item" href="/journal/${esc(p.slug ?? '')}/">
+        ${thumb}
+        <div class="about-journal-meta">
+          <div class="about-journal-title">${esc(p.title ?? 'Untitled')}</div>
+          <div class="about-journal-date">${esc(date)}</div>
+        </div>
+      </a>`;
+  }).join('');
 }
 
 // ── Load photos — justified gallery with SEO alt-text ─────────────────────
@@ -1266,12 +1553,36 @@ async function loadPhotos(userId: number) {
         img.loading = currentIdx < 6 ? 'eager' : 'lazy';
         img.className = 'profile-photo-img';
 
+        // Viewfinder corner brackets (match homepage gallery wall)
+        ['tl', 'tr', 'bl', 'br'].forEach(c => {
+          const corner = document.createElement('div');
+          corner.className = `pf-corner ${c}`;
+          btn.appendChild(corner);
+        });
+
+        // Caption overlay — photograph title with caption as a sub-line
         const overlay = document.createElement('div');
         overlay.className = 'profile-photo-overlay';
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'profile-photo-title';
-        titleSpan.textContent = p.title ?? '';
-        overlay.appendChild(titleSpan);
+        const titleText = (p.title ?? '').trim();
+        const capText = (p.caption ?? '').trim();
+        if (titleText) {
+          const titleSpan = document.createElement('div');
+          titleSpan.className = 'profile-photo-title';
+          titleSpan.textContent = titleText;
+          overlay.appendChild(titleSpan);
+        }
+        if (capText && capText !== titleText) {
+          const capSpan = document.createElement('div');
+          capSpan.className = 'profile-photo-cap';
+          capSpan.textContent = capText;
+          overlay.appendChild(capSpan);
+        }
+        if (!titleText && !capText) {
+          const titleSpan = document.createElement('div');
+          titleSpan.className = 'profile-photo-title';
+          titleSpan.textContent = 'Untitled';
+          overlay.appendChild(titleSpan);
+        }
 
         btn.appendChild(img);
         btn.appendChild(overlay);

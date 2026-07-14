@@ -8,12 +8,14 @@ export interface CreateAlbumDto {
   title:       string;
   description?: string;
   visibility?: 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE';
+  kind?:       'COLLECTION' | 'STORY';
 }
 
 export interface UpdateAlbumDto {
   title?:        string;
   description?:  string;
   visibility?:   'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE';
+  kind?:         'COLLECTION' | 'STORY';
   cover_photo_uuid?: string;  // UUID of a photo already in this album
 }
 

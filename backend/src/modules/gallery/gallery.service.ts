@@ -123,10 +123,12 @@ function formatAlbum(row: Record<string, unknown>) {
     description:      row.description ?? null,
     visibility:       row.visibility,
     album_type:       row.album_type,
+    kind:             row.kind ?? 'COLLECTION',
     source_ref_id:    row.source_ref_id ?? null,
     sort_order:       row.sort_order,
     owner_user_id:    row.owner_user_id,
     cover_photo_uuid: row.cover_photo_uuid ?? null,
+    cover_image_url:  row.cover_image_url ?? null,
     photo_count:      row.photo_count ?? 0,
     created_at:       isoOrNull(row.created_at),
     updated_at:       isoOrNull(row.updated_at),
@@ -620,6 +622,7 @@ export class GalleryService {
         description:   dto.description ?? null,
         visibility:    dto.visibility ?? 'MEMBERS_ONLY',
         album_type:    'MEMBER_CREATED',
+        kind:          dto.kind ?? 'COLLECTION',
         sort_order:    0,
         created_at:    now,
         updated_at:    now,
@@ -673,18 +676,29 @@ export class GalleryService {
           .select(eb => eb.fn.count<number>('id').as('cnt'))
           .executeTakeFirst();
         let coverUuid: string | null = null;
-        if (album.cover_photo_id) {
-          const cover = await db
-            .selectFrom('photos')
-            .where('id', '=', album.cover_photo_id as number)
-            .select('uuid')
-            .executeTakeFirst();
-          coverUuid = cover?.uuid ?? null;
+        let coverImageUrl: string | null = null;
+        // Fall back to the most recent photo in the album when no explicit
+        // cover is set, so Stories/Collections always show a thumbnail.
+        const coverPhoto = await db
+          .selectFrom('photos')
+          .$if(!!album.cover_photo_id, qb => qb.where('id', '=', album.cover_photo_id as number))
+          .$if(!album.cover_photo_id, qb => qb
+            .innerJoin('photo_album_items', 'photo_album_items.photo_id', 'photos.id')
+            .where('photo_album_items.album_id', '=', album.id as number)
+            .where('photos.status', '=', 'ACTIVE')
+            .orderBy('photo_album_items.sort_order', 'asc')
+          )
+          .select(['photos.uuid', 'photos.r2_key'])
+          .executeTakeFirst();
+        if (coverPhoto) {
+          coverUuid = coverPhoto.uuid;
+          coverImageUrl = photoVariants(coverPhoto.r2_key).medium ?? null;
         }
         return formatAlbum({
           ...(album as Record<string, unknown>),
           photo_count:      Number(count?.cnt ?? 0),
           cover_photo_uuid: coverUuid,
+          cover_image_url:  coverImageUrl,
         });
       }),
     );
@@ -778,6 +792,7 @@ export class GalleryService {
     if (dto.title        !== undefined) updates.title       = dto.title;
     if (dto.description  !== undefined) updates.description = dto.description;
     if (dto.visibility   !== undefined) updates.visibility  = dto.visibility;
+    if (dto.kind         !== undefined) updates.kind        = dto.kind;
 
     // Resolve cover photo UUID -> numeric id
     if (dto.cover_photo_uuid !== undefined) {

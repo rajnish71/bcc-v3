@@ -77,6 +77,7 @@ export class HubProfileService {
       .selectFrom('memberships')
       .leftJoin('membership_classes', 'membership_classes.id', 'memberships.membership_class_id')
       .select([
+        'memberships.id as membership_id',
         'memberships.membership_number',
         'memberships.activated_at',
         'membership_classes.name as class_name',
@@ -85,6 +86,16 @@ export class HubProfileService {
       .where('memberships.user_id', '=', userId)
       .where('memberships.lifecycle_state', '=', 'ACTIVE')
       .executeTakeFirst();
+
+    // MEM-007 §6 temporary onboarding identifier (item 46). Displayed only
+    // until permanent numbering is run; NOT persisted here and possessing no
+    // constitutional authority. Format matches
+    // MembershipNumberingService.issueTemporaryIdentifier (BCCTemp + membership id).
+    const temporaryNumber = membership
+      ? `BCCTemp${String(membership.membership_id).padStart(5, '0')}`
+      : null;
+    const isTemporaryNumber = !!membership && !membership.membership_number;
+    const membershipNumberDisplay = membership?.membership_number ?? temporaryNumber;
 
     // Social handles
     const socialRows = await db
@@ -138,6 +149,14 @@ export class HubProfileService {
       .where('status', '=', 'ATTENDED')
       .executeTakeFirst();
 
+    // Awards / distinctions count — live from user_awards (item 45: no
+    // hardcoded statistics). Labelled "Contest Awards" on the profile card.
+    const awardsCount = await db
+      .selectFrom('user_awards')
+      .select(({ fn }) => [fn.countAll<number>().as('count')])
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+
     // Assemble distinctions
     const groupByCode = (code: string) =>
       titleRows
@@ -161,6 +180,8 @@ export class HubProfileService {
       coverUrl: cover?.imagekit_url ?? null,
       membershipTier: membership?.class_code ?? null,
       membershipNumber: membership?.membership_number ?? null,
+      membershipNumberDisplay,
+      isTemporaryNumber,
       memberSince: membership?.activated_at ?? null,
 
       // Personal — name fields read-only
@@ -219,15 +240,23 @@ export class HubProfileService {
         volunteer: roleNames.has('volunteer'),
       },
 
-      // Stats
-      stats: {
-        memberSince: membership?.activated_at ?? null,
-        membershipClass: membership?.class_name ?? null,
-        portfolioCount: Number(photoCount?.count ?? 0),
-        eventAttendance: Number(eventCount?.count ?? 0),
-        contestAwards: 0,
-        activityScore: 0,
-      },
+      // Stats — all derived live (item 45). contestAwards counts user_awards
+      // rows. activityScore is an interim composite of concrete activity
+      // signals (portfolio + attended events + awards) pending the Phase 3
+      // engagement subsystem that will define a canonical score.
+      stats: (() => {
+        const portfolioCount = Number(photoCount?.count ?? 0);
+        const eventAttendance = Number(eventCount?.count ?? 0);
+        const contestAwards = Number(awardsCount?.count ?? 0);
+        return {
+          memberSince: membership?.activated_at ?? null,
+          membershipClass: membership?.class_name ?? null,
+          portfolioCount,
+          eventAttendance,
+          contestAwards,
+          activityScore: portfolioCount + eventAttendance * 2 + contestAwards * 3,
+        };
+      })(),
     };
   }
 

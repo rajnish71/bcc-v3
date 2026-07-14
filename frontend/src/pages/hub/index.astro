@@ -1044,6 +1044,7 @@ async function loadMembership(): Promise<void> {
   }
 
   const memberships = await res.json() as Array<{
+    id?: number;
     lifecycle_state?: string;
     membership_number?: string | null;
     membership_class_id?: number | null;
@@ -1070,8 +1071,11 @@ async function loadMembership(): Promise<void> {
   show('membership-dark-card');
   setText('mcard-class', classLabel.toUpperCase());
 
+  // MEM-007 §6 temporary identifier (item 46): show BCCTempXXXXX until a
+  // permanent number is allocated. Display-only, derived from membership id.
+  const tempNumber = active.id != null ? `BCCTemp${String(active.id).padStart(5, '0')}` : 'Pending';
   const numEl = document.getElementById('mcard-number');
-  if (numEl) numEl.textContent = active.membership_number ?? 'Pending';
+  if (numEl) numEl.textContent = active.membership_number ?? tempNumber;
 
   // Expiry / renewal
   const expiryEl      = document.getElementById('mcard-expiry');

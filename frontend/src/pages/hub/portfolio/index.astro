@@ -39,6 +39,17 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       </div>
     </header>
 
+    <!-- Collections & Stories (item 53) -->
+    <section class="collections-section" id="collections-section">
+      <div class="collections-head">
+        <div class="collections-title">Collections &amp; Stories</div>
+        <button class="btn-collection-new" id="new-collection-btn" type="button">+ New</button>
+      </div>
+      <div class="collections-hint">Group photographs into a Collection or tell a Story — public ones appear near the top of your photographer profile. Photographs are referenced, never moved or copied.</div>
+      <div class="collections-row" id="collections-row"></div>
+      <div class="collections-empty" id="collections-empty" hidden>No collections yet.</div>
+    </section>
+
     <!-- Toolbar — hidden until photos load -->
     <div class="port-toolbar" id="port-toolbar" hidden>
       <div class="toolbar-row toolbar-row--search">
@@ -96,7 +107,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       <div class="sel-bar-actions">
         <button class="sel-action-btn" id="sel-feature-btn" type="button">Feature</button>
         <button class="sel-action-btn" id="sel-visibility-btn" type="button">Visibility</button>
-        <button class="sel-action-btn" id="sel-move-btn" type="button">Move</button>
+        <button class="sel-action-btn" id="sel-move-btn" type="button">Add to Collection</button>
         <button class="sel-action-btn sel-action-btn--danger" id="sel-delete-btn" type="button">Delete</button>
       </div>
     </div>
@@ -232,6 +243,75 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       <div class="modal-actions">
         <button class="btn-danger" id="confirm-yes-btn" type="button">Yes, delete</button>
         <button class="btn-ghost" id="confirm-no-btn" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Collection create / edit dialog (item 53) -->
+<div class="modal-backdrop" id="collection-backdrop" hidden aria-modal="true" role="dialog" aria-label="Collection">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="collection-modal-title">New Collection</div>
+      <button class="modal-close" id="collection-cancel-x" aria-label="Cancel" type="button">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <line x1="2" y1="2" x2="12" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="12" y1="2" x2="2" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="cform-field">
+        <label class="cform-label" for="collection-title-input">Title</label>
+        <input class="cform-input" id="collection-title-input" type="text" maxlength="120" placeholder="e.g. Monsoon in Bhopal" />
+      </div>
+      <div class="cform-field">
+        <label class="cform-label" for="collection-desc-input">Description <span class="cform-opt">(optional)</span></label>
+        <textarea class="cform-textarea" id="collection-desc-input" maxlength="500" rows="3" placeholder="A short line about this collection…"></textarea>
+      </div>
+      <div class="cform-row">
+        <div class="cform-field">
+          <label class="cform-label" for="collection-kind-input">Type</label>
+          <select class="cform-input" id="collection-kind-input">
+            <option value="COLLECTION">Collection</option>
+            <option value="STORY">Story</option>
+          </select>
+        </div>
+        <div class="cform-field">
+          <label class="cform-label" for="collection-vis-input">Visibility</label>
+          <select class="cform-input" id="collection-vis-input">
+            <option value="PUBLIC">Public</option>
+            <option value="MEMBERS_ONLY">Members only</option>
+            <option value="PRIVATE">Private</option>
+          </select>
+        </div>
+      </div>
+      <div class="cform-error" id="collection-error" hidden></div>
+      <div class="modal-actions">
+        <button class="btn-gold-cta" id="collection-save-btn" type="button">Create</button>
+        <button class="btn-ghost" id="collection-cancel-btn" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add-to-collection dialog (item 53) -->
+<div class="modal-backdrop" id="addto-backdrop" hidden aria-modal="true" role="dialog" aria-label="Add to collection">
+  <div class="modal modal--sm">
+    <div class="modal-header">
+      <div class="modal-title">Add to Collection</div>
+      <button class="modal-close" id="addto-cancel-x" aria-label="Cancel" type="button">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <line x1="2" y1="2" x2="12" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="12" y1="2" x2="2" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-text" id="addto-text">Add the selected photographs to:</p>
+      <div class="addto-list" id="addto-list"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="addto-cancel-btn" type="button">Cancel</button>
       </div>
     </div>
   </div>
@@ -721,6 +801,73 @@ import HubLayout from '../../../layouts/HubLayout.astro';
    and toolbar are all rendered on page load before any user interaction.
 ───────────────────────────────────────────────────────────────────────── */
 .modal-backdrop[hidden] { display: none; }
+
+/* ── Collections & Stories (item 53) ─────────────────────────────────────── */
+.collections-section { margin-bottom: 28px; }
+.collections-head {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+}
+.collections-title {
+  font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #141210;
+}
+.btn-collection-new {
+  font-size: 13px; font-weight: 600; color: #A8843C; background: none;
+  border: 1px solid #C9A961; padding: 6px 14px; cursor: pointer; font-family: var(--font-body);
+  transition: background 0.15s, color 0.15s;
+}
+.btn-collection-new:hover { background: #C9A961; color: #fff; }
+.collections-hint { font-size: 12px; color: #8B8378; line-height: 1.5; margin-bottom: 14px; max-width: 720px; }
+.collections-empty { font-size: 13px; color: #8B8378; font-style: italic; }
+.collections-row { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 6px; }
+.collection-card {
+  flex: 0 0 auto; width: 210px; background: #fff; border: 1px solid #E7E1D6; position: relative;
+}
+.collection-cover {
+  width: 100%; aspect-ratio: 16 / 10; overflow: hidden;
+  background: #241E1A repeating-linear-gradient(135deg, #2A2420 0, #2A2420 18px, #241E1A 18px, #241E1A 36px);
+}
+.collection-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.collection-body { padding: 10px 12px 12px; }
+.collection-kind {
+  display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #A8843C; background: #F4F0E8; border: 1px solid #E7E1D6; padding: 2px 7px; margin-bottom: 6px;
+}
+.collection-name { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: #141210; line-height: 1.3; margin-bottom: 4px; }
+.collection-meta { font-size: 11px; color: #8B8378; font-family: var(--font-mono); }
+.collection-vis { text-transform: capitalize; }
+.collection-actions { display: flex; gap: 8px; margin-top: 10px; }
+.collection-action {
+  font-size: 12px; color: #57514B; background: none; border: none; cursor: pointer;
+  padding: 0; font-family: var(--font-body); text-decoration: underline;
+}
+.collection-action:hover { color: #A8843C; }
+.collection-action--danger:hover { color: #882828; }
+
+/* Collection form */
+.cform-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.cform-row { display: flex; gap: 14px; }
+.cform-row .cform-field { flex: 1; }
+.cform-label { font-size: 12px; font-weight: 600; color: #57514B; font-family: var(--font-body); }
+.cform-opt { font-weight: 400; color: #8B8378; }
+.cform-input, .cform-textarea {
+  font-family: var(--font-body); font-size: 14px; color: #141210; border: 1px solid #D8D2C6;
+  padding: 9px 12px; background: #fff; width: 100%; box-sizing: border-box;
+}
+.cform-input:focus, .cform-textarea:focus { outline: none; border-color: #C9A961; box-shadow: 0 0 0 3px rgba(201,169,97,0.12); }
+.cform-textarea { resize: vertical; }
+.cform-error { font-size: 12px; color: #882828; margin-bottom: 10px; }
+
+/* Add-to-collection list */
+.addto-list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; max-height: 260px; overflow-y: auto; }
+.addto-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 1px solid #E7E1D6; padding: 10px 12px; cursor: pointer; background: #fff;
+  font-family: var(--font-body); text-align: left; width: 100%;
+}
+.addto-item:hover { border-color: #C9A961; background: #FAF8F4; }
+.addto-item-name { font-size: 13px; font-weight: 600; color: #141210; }
+.addto-item-meta { font-size: 11px; color: #8B8378; font-family: var(--font-mono); }
+.addto-empty { font-size: 13px; color: #8B8378; font-style: italic; }
 .insp-panel[hidden]     { display: none; }
 .selection-bar[hidden]  { display: none; }
 .port-toolbar[hidden]   { display: none; }
@@ -1265,7 +1412,166 @@ async function loadProfileLink() {
   } catch { /* non-critical */ }
 }
 
+/* ── Collections & Stories (item 53) ─────────────────────────────────────── */
+interface CollectionItem {
+  uuid: string; title: string; description: string | null;
+  visibility: string; kind: string; photo_count: number; cover_image_url: string | null;
+}
+let myCollections: CollectionItem[] = [];
+let editingCollectionUuid: string | null = null;
+
+async function loadCollections() {
+  try {
+    const res = await apiFetch(`${API}/gallery/albums`);
+    if (!res.ok) return;
+    const data = await res.json();
+    myCollections = Array.isArray(data) ? data : [];
+    renderCollections();
+  } catch { /* non-critical */ }
+}
+
+function renderCollections() {
+  const row = document.getElementById('collections-row')!;
+  const empty = document.getElementById('collections-empty')!;
+  row.innerHTML = '';
+  if (!myCollections.length) { empty.hidden = false; return; }
+  empty.hidden = true;
+  myCollections.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'collection-card';
+    const visLabel = c.visibility.toLowerCase().replace(/_/g, ' ');
+    card.innerHTML = `
+      <div class="collection-cover">${c.cover_image_url ? `<img src="${c.cover_image_url}" alt="" loading="lazy"/>` : ''}</div>
+      <div class="collection-body">
+        <span class="collection-kind">${c.kind === 'STORY' ? 'Story' : 'Collection'}</span>
+        <div class="collection-name"></div>
+        <div class="collection-meta">${c.photo_count} ${c.photo_count === 1 ? 'photo' : 'photos'} · <span class="collection-vis"></span></div>
+        <div class="collection-actions">
+          <button class="collection-action" data-edit="${c.uuid}" type="button">Edit</button>
+          <button class="collection-action collection-action--danger" data-del="${c.uuid}" type="button">Delete</button>
+        </div>
+      </div>`;
+    (card.querySelector('.collection-name') as HTMLElement).textContent = c.title;
+    (card.querySelector('.collection-vis') as HTMLElement).textContent = visLabel;
+    row.appendChild(card);
+  });
+  row.querySelectorAll<HTMLButtonElement>('[data-edit]').forEach(b =>
+    b.addEventListener('click', () => openCollectionModal(b.dataset.edit!)));
+  row.querySelectorAll<HTMLButtonElement>('[data-del]').forEach(b =>
+    b.addEventListener('click', () => deleteCollection(b.dataset.del!)));
+}
+
+function openCollectionModal(uuid?: string) {
+  editingCollectionUuid = uuid ?? null;
+  const titleInput = document.getElementById('collection-title-input') as HTMLInputElement;
+  const descInput  = document.getElementById('collection-desc-input') as HTMLTextAreaElement;
+  const kindInput  = document.getElementById('collection-kind-input') as HTMLSelectElement;
+  const visInput   = document.getElementById('collection-vis-input') as HTMLSelectElement;
+  const errEl      = document.getElementById('collection-error')!;
+  errEl.hidden = true;
+  const saveBtn = document.getElementById('collection-save-btn') as HTMLButtonElement;
+  if (uuid) {
+    const c = myCollections.find(x => x.uuid === uuid);
+    document.getElementById('collection-modal-title')!.textContent = 'Edit Collection';
+    saveBtn.textContent = 'Save';
+    titleInput.value = c?.title ?? '';
+    descInput.value  = c?.description ?? '';
+    kindInput.value  = c?.kind ?? 'COLLECTION';
+    visInput.value   = c?.visibility ?? 'PUBLIC';
+  } else {
+    document.getElementById('collection-modal-title')!.textContent = 'New Collection';
+    saveBtn.textContent = 'Create';
+    titleInput.value = ''; descInput.value = ''; kindInput.value = 'COLLECTION'; visInput.value = 'PUBLIC';
+  }
+  document.getElementById('collection-backdrop')!.hidden = false;
+  titleInput.focus();
+}
+
+function closeCollectionModal() {
+  document.getElementById('collection-backdrop')!.hidden = true;
+  editingCollectionUuid = null;
+}
+
+async function saveCollection() {
+  const title       = (document.getElementById('collection-title-input') as HTMLInputElement).value.trim();
+  const description = (document.getElementById('collection-desc-input') as HTMLTextAreaElement).value.trim();
+  const kind        = (document.getElementById('collection-kind-input') as HTMLSelectElement).value;
+  const visibility  = (document.getElementById('collection-vis-input') as HTMLSelectElement).value;
+  const errEl       = document.getElementById('collection-error')!;
+  if (!title) { errEl.textContent = 'Please enter a title.'; errEl.hidden = false; return; }
+  const btn = document.getElementById('collection-save-btn') as HTMLButtonElement;
+  btn.disabled = true;
+  try {
+    const body = JSON.stringify({ title, description: description || undefined, kind, visibility });
+    const res = editingCollectionUuid
+      ? await apiFetch(`${API}/gallery/albums/${editingCollectionUuid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body })
+      : await apiFetch(`${API}/gallery/albums`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+    if (!res.ok) { errEl.textContent = 'Could not save. Please try again.'; errEl.hidden = false; return; }
+    closeCollectionModal();
+    await loadCollections();
+  } catch {
+    errEl.textContent = 'Network error. Please try again.'; errEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteCollection(uuid: string) {
+  const c = myCollections.find(x => x.uuid === uuid);
+  if (!confirm(`Delete "${c?.title ?? 'this collection'}"?\nYour photographs are not deleted — only the collection wrapper is removed.`)) return;
+  const res = await apiFetch(`${API}/gallery/albums/${uuid}`, { method: 'DELETE' });
+  if (res.ok) { myCollections = myCollections.filter(x => x.uuid !== uuid); renderCollections(); }
+}
+
+/* Add selected photos to a collection (repurposed "Add to Collection" selection action) */
+function openAddToCollection() {
+  const list = document.getElementById('addto-list')!;
+  document.getElementById('addto-text')!.textContent =
+    `Add ${selectedUuids.size} selected photograph${selectedUuids.size === 1 ? '' : 's'} to:`;
+  list.innerHTML = '';
+  if (!myCollections.length) {
+    list.innerHTML = '<div class="addto-empty">You have no collections yet. Create one first with “+ New”.</div>';
+  } else {
+    myCollections.forEach(c => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'addto-item';
+      const name = document.createElement('span'); name.className = 'addto-item-name'; name.textContent = c.title;
+      const meta = document.createElement('span'); meta.className = 'addto-item-meta';
+      meta.textContent = `${c.kind === 'STORY' ? 'Story' : 'Collection'} · ${c.photo_count}`;
+      btn.appendChild(name); btn.appendChild(meta);
+      btn.addEventListener('click', () => addSelectedToCollection(c.uuid));
+      list.appendChild(btn);
+    });
+  }
+  document.getElementById('addto-backdrop')!.hidden = false;
+}
+
+async function addSelectedToCollection(uuid: string) {
+  const uuids = [...selectedUuids];
+  await Promise.all(uuids.map(photoUuid =>
+    apiFetch(`${API}/gallery/albums/${uuid}/photos`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo_uuid: photoUuid }),
+    }).catch(() => null)
+  ));
+  document.getElementById('addto-backdrop')!.hidden = true;
+  clearSelection();
+  await loadCollections();
+}
+
+document.getElementById('new-collection-btn')?.addEventListener('click', () => openCollectionModal());
+document.getElementById('collection-save-btn')?.addEventListener('click', saveCollection);
+document.getElementById('collection-cancel-btn')?.addEventListener('click', closeCollectionModal);
+document.getElementById('collection-cancel-x')?.addEventListener('click', closeCollectionModal);
+document.getElementById('sel-move-btn')?.addEventListener('click', () => {
+  if (selectedUuids.size === 0) return;
+  openAddToCollection();
+});
+document.getElementById('addto-cancel-btn')?.addEventListener('click', () => { document.getElementById('addto-backdrop')!.hidden = true; });
+document.getElementById('addto-cancel-x')?.addEventListener('click', () => { document.getElementById('addto-backdrop')!.hidden = true; });
+
 /* ── Init ────────────────────────────────────────────────────────────────── */
 loadPhotos().catch(() => {});
 loadProfileLink().catch(() => {});
+loadCollections().catch(() => {});
 </script>

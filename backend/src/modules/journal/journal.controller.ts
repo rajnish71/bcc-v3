@@ -62,6 +62,16 @@ export class JournalController {
     });
   }
 
+  /** List PUBLISHED posts by a given author — for the photographer profile
+   *  (item 53). Declared before /:slug so "author" is not treated as a slug. */
+  @Get('author/:userId')
+  async listByAuthor(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('limit') limit?: string,
+  ) {
+    return this.journal.listByAuthor(userId, limit ? parseInt(limit, 10) : 12);
+  }
+
   // =========================================================================
   // ADMIN — declared BEFORE /:slug to prevent routing collision
   // =========================================================================

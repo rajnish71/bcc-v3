@@ -624,9 +624,12 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 /* ── PROFILE HEADER ─────────────────────────────────────────────────────── */
 .ph { background:#fff; border-bottom:1px solid #E7E1D6; position:sticky; top:96px; z-index:50; }
 
-/* Cover */
+/* Cover — standardised 16:5 ratio (item 48). Whole image stays visible
+   (object-fit:contain, letterboxed). Height is capped so the sticky editing
+   header does not grow tall enough to force extra scrolling. */
 .ph-cover {
-  height:160px; width:100%; position:relative; overflow:hidden;
+  width:100%; aspect-ratio:16 / 5; max-height:200px;
+  position:relative; overflow:hidden;
   background:#1A1614;
 }
 .ph-cover-stripe {
@@ -635,7 +638,7 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
     -45deg, #2A2320 0px, #2A2320 10px, #1A1614 10px, #1A1614 20px
   );
 }
-.ph-cover-img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.ph-cover-img { width:100%; height:100%; object-fit:contain; position:absolute; inset:0; }
 .ph-cover-actions {
   position:absolute; top:12px; right:16px;
 }
@@ -739,12 +742,12 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 /* ── SECTIONS ────────────────────────────────────────────────────────────── */
 .profile-body { padding:40px 32px 120px; display:flex; flex-direction:column; gap:0; }
 
-.ps {
-  padding-bottom:40px; margin-bottom:40px;
-  border-bottom:1px solid #F0EBE0;
-  scroll-margin-top:240px;
-}
-.ps:last-child { border-bottom:none; }
+/* Tab-panel model (item 50): only the active section is shown, so each tab
+   displays only its own content and there is no long-scroll between sections.
+   Visual layout/fields/spacing remain per the V6 13 wireframe. */
+.ps { display:none; padding-bottom:8px; }
+.ps.ps--active { display:block; animation:ps-fade 0.18s ease; }
+@keyframes ps-fade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
 .ps-head { margin-bottom:24px; }
 .ps-title {
   font-family:var(--font-display); font-size:18px; font-weight:700;
@@ -832,13 +835,14 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 .ps-avatar-actions { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
 
 .ps-cover-thumb {
-  width:120px; height:64px; overflow:hidden; flex-shrink:0; position:relative;
+  width:160px; aspect-ratio:16 / 5; overflow:hidden; flex-shrink:0; position:relative;
+  background:#1A1614;
 }
 .ps-cover-stripe-sm {
   width:100%; height:100%;
   background:repeating-linear-gradient(-45deg,#2A2320 0,#2A2320 6px,#1A1614 6px,#1A1614 12px);
 }
-.ps-cover-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.ps-cover-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
 
 .ps-url-row {
   display:flex; align-items:center; gap:8px; flex-wrap:wrap;
@@ -1087,13 +1091,13 @@ async function loadProfile() {
   setTxt('ps-avatar-thumb-initials', initials || '?');
   setTxt('ph-name', p.fullName ?? '—');
   setTxt('ph-tier', p.membershipTier ?? '—');
-  setTxt('ph-number', p.membershipNumber ?? '—');
+  setTxt('ph-number', p.membershipNumberDisplay ?? p.membershipNumber ?? '—');
   setTxt('ph-public-link', `v3bcc.bhopal.info/photographers/${p.username ?? ''}`);
   setAttr('ph-public-link', 'href', `/photographers/${p.username ?? ''}/`);
   setTxt('ps-url-value', p.username ?? '—');
   setAttr('ps-url-view', 'href', `/photographers/${p.username ?? ''}/`);
   setTxt('identity-tier', p.membershipTier ?? '—');
-  setTxt('identity-number', p.membershipNumber ?? '—');
+  setTxt('identity-number', p.membershipNumberDisplay ?? p.membershipNumber ?? '—');
 
   // Avatar
   if (p.avatarUrl) {
@@ -1385,29 +1389,19 @@ function showCover(src: string) {
 
 // ── Tab navigation + IntersectionObserver ─────────────────────────────────
 function initTabs() {
-  const tabs = document.querySelectorAll<HTMLButtonElement>('.ph-tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const sectionId = `section-${tab.dataset.section}`;
-      const section = document.getElementById(sectionId);
-      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setActiveTab(tab.dataset.section ?? '');
-    });
+  document.querySelectorAll<HTMLButtonElement>('.ph-tab').forEach(tab => {
+    tab.addEventListener('click', () => showSection(tab.dataset.section ?? 'identity'));
   });
+  // Show the first section on load — tab-panel model (item 50).
+  showSection('identity');
+}
 
-  // IntersectionObserver to update active tab on scroll
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const section = entry.target as HTMLElement;
-        setActiveTab(section.dataset.section ?? '');
-      }
-    });
-  }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
-
-  document.querySelectorAll('.ps[data-section]').forEach(section => {
-    observer.observe(section);
+// Show only the requested section's panel; hide the rest.
+function showSection(sectionKey: string) {
+  document.querySelectorAll<HTMLElement>('.ps[data-section]').forEach(section => {
+    section.classList.toggle('ps--active', section.dataset.section === sectionKey);
   });
+  setActiveTab(sectionKey);
 }
 
 function setActiveTab(sectionKey: string) {

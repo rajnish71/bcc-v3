@@ -770,6 +770,7 @@ export interface PhotoAlbumsTable {
   description:    Nullable<string>;
   cover_photo_id: Nullable<number>;
   album_type:     Generated<AlbumType>;
+  kind:           Generated<'COLLECTION' | 'STORY'>;
   source_ref_id:  Nullable<number>;
   visibility:     Generated<AlbumVisibility>;
   sort_order:     Generated<number>;

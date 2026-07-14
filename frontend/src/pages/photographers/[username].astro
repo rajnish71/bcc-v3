@@ -117,7 +117,7 @@ const { username } = Astro.params;
   <div id="tab-portfolio" class="tab-panel" role="tabpanel">
     <div class="portfolio-layout">
 
-      <!-- Left Rail: Profile at a Glance (sticky) -->
+      <!-- Left Rail: Profile at a Glance (sticky) — V6 05 spec -->
       <aside class="left-rail" id="left-rail">
         <div class="rail-section-head">Profile at a Glance</div>
 
@@ -131,19 +131,35 @@ const { username } = Astro.params;
           <div class="rail-badge-wrap" id="rail-class-badge"></div>
         </div>
 
+        <div class="rail-row" id="rail-primary-genre-row" hidden>
+          <div class="rail-label">Primary Genre</div>
+          <div class="rail-val" id="rail-primary-genre">—</div>
+        </div>
+
+        <div class="rail-row" id="rail-expertise-row" hidden>
+          <div class="rail-label">Areas of Expertise</div>
+          <div class="rail-genres" id="rail-expertise"></div>
+        </div>
+
+        <div class="rail-row" id="rail-favsubjects-row" hidden>
+          <div class="rail-label">Favourite Subject</div>
+          <div class="rail-val" id="rail-favsubjects">—</div>
+        </div>
+
         <div class="rail-row" id="rail-system-row" hidden>
-          <div class="rail-label">Camera System</div>
+          <div class="rail-label">Preferred Camera</div>
           <div class="rail-val" id="rail-camera-system">—</div>
+          <div class="rail-note">Self-declared · unverified</div>
         </div>
 
-        <div class="rail-row" id="rail-genres-row" hidden>
-          <div class="rail-label">Genres</div>
-          <div class="rail-genres" id="rail-genres"></div>
+        <div class="rail-row" id="rail-distinctions-row" hidden>
+          <div class="rail-label">Distinctions &amp; Awards</div>
+          <div class="rail-distinctions" id="rail-distinctions"></div>
         </div>
 
-        <div class="rail-row" id="rail-social-row" hidden>
-          <div class="rail-label">Links</div>
-          <div class="rail-social" id="rail-social"></div>
+        <div class="rail-row" id="rail-gear-row" hidden>
+          <div class="rail-label">Equipment Bag</div>
+          <div class="rail-gear" id="rail-gear"></div>
         </div>
       </aside>
 
@@ -561,6 +577,15 @@ const { username } = Astro.params;
 }
 .rail-social-link:hover { border-color: #C9A961; color: #A8843C; }
 .rail-social-link svg { display: block; }
+.rail-note { font-size: 11px; color: #8B8378; margin-top: 2px; }
+.rail-distinctions { font-size: 12px; line-height: 1.8; color: #57514B; }
+.rail-distinctions :is(ul, ol) { padding-left: 16px; margin: 0; }
+.rail-distinctions li { margin-bottom: 2px; }
+.rail-distinctions p { margin: 0 0 6px; }
+.rail-gear-group { margin-bottom: 10px; }
+.rail-gear-group:last-child { margin-bottom: 0; }
+.rail-gear-label { font-size: 11px; font-weight: 600; color: #57514B; margin-bottom: 3px; }
+.rail-gear-items { font-size: 12px; line-height: 1.8; color: #57514B; }
 
 /* Portfolio Main */
 .portfolio-main { flex: 1; min-width: 0; }
@@ -1228,30 +1253,61 @@ async function loadProfile() {
     setTxt('rail-camera-system', profile.preferredCameraSystem);
   }
 
-  // Genres
+  // Genres — rail shows Primary Genre (first); full list remains in About tab
   const genres: string[] = Array.isArray(profile.photographyGenres) ? profile.photographyGenres : [];
   if (genres.length) {
-    const row = document.getElementById('rail-genres-row');
-    const container = document.getElementById('rail-genres');
+    const row = document.getElementById('rail-primary-genre-row');
     if (row) row.hidden = false;
-    if (container) {
-      container.innerHTML = genres.map(g => `<span class="rail-genre-tag">${esc(g)}</span>`).join('');
+    setTxt('rail-primary-genre', genres[0]);
+  }
+
+  // Areas of Expertise (rail)
+  const railExpertise: string[] = Array.isArray(profile.areasOfExpertise) ? profile.areasOfExpertise : [];
+  if (railExpertise.length) {
+    const row = document.getElementById('rail-expertise-row');
+    const container = document.getElementById('rail-expertise');
+    if (row) row.hidden = false;
+    if (container) container.innerHTML = railExpertise.map(g => `<span class="rail-genre-tag">${esc(g)}</span>`).join('');
+  }
+
+  // Favourite Subject(s) (rail)
+  const favSubjects: string[] = Array.isArray(profile.favouriteSubjects) ? profile.favouriteSubjects : [];
+  if (favSubjects.length) {
+    const row = document.getElementById('rail-favsubjects-row');
+    if (row) row.hidden = false;
+    setTxt('rail-favsubjects', favSubjects.join(', '));
+  }
+
+  // Distinctions & Awards (rail) — society titles + awards HTML
+  const railTitles: Array<{ bodyName: string; titleCode: string }> = Array.isArray(profile.photoTitles) ? profile.photoTitles : [];
+  const railAwardsHtml = (profile.awardsHtml && String(profile.awardsHtml).trim()) ? String(profile.awardsHtml) : '';
+  if (railTitles.length || railAwardsHtml) {
+    const row = document.getElementById('rail-distinctions-row');
+    const el = document.getElementById('rail-distinctions');
+    if (row) row.hidden = false;
+    if (el) {
+      const titleLines = railTitles
+        .map(t => `${esc(t.titleCode)}${t.bodyName ? ` <span style="color:#8B8378">${esc(t.bodyName)}</span>` : ''}`)
+        .join('<br/>');
+      el.innerHTML = (titleLines ? `<div>${titleLines}</div>` : '') + railAwardsHtml;
     }
   }
 
-  // Social links in rail
-  const handles = profile.socialHandles ?? {};
-  const socialPlatforms = Object.keys(handles).filter(p => p !== 'website');
-  if (socialPlatforms.length) {
-    const row = document.getElementById('rail-social-row');
-    const container = document.getElementById('rail-social');
+  // Equipment Bag (rail) — cameras / lenses / other
+  const railGear = profile.gear ?? {};
+  const gearGroups: string[] = [];
+  if (railGear.bodies?.length)      gearGroups.push(`<div class="rail-gear-group"><div class="rail-gear-label">Cameras</div><div class="rail-gear-items">${railGear.bodies.map(esc).join('<br/>')}</div></div>`);
+  if (railGear.lenses?.length)      gearGroups.push(`<div class="rail-gear-group"><div class="rail-gear-label">Lenses</div><div class="rail-gear-items">${railGear.lenses.map(esc).join('<br/>')}</div></div>`);
+  if (railGear.accessories?.length) gearGroups.push(`<div class="rail-gear-group"><div class="rail-gear-label">Other</div><div class="rail-gear-items">${railGear.accessories.map(esc).join('<br/>')}</div></div>`);
+  if (gearGroups.length) {
+    const row = document.getElementById('rail-gear-row');
+    const el = document.getElementById('rail-gear');
     if (row) row.hidden = false;
-    if (container) {
-      container.innerHTML = socialPlatforms.map(p =>
-        `<a class="rail-social-link" href="${socialUrl(p, handles[p])}" target="_blank" rel="noopener noreferrer" title="${p}">${socialIcon(p)}</a>`
-      ).join('');
-    }
+    if (el) el.innerHTML = gearGroups.join('');
   }
+
+  // Social handles are shown in the About tab (V6 05 keeps them out of the rail)
+  const handles = profile.socialHandles ?? {};
 
   // ── Bio Snippet (portfolio tab) ────────────────────────────────────────
   if (profile.bio) {

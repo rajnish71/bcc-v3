@@ -271,6 +271,7 @@ export class PhotographerProfilesService {
         'u.website_url',
         'u.photography_genres',
         'u.areas_of_expertise',
+        'u.favourite_subjects',
         'u.preferred_camera_system',
         'u.awards_html',
         'm.id as membership_id',
@@ -367,6 +368,7 @@ export class PhotographerProfilesService {
         websiteUrl:            user.website_url ?? null,
         photographyGenres:     (user.photography_genres as unknown as string[] | null) ?? [],
         areasOfExpertise:      (user.areas_of_expertise as unknown as string[] | null) ?? [],
+        favouriteSubjects:     (user.favourite_subjects as unknown as string[] | null) ?? [],
         preferredCameraSystem: user.preferred_camera_system ?? null,
         isFoundingMember,
         gear: {

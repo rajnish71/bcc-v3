@@ -71,6 +71,48 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       </div>
     </section>
 
+    <!-- ③ SPOTLIGHT MANAGEMENT ─────────────────────────────────────────── -->
+    <section class="admin-section" id="section-spotlight">
+      <div class="section-kicker"><span class="kicker-rule"></span>Homepage</div>
+      <h2 class="section-title">Spotlight Photo</h2>
+
+      <!-- Current spotlight preview -->
+      <div id="spotlight-current" class="spotlight-current" hidden>
+        <div class="spotlight-label">Current spotlight</div>
+        <div class="spotlight-preview-row">
+          <img id="spotlight-preview-img" class="spotlight-preview-img" src="" alt="" />
+          <div class="spotlight-preview-info">
+            <div class="spotlight-preview-title" id="spotlight-preview-title"></div>
+            <div class="spotlight-preview-credit" id="spotlight-preview-credit"></div>
+          </div>
+        </div>
+      </div>
+      <div id="spotlight-none" class="state-empty" hidden>No spotlight set — homepage falls back to latest gallery photo.</div>
+
+      <!-- Photo search -->
+      <form class="search-form" id="spotlight-search-form" autocomplete="off">
+        <input
+          type="text"
+          id="spotlight-search-input"
+          class="search-input"
+          placeholder="Search public photos by title or photographer…"
+          minlength="2"
+          required
+        />
+        <button type="submit" class="btn-search">Search</button>
+      </form>
+
+      <div id="spotlight-search-loading" class="state-loading" hidden>Searching…</div>
+      <div id="spotlight-search-empty"   class="state-empty"   hidden>No photos found.</div>
+      <div id="spotlight-search-error"   class="state-error"   hidden></div>
+
+      <!-- Photo results grid -->
+      <div id="spotlight-results" class="spotlight-results" hidden></div>
+
+      <!-- Set confirmation -->
+      <div id="spotlight-set-feedback" class="reset-feedback" hidden></div>
+    </section>
+
   </div>
 
 </HubLayout>
@@ -331,6 +373,109 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 }
 .reset-feedback.ok    { background: #E8F5E9; color: #1A7A40; }
 .reset-feedback.error { background: #FDECEA; color: #C0392B; }
+
+/* ─── Spotlight management ─────────────────────────────────── */
+.spotlight-current {
+  background: #FAF8F4;
+  border: 1px solid #E7E1D6;
+  padding: 14px 16px;
+  max-width: 560px;
+}
+.spotlight-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #A8843C;
+  margin-bottom: 10px;
+}
+.spotlight-preview-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.spotlight-preview-img {
+  width: 96px;
+  height: 64px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #E7E1D6;
+}
+.spotlight-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.spotlight-preview-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #141210;
+}
+.spotlight-preview-credit {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #7A7469;
+}
+.spotlight-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  max-width: 640px;
+}
+.spotlight-photo-card {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+}
+.spotlight-photo-card:hover { border-color: #C9A961; }
+.spotlight-photo-card img {
+  display: block;
+  width: 100%;
+  height: 108px;
+  object-fit: cover;
+}
+.spotlight-photo-card__title {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #141210;
+  padding: 4px 6px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #fff;
+  border: 1px solid #E7E1D6;
+  border-top: none;
+}
+.spotlight-photo-card__credit {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #7A7469;
+  padding: 0 6px 4px;
+  background: #fff;
+  border: 1px solid #E7E1D6;
+  border-top: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.btn-set-spotlight {
+  display: block;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 0;
+  background: #C9A961;
+  color: #141210;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-set-spotlight:hover:not(:disabled) { opacity: 0.8; }
+.btn-set-spotlight:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 
 <script>
@@ -573,6 +718,136 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     }
   });
 
+  /* ════════════════════════════════════════════════════════════
+     SECTION 3 — SPOTLIGHT MANAGEMENT
+  ════════════════════════════════════════════════════════════ */
+
+  async function loadCurrentSpotlight() {
+    const currentEl = document.getElementById('spotlight-current');
+    const noneEl    = document.getElementById('spotlight-none');
+    try {
+      const res = await fetch(`${API}/gallery/spotlight`);
+      if (res.ok) {
+        const p = await res.json() as any;
+        const img   = document.getElementById('spotlight-preview-img')  as HTMLImageElement | null;
+        const title = document.getElementById('spotlight-preview-title') as HTMLElement | null;
+        const credit= document.getElementById('spotlight-preview-credit')as HTMLElement | null;
+        if (img)    img.src         = p.urls?.medium ?? p.urls?.thumbnail ?? '';
+        if (img)    img.alt         = p.title ?? 'Spotlight';
+        if (title)  title.textContent  = p.title_override ?? p.title ?? '—';
+        if (credit) credit.textContent = p.credit_override ?? (p.photographer ? `Photo by ${p.photographer.name}` : '—');
+        show(currentEl);
+      } else {
+        show(noneEl);
+      }
+    } catch {
+      show(noneEl);
+    }
+  }
+
+  const spotlightSearchForm    = document.getElementById('spotlight-search-form')    as HTMLFormElement | null;
+  const spotlightSearchInput   = document.getElementById('spotlight-search-input')   as HTMLInputElement | null;
+  const spotlightSearchLoading = document.getElementById('spotlight-search-loading');
+  const spotlightSearchEmpty   = document.getElementById('spotlight-search-empty');
+  const spotlightSearchError   = document.getElementById('spotlight-search-error');
+  const spotlightResults       = document.getElementById('spotlight-results');
+  const spotlightFeedback      = document.getElementById('spotlight-set-feedback');
+
+  spotlightSearchForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = spotlightSearchInput?.value.trim() ?? '';
+    if (q.length < 2) return;
+
+    hide(spotlightSearchEmpty); hide(spotlightSearchError); hide(spotlightResults);
+    if (spotlightResults) spotlightResults.innerHTML = '';
+    show(spotlightSearchLoading);
+
+    try {
+      // Search public feed with the query as a tag/title hint
+      const res = await fetch(`${API}/gallery/feed?limit=20&shuffle=false`, { headers: authHeaders() });
+      hide(spotlightSearchLoading);
+      if (!res.ok) {
+        if (spotlightSearchError) { spotlightSearchError.textContent = `Error ${res.status}`; show(spotlightSearchError); }
+        return;
+      }
+      const { photos } = await res.json() as { photos: any[] };
+      // Client-side filter by title or photographer name
+      const ql = q.toLowerCase();
+      const filtered = photos.filter(p =>
+        (p.title ?? '').toLowerCase().includes(ql) ||
+        (p.photographer?.name ?? '').toLowerCase().includes(ql) ||
+        (p.caption ?? '').toLowerCase().includes(ql)
+      );
+      if (!filtered.length) { show(spotlightSearchEmpty); return; }
+
+      if (spotlightResults) {
+        spotlightResults.innerHTML = filtered.map(p => {
+          const thumb = p.urls?.thumbnail ?? p.urls?.medium ?? '';
+          const title = p.title ?? 'Untitled';
+          const credit = p.photographer ? `by ${p.photographer.name}` : '';
+          return `
+            <div class="spotlight-photo-card" data-uuid="${p.uuid}">
+              <img src="${thumb}" alt="${title.replace(/"/g, '&quot;')}" loading="lazy" />
+              <div class="spotlight-photo-card__title">${title}</div>
+              <div class="spotlight-photo-card__credit">${credit}</div>
+              <button class="btn-set-spotlight" data-uuid="${p.uuid}">Set as Spotlight</button>
+            </div>
+          `;
+        }).join('');
+        show(spotlightResults);
+
+        spotlightResults.addEventListener('click', async (ev) => {
+          const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('.btn-set-spotlight');
+          if (!btn) return;
+          const uuid = btn.dataset.uuid!;
+          btn.disabled = true;
+          btn.textContent = 'Setting…';
+          if (spotlightFeedback) { hide(spotlightFeedback); spotlightFeedback.className = 'reset-feedback'; }
+
+          try {
+            const setRes = await fetch(`${API}/gallery/spotlight`, {
+              method: 'PUT',
+              headers: authHeaders(),
+              body: JSON.stringify({ photo_uuid: uuid }),
+            });
+            if (setRes.ok) {
+              if (spotlightFeedback) {
+                spotlightFeedback.textContent = 'Spotlight updated. Homepage will show this photo.';
+                spotlightFeedback.className = 'reset-feedback ok';
+                show(spotlightFeedback);
+              }
+              // Refresh current spotlight preview
+              hide(document.getElementById('spotlight-current'));
+              hide(document.getElementById('spotlight-none'));
+              loadCurrentSpotlight();
+            } else {
+              const err = await setRes.json().catch(() => ({})) as { message?: string };
+              if (spotlightFeedback) {
+                spotlightFeedback.textContent = `Error: ${err.message ?? setRes.status}`;
+                spotlightFeedback.className = 'reset-feedback error';
+                show(spotlightFeedback);
+              }
+              btn.disabled = false;
+              btn.textContent = 'Set as Spotlight';
+            }
+          } catch {
+            if (spotlightFeedback) {
+              spotlightFeedback.textContent = 'Network error. Please try again.';
+              spotlightFeedback.className = 'reset-feedback error';
+              show(spotlightFeedback);
+            }
+            btn.disabled = false;
+            btn.textContent = 'Set as Spotlight';
+          }
+        });
+      }
+    } catch {
+      hide(spotlightSearchLoading);
+      if (spotlightSearchError) { spotlightSearchError.textContent = 'Failed to search photos.'; show(spotlightSearchError); }
+    }
+  });
+
   /* ── Init ────────────────────────────────────────────────── */
   loadPending();
+  loadCurrentSpotlight();
 </script>

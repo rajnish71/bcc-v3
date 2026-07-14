@@ -832,6 +832,19 @@ export interface PhotoCommentsTable {
 
 
 // ============================================================================
+// Gallery Spotlight
+// ============================================================================
+
+export interface GallerySpotlightTable {
+  id:              number;                                         // always 1 (single-row config)
+  photo_uuid:      string;
+  title_override:  Nullable<string>;
+  credit_override: Nullable<string>;
+  set_by_user_id:  number;
+  set_at:          Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+// ============================================================================
 // Journal
 // ============================================================================
 
@@ -956,6 +969,7 @@ export interface DB {
   photo_tag_assignments: PhotoTagAssignmentsTable;
   photo_reactions: PhotoReactionsTable;
   photo_comments: PhotoCommentsTable;
+  gallery_spotlight: GallerySpotlightTable;
 
   journal_posts: JournalPostsTable;
 }

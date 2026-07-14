@@ -1072,6 +1072,70 @@ export class GalleryService {
   }
 
   // =========================================================================
+  // Spotlight — admin-curated homepage hero (item 58)
+  // =========================================================================
+
+  async getSpotlight(): Promise<(ReturnType<typeof formatPhoto> & {
+    title_override: string | null;
+    credit_override: string | null;
+  }) | null> {
+    const row = await db
+      .selectFrom('gallery_spotlight as gs')
+      .innerJoin('photos as p', 'p.uuid', 'gs.photo_uuid')
+      .leftJoin('users as u', 'u.id', 'p.owner_user_id')
+      .where('p.status', '=', 'ACTIVE')
+      .where('p.visibility', '=', 'PUBLIC')
+      .selectAll('p')
+      .select([
+        'gs.title_override',
+        'gs.credit_override',
+        'u.full_name as photographer_name',
+        'u.username as photographer_username',
+      ] as any)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    const photo = formatPhoto(row as Record<string, unknown>);
+    return {
+      ...photo,
+      title_override:  (row as any).title_override  ?? null,
+      credit_override: (row as any).credit_override ?? null,
+    };
+  }
+
+  async setSpotlight(
+    adminUserId: number,
+    photoUuid: string,
+    titleOverride?: string | null,
+    creditOverride?: string | null,
+  ): Promise<void> {
+    const photo = await db
+      .selectFrom('photos')
+      .where('uuid', '=', photoUuid)
+      .where('status', '=', 'ACTIVE')
+      .where('visibility', '=', 'PUBLIC')
+      .select('uuid')
+      .executeTakeFirst();
+
+    if (!photo) {
+      throw new NotFoundException(`Photo ${photoUuid} not found or is not a public active photo.`);
+    }
+
+    const now: any = toMysqlDatetime(new Date());
+    await sql`
+      INSERT INTO gallery_spotlight (id, photo_uuid, title_override, credit_override, set_by_user_id, set_at)
+      VALUES (1, ${photoUuid}, ${titleOverride ?? null}, ${creditOverride ?? null}, ${adminUserId}, ${now})
+      ON DUPLICATE KEY UPDATE
+        photo_uuid      = VALUES(photo_uuid),
+        title_override  = VALUES(title_override),
+        credit_override = VALUES(credit_override),
+        set_by_user_id  = VALUES(set_by_user_id),
+        set_at          = VALUES(set_at)
+    `.execute(db);
+  }
+
+  // =========================================================================
   // Distinct genres actually present (item 76) — for filter chips
   // =========================================================================
 

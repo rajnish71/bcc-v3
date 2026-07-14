@@ -33,16 +33,20 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { GalleryService } from './gallery.service';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
+import { RbacGuard } from '../identity/rbac/rbac.guard';
+import { RequirePermissions } from '../identity/rbac/permissions.decorator';
 import type { PresignPhotoDto } from './dto/presign-photo.dto';
 import type { ConfirmPhotoDto } from './dto/confirm-photo.dto';
 import type { UpdatePhotoDto } from './dto/update-photo.dto';
@@ -91,6 +95,27 @@ export class GalleryController {
       limit:  limit  ? parseInt(limit, 10)  : 20,
       offset: offset ? parseInt(offset, 10) : 0,
     });
+  }
+
+  /** Current homepage spotlight photo (admin-curated). Returns 404 if none set. */
+  @Get('spotlight')
+  async getSpotlight() {
+    const spotlight = await this.gallery.getSpotlight();
+    if (!spotlight) throw new NotFoundException('No spotlight configured.');
+    return spotlight;
+  }
+
+  /** Set the homepage spotlight — admin only. */
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('gallery.spotlight.set')
+  @HttpCode(HttpStatus.OK)
+  @Put('spotlight')
+  async setSpotlight(
+    @Body() body: { photo_uuid: string; title_override?: string | null; credit_override?: string | null },
+    @Req() req: any,
+  ) {
+    await this.gallery.setSpotlight(req.user.sub, body.photo_uuid, body.title_override, body.credit_override);
+    return { ok: true };
   }
 
   /** Tag taxonomy list. */

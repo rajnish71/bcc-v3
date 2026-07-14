@@ -1,4 +1,4 @@
----
+﻿---
 /**
  * index.astro — Home Page
  * Hierarchy per BCC_V3_Design_System.md §14 (frozen):
@@ -182,7 +182,7 @@ const activeContest = {
         
         <!-- Card 1: Photowalks -->
         <a href="/activities?type=photowalk" class="club-card active-card" aria-label="Photowalks: Walk the city with us">
-          <div class="club-card__image-area">
+          <div class="club-card__image-area" id="card-img-photowalk">
             <div class="club-card__gradient" style="background: linear-gradient(160deg, #0D1B2A 0%, #1A2D4A 50%, #0A1520 100%);"></div>
           </div>
           <div class="club-card__body">
@@ -195,7 +195,7 @@ const activeContest = {
 
         <!-- Card 2: Photo Contests -->
         <a href="/activities/contests" class="club-card active-card" aria-label="Photo Contests: Compete and be seen">
-          <div class="club-card__image-area">
+          <div class="club-card__image-area" id="card-img-contests">
             <div class="club-card__gradient" style="background: linear-gradient(160deg, #2A1A06 0%, #4A2E10 50%, #1E1208 100%);"></div>
           </div>
           <div class="club-card__body">
@@ -208,7 +208,7 @@ const activeContest = {
 
         <!-- Card 3: Exhibitions -->
         <a href="/activities/exhibitions" class="club-card active-card" aria-label="Exhibitions: Print and exhibit your work">
-          <div class="club-card__image-area">
+          <div class="club-card__image-area" id="card-img-exhibitions">
             <div class="club-card__gradient" style="background: linear-gradient(160deg, #141210 0%, #221E1A 50%, #0E0C0A 100%);"></div>
           </div>
           <div class="club-card__body">
@@ -221,7 +221,7 @@ const activeContest = {
 
         <!-- Card 4: Photography School (Coming Soon) -->
         <div class="club-card disabled-card" aria-label="Photography School: Learn with the club (Coming Soon)">
-          <div class="club-card__image-area">
+          <div class="club-card__image-area" id="card-img-school">
             <div class="club-card__gradient" style="background: linear-gradient(160deg, #1A1E28 0%, #262C3A 50%, #141820 100%);"></div>
             <div class="club-card__badge-overlay">
               <span class="badge">COMING SOON</span>
@@ -1996,23 +1996,27 @@ const activeContest = {
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
-  /* ── 1. Spotlight — admin-curated editorial override ── */
-  // TODO: Replace with Dr Anil Bhati "Twilight Hours, Maldives" when the photo
-  //       URL is confirmed. Pass the ImageKit URL as imageUrl below.
+  /* ── 1. Spotlight — admin-curated editorial hero ── */
   (async () => {
-    const OVERRIDE: { imageUrl: string; title: string; credit: string } | null = null;
-    // ↑ Set to { imageUrl, title, credit } to freeze the spotlight on a specific photo.
-
     let photoUrl = '';
-    let photoTitle = 'Light, Frame, Moment.';
+    let photoTitle = 'Light, Frame, Moment.';
     let photoCredit = '';
 
-    if (OVERRIDE) {
-      photoUrl   = OVERRIDE.imageUrl;
-      photoTitle = OVERRIDE.title;
-      photoCredit = OVERRIDE.credit;
-    } else {
-      // Load the most recent public gallery photo for the spotlight.
+    // Try admin-curated spotlight first
+    let usedSpotlight = false;
+    try {
+      const res = await fetch('/api/v1/gallery/spotlight');
+      if (res.ok) {
+        const p = await res.json();
+        photoUrl      = p.urls?.original ?? p.urls?.medium ?? '';
+        photoTitle    = p.title_override ?? p.title ?? 'Light, Frame, Moment.';
+        photoCredit   = p.credit_override ?? (p.photographer ? `Photo by ${p.photographer.name}` : '');
+        usedSpotlight = true;
+      }
+    } catch { /* fall through to feed */ }
+
+    // Fallback: most recent public photo
+    if (!usedSpotlight) {
       try {
         const res = await fetch('/api/v1/gallery/feed?limit=1');
         if (res.ok) {
@@ -2020,7 +2024,7 @@ const activeContest = {
           const p = Array.isArray(photos) ? photos[0] : null;
           if (p) {
             photoUrl    = p.urls?.original ?? p.urls?.medium ?? '';
-            photoTitle  = p.title ?? 'Light, Frame, Moment.';
+            photoTitle  = p.title ?? 'Light, Frame, Moment.';
             photoCredit = p.photographer ? `Photo by ${p.photographer.name}` : '';
           }
         }
@@ -2044,6 +2048,36 @@ const activeContest = {
 
     const activity = document.getElementById('spotlight-activity');
     if (activity) activity.style.display = 'none';
+  })();
+
+  /* ── 1b. Club cards — dynamic genre photo backgrounds ── */
+  (() => {
+    const CARD_GENRES = [
+      { id: 'card-img-photowalk',   tag: 'street'    },
+      { id: 'card-img-contests',    tag: 'wildlife'  },
+      { id: 'card-img-exhibitions', tag: 'landscape' },
+      { id: 'card-img-school',      tag: 'portrait'  },
+    ];
+    for (const { id, tag } of CARD_GENRES) {
+      const area = document.getElementById(id);
+      if (!area) continue;
+      fetch(`/api/v1/gallery/feed?tag=${tag}&limit=5&shuffle=true`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          const p = data?.photos?.[0];
+          const imgUrl = p?.urls?.medium ?? p?.urls?.thumbnail ?? '';
+          if (!imgUrl) return;
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.alt = '';
+          img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
+          area.style.position = 'relative';
+          area.insertBefore(img, area.firstChild);
+          const grad = area.querySelector('.club-card__gradient') as HTMLElement | null;
+          if (grad) { grad.style.position = 'absolute'; grad.style.inset = '0'; grad.style.zIndex = '1'; }
+        })
+        .catch(() => { /* gradient fallback */ });
+    }
   })();
 
   /* ── 2. Gallery wall — justified layout ── */

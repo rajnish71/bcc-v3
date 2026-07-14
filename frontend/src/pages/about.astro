@@ -19,12 +19,17 @@ const TIMELINE = [
 ];
 
 const COMMITTEE = [
-  { name: 'Rajnish Khare', role: 'Core Coordinator', initials: 'RK', since: '2015', bio: 'Lead travel and street photographer, and core coordinator managing Bhopal Camera Club operations.' },
-  { name: 'Kshitij Patle', role: 'Core Coordinator', initials: 'KP', since: '2016', bio: 'Energetic travel storyteller documenting remote places, trails, and local interactions.' },
-  { name: 'Rahil Khan', role: 'Core Coordinator', initials: 'RK2', since: '2016', bio: 'Contemporary street visual artist capturing dynamic urban moments and frame compositions.' },
-  { name: 'Sauvik Acharyya', role: 'Core Coordinator', initials: 'SA', since: '2018', bio: 'Street documentarian capturing everyday life, street markets, and candid frames.' },
-  { name: 'Vikas Gangpari', role: 'Core Coordinator', initials: 'VG', since: '2020', bio: 'Core coordinator and travel photographer assisting in organizing club educational activities.' },
-  { name: 'Taurez Anwar', role: 'Core Coordinator', initials: 'TA', since: '2020', bio: 'Core coordinator and wildlife photographer assisting in documentation of natural reserves.' }
+  { name: 'Rajnish Khare',   role: 'Core Coordinator',      initials: 'RK',  since: '2015', bio: 'Lead travel and street photographer, and core coordinator managing Bhopal Camera Club operations.' },
+  { name: 'Kshitij Patle',   role: 'Core Coordinator',      initials: 'KP',  since: '2016', bio: 'Energetic travel storyteller documenting remote places, trails, and local interactions.' },
+  { name: 'Rahil Khan',      role: 'Core Coordinator',      initials: 'RK2', since: '2016', bio: 'Contemporary street visual artist capturing dynamic urban moments and frame compositions.' },
+  { name: 'Vikas Gangpari',  role: 'Education Coordinator', initials: 'VG',  since: '2020', bio: "Leads the club's photography school curriculum and organises educational workshops for members." },
+  { name: 'Taurez Anwar',    role: 'Core Coordinator',      initials: 'TA',  since: '2020', bio: 'Core coordinator and wildlife photographer assisting in documentation of natural reserves.' },
+  { name: 'Yogesh More',     role: 'Core Coordinator',      initials: 'YM',  since: '2021', bio: 'Core coordinator supporting club events, member outreach, and photowalk logistics.' },
+];
+
+const MENTORS = [
+  { name: 'Dr. Anil Bhati',    role: 'Mentor', initials: 'AB', bio: "Renowned nature and wildlife photographer whose guidance has shaped BCC's documentary ethos and international exhibition presence." },
+  { name: 'Sauvik Acharyya',   role: 'Mentor', initials: 'SA', bio: "Street documentarian and long-time BCC contributor whose candid storytelling continues to inspire the club's photographic voice." },
 ];
 ---
 
@@ -164,6 +169,36 @@ const COMMITTEE = [
               <h4 class="member-name">{m.name}</h4>
               <span class="member-role">{m.role}</span>
               <span class="member-since">Since {m.since}</span>
+              <p class="member-bio">{m.bio}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Mentors -->
+  <section class="section mentors-section" aria-label="Club mentors">
+    <div class="container">
+      <div class="section-header-wrap" data-gsap="reveal">
+        <SectionHeader
+          eyebrow="Mentors"
+          title="Voices That Guide Us"
+          subtitle="Senior photographers whose experience and generosity have shaped BCC's creative direction."
+        />
+      </div>
+
+      <div class="mentors-grid" data-gsap="stagger">
+        {MENTORS.map(m => (
+          <div class="mentor-mat-card">
+            <div class="avatar-ring-container">
+              <div class="mentor-avatar-circle">
+                {m.initials}
+              </div>
+            </div>
+            <div class="committee-info">
+              <h4 class="member-name">{m.name}</h4>
+              <span class="member-role mentor-role-label">{m.role}</span>
               <p class="member-bio">{m.bio}</p>
             </div>
           </div>
@@ -434,6 +469,44 @@ const COMMITTEE = [
   margin-top: var(--s-2);
 }
 
+/* Mentors */
+.mentors-section {
+  background: var(--surface-0);
+  border-top: 1px solid var(--hairline);
+}
+.mentors-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-3);
+}
+.mentor-mat-card {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  padding: var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  border-radius: var(--r-0);
+}
+.mentor-avatar-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-full);
+  background: var(--slate-gradient, linear-gradient(135deg, #4a5568 0%, #2d3748 100%));
+  color: var(--surface-0);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--surface-0);
+  box-shadow: 0 0 0 1px var(--hairline-strong);
+}
+.mentor-role-label {
+  color: var(--ink-400);
+}
+
 /* Responsive */
 @media (min-width: 900px) {
   .pillars-grid {
@@ -445,6 +518,9 @@ const COMMITTEE = [
 }
 @media (min-width: 640px) {
   .committee-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mentors-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }

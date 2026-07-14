@@ -40,7 +40,7 @@ export class HubProfileService {
         'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
         'tagline', 'website_url', 'bio', 'awards_html',
         'photography_genres', 'areas_of_expertise', 'favourite_subjects',
-        'preferred_camera_system', 'year_joined_bcc',
+        'preferred_camera_system', 'year_joined_bcc', 'gallery_layout',
       ])
       .where('id', '=', userId)
       .executeTakeFirst();
@@ -216,6 +216,7 @@ export class HubProfileService {
       yearJoinedBcc: user.year_joined_bcc,
       photographyGenres: (user.photography_genres as string[] | null) ?? [],
       bio: user.bio,
+      galleryLayout: (user as any).gallery_layout ?? 'justified',
 
       // Social links
       socialLinks: socialRows.map(s => ({ platform: s.platform, handle: s.handle_or_url })),
@@ -296,6 +297,8 @@ export class HubProfileService {
       }
       updateData.year_joined_bcc = dto.yearJoinedBcc ?? null;
     }
+
+    if (dto.galleryLayout !== undefined) updateData.gallery_layout = dto.galleryLayout;
 
     // Strip any protected fields that somehow slipped through
     for (const key of PROTECTED_FIELDS) delete updateData[key];

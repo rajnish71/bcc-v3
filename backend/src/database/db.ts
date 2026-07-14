@@ -49,6 +49,7 @@ export interface UsersTable {
   experience_level: 'BEGINNER' | 'ENTHUSIAST' | 'SERIOUS_AMATEUR' | 'PROFESSIONAL' | null;
   language_pref: Generated<'EN' | 'HI'>;
   profile_visibility: Generated<'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE'>;
+  gallery_layout: Generated<'justified' | 'masonry' | 'editorial' | 'modular' | 'metro' | 'magazine'>;
   portfolio_visibility: Generated<'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE'>;
   activity_visibility: Generated<'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE'>;
   deletion_requested_at: ColumnType<Date | null, string | null, string | null>;

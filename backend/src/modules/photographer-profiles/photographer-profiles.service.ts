@@ -283,6 +283,7 @@ export class PhotographerProfilesService {
         'u.state',
         'u.experience_level',
         'u.profile_visibility',
+        'u.gallery_layout',
         'u.tagline',
         'u.website_url',
         'u.photography_genres',
@@ -386,6 +387,7 @@ export class PhotographerProfilesService {
         areasOfExpertise:      (user.areas_of_expertise as unknown as string[] | null) ?? [],
         favouriteSubjects:     (user.favourite_subjects as unknown as string[] | null) ?? [],
         preferredCameraSystem: user.preferred_camera_system ?? null,
+        galleryLayout: (user as any).gallery_layout ?? 'justified',
         isFoundingMember,
         gear: {
           bodies:      gearRows.filter(g => g.gear_type === 'BODY').map(g => g.label),

@@ -777,6 +777,68 @@ const { username } = Astro.params;
 :global(.profile-jrow) { display: flex; gap: 8px; margin-bottom: 8px; }
 :global(.profile-jrow:last-child) { margin-bottom: 0; }
 
+/* ── Masonry layout — CSS columns, natural image heights ─────────────────── */
+/* #portfolio-grid gets this class dynamically; the element IS in the template
+   so it carries Astro's scoping attribute and scoped selectors work on it.
+   Child .profile-alt-card elements are runtime-created → they need :global(). */
+.profile-masonry-grid { display: block; column-count: 3; column-gap: 8px; }
+:global(.profile-masonry-card) {
+  break-inside: avoid; display: block; margin-bottom: 8px; width: 100%;
+}
+:global(.profile-masonry-card .photo-card__img) { height: auto; object-fit: cover; }
+
+/* ── Modular — uniform fixed-aspect grid ─────────────────────────────────── */
+.profile-modular-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+/* ── Editorial — full-width hero alternating with 2-col rows ─────────────── */
+/* Pattern repeats every 3 items: 1,4,7… hero (span-2 cols, span-2 rows);
+   items 2-3, 5-6… fill a normal 2-column row beside/below the hero. */
+.profile-editorial-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 240px;
+  gap: 8px;
+}
+:global(.profile-editorial-grid .profile-alt-card:nth-child(3n+1)) {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* ── Metro — mosaic of large (2×2) and small (1×1) tiles ────────────────── */
+/* Pattern: 1,6,11… large; the 4 items between fill the remaining 2×2 cells. */
+.profile-metro-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 200px;
+  grid-auto-flow: dense;
+  gap: 8px;
+}
+:global(.profile-metro-grid .profile-alt-card:nth-child(5n+1)) {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* ── Magazine — full-width feature + 2-column body ───────────────────────── */
+/* First photo: double-height hero spanning both columns.
+   Remaining photos fill a 2:1 wide-narrow column layout. */
+.profile-magazine-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-auto-rows: 260px;
+  gap: 8px;
+}
+:global(.profile-magazine-grid .profile-alt-card:first-child) {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* Shared styles for all non-justified photo cards (runtime-created) */
+:global(.profile-alt-card) { display: block; width: 100%; height: 100%; }
+
 /* Load more — mirrors /showcase load-more control, restyled for the ivory profile surface */
 .profile-load-more-wrap {
   display: flex;
@@ -1017,6 +1079,9 @@ const { username } = Astro.params;
   .portfolio-layout { flex-direction: column; padding: 16px 16px 60px; }
   .left-rail { width: 100%; position: relative; top: auto; max-height: none; }
   .profile-jrow { gap: 6px; margin-bottom: 6px; }
+  .profile-masonry-grid { column-count: 2; }
+  .profile-metro-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-modular-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 
   .about-layout { flex-direction: column; padding: 16px 16px 60px; }
   .about-rail { order: -1; }
@@ -1053,6 +1118,7 @@ interface PhotoEntry {
 }
 let allPhotos: PhotoEntry[] = [];
 let profileDisplayName = '';
+let currentGalleryLayout = 'justified';
 
 // ── Justified grid layout — inherited verbatim from /showcase (item 70) ────
 // Rows fill to the container width; the trailing partial row is kept as
@@ -1468,6 +1534,15 @@ async function loadProfile() {
     if (el) el.innerHTML = expertise.map(g => `<span class="about-genre-tag">${esc(g)}</span>`).join('');
   }
 
+  // Gallery layout — apply before photos load so the grid is ready
+  currentGalleryLayout = profile.galleryLayout ?? 'justified';
+  const portfolioGrid = document.getElementById('portfolio-grid');
+  if (portfolioGrid && currentGalleryLayout !== 'justified') {
+    portfolioGrid.classList.remove('profile-justified-grid');
+    portfolioGrid.classList.add(`profile-${currentGalleryLayout}-grid`);
+    portfolioGrid.setAttribute('data-layout', currentGalleryLayout);
+  }
+
   // Stories / Collections + Journal articles (item 53) — non-blocking
   loadStories(profile.id).catch(() => {});
   loadJournal(profile.id).catch(() => {});
@@ -1642,8 +1717,93 @@ function renderProfilePhotoCard(p: any): HTMLElement {
   return btn;
 }
 
+// ── Alt-layout photo card (no explicit width/height — CSS grid/columns size it) ──
+function renderAltPhotoCard(p: any, isMasonry: boolean): HTMLElement {
+  const btn = document.createElement('button');
+  btn.className = 'photo-card vf-card profile-alt-card' + (isMasonry ? ' profile-masonry-card' : '');
+  btn.type = 'button';
+
+  const altTitle = p.title ? esc(p.title) : 'Untitled';
+  const altCredit = profileDisplayName ? ` by ${esc(profileDisplayName)}` : '';
+  btn.setAttribute('aria-label', `${altTitle}${altCredit} · Bhopal Camera Club`);
+
+  const img = document.createElement('img');
+  img.src = p.imageUrl ?? '';
+  img.alt = `${altTitle}${altCredit} · Bhopal Camera Club`;
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.className = 'photo-card__img';
+  // Masonry: natural height so columns balance correctly.
+  // Grid layouts: fill the cell produced by the grid CSS.
+  img.style.cssText = isMasonry
+    ? 'width:100%;height:auto;object-fit:cover;'
+    : 'width:100%;height:100%;object-fit:cover;';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-overlay';
+  overlay.setAttribute('aria-hidden', 'true');
+
+  const br = document.createElement('span');
+  br.className = 'vf-br'; br.setAttribute('aria-hidden', 'true');
+  const bl = document.createElement('span');
+  bl.className = 'vf-bl'; bl.setAttribute('aria-hidden', 'true');
+
+  const titleText = (p.title ?? '').trim();
+  const capText = (p.caption ?? '').trim();
+  if (titleText || capText) {
+    const info = document.createElement('div');
+    info.className = 'photo-card__info';
+    info.setAttribute('aria-hidden', 'true');
+    const t = document.createElement('div');
+    t.className = 'photo-card__title';
+    t.textContent = titleText || 'Untitled';
+    info.appendChild(t);
+    if (capText && capText !== titleText) {
+      const c = document.createElement('div');
+      c.className = 'photo-card__photographer';
+      c.textContent = capText;
+      info.appendChild(c);
+    }
+    btn.appendChild(info);
+  }
+
+  btn.appendChild(img);
+  btn.appendChild(overlay);
+  btn.appendChild(br);
+  btn.appendChild(bl);
+
+  btn.addEventListener('click', () => {
+    const params = new URLSearchParams({
+      ctx: 'portfolio', ctxId: username,
+      ctxLabel: profileDisplayName || username,
+      ids: allPhotos.map(ph => ph.id).join(','),
+    });
+    window.location.href = `/showcase/photos/${p.id}?${params}`;
+  });
+
+  return btn;
+}
+
+// ── Render alt-layout photos (masonry / grid variants) ────────────────────
+function renderProfileAltGrid(newPhotos: any[]) {
+  const grid = document.getElementById('portfolio-grid') as HTMLElement | null;
+  if (!grid) return;
+  const isMasonry = currentGalleryLayout === 'masonry';
+  const fragment = document.createDocumentFragment();
+  for (const p of newPhotos) {
+    allPhotos.push(p);
+    fragment.appendChild(renderAltPhotoCard({ ...p, imageUrl: p.imageUrl ?? '' }, isMasonry));
+  }
+  grid.appendChild(fragment);
+}
+
 // ── Render a page of photos into justified rows (mirrors /showcase) ────────
 function renderProfileGrid(newPhotos: any[], flushRemainder: boolean) {
+  if (currentGalleryLayout !== 'justified') {
+    renderProfileAltGrid(newPhotos);
+    return;
+  }
+
   const grid = document.getElementById('portfolio-grid') as HTMLElement | null;
   if (!grid) return;
 
@@ -1798,12 +1958,13 @@ document.getElementById('profile-filter')?.addEventListener('click', e => {
 });
 
 // Re-justify on resize (rebuild from the full loaded set — mirrors /showcase)
+// Alt layouts (masonry/grid) are pure CSS — no JS rebuild needed.
 let profileResizeTimer: ReturnType<typeof setTimeout>;
 window.addEventListener('resize', () => {
   clearTimeout(profileResizeTimer);
   profileResizeTimer = setTimeout(() => {
     const grid = document.getElementById('portfolio-grid');
-    if (!grid || allPhotos.length === 0) return;
+    if (!grid || allPhotos.length === 0 || currentGalleryLayout !== 'justified') return;
     // Rebuild justified rows from the full loaded set. Snapshot first, then
     // reset the accumulators so renderProfileGrid re-populates them cleanly.
     const full = [...allPhotos, ...profileBuffer];

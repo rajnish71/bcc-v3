@@ -1613,13 +1613,10 @@ async function openStory(uuid: string, label: string) {
     const photos: any[] = data.photos ?? [];
     if (!photos.length) return;
     const ids = photos.map((p: any) => p.id);
-    const params = new URLSearchParams({
-      ctx: 'collection',
-      ctxId: uuid,
-      ctxLabel: label || 'Collection',
-      ids: ids.join(','),
-    });
-    window.location.href = `/showcase/${ids[0]}?${params}`;
+    sessionStorage.setItem('bcc_photo_ctx', JSON.stringify({
+      type: 'collection', ctxId: uuid, ctxLabel: label || 'Collection', ids,
+    }));
+    window.location.href = `/showcase/${ids[0]}/`;
   } catch { /* ignore */ }
 }
 
@@ -1702,16 +1699,15 @@ function renderProfilePhotoCard(p: any): HTMLElement {
   btn.appendChild(br);
   btn.appendChild(bl);
 
-  // Click → canonical photo page, carrying portfolio context for prev/next.
-  // ids reflect the full loaded set at click time so navigation stays correct
-  // as more pages load.
+  // Click → canonical photo page; store full portfolio context in sessionStorage
+  // so prev/next navigation works without polluting the URL.
   btn.addEventListener('click', () => {
-    const params = new URLSearchParams({
-      ctx: 'portfolio', ctxId: username,
+    sessionStorage.setItem('bcc_photo_ctx', JSON.stringify({
+      type: 'portfolio', ctxId: username,
       ctxLabel: profileDisplayName || username,
-      ids: allPhotos.map(ph => ph.id).join(','),
-    });
-    window.location.href = `/showcase/${p.id}?${params}`;
+      ids: allPhotos.map(ph => ph.id),
+    }));
+    window.location.href = `/showcase/${p.id}/`;
   });
 
   return btn;
@@ -1773,12 +1769,12 @@ function renderAltPhotoCard(p: any, isMasonry: boolean): HTMLElement {
   btn.appendChild(bl);
 
   btn.addEventListener('click', () => {
-    const params = new URLSearchParams({
-      ctx: 'portfolio', ctxId: username,
+    sessionStorage.setItem('bcc_photo_ctx', JSON.stringify({
+      type: 'portfolio', ctxId: username,
       ctxLabel: profileDisplayName || username,
-      ids: allPhotos.map(ph => ph.id).join(','),
-    });
-    window.location.href = `/showcase/${p.id}?${params}`;
+      ids: allPhotos.map(ph => ph.id),
+    }));
+    window.location.href = `/showcase/${p.id}/`;
   });
 
   return btn;

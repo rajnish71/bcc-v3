@@ -1276,7 +1276,8 @@ async function loadPhotos(): Promise<number> {
   const grid = document.getElementById('photo-grid');
   if (!grid) return total;
 
-  const mats = photos.slice(0, 5).map(p => {
+  const recentPhotos = photos.slice(0, 5);
+  const mats = recentPhotos.map(p => {
     const thumbUrl   = p.urls?.thumbnail ?? p.urls?.medium ?? '';
     const thumbInner = thumbUrl
       ? `<img src="${thumbUrl}" alt="${p.title ?? 'Photograph'}" loading="lazy" />`
@@ -1284,7 +1285,7 @@ async function loadPhotos(): Promise<number> {
     const title = p.title ?? 'Untitled';
     const vis   = visBadge(p.visibility ?? 'PRIVATE');
     return `
-      <a href="/showcase/${p.id}/" class="photo-mat" title="${title}">
+      <a href="/showcase/${p.id}/" class="photo-mat" data-photoid="${p.id}" title="${title}">
         <div class="photo-thumb">${thumbInner}</div>
         <div class="photo-mat-meta">
           <div class="photo-mat-title">${title}</div>
@@ -1301,6 +1302,19 @@ async function loadPhotos(): Promise<number> {
 
   grid.innerHTML = mats + uploadTile;
   grid.hidden = false;
+
+  // Store viewing context in sessionStorage before navigating so showcase
+  // page can show prev/next among the recent photo set without a polluted URL.
+  const recentIds = recentPhotos.map(p => p.id);
+  grid.addEventListener('click', (e: MouseEvent) => {
+    const anchor = (e.target as HTMLElement).closest('a[data-photoid]') as HTMLAnchorElement | null;
+    if (!anchor) return;
+    e.preventDefault();
+    sessionStorage.setItem('bcc_photo_ctx', JSON.stringify({
+      type: 'portfolio', ctxId: 'me', ctxLabel: 'My Photos', ids: recentIds,
+    }));
+    window.location.href = anchor.href;
+  });
 
   setText('jn-photos', String(total));
 

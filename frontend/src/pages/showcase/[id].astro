@@ -975,51 +975,47 @@ const { id } = Astro.params;
   }
   window.setTab = setTab;
 
-  // ── Viewing Context from URL ──
+  // ── Viewing Context from sessionStorage ──
   function resolveViewingContext() {
-    const params   = new URLSearchParams(window.location.search);
-    const ctx      = params.get('ctx') || 'showcase';
-    const ctxId    = params.get('ctxId') || '';
-    const ctxLabel = params.get('ctxLabel') || ctxId;
-
-    // ids: comma-separated photo ID list passed by portfolio/related sources.
-    // When present, derive prevId/nextId/pos/total from the array so multi-step
-    // navigation keeps working across canonical page hops.
-    const idsStr    = params.get('ids') || '';
-    const idsList   = idsStr ? idsStr.split(',').map(n => parseInt(n, 10)).filter(Boolean) : [];
-    const idxInList = idsList.indexOf(Number(photoId));   // photoId is a string param; coerce to match numeric ids
-
-    let prevId = params.get('prevId') || null;
-    let nextId = params.get('nextId') || null;
-    let pos    = parseInt(params.get('pos')   || '0', 10);
-    let total  = parseInt(params.get('total') || '0', 10);
-
-    if (idsList.length > 0 && idxInList >= 0) {
-      prevId = idxInList > 0                    ? String(idsList[idxInList - 1]) : null;
-      nextId = idxInList < idsList.length - 1   ? String(idsList[idxInList + 1]) : null;
-      pos    = idxInList + 1;
-      total  = idsList.length;
-    }
-
     const MAP = {
-      showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                        prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
-      portfolio:  { label: 'Portfolio',   crumbs: ['Home', 'Photographers', ctxLabel],         prevLabel: '← Previous in Portfolio', nextLabel: 'Next in Portfolio →'  },
-      story:      { label: 'Story',       crumbs: ['Home', 'Stories', ctxLabel],               prevLabel: '← Previous in Story',     nextLabel: 'Next in Story →'      },
-      collection: { label: 'Collection',  crumbs: ['Home', 'Collections', ctxLabel],           prevLabel: '← Previous',              nextLabel: 'Next →'               },
-      activity:   { label: 'Activity',    crumbs: ['Home', 'Activities', ctxLabel],            prevLabel: '← Previous Photo',        nextLabel: 'Next Photo →'         },
-      contest:    { label: 'Contest',     crumbs: ['Home', 'Contests', ctxLabel],              prevLabel: '← Previous Entry',        nextLabel: 'Next Entry →'         },
+      showcase:   { label: 'Showcase',    crumbs: ['Home', 'Showcase'],                prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
+      portfolio:  { label: 'Portfolio',   crumbs: ['Home', 'Photographers', ''],       prevLabel: '← Previous in Portfolio', nextLabel: 'Next in Portfolio →'  },
+      story:      { label: 'Story',       crumbs: ['Home', 'Stories', ''],             prevLabel: '← Previous in Story',    nextLabel: 'Next in Story →'      },
+      collection: { label: 'Collection',  crumbs: ['Home', 'Collections', ''],         prevLabel: '← Previous',             nextLabel: 'Next →'               },
+      activity:   { label: 'Activity',    crumbs: ['Home', 'Activities', ''],          prevLabel: '← Previous Photo',       nextLabel: 'Next Photo →'         },
+      contest:    { label: 'Contest',     crumbs: ['Home', 'Contests', ''],            prevLabel: '← Previous Entry',       nextLabel: 'Next Entry →'         },
     };
 
+    let ctx = 'showcase', ctxId = '', ctxLabel = '', idsList = [], phLink = '/photographers';
+    try {
+      const raw = sessionStorage.getItem('bcc_photo_ctx');
+      if (raw) {
+        const stored = JSON.parse(raw);
+        ctx      = stored.type    || 'showcase';
+        ctxId    = stored.ctxId   || '';
+        ctxLabel = stored.ctxLabel || ctxId;
+        idsList  = Array.isArray(stored.ids) ? stored.ids : [];
+        if (ctx === 'portfolio') phLink = `/photographers/${ctxId}`;
+      }
+    } catch { /* ignore parse errors */ }
+
+    const idxInList = idsList.indexOf(Number(photoId));
+    const prevId = idxInList > 0               ? String(idsList[idxInList - 1]) : null;
+    const nextId = idxInList < idsList.length - 1 ? String(idsList[idxInList + 1]) : null;
+    const pos    = idxInList >= 0 ? idxInList + 1 : 0;
+    const total  = idsList.length;
+
     const def = MAP[ctx] || MAP.showcase;
+    const crumbs = def.crumbs.map(c => c === '' ? ctxLabel : c);
     viewCtx = {
       label:     def.label,
-      crumbs:    def.crumbs,
-      position:  total > 0 ? `Photo ${pos} of ${total}` : '',
+      crumbs,
+      position:  total > 0 && pos > 0 ? `Photo ${pos} of ${total}` : '',
       prevLabel: def.prevLabel,
       nextLabel: def.nextLabel,
       prevId,
       nextId,
-      phLink:    ctx === 'portfolio' ? `/photographers/${ctxId}` : '/photographers',
+      phLink,
     };
   }
 
@@ -1060,8 +1056,7 @@ const { id } = Astro.params;
   }
 
   function navigateToPhoto(targetId) {
-    const params = new URLSearchParams(window.location.search);
-    window.location.href = `/showcase/${targetId}?${params.toString()}`;
+    window.location.href = `/showcase/${targetId}/`;
   }
 
   // ── Load photo data ──

@@ -1619,7 +1619,7 @@ async function openStory(uuid: string, label: string) {
       ctxLabel: label || 'Collection',
       ids: ids.join(','),
     });
-    window.location.href = `/showcase/photos/${ids[0]}?${params}`;
+    window.location.href = `/showcase/${ids[0]}?${params}`;
   } catch { /* ignore */ }
 }
 
@@ -1711,7 +1711,7 @@ function renderProfilePhotoCard(p: any): HTMLElement {
       ctxLabel: profileDisplayName || username,
       ids: allPhotos.map(ph => ph.id).join(','),
     });
-    window.location.href = `/showcase/photos/${p.id}?${params}`;
+    window.location.href = `/showcase/${p.id}?${params}`;
   });
 
   return btn;
@@ -1778,7 +1778,7 @@ function renderAltPhotoCard(p: any, isMasonry: boolean): HTMLElement {
       ctxLabel: profileDisplayName || username,
       ids: allPhotos.map(ph => ph.id).join(','),
     });
-    window.location.href = `/showcase/photos/${p.id}?${params}`;
+    window.location.href = `/showcase/${p.id}?${params}`;
   });
 
   return btn;

@@ -1284,7 +1284,7 @@ async function loadPhotos(): Promise<number> {
     const title = p.title ?? 'Untitled';
     const vis   = visBadge(p.visibility ?? 'PRIVATE');
     return `
-      <a href="/showcase/photos/${p.id}/" class="photo-mat" title="${title}">
+      <a href="/showcase/${p.id}/" class="photo-mat" title="${title}">
         <div class="photo-thumb">${thumbInner}</div>
         <div class="photo-mat-meta">
           <div class="photo-mat-title">${title}</div>

@@ -246,7 +246,11 @@
       "Bash(ssh -i ~/.ssh/BCCAWS.pem ubuntu@52.66.167.85 \"grep -o 'as HTMLScriptElement\\\\|as HTMLAnchorElement\\\\|as HTMLButtonElement' /var/www/bcc-v3/frontend/dist/showcase/669/index.html | head -5\")",
       "Bash(ssh -i ~/.ssh/BCCAWS.pem ubuntu@52.66.167.85 \"grep -o '_astro/[^\\\\\"]*' /var/www/bcc-v3/frontend/dist/showcase/669/index.html | head -5 && echo '---' && wc -l /var/www/bcc-v3/frontend/dist/showcase/669/index.html\")",
       "Bash(git show *)",
-      "Bash(ssh -i ~/.ssh/BCCAWS.pem ubuntu@52.66.167.85 \"curl -sk -H 'Host: bcc.bhopal.info' https://localhost/api/v1/gallery/photos/by-id/669 | python3 -c \\\\\"import json,sys; d=json.load\\(sys.stdin\\); print\\('id:', d.get\\('id'\\), 'title:', d.get\\('title'\\)\\)\\\\\" && echo '' && curl -sk -o /dev/null -w 'HTTP %{http_code}' -H 'Host: bcc.bhopal.info' https://localhost/showcase/669/ && echo ' /showcase/669/'\")"
+      "Bash(ssh -i ~/.ssh/BCCAWS.pem ubuntu@52.66.167.85 \"curl -sk -H 'Host: bcc.bhopal.info' https://localhost/api/v1/gallery/photos/by-id/669 | python3 -c \\\\\"import json,sys; d=json.load\\(sys.stdin\\); print\\('id:', d.get\\('id'\\), 'title:', d.get\\('title'\\)\\)\\\\\" && echo '' && curl -sk -o /dev/null -w 'HTTP %{http_code}' -H 'Host: bcc.bhopal.info' https://localhost/showcase/669/ && echo ' /showcase/669/'\")",
+      "Bash(curl -s \"https://bcc.bhopal.info/api/v1/photographers?limit=50\")",
+      "Bash(curl -s \"https://bcc.bhopal.info/api/v1/photographers?limit=100&sort=name\")",
+      "Bash(curl -s \"https://bcc.bhopal.info/api/v1/photographers/yogeshmore\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")"
     ]
   }
 }

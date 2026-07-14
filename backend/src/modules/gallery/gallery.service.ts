@@ -120,7 +120,10 @@ function formatAlbum(row: Record<string, unknown>) {
   return {
     uuid:             row.uuid,
     title:            row.title,
+    eyebrow:          row.eyebrow ?? null,
+    subtitle:         row.subtitle ?? null,
     description:      row.description ?? null,
+    genre:            row.genre ?? null,
     visibility:       row.visibility,
     album_type:       row.album_type,
     kind:             row.kind ?? 'COLLECTION',
@@ -419,6 +422,7 @@ export class GalleryService {
     opts: {
       owner_user_id?: number;
       genre?: string;
+      tag?: string;
       limit?: number;
       offset?: number;
     },
@@ -458,6 +462,17 @@ export class GalleryService {
 
     if (opts.genre) {
       query = query.where('genre', '=', opts.genre as never);
+    }
+
+    // Category filter (item 71): match photos assigned the given tag_key.
+    if (opts.tag) {
+      const tag = opts.tag;
+      query = query.where('id', 'in', eb =>
+        eb.selectFrom('photo_tag_assignments as pta')
+          .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+          .where('pt.tag_key', '=', tag)
+          .select('pta.photo_id'),
+      );
     }
 
     const rows = await query
@@ -619,7 +634,10 @@ export class GalleryService {
         uuid,
         owner_user_id: userId,
         title:         dto.title,
+        eyebrow:       dto.eyebrow ?? null,
+        subtitle:      dto.subtitle ?? null,
         description:   dto.description ?? null,
+        genre:         dto.genre ?? null,
         visibility:    dto.visibility ?? 'MEMBERS_ONLY',
         album_type:    'MEMBER_CREATED',
         kind:          dto.kind ?? 'COLLECTION',
@@ -790,7 +808,10 @@ export class GalleryService {
       updated_at: toMysqlDatetime(new Date()),
     };
     if (dto.title        !== undefined) updates.title       = dto.title;
+    if (dto.eyebrow      !== undefined) updates.eyebrow     = dto.eyebrow;
+    if (dto.subtitle     !== undefined) updates.subtitle    = dto.subtitle;
     if (dto.description  !== undefined) updates.description = dto.description;
+    if (dto.genre        !== undefined) updates.genre       = dto.genre;
     if (dto.visibility   !== undefined) updates.visibility  = dto.visibility;
     if (dto.kind         !== undefined) updates.kind        = dto.kind;
 
@@ -932,6 +953,7 @@ export class GalleryService {
 
   async getPublicFeed(opts: {
     genre?: string;
+    tag?: string;
     limit?: number;
     offset?: number;
     shuffle?: boolean;
@@ -954,6 +976,17 @@ export class GalleryService {
 
     if (opts.genre) {
       q = q.where('photos.genre', '=', opts.genre as any);
+    }
+
+    // Category filter (item 71): only photos assigned the given tag_key.
+    if (opts.tag) {
+      const tag = opts.tag;
+      q = q.where('photos.id', 'in', eb =>
+        eb.selectFrom('photo_tag_assignments as pta')
+          .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+          .where('pt.tag_key', '=', tag)
+          .select('pta.photo_id'),
+      );
     }
 
     // Retrieve approved public photographs
@@ -1027,11 +1060,12 @@ export class GalleryService {
   async getPhotographerGallery(
     requestingUserId: number | null,
     photographerUserId: number,
-    opts: { genre?: string; limit?: number; offset?: number } = {},
+    opts: { genre?: string; tag?: string; limit?: number; offset?: number } = {},
   ): Promise<{ photos: ReturnType<typeof formatPhoto>[]; total: number }> {
     return this.listPhotos(requestingUserId, {
       owner_user_id: photographerUserId,
       genre:         opts.genre,
+      tag:           opts.tag,
       limit:         opts.limit,
       offset:        opts.offset,
     });

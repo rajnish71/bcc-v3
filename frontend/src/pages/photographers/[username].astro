@@ -181,8 +181,20 @@ const { username } = Astro.params;
           <span class="photo-grid-count" id="photo-grid-count"></span>
         </div>
 
-        <div id="portfolio-grid" class="profile-justified-grid">
+        <!-- Category filter (item 71) — hidden until chips load -->
+        <div class="profile-filter" id="profile-filter" role="group" aria-label="Filter by category" hidden>
+          <button class="profile-filter-chip is-on" data-tag="" type="button" aria-pressed="true">All</button>
+        </div>
+
+        <div id="portfolio-grid" class="profile-justified-grid" data-target-height="240" data-gap="8">
           <div class="grid-empty" id="grid-loading">Loading portfolio…</div>
+        </div>
+
+        <!-- Load more — mirrors /showcase pagination (20 initial, +20 per click) -->
+        <div class="profile-load-more-wrap" id="profile-load-more-wrap" hidden>
+          <button class="profile-load-more-btn" id="profile-load-more-btn" type="button">
+            Load More Photographs
+          </button>
         </div>
 
       </main>
@@ -723,10 +735,41 @@ const { username } = Astro.params;
   color: #8B8378;
 }
 
-/* Justified gallery — same algorithm as homepage gallery wall */
+/* Category filter strip (item 71) */
+.profile-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.profile-filter-chip {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #57514B;
+  background: #FFFFFF; border: 1px solid #D8D2C6; padding: 6px 14px; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.profile-filter-chip:hover { border-color: #C9A961; color: #141210; }
+.profile-filter-chip.is-on { background: linear-gradient(135deg, #C9A961, #A8843C); border-color: #A8843C; color: #FFFFFF; }
+
+/* Justified gallery — inherits the /showcase justified grid (item 70) */
 .profile-justified-grid { display: flex; flex-direction: column; gap: 0; }
 .profile-jrow { display: flex; gap: 8px; margin-bottom: 8px; }
 .profile-jrow:last-child { margin-bottom: 0; }
+
+/* Load more — mirrors /showcase load-more control, restyled for the ivory profile surface */
+.profile-load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 28px 0 4px;
+}
+.profile-load-more-btn {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #A8843C;
+  border: 1px solid rgba(168, 132, 60, 0.5);
+  padding: 12px 40px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+}
+.profile-load-more-btn:hover { border-color: #A8843C; background: #A8843C; color: #FFFFFF; }
+.profile-load-more-btn[disabled] { opacity: 0.5; cursor: default; }
 
 .grid-empty {
   text-align: center;
@@ -737,86 +780,9 @@ const { username } = Astro.params;
   border: 1px solid #E7E1D6;
 }
 
-/* Photo card hover — mirrors the homepage gallery-wall effect (item 49):
-   dark overlay fade-in, viewfinder corner brackets, caption slide-up. */
-.profile-photo-card {
-  position: relative;
-  overflow: hidden;
-  background: #141210;
-  cursor: pointer;
-  display: block;
-  border: none;
-  padding: 0;
-  flex-shrink: 0;
-}
-.profile-photo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.profile-photo-card:hover .profile-photo-img { transform: scale(1.04); }
-
-/* Dark overlay on hover */
-.profile-photo-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(20, 18, 16, 0.45);
-  opacity: 0;
-  transition: opacity 0.25s;
-  z-index: 1;
-  pointer-events: none;
-}
-.profile-photo-card:hover::before { opacity: 1; }
-
-/* Viewfinder corner brackets */
-.pf-corner {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  opacity: 0;
-  transition: opacity 0.25s;
-  pointer-events: none;
-  z-index: 2;
-}
-.pf-corner.tl { top: 10px; left: 10px; border-top: 2px solid #FFFFFF; border-left: 2px solid #FFFFFF; }
-.pf-corner.tr { top: 10px; right: 10px; border-top: 2px solid #FFFFFF; border-right: 2px solid #FFFFFF; }
-.pf-corner.bl { bottom: 10px; left: 10px; border-bottom: 2px solid #FFFFFF; border-left: 2px solid #FFFFFF; }
-.pf-corner.br { bottom: 10px; right: 10px; border-bottom: 2px solid #FFFFFF; border-right: 2px solid #FFFFFF; }
-.profile-photo-card:hover .pf-corner { opacity: 1; }
-
-/* Caption slides up on hover */
-.profile-photo-overlay {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 10px 12px;
-  background: rgba(20, 18, 16, 0.65);
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.25s, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 3;
-}
-.profile-photo-card:hover .profile-photo-overlay { opacity: 1; transform: translateY(0); }
-.profile-photo-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #FFFFFF;
-  line-height: 1.3;
-}
-.profile-photo-cap {
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.4;
-  margin-top: 2px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+/* Photo card hover treatment is inherited from the global .photo-card /
+   .vf-card / .photo-overlay / .photo-card__info rules (styles/global.css),
+   identical to /showcase (item 70). No page-local photo-card CSS. */
 
 /* ── ABOUT TAB ───────────────────────────────────────────────────────────── */
 .about-layout {
@@ -1061,33 +1027,46 @@ interface PhotoEntry {
 let allPhotos: PhotoEntry[] = [];
 let profileDisplayName = '';
 
-// ── Justified grid layout (same algorithm as homepage gallery wall) ────────
-function buildProfileRows(
-  photos: Array<{ aspect: number }>,
+// ── Justified grid layout — inherited verbatim from /showcase (item 70) ────
+// Rows fill to the container width; the trailing partial row is kept as
+// `leftovers` so the next load-more page can complete it (identical to
+// Showcase). flushLeftovers() renders any remainder once no more pages exist.
+function buildJustifiedLayout(
+  photos: Array<{ aspect: number } & Record<string, any>>,
   containerWidth: number,
-  targetH = 220,
+  targetHeight = 240,
   gap = 8
 ) {
-  const rows: Array<{ height: number; items: typeof photos }> = [];
-  let row: typeof photos = [], rowW = 0;
+  const rows: Array<{ height: number; photos: typeof photos }> = [];
+  let row: typeof photos = [];
+  let rowWidth = 0;
 
-  const flush = (last = false) => {
+  const flush = () => {
     if (!row.length) return;
     const totalGap = gap * (row.length - 1);
-    const scale = last ? Math.min(1, (containerWidth - totalGap) / rowW) : (containerWidth - totalGap) / rowW;
-    const h = targetH * scale;
-    rows.push({ height: h, items: row.map(p => ({ ...p, width: (p as any).aspect * h })) });
-    row = []; rowW = 0;
+    const scale = (containerWidth - totalGap) / rowWidth;
+    const height = targetHeight * scale;
+    rows.push({ height, photos: row.map(p => ({ ...p, width: p.aspect * height })) });
+    row = [];
+    rowWidth = 0;
   };
 
-  for (const p of photos) {
-    const iW = (p as any).aspect * targetH;
-    row.push(p); rowW += iW;
-    if (rowW + gap * (row.length - 1) >= containerWidth * 0.88) flush();
+  for (const photo of photos) {
+    row.push(photo);
+    rowWidth += photo.aspect * targetHeight;
+    if (rowWidth + gap * (row.length - 1) >= containerWidth * 0.88) flush();
   }
-  flush(true); // include partial last row for profile (show all photos)
-  return rows;
+
+  return { rows, leftovers: row };
 }
+
+// ── Justified paging state (mirrors /showcase) ─────────────────────────────
+const PROFILE_PAGE_SIZE = 20;              // 20 initial, +20 per load-more
+let profileBuffer: any[] = [];             // trailing photos awaiting a full row
+let profileTotal = 0;                      // total photos for this photographer
+let profileUserId = 0;                     // owner id, for load-more fetches
+let profileLoading = false;
+let currentProfileTag = '';                // active category filter (tag_key), '' = all
 
 // ── Social link helpers ────────────────────────────────────────────────────
 const SOCIAL_BASE: Record<string, string> = {
@@ -1545,123 +1524,246 @@ async function loadJournal(userId: number) {
   }).join('');
 }
 
-// ── Load photos — justified gallery with SEO alt-text ─────────────────────
-async function loadPhotos(userId: number) {
+// ── Render one card (identical hover treatment to /showcase) ───────────────
+function renderProfilePhotoCard(p: any): HTMLElement {
+  const btn = document.createElement('button');
+  btn.className = 'photo-card vf-card';
+  btn.type = 'button';
+  btn.style.cssText = `width:${p.width}px;height:${p.height}px;flex-shrink:0;`;
+  btn.setAttribute('data-aspect', String(p.aspect));
+
+  const altTitle = p.title ? esc(p.title) : 'Untitled';
+  const altCredit = profileDisplayName ? ` by ${esc(profileDisplayName)}` : '';
+  btn.setAttribute('aria-label', `${altTitle}${altCredit} · Bhopal Camera Club`);
+
+  const img = document.createElement('img');
+  img.src = p.imageUrl ?? '';
+  img.alt = `${altTitle}${altCredit} · Bhopal Camera Club`;
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.className = 'photo-card__img';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-overlay';
+  overlay.setAttribute('aria-hidden', 'true');
+
+  const br = document.createElement('span');
+  br.className = 'vf-br'; br.setAttribute('aria-hidden', 'true');
+  const bl = document.createElement('span');
+  bl.className = 'vf-bl'; bl.setAttribute('aria-hidden', 'true');
+
+  // Caption block — Showcase treatment; title + caption sub-line (photographer
+  // is implicit on their own profile, so the sub-line carries the caption).
+  const titleText = (p.title ?? '').trim();
+  const capText = (p.caption ?? '').trim();
+  if (titleText || capText) {
+    const info = document.createElement('div');
+    info.className = 'photo-card__info';
+    info.setAttribute('aria-hidden', 'true');
+    const t = document.createElement('div');
+    t.className = 'photo-card__title';
+    t.textContent = titleText || 'Untitled';
+    info.appendChild(t);
+    if (capText && capText !== titleText) {
+      const c = document.createElement('div');
+      c.className = 'photo-card__photographer';
+      c.textContent = capText;
+      info.appendChild(c);
+    }
+    btn.appendChild(info);
+  }
+
+  btn.appendChild(img);
+  btn.appendChild(overlay);
+  btn.appendChild(br);
+  btn.appendChild(bl);
+
+  // Click → canonical photo page, carrying portfolio context for prev/next.
+  // ids reflect the full loaded set at click time so navigation stays correct
+  // as more pages load.
+  btn.addEventListener('click', () => {
+    const params = new URLSearchParams({
+      ctx: 'portfolio', ctxId: username,
+      ctxLabel: profileDisplayName || username,
+      ids: allPhotos.map(ph => ph.id).join(','),
+    });
+    window.location.href = `/showcase/photos/${p.id}?${params}`;
+  });
+
+  return btn;
+}
+
+// ── Render a page of photos into justified rows (mirrors /showcase) ────────
+function renderProfileGrid(newPhotos: any[], flushRemainder: boolean) {
   const grid = document.getElementById('portfolio-grid') as HTMLElement | null;
   if (!grid) return;
+
+  const candidates = [...profileBuffer, ...newPhotos];
+  const containerWidth = grid.clientWidth || 700;
+  const { rows, leftovers } = buildJustifiedLayout(candidates, containerWidth, 240, 8);
+  profileBuffer = leftovers;
+
+  const fragment = document.createDocumentFragment();
+  rows.forEach(row => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'profile-jrow';
+    row.photos.forEach((p: any) => {
+      rowEl.appendChild(renderProfilePhotoCard({ ...p, height: row.height }));
+      allPhotos.push(p);          // only *rendered* photos accumulate (offset math)
+    });
+    fragment.appendChild(rowEl);
+  });
+
+  // On the final page, render any trailing partial row at natural height so
+  // every photo is shown (Showcase leaves leftovers buffered indefinitely).
+  if (flushRemainder && profileBuffer.length) {
+    const gap = 8;
+    const totalGap = gap * (profileBuffer.length - 1);
+    const rowWidth = profileBuffer.reduce((s, p) => s + p.aspect * 240, 0);
+    const scale = Math.min(1, (containerWidth - totalGap) / rowWidth);
+    const height = 240 * scale;
+    const rowEl = document.createElement('div');
+    rowEl.className = 'profile-jrow';
+    profileBuffer.forEach((p: any) => {
+      rowEl.appendChild(renderProfilePhotoCard({ ...p, width: p.aspect * height, height }));
+      allPhotos.push(p);
+    });
+    fragment.appendChild(rowEl);
+    profileBuffer = [];
+  }
+
+  grid.appendChild(fragment);
+}
+
+// ── Load a page of photos — justified gallery scoped to this photographer ──
+async function loadPhotos(userId: number, append = false) {
+  const grid = document.getElementById('portfolio-grid') as HTMLElement | null;
+  if (!grid || profileLoading) return;
+  profileLoading = true;
+  profileUserId = userId;
+
+  const loadMoreWrap = document.getElementById('profile-load-more-wrap');
+  const loadMoreBtn  = document.getElementById('profile-load-more-btn') as HTMLButtonElement | null;
+  if (loadMoreBtn) loadMoreBtn.disabled = true;
 
   try {
     const token = localStorage.getItem('bcc_token') ?? '';
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch(`/api/v1/gallery/photographer/${userId}?limit=500`, { headers });
+    // Fresh loads (filter change / first load) always start at offset 0.
+    const offset = append ? (allPhotos.length + profileBuffer.length) : 0;
+    const tagParam = currentProfileTag ? `&tag=${encodeURIComponent(currentProfileTag)}` : '';
+    const res = await fetch(
+      `/api/v1/gallery/photographer/${userId}?limit=${PROFILE_PAGE_SIZE}&offset=${offset}${tagParam}`,
+      { headers },
+    );
     if (!res.ok) throw new Error('Photos fetch failed');
-    const { photos } = await res.json();
+    const payload = await res.json();
+    const photos: PhotoEntry[] = Array.isArray(payload.photos) ? payload.photos : [];
+    profileTotal = payload.total ?? photos.length;
 
-    if (!Array.isArray(photos) || photos.length === 0) {
-      grid.innerHTML = `<div class="grid-empty">No photographs uploaded to the showcase yet.</div>`;
+    // On a fresh load, reset the accumulators only after the response arrives
+    // (so a failed fetch doesn't wipe the grid).
+    if (!append) { allPhotos = []; profileBuffer = []; grid.innerHTML = ''; }
+
+    if (photos.length === 0 && allPhotos.length === 0) {
+      grid.innerHTML = currentProfileTag
+        ? `<div class="grid-empty">No photographs in this category.</div>`
+        : `<div class="grid-empty">No photographs uploaded to the showcase yet.</div>`;
+      loadMoreWrap?.setAttribute('hidden', '');
       return;
     }
 
-    allPhotos = photos;
-
-    // Update photo count stat
-    setTxt('ph-photo-count', String(photos.length));
-
-    // Photo grid count header
-    const header = document.getElementById('photo-grid-header');
-    const countEl = document.getElementById('photo-grid-count');
-    if (header) header.hidden = false;
-    if (countEl) countEl.textContent = `${photos.length} ${photos.length === 1 ? 'photograph' : 'photographs'}`;
-
-    grid.innerHTML = '';
-
-    // Build justified grid
-    const photoData = photos.map((p: PhotoEntry) => ({
+    const mapped = photos.map((p: PhotoEntry) => ({
       ...p,
       aspect: (p.width_px && p.height_px) ? p.width_px / p.height_px : 1.5,
       imageUrl: p.urls?.medium ?? p.urls?.original ?? '',
     }));
 
-    const containerWidth = grid.clientWidth || 700;
-    let flatIdx = 0;
+    // hasMore is computed from what has been *fetched* (rendered + buffered),
+    // independent of how many end up in the trailing buffer this page.
+    const fetchedSoFar = offset + mapped.length;
+    const hasMore = fetchedSoFar < profileTotal;
+    renderProfileGrid(mapped, !hasMore);
 
-    buildProfileRows(photoData, containerWidth).forEach(row => {
-      const rowEl = document.createElement('div');
-      rowEl.className = 'profile-jrow';
+    // Photo count header + stat
+    setTxt('ph-photo-count', String(profileTotal));
+    const header = document.getElementById('photo-grid-header');
+    const countEl = document.getElementById('photo-grid-count');
+    if (header) header.hidden = false;
+    if (countEl) countEl.textContent = `${profileTotal} ${profileTotal === 1 ? 'photograph' : 'photographs'}`;
 
-      (row.items as any[]).forEach((p: any) => {
-        const currentIdx = flatIdx++;
-        const btn = document.createElement('button');
-        btn.className = 'profile-photo-card';
-        btn.type = 'button';
-        btn.style.cssText = `width:${p.width}px;height:${row.height}px;`;
-
-        // Canonical SEO alt-text: "Photo Title by Photographer Name · Bhopal Camera Club"
-        const altTitle = p.title ? esc(p.title) : 'Untitled';
-        const altCredit = profileDisplayName ? ` by ${esc(profileDisplayName)}` : '';
-        const altText = `${altTitle}${altCredit} · Bhopal Camera Club`;
-
-        btn.setAttribute('aria-label', p.title || `Photo ${currentIdx + 1}`);
-
-        const img = document.createElement('img');
-        img.src = p.imageUrl;
-        img.alt = altText;
-        img.loading = currentIdx < 6 ? 'eager' : 'lazy';
-        img.className = 'profile-photo-img';
-
-        // Viewfinder corner brackets (match homepage gallery wall)
-        ['tl', 'tr', 'bl', 'br'].forEach(c => {
-          const corner = document.createElement('div');
-          corner.className = `pf-corner ${c}`;
-          btn.appendChild(corner);
-        });
-
-        // Caption overlay — photograph title with caption as a sub-line
-        const overlay = document.createElement('div');
-        overlay.className = 'profile-photo-overlay';
-        const titleText = (p.title ?? '').trim();
-        const capText = (p.caption ?? '').trim();
-        if (titleText) {
-          const titleSpan = document.createElement('div');
-          titleSpan.className = 'profile-photo-title';
-          titleSpan.textContent = titleText;
-          overlay.appendChild(titleSpan);
-        }
-        if (capText && capText !== titleText) {
-          const capSpan = document.createElement('div');
-          capSpan.className = 'profile-photo-cap';
-          capSpan.textContent = capText;
-          overlay.appendChild(capSpan);
-        }
-        if (!titleText && !capText) {
-          const titleSpan = document.createElement('div');
-          titleSpan.className = 'profile-photo-title';
-          titleSpan.textContent = 'Untitled';
-          overlay.appendChild(titleSpan);
-        }
-
-        btn.appendChild(img);
-        btn.appendChild(overlay);
-        btn.addEventListener('click', () => {
-          const prev = allPhotos[currentIdx - 1]?.id;
-          const next = allPhotos[currentIdx + 1]?.id;
-          const params = new URLSearchParams({
-            ctx: 'portfolio', ctxId: username,
-            ctxLabel: profileDisplayName || username,
-            ids: allPhotos.map(p => p.id).join(','),
-          });
-          window.location.href = `/showcase/photos/${p.id}?${params}`;
-        });
-        rowEl.appendChild(btn);
-      });
-
-      grid.appendChild(rowEl);
-    });
+    if (hasMore) loadMoreWrap?.removeAttribute('hidden');
+    else loadMoreWrap?.setAttribute('hidden', '');
 
   } catch {
-    if (grid) grid.innerHTML = `<div class="grid-empty">Unable to load portfolio. Please try again later.</div>`;
+    if (!append && allPhotos.length === 0) {
+      grid.innerHTML = `<div class="grid-empty">Unable to load portfolio. Please try again later.</div>`;
+    }
+  } finally {
+    profileLoading = false;
+    if (loadMoreBtn) loadMoreBtn.disabled = false;
   }
 }
+
+// Load-more click → next page
+document.getElementById('profile-load-more-btn')?.addEventListener('click', () => {
+  if (profileUserId) loadPhotos(profileUserId, true);
+});
+
+// ── Category filter chips (item 71) ────────────────────────────────────────
+async function loadProfileFilterChips() {
+  try {
+    const res = await fetch('/api/v1/gallery/tags?category=GENRE');
+    if (!res.ok) return;
+    const tags = await res.json() as Array<{ tag_key: string; display_name: string }>;
+    const strip = document.getElementById('profile-filter');
+    if (!strip || !tags.length) return;
+    tags
+      .sort((a, b) => a.display_name.localeCompare(b.display_name))
+      .forEach(t => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'profile-filter-chip';
+        btn.dataset.tag = t.tag_key;
+        btn.setAttribute('aria-pressed', 'false');
+        btn.textContent = t.display_name;
+        strip.appendChild(btn);
+      });
+    strip.hidden = false;
+  } catch { /* non-critical */ }
+}
+
+document.getElementById('profile-filter')?.addEventListener('click', e => {
+  const btn = (e.target as Element).closest<HTMLButtonElement>('.profile-filter-chip');
+  if (!btn) return;
+  const tag = btn.dataset.tag ?? '';
+  if (tag === currentProfileTag) return;
+  currentProfileTag = tag;
+  document.querySelectorAll('.profile-filter-chip').forEach(b => {
+    const on = b === btn;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  if (profileUserId) loadPhotos(profileUserId, false);
+});
+
+// Re-justify on resize (rebuild from the full loaded set — mirrors /showcase)
+let profileResizeTimer: ReturnType<typeof setTimeout>;
+window.addEventListener('resize', () => {
+  clearTimeout(profileResizeTimer);
+  profileResizeTimer = setTimeout(() => {
+    const grid = document.getElementById('portfolio-grid');
+    if (!grid || allPhotos.length === 0) return;
+    // Rebuild justified rows from the full loaded set. Snapshot first, then
+    // reset the accumulators so renderProfileGrid re-populates them cleanly.
+    const full = [...allPhotos, ...profileBuffer];
+    allPhotos = [];
+    profileBuffer = [];
+    grid.querySelectorAll('.profile-jrow').forEach(r => r.remove());
+    const hasMore = full.length < profileTotal;
+    renderProfileGrid(full, !hasMore);
+  }, 200);
+});
 
 // ── Tab navigation ────────────────────────────────────────────────────────
 function activateTab(tabKey: string) {
@@ -1695,6 +1797,7 @@ function esc(str: string): string {
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────
+loadProfileFilterChips().catch(() => {});
 loadProfile().catch(() => {
   setTxt('ph-name', 'Photographer');
   const grid = document.getElementById('portfolio-grid');

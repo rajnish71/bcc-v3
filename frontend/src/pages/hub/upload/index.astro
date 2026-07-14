@@ -98,15 +98,14 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       </div>
 
       <div class="insp-field">
-        <div class="insp-label">Genre</div>
-        <div class="pill-group" id="genre-pills" role="group" aria-label="Genre">
-          <button class="pill" data-value="Street" type="button">Street</button>
-          <button class="pill" data-value="Landscape" type="button">Landscape</button>
-          <button class="pill" data-value="Portrait" type="button">Portrait</button>
-          <button class="pill" data-value="Wildlife" type="button">Wildlife</button>
-          <button class="pill" data-value="Architecture" type="button">Architecture</button>
-          <button class="pill" data-value="Abstract" type="button">Abstract</button>
+        <div class="insp-label-row">
+          <div class="insp-label">Categories</div>
+          <span class="insp-optional">select one or more</span>
         </div>
+        <div class="pill-group" id="genre-pills" role="group" aria-label="Categories">
+          <span class="insp-hint" id="genre-pills-loading">Loading categories…</span>
+        </div>
+        <p class="insp-hint">Applies to all photographs in this upload — powers category filtering across the gallery.</p>
       </div>
 
       <div class="insp-field">
@@ -415,10 +414,37 @@ let draftCount = 0;
 const abortMap = new Map<string, AbortController>();
 
 // Inspector metadata state
-let activeGenre: string | null = null;
 let activeActivity: string | null = null;
 let keywords: string[] = [];
 let addingKeyword = false;
+
+// Categories (item 71) — multi-select GENRE tags applied to every uploaded photo.
+const selectedCategories = new Set<string>();     // tag_key
+const categoryTagIds: Record<string, number> = {}; // tag_key -> tag id
+let categoriesLoaded = false;
+
+async function loadCategoryPills(): Promise<void> {
+  if (categoriesLoaded) return;
+  try {
+    const res = await fetch('/api/v1/gallery/tags?category=GENRE');
+    if (!res.ok) return;
+    const tags = await res.json() as Array<{ id: number; tag_key: string; display_name: string }>;
+    const group = qid('genre-pills');
+    group.innerHTML = '';
+    tags
+      .sort((a, b) => a.display_name.localeCompare(b.display_name))
+      .forEach(t => {
+        categoryTagIds[t.tag_key] = t.id;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pill';
+        btn.dataset.value = t.tag_key;
+        btn.textContent = t.display_name;
+        group.appendChild(btn);
+      });
+    categoriesLoaded = true;
+  } catch { /* non-critical — pills just stay empty */ }
+}
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -943,6 +969,20 @@ function clearPubError(): void {
   if (banner) banner.hidden = true;
 }
 
+// Assign the inspector's selected categories to a confirmed photo (item 71).
+async function assignCategories(photoUuid: string): Promise<void> {
+  for (const key of selectedCategories) {
+    const tagId = categoryTagIds[key];
+    if (!tagId) continue;
+    try {
+      await fetch(`/api/v1/gallery/photos/${photoUuid}/tags/${tagId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${tok()}` },
+      });
+    } catch { /* best-effort */ }
+  }
+}
+
 async function confirmItems(
   selectedIds: string[],
   visibility: string,
@@ -1004,6 +1044,8 @@ async function confirmItems(
         item.confirmedAs = visibility === 'PRIVATE' ? 'drafted' : 'published';
         item.selected = false;
         confirmed++;
+        // Attach selected categories (item 71) — best-effort, never blocks upload.
+        await assignCategories(item.photoUuid);
       } else {
         let msg = `Server error (${res.status})`;
         try {
@@ -1176,13 +1218,14 @@ qid('btn-close-insp').addEventListener('click', () => {
   qid('hub-main').classList.remove('insp-open');
 });
 
-// Genre pills
+// Category pills (item 71) — multi-select
 qid('genre-pills').addEventListener('click', e => {
   const btn = (e.target as Element).closest('.pill') as HTMLElement | null;
-  if (!btn) return;
-  const val = btn.dataset.value!;
-  activeGenre = activeGenre === val ? null : val;
-  qid('genre-pills').querySelectorAll('.pill').forEach(p => p.classList.toggle('pill--active', (p as HTMLElement).dataset.value === activeGenre));
+  if (!btn || !btn.dataset.value) return;
+  const val = btn.dataset.value;
+  if (selectedCategories.has(val)) selectedCategories.delete(val);
+  else selectedCategories.add(val);
+  btn.classList.toggle('pill--active', selectedCategories.has(val));
 });
 
 // Activity pills
@@ -1211,7 +1254,9 @@ qid('btn-draft').addEventListener('click', () => handlePublish(true).catch((err:
 // Upload More
 qid('btn-upload-more').addEventListener('click', () => {
   items = []; publishedCount = 0; draftCount = 0;
-  activeGenre = null; activeActivity = null; keywords = [];
+  activeActivity = null; keywords = [];
+  selectedCategories.clear();
+  qid('genre-pills').querySelectorAll('.pill').forEach(p => p.classList.remove('pill--active'));
   setPhase('empty');
 });
 
@@ -1246,4 +1291,7 @@ qid('src-files').addEventListener('click', () => {
   fileInput.removeAttribute('capture');
   fileInput.click();
 });
+
+// Load the category taxonomy for the inspector pills (item 71).
+void loadCategoryPills();
 </script>

@@ -6,14 +6,20 @@
 
 export interface CreateAlbumDto {
   title:       string;
+  eyebrow?:    string;   // item 69: kicker above the title
+  subtitle?:   string;   // item 69: one-line subtitle
   description?: string;
+  genre?:      string;   // item 71: a single GENRE tag_key (primary category)
   visibility?: 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE';
   kind?:       'COLLECTION' | 'STORY';
 }
 
 export interface UpdateAlbumDto {
   title?:        string;
+  eyebrow?:      string;
+  subtitle?:     string;
   description?:  string;
+  genre?:        string;
   visibility?:   'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE';
   kind?:         'COLLECTION' | 'STORY';
   cover_photo_uuid?: string;  // UUID of a photo already in this album

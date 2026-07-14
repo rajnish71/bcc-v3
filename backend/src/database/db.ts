@@ -767,7 +767,12 @@ export interface PhotoAlbumsTable {
   uuid:           string;
   owner_user_id:  number;
   title:          string;
+  // Editorial framing (item 69). eyebrow = kicker above title, subtitle = one-liner.
+  eyebrow:        Nullable<string>;
+  subtitle:       Nullable<string>;
   description:    Nullable<string>;
+  // Primary category — a single GENRE tag_key from photo_tags (item 71).
+  genre:          Nullable<string>;
   cover_photo_id: Nullable<number>;
   album_type:     Generated<AlbumType>;
   kind:           Generated<'COLLECTION' | 'STORY'>;

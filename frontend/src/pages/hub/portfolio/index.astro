@@ -200,6 +200,11 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     <div class="insp-exif" id="insp-exif" hidden></div>
 
     <div class="insp-field">
+      <div class="insp-label">Categories</div>
+      <div class="insp-cat-pills" id="insp-categories" role="group" aria-label="Categories"></div>
+    </div>
+
+    <div class="insp-field">
       <label class="insp-label" for="insp-visibility">Visibility</label>
       <select class="insp-select" id="insp-visibility">
         <option value="PUBLIC">Public — visible to everyone</option>
@@ -265,6 +270,16 @@ import HubLayout from '../../../layouts/HubLayout.astro';
         <label class="cform-label" for="collection-title-input">Title</label>
         <input class="cform-input" id="collection-title-input" type="text" maxlength="120" placeholder="e.g. Monsoon in Bhopal" />
       </div>
+      <div class="cform-row">
+        <div class="cform-field">
+          <label class="cform-label" for="collection-eyebrow-input">Eyebrow <span class="cform-opt">(optional)</span></label>
+          <input class="cform-input" id="collection-eyebrow-input" type="text" maxlength="120" placeholder="e.g. A Photo Essay" />
+        </div>
+        <div class="cform-field">
+          <label class="cform-label" for="collection-subtitle-input">Subtitle <span class="cform-opt">(optional)</span></label>
+          <input class="cform-input" id="collection-subtitle-input" type="text" maxlength="255" placeholder="e.g. The city under rain" />
+        </div>
+      </div>
       <div class="cform-field">
         <label class="cform-label" for="collection-desc-input">Description <span class="cform-opt">(optional)</span></label>
         <textarea class="cform-textarea" id="collection-desc-input" maxlength="500" rows="3" placeholder="A short line about this collection…"></textarea>
@@ -285,6 +300,17 @@ import HubLayout from '../../../layouts/HubLayout.astro';
             <option value="PRIVATE">Private</option>
           </select>
         </div>
+      </div>
+      <div class="cform-field">
+        <label class="cform-label" for="collection-genre-input">Primary category <span class="cform-opt">(optional)</span></label>
+        <select class="cform-input" id="collection-genre-input">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <!-- Cover selection (item 68) — only shown when editing a container that has photos -->
+      <div class="cform-field" id="collection-cover-field" hidden>
+        <label class="cform-label">Cover photograph <span class="cform-opt">(pick one from this container)</span></label>
+        <div class="cover-picker" id="collection-cover-picker"></div>
       </div>
       <div class="cform-error" id="collection-error" hidden></div>
       <div class="modal-actions">
@@ -818,12 +844,18 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .btn-collection-new:hover { background: #C9A961; color: #fff; }
 .collections-hint { font-size: 12px; color: #8B8378; line-height: 1.5; margin-bottom: 14px; max-width: 720px; }
 .collections-empty { font-size: 13px; color: #8B8378; font-style: italic; }
-.collections-row { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 6px; }
+/* item 69: cards match the portfolio photo grid so they don't dominate. */
+.collections-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  align-items: start;
+}
 .collection-card {
-  flex: 0 0 auto; width: 210px; background: #fff; border: 1px solid #E7E1D6; position: relative;
+  background: #fff; border: 1px solid #E7E1D6; position: relative;
 }
 .collection-cover {
-  width: 100%; aspect-ratio: 16 / 10; overflow: hidden;
+  width: 100%; aspect-ratio: 4 / 5; overflow: hidden;
   background: #241E1A repeating-linear-gradient(135deg, #2A2420 0, #2A2420 18px, #241E1A 18px, #241E1A 36px);
 }
 .collection-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -857,6 +889,37 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .cform-textarea { resize: vertical; }
 .cform-error { font-size: 12px; color: #882828; margin-bottom: 10px; }
 
+/* Inspector category pills (item 71) */
+.insp-cat-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.insp-cat-pill {
+  font-size: 11px; font-weight: 600; color: #57514B; background: #fff;
+  border: 1px solid #D8D2C6; padding: 4px 10px; cursor: pointer; font-family: var(--font-body);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.insp-cat-pill:hover { border-color: #C9A961; }
+.insp-cat-pill.is-on { background: #C9A961; border-color: #A8843C; color: #fff; }
+
+/* Cover picker (item 68) */
+.cover-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.cover-pick {
+  position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+  border: 2px solid transparent; cursor: pointer; background: #1A1816; padding: 0;
+}
+.cover-pick img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover-pick[aria-pressed="true"] { border-color: #C9A961; }
+.cover-pick[aria-pressed="true"]::after {
+  content: '✓'; position: absolute; top: 2px; right: 4px; color: #fff;
+  font-size: 11px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+.cover-picker-empty { font-size: 12px; color: #8B8378; font-style: italic; grid-column: 1 / -1; }
+
 /* Add-to-collection list */
 .addto-list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; max-height: 260px; overflow-y: auto; }
 .addto-item {
@@ -877,15 +940,18 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 ───────────────────────────────────────────────────────────────────────── */
 @media (min-width: 641px) and (max-width: 1199px) {
   .port-grid { grid-template-columns: repeat(3, 1fr); }
+  .collections-row { grid-template-columns: repeat(3, 1fr); }
   .insp-panel { width: 380px; }
 }
 
 @media (max-width: 900px) {
   .port-grid { grid-template-columns: repeat(3, 1fr); }
+  .collections-row { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 640px) {
   .port-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .collections-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .insp-panel { width: 100%; top: 0; }
   .toolbar-row--controls { flex-direction: column; align-items: flex-start; }
   .toolbar-genre-chips { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
@@ -1239,6 +1305,8 @@ function populateInspector(p: Photo) {
   const errEl = document.getElementById('insp-error')!;
   errEl.hidden = true;
 
+  void renderInspectorCategories(p.uuid);
+
   // Nav label + button states
   const navLabel = document.getElementById('insp-nav-label')!;
   navLabel.textContent = `${inspectorIndex + 1} of ${filtered.length}`;
@@ -1265,6 +1333,70 @@ document.getElementById('insp-next-btn')?.addEventListener('click', () => {
 document.getElementById('insp-close-btn')?.addEventListener('click', closeInspector);
 document.getElementById('insp-scrim')?.addEventListener('click', closeInspector);
 
+/* ── Inspector categories (item 71) — per-photo GENRE tags ───────────────── */
+let inspGenreTags: Array<{ id: number; tag_key: string; display_name: string }> | null = null;
+let inspOriginalTagIds = new Set<number>();
+let inspWorkingTagIds  = new Set<number>();
+
+async function ensureInspGenreTags() {
+  if (inspGenreTags) return inspGenreTags;
+  try {
+    const res = await apiFetch(`${API}/gallery/tags?category=GENRE`);
+    if (res.ok) {
+      const tags = await res.json() as Array<{ id: number; tag_key: string; display_name: string }>;
+      inspGenreTags = tags.sort((a, b) => a.display_name.localeCompare(b.display_name));
+    }
+  } catch { /* non-critical */ }
+  return inspGenreTags ?? [];
+}
+
+async function renderInspectorCategories(uuid: string) {
+  const wrap = document.getElementById('insp-categories');
+  if (!wrap) return;
+  const tags = await ensureInspGenreTags();
+
+  // Load this photo's current GENRE tags → the baseline for diffing on save.
+  inspOriginalTagIds = new Set();
+  try {
+    const r = await apiFetch(`${API}/gallery/photos/${uuid}/tags`);
+    if (r.ok) {
+      const cur = await r.json() as Array<{ id: number; category: string }>;
+      cur.forEach(t => { if (t.category === 'GENRE') inspOriginalTagIds.add(Number(t.id)); });
+    }
+  } catch { /* non-critical */ }
+  inspWorkingTagIds = new Set(inspOriginalTagIds);
+
+  wrap.innerHTML = '';
+  tags.forEach(t => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'insp-cat-pill';
+    btn.textContent = t.display_name;
+    const on = inspWorkingTagIds.has(t.id);
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.addEventListener('click', () => {
+      if (inspWorkingTagIds.has(t.id)) inspWorkingTagIds.delete(t.id);
+      else inspWorkingTagIds.add(t.id);
+      const active = inspWorkingTagIds.has(t.id);
+      btn.classList.toggle('is-on', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+// Persist category changes for the current photo (POST added, DELETE removed).
+async function syncInspectorCategories(uuid: string) {
+  const added   = [...inspWorkingTagIds].filter(id => !inspOriginalTagIds.has(id));
+  const removed = [...inspOriginalTagIds].filter(id => !inspWorkingTagIds.has(id));
+  await Promise.all([
+    ...added.map(id   => apiFetch(`${API}/gallery/photos/${uuid}/tags/${id}`, { method: 'POST' }).catch(() => null)),
+    ...removed.map(id => apiFetch(`${API}/gallery/photos/${uuid}/tags/${id}`, { method: 'DELETE' }).catch(() => null)),
+  ]);
+  inspOriginalTagIds = new Set(inspWorkingTagIds);
+}
+
 /* ── Save from inspector ─────────────────────────────────────────────────── */
 document.getElementById('insp-save-btn')?.addEventListener('click', async () => {
   if (!inspectorUuid) return;
@@ -1285,6 +1417,8 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
   saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
 
   if (res.ok) {
+    // Persist category changes alongside the metadata save (item 71).
+    await syncInspectorCategories(inspectorUuid);
     // Update local cache
     const updated = await res.json() as Photo;
     const idx = allPhotos.findIndex(p => p.uuid === inspectorUuid);
@@ -1406,8 +1540,13 @@ async function loadProfileLink() {
     if (!res.ok) return;
     const me = await res.json() as { id?: number; username?: string };
     const link = document.getElementById('view-portfolio-link') as HTMLAnchorElement;
-    if (link && me.id) {
-      link.href = `/photographers/${me.id}/`;
+    if (!link) return;
+    if (me.username) {
+      link.href = `/photographers/${me.username}/`;
+      link.hidden = false;
+    } else {
+      // No username → no public profile URL; hide the link rather than link to a broken /photographers/{id}/ page.
+      link.hidden = true;
     }
   } catch { /* non-critical */ }
 }
@@ -1415,10 +1554,70 @@ async function loadProfileLink() {
 /* ── Collections & Stories (item 53) ─────────────────────────────────────── */
 interface CollectionItem {
   uuid: string; title: string; description: string | null;
-  visibility: string; kind: string; photo_count: number; cover_image_url: string | null;
+  eyebrow: string | null; subtitle: string | null; genre: string | null;
+  visibility: string; kind: string; photo_count: number;
+  cover_image_url: string | null; cover_photo_uuid: string | null;
 }
 let myCollections: CollectionItem[] = [];
 let editingCollectionUuid: string | null = null;
+let selectedCoverUuid: string | null = null;
+let genreOptionsLoaded = false;
+
+/* Populate the "Primary category" select from the GENRE tag taxonomy (item 71). */
+async function loadGenreOptions() {
+  if (genreOptionsLoaded) return;
+  try {
+    const res = await apiFetch(`${API}/gallery/tags?category=GENRE`);
+    if (!res.ok) return;
+    const tags = await res.json() as Array<{ tag_key: string; display_name: string }>;
+    const sel = document.getElementById('collection-genre-input') as HTMLSelectElement;
+    tags
+      .sort((a, b) => a.display_name.localeCompare(b.display_name))
+      .forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.tag_key;
+        opt.textContent = t.display_name;
+        sel.appendChild(opt);
+      });
+    genreOptionsLoaded = true;
+  } catch { /* non-critical */ }
+}
+
+/* Build the cover thumbnail picker from an album's photos (item 68). */
+async function loadCoverPicker(uuid: string, currentCoverUuid: string | null) {
+  const field  = document.getElementById('collection-cover-field')!;
+  const picker = document.getElementById('collection-cover-picker')!;
+  picker.innerHTML = '';
+  try {
+    const res = await apiFetch(`${API}/gallery/albums/${uuid}?limit=60`);
+    if (!res.ok) { field.hidden = true; return; }
+    const data = await res.json() as { photos: Array<{ uuid: string; title?: string; urls?: { thumbnail?: string; medium?: string } }> };
+    const photos = data.photos ?? [];
+    if (!photos.length) { field.hidden = true; return; }   // nothing to pick yet
+    field.hidden = false;
+    photos.forEach(p => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cover-pick';
+      btn.setAttribute('aria-pressed', String(p.uuid === currentCoverUuid));
+      btn.dataset.uuid = p.uuid;
+      const thumb = p.urls?.thumbnail ?? p.urls?.medium ?? '';
+      btn.innerHTML = `<img src="${escAttr(thumb)}" alt="${escAttr(p.title ?? '')}" loading="lazy"/>`;
+      btn.addEventListener('click', () => {
+        selectedCoverUuid = p.uuid;
+        picker.querySelectorAll('.cover-pick').forEach(el => el.setAttribute('aria-pressed', 'false'));
+        btn.setAttribute('aria-pressed', 'true');
+      });
+      picker.appendChild(btn);
+    });
+  } catch { field.hidden = true; }
+}
+
+/* Attribute-safe escape for interpolated values. */
+function escAttr(s: string): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 async function loadCollections() {
   try {
@@ -1463,25 +1662,38 @@ function renderCollections() {
 
 function openCollectionModal(uuid?: string) {
   editingCollectionUuid = uuid ?? null;
-  const titleInput = document.getElementById('collection-title-input') as HTMLInputElement;
-  const descInput  = document.getElementById('collection-desc-input') as HTMLTextAreaElement;
-  const kindInput  = document.getElementById('collection-kind-input') as HTMLSelectElement;
-  const visInput   = document.getElementById('collection-vis-input') as HTMLSelectElement;
-  const errEl      = document.getElementById('collection-error')!;
+  selectedCoverUuid = null;
+  const titleInput    = document.getElementById('collection-title-input') as HTMLInputElement;
+  const eyebrowInput  = document.getElementById('collection-eyebrow-input') as HTMLInputElement;
+  const subtitleInput = document.getElementById('collection-subtitle-input') as HTMLInputElement;
+  const descInput     = document.getElementById('collection-desc-input') as HTMLTextAreaElement;
+  const kindInput     = document.getElementById('collection-kind-input') as HTMLSelectElement;
+  const visInput      = document.getElementById('collection-vis-input') as HTMLSelectElement;
+  const genreInput    = document.getElementById('collection-genre-input') as HTMLSelectElement;
+  const coverField    = document.getElementById('collection-cover-field')!;
+  const errEl         = document.getElementById('collection-error')!;
   errEl.hidden = true;
+  coverField.hidden = true;
+  void loadGenreOptions();
   const saveBtn = document.getElementById('collection-save-btn') as HTMLButtonElement;
   if (uuid) {
     const c = myCollections.find(x => x.uuid === uuid);
     document.getElementById('collection-modal-title')!.textContent = 'Edit Collection';
     saveBtn.textContent = 'Save';
-    titleInput.value = c?.title ?? '';
-    descInput.value  = c?.description ?? '';
-    kindInput.value  = c?.kind ?? 'COLLECTION';
-    visInput.value   = c?.visibility ?? 'PUBLIC';
+    titleInput.value    = c?.title ?? '';
+    eyebrowInput.value  = c?.eyebrow ?? '';
+    subtitleInput.value = c?.subtitle ?? '';
+    descInput.value     = c?.description ?? '';
+    kindInput.value     = c?.kind ?? 'COLLECTION';
+    visInput.value      = c?.visibility ?? 'PUBLIC';
+    genreInput.value    = c?.genre ?? '';
+    // Cover selection requires the container's photos — load them lazily.
+    void loadCoverPicker(uuid, c?.cover_photo_uuid ?? null);
   } else {
     document.getElementById('collection-modal-title')!.textContent = 'New Collection';
     saveBtn.textContent = 'Create';
-    titleInput.value = ''; descInput.value = ''; kindInput.value = 'COLLECTION'; visInput.value = 'PUBLIC';
+    titleInput.value = ''; eyebrowInput.value = ''; subtitleInput.value = '';
+    descInput.value = ''; kindInput.value = 'COLLECTION'; visInput.value = 'PUBLIC'; genreInput.value = '';
   }
   document.getElementById('collection-backdrop')!.hidden = false;
   titleInput.focus();
@@ -1494,15 +1706,29 @@ function closeCollectionModal() {
 
 async function saveCollection() {
   const title       = (document.getElementById('collection-title-input') as HTMLInputElement).value.trim();
-  const description = (document.getElementById('collection-desc-input') as HTMLTextAreaElement).value.trim();
+  const eyebrow     = (document.getElementById('collection-eyebrow-input') as HTMLInputElement).value.trim();
+  const subtitle    = (document.getElementById('collection-subtitle-input') as HTMLInputElement).value.trim();
+  const description  = (document.getElementById('collection-desc-input') as HTMLTextAreaElement).value.trim();
   const kind        = (document.getElementById('collection-kind-input') as HTMLSelectElement).value;
   const visibility  = (document.getElementById('collection-vis-input') as HTMLSelectElement).value;
+  const genre       = (document.getElementById('collection-genre-input') as HTMLSelectElement).value;
   const errEl       = document.getElementById('collection-error')!;
   if (!title) { errEl.textContent = 'Please enter a title.'; errEl.hidden = false; return; }
   const btn = document.getElementById('collection-save-btn') as HTMLButtonElement;
   btn.disabled = true;
   try {
-    const body = JSON.stringify({ title, description: description || undefined, kind, visibility });
+    // On edit, send cover_photo_uuid only when the user picked one this session.
+    const payload: Record<string, unknown> = {
+      title,
+      eyebrow:     eyebrow || undefined,
+      subtitle:    subtitle || undefined,
+      description: description || undefined,
+      genre:       genre || undefined,
+      kind,
+      visibility,
+    };
+    if (editingCollectionUuid && selectedCoverUuid) payload.cover_photo_uuid = selectedCoverUuid;
+    const body = JSON.stringify(payload);
     const res = editingCollectionUuid
       ? await apiFetch(`${API}/gallery/albums/${editingCollectionUuid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body })
       : await apiFetch(`${API}/gallery/albums`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });

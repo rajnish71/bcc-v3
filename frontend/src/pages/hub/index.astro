@@ -47,6 +47,16 @@ import HubLayout from '../../layouts/HubLayout.astro';
       </a>
     </div>
 
+    <!-- ①.5 YOUR STORIES & COLLECTIONS (item 68) — top of main content ─────
+         Hidden until the member has at least one story/collection. -->
+    <div class="section-block stories-collections" id="stories-collections" hidden>
+      <div class="section-head">
+        <div class="section-kicker"><span class="kicker-rule"></span>Your Stories &amp; Collections</div>
+        <a href="/hub/portfolio/" class="section-link">Manage &#8594;</a>
+      </div>
+      <div class="sc-grid" id="sc-grid"></div>
+    </div>
+
     <!-- ② ATTENTION ROW (hidden when no items) ──────────────────────────── -->
     <div class="attention-row" id="attention-row" hidden>
       <!-- items injected by JS: max 3 -->
@@ -316,6 +326,73 @@ import HubLayout from '../../layouts/HubLayout.astro';
   text-decoration: none;
   font-family: var(--font-body);
 }
+
+/* Stories & Collections grid (item 68) */
+.sc-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+@media (min-width: 641px) and (max-width: 1199px) { .sc-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 640px)                          { .sc-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.sc-card {
+  background: #FFFFFF;
+  border: 1px solid #E7E1D6;
+  box-shadow: 0 1px 2px rgba(20,18,16,0.04);
+  padding: 8px;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.sc-card:hover { box-shadow: 0 4px 12px rgba(20,18,16,0.1); border-color: #C9A961; }
+
+.sc-thumb {
+  aspect-ratio: 4 / 5;
+  background: #1A1816;
+  overflow: hidden;
+  position: relative;
+  border-radius: 0;               /* photos never rounded (design token) */
+}
+.sc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Branded fallback for containers with no cover/photos yet */
+.sc-thumb-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(160deg, #201C17 0%, #141210 100%);
+  color: rgba(201,169,97,0.55);
+}
+.sc-thumb-fallback .sc-fallback-mark {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  font-weight: 600;
+}
+.sc-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #141210;
+  margin-top: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-body);
+}
+.sc-meta {
+  font-size: 10px;
+  color: #8B8378;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+.sc-card:hover .sc-name { color: #A8843C; }
 
 /* Photo grid */
 .photo-grid {
@@ -986,6 +1063,24 @@ function visBadge(vis: string): string {
   return '<span class="photo-vis-badge photo-vis-badge--private">PRIVATE</span>';
 }
 
+/* HTML-escape helper for values interpolated into innerHTML */
+function escHtml(s: string): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* Branded fallback thumbnail for stories/collections with no cover/photos yet */
+const SC_FALLBACK = `
+  <div class="sc-thumb-fallback">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true" stroke="currentColor">
+      <rect x="2" y="2" width="24" height="24" stroke-width="1"/>
+      <circle cx="9" cy="8" r="2.5" stroke-width="0.75"/>
+      <path d="M2 20l7-6 5 4 4-3 8 6" stroke-width="0.75"/>
+    </svg>
+    <span class="sc-fallback-mark">BCC</span>
+  </div>`;
+
 /* Placeholder SVG for photos without thumbnails */
 const PHOTO_PH = `
   <div class="photo-thumb-empty">
@@ -1197,6 +1292,43 @@ async function loadPhotos(): Promise<number> {
   return total;
 }
 
+/* ── LOAD STORIES & COLLECTIONS (item 68) ───────────────────────
+   Source: GET /api/v1/gallery/albums (own albums). Each card shows the
+   container cover (or a branded fallback) with its name beneath. */
+async function loadStoriesCollections(): Promise<void> {
+  const res = await apiFetch(`${API}/gallery/albums`);
+  if (!res.ok) return;
+
+  const albums = await res.json() as Array<{
+    uuid: string;
+    title: string;
+    kind?: string;
+    photo_count?: number;
+    cover_image_url?: string | null;
+  }>;
+  if (!Array.isArray(albums) || albums.length === 0) return;  // stays hidden
+
+  const grid = document.getElementById('sc-grid');
+  if (!grid) return;
+
+  grid.innerHTML = albums.map(a => {
+    const kindLabel = a.kind === 'STORY' ? 'Story' : 'Collection';
+    const count = a.photo_count ?? 0;
+    const countLabel = `${count} ${count === 1 ? 'photo' : 'photos'}`;
+    const thumb = a.cover_image_url
+      ? `<img src="${escHtml(a.cover_image_url)}" alt="${escHtml(a.title)}" loading="lazy" />`
+      : SC_FALLBACK;
+    return `
+      <a href="/hub/portfolio/" class="sc-card" title="${escHtml(a.title)}">
+        <div class="sc-thumb">${thumb}</div>
+        <div class="sc-name">${escHtml(a.title)}</div>
+        <div class="sc-meta">${kindLabel} · ${countLabel}</div>
+      </a>`;
+  }).join('');
+
+  show('stories-collections');
+}
+
 /* ── LOAD EVENTS ────────────────────────────────────────────── */
 async function loadEvents(isEmpty: boolean): Promise<void> {
   show('club-section');
@@ -1360,6 +1492,7 @@ async function init() {
   await Promise.all([
     loadMembership().catch(() => {}),
     loadEvents(!hasPhotos).catch(() => {}),
+    loadStoriesCollections().catch(() => {}),
   ]);
 
   renderAttentionRow();

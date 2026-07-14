@@ -60,12 +60,14 @@ export class GalleryController {
   @Get('feed')
   async publicFeed(
     @Query('genre')  genre?: string,
+    @Query('tag')    tag?: string,
     @Query('limit')  limit?: string,
     @Query('offset') offset?: string,
     @Query('shuffle') shuffle?: string,
   ) {
     return this.gallery.getPublicFeed({
       genre,
+      tag,
       limit:   limit   ? parseInt(limit, 10)  : 20,
       offset:  offset  ? parseInt(offset, 10) : 0,
       shuffle: shuffle !== 'false',
@@ -78,12 +80,14 @@ export class GalleryController {
     @Param('userId', ParseIntPipe) userId: number,
     @Req() req: any,
     @Query('genre')  genre?: string,
+    @Query('tag')    tag?: string,
     @Query('limit')  limit?: string,
     @Query('offset') offset?: string,
   ) {
     const requestingUserId: number | null = req.user?.sub ?? null;
     return this.gallery.getPhotographerGallery(requestingUserId, userId, {
       genre,
+      tag,
       limit:  limit  ? parseInt(limit, 10)  : 20,
       offset: offset ? parseInt(offset, 10) : 0,
     });
@@ -218,12 +222,14 @@ export class GalleryController {
   async listOwnPhotos(
     @Req() req: any,
     @Query('genre')  genre?: string,
+    @Query('tag')    tag?: string,
     @Query('limit')  limit?: string,
     @Query('offset') offset?: string,
   ) {
     return this.gallery.listPhotos(req.user.sub, {
       owner_user_id: req.user.sub,
       genre,
+      tag,
       limit:  limit  ? parseInt(limit, 10)  : 20,
       offset: offset ? parseInt(offset, 10) : 0,
     });

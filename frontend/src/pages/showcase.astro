@@ -32,14 +32,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <!-- Filter strip -->
     <div class="filter-strip" id="filter-strip">
       <span class="filter-label">Filter</span>
-      <div class="filter-chips" id="filter-chips" role="group" aria-label="Filter by genre">
+      <div class="filter-chips" id="filter-chips" role="group" aria-label="Filter by category">
+        <!-- "All" is static; category chips are injected from the GENRE taxonomy (item 71). -->
         <button class="filter-chip active" data-filter="all" aria-pressed="true">All</button>
-        <button class="filter-chip" data-filter="photowalks" aria-pressed="false">Photowalks</button>
-        <button class="filter-chip" data-filter="heritage" aria-pressed="false">Heritage</button>
-        <button class="filter-chip" data-filter="wildlife" aria-pressed="false">Wildlife</button>
-        <button class="filter-chip" data-filter="portraits" aria-pressed="false">Portraits</button>
-        <button class="filter-chip" data-filter="monsoon" aria-pressed="false">Monsoon</button>
-        <button class="filter-chip" data-filter="architecture" aria-pressed="false">Architecture</button>
       </div>
     </div>
 
@@ -670,18 +665,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
   }
 
-  /* ── Filter chips ── */
-  document.querySelectorAll<HTMLButtonElement>('.filter-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-chip').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
-      currentFilter = btn.dataset.filter ?? 'all';
-      fetchPhotos(true);
+  /* ── Filter chips — load the GENRE taxonomy, then delegate clicks ── */
+  async function loadFilterChips() {
+    try {
+      const res = await fetch('/api/v1/gallery/tags?category=GENRE');
+      if (!res.ok) return;
+      const tags = await res.json() as Array<{ tag_key: string; display_name: string }>;
+      const chips = document.getElementById('filter-chips');
+      if (!chips) return;
+      tags
+        .sort((a, b) => a.display_name.localeCompare(b.display_name))
+        .forEach(t => {
+          const btn = document.createElement('button');
+          btn.className = 'filter-chip';
+          btn.dataset.filter = t.tag_key;
+          btn.setAttribute('aria-pressed', 'false');
+          btn.textContent = t.display_name;
+          chips.appendChild(btn);
+        });
+    } catch { /* non-critical — "All" still works */ }
+  }
+
+  document.getElementById('filter-chips')?.addEventListener('click', e => {
+    const btn = (e.target as Element).closest<HTMLButtonElement>('.filter-chip');
+    if (!btn) return;
+    document.querySelectorAll('.filter-chip').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
     });
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+    currentFilter = btn.dataset.filter ?? 'all';
+    fetchPhotos(true);
   });
 
   /* ── Load more ── */
@@ -805,6 +820,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   /* ── Initial load ── */
+  loadFilterChips();
   loadPhotographers().then(() => fetchPhotos(true));
 
   /* ── Recompute grid on resize ── */

@@ -7,5 +7,3 @@ ALTER TABLE users
     ENUM('justified','masonry','editorial','modular','metro','magazine')
     NOT NULL DEFAULT 'justified'
   AFTER profile_visibility;
-
-INSERT INTO schema_migrations (filename) VALUES ('0064_photographer_gallery_layout.sql');

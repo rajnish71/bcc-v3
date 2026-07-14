@@ -80,13 +80,29 @@ m. "V6 12 Members Hub Batch Upload" ( edit 10 July - retiring this idea and we u
 
 n. "V6 13 Members Hub Profile"
 
-o. "V6 99 systemdesign.md "
+o. V6 14
 
-p. "V6 98 token.css"
+p. V6 15
 
-q. "V6 91 SiteHeader"
+q. V6 16
 
-r. "V6 92 SiteFooter"
+r. V6 17
+
+s. V6 18
+
+t. V6 19
+
+u. V6 20
+
+v. V6 21
+
+w. "V6 99 systemdesign.md "
+
+x. "V6 98 token.css"
+
+y. "V6 91 SiteHeader"
+
+z. "V6 92 SiteFooter"
 
 
 
@@ -692,17 +708,21 @@ Empty state (not rendered — zero filter results): Card grid area replaced with
 
 
 
-BaseLayout
+V6 component tree stub (expand this into full wireframe):
 
-&#x20; SiteHeader
+&#x20; BaseLayout
 
-&#x20; PageHero {missionStatement}
+&#x20;   SiteHeader {session}
 
-&#x20; Search Band
+&#x20;   PageHero {title, intro}
 
-&#x20; Photographers Grid
+&#x20;   SearchFilter {genres\[], city}    ← confirm or redesign
 
-&#x20; SiteFooter
+&#x20;   PhotographerCard grid            ← 4-col desktop, 3-col tablet, 2-col mobile
+
+&#x20;   Pagination                       ← confirm if needed
+
+&#x20;   SiteFooter
 
 
 
@@ -1506,7 +1526,7 @@ V6 20 - Account Setting ✅
 
 \## PHASE E — Soft Pre-Launch \& Platform Stabilization
 
-A. Move : v3bcc.bhopal.info --> bcc.bhopal.info
+A. Move : v3bcc.bhopal.info --> bcc.bhopal.info ✅
 
 
 
@@ -1514,11 +1534,23 @@ B. Public Pages
 
 
 
-\- V6 04 — Photographers Directory (Reconciliation)
+\- V6 04 — Photographers Directory (Reconciliation)  ✅
 
-\- V6 05 — Photographer Profile
+\- V6 05 — Photographer Profile  ✅
 
-\- V6 21 — Canonical Photo / Showcase
+\- V6 21 — Canonical Photo Page (Governed by PHOTO-ARCH-001)
+
+
+
+\---
+
+
+
+\### Membership Card
+
+
+
+\- ⬜ V6 31 — Membership Card Design System
 
 
 
@@ -1527,6 +1559,50 @@ B. Public Pages
 
 
 \### Design Authority Reconciliation
+
+
+
+\- ⬜ Membership Card widget reconciliation
+
+\- ⬜ Responsive canonical Membership Card rendering
+
+\- ⬜ Remove independent dark card implementation
+
+\- ⬜ General Design Authority reconciliation
+
+
+
+\---
+
+
+
+\### System Deliverables
+
+
+
+\- ⬜ V6 98 — token.css
+
+\- ⬜ V6 99 — systemdesign.md
+
+
+
+\---
+
+
+
+\# PHASE E1 — Administration Architecture
+
+✅ ADMIN-ARCH-001 — Administration Console Architecture Freeze v1.0
+
+
+
+\---
+
+
+
+C.
+
+\### Design Authority Reconciliation : Stage 7 - Bug Fixes to be done along with this bugfixes.md
 
 
 
@@ -1543,6 +1619,8 @@ B. Public Pages
 \---
 
 
+
+D.
 
 \### System Deliverables
 

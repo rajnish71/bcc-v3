@@ -62,9 +62,9 @@ Governance/
 
 ├── CLAUDE.md
 
-├── PHASE\_ROADMAP.md
+├── PHASE\\\_ROADMAP.md
 
-├── SOURCE\_INDEX.md
+├── SOURCE\\\_INDEX.md
 
 └── TECH-STACK-FREEZE.md
 
@@ -88,10 +88,10 @@ Contains the authoritative platform architecture and implementation reconciliati
 
 Architecture/
 
-├── BCC_Unified_Platform_Specification_v3.md
-├── HUB_COMPONENT_ARCHITECTURE_FREEZE_v1.0.md
-├── PHOTO-ASSET-ARCHITECTURE_FREEZE_v1.0.md
-└── BCC_V3_Stage2_Reconciliation_Audit.md
+├── BCC\_Unified\_Platform\_Specification\_v3.md
+├── HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md
+├── PHOTO-ASSET-ARCHITECTURE\_FREEZE\_v1.0.md
+└── BCC\_V3\_Stage2\_Reconciliation\_Audit.md
 
 ```
 
@@ -113,9 +113,9 @@ Contains constitutional membership documents.
 
 Membership/
 
-├── MEM-006\_MEMBERSHIP\_CONSTITUTION\_AND\_ARCHITECTURE\_v1.0.md
+├── MEM-006\\\_MEMBERSHIP\\\_CONSTITUTION\\\_AND\\\_ARCHITECTURE\\\_v1.0.md
 
-└── MEM-007\_MEMBERSHIP\_NUMBERING\_CONSTITUTION\_v1.0.md
+└── MEM-007\\\_MEMBERSHIP\\\_NUMBERING\\\_CONSTITUTION\\\_v1.0.md
 
 ```
 
@@ -139,9 +139,9 @@ DesignSystem/
 
 └── V6/
 
-&#x20;   ├── V6 00 BCC Design Principles.dc.html
+\&#x20;   ├── V6 00 BCC Design Principles.dc.html
 
-&#x20;   └── V6 00 BCC Design Principles.pdf
+\&#x20;   └── V6 00 BCC Design Principles.pdf
 
 ```
 
@@ -169,13 +169,13 @@ Wireframes/
 
 └── V6/
 
-&#x20;   ├── 01 Home/
+\&#x20;   ├── 01 Home/
 
-&#x20;   ├── 09 Hub Home/
+\&#x20;   ├── 09 Hub Home/
 
-&#x20;   ├── 91 SiteHeader/
+\&#x20;   ├── 91 SiteHeader/
 
-&#x20;   └── 92 SiteFooter/
+\&#x20;   └── 92 SiteFooter/
 
 ```
 
@@ -472,6 +472,4 @@ Architecture/BCC\_Unified\_Platform\_Specification\_v3.md
 \* Avoid unnecessary repository scanning.
 
 \* Follow the published reading paths whenever applicable.
-
-
 

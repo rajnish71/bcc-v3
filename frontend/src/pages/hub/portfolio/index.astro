@@ -307,9 +307,17 @@ import HubLayout from '../../../layouts/HubLayout.astro';
           <option value="">— None —</option>
         </select>
       </div>
-      <!-- Cover selection (item 68) — only shown when editing a container that has photos -->
+      <!-- Photo selection (item 77) — choose which photographs belong to this container -->
+      <div class="cform-field">
+        <div class="cform-label-row">
+          <label class="cform-label">Photographs <span class="cform-opt">(select to include)</span></label>
+          <span class="cform-count" id="collection-photo-count">0 selected</span>
+        </div>
+        <div class="cover-picker" id="collection-photo-picker"></div>
+      </div>
+      <!-- Cover selection (item 68) — pick a cover from the selected photographs -->
       <div class="cform-field" id="collection-cover-field" hidden>
-        <label class="cform-label">Cover photograph <span class="cform-opt">(pick one from this container)</span></label>
+        <label class="cform-label">Cover photograph <span class="cform-opt">(pick one from the selected)</span></label>
         <div class="cover-picker" id="collection-cover-picker"></div>
       </div>
       <div class="cform-error" id="collection-error" hidden></div>
@@ -881,6 +889,8 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .cform-row .cform-field { flex: 1; }
 .cform-label { font-size: 12px; font-weight: 600; color: #57514B; font-family: var(--font-body); }
 .cform-opt { font-weight: 400; color: #8B8378; }
+.cform-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cform-count { font-size: 11px; color: #A8843C; font-family: var(--font-mono); }
 .cform-input, .cform-textarea {
   font-family: var(--font-body); font-size: 14px; color: #141210; border: 1px solid #D8D2C6;
   padding: 9px 12px; background: #fff; width: 100%; box-sizing: border-box;
@@ -1562,6 +1572,9 @@ let myCollections: CollectionItem[] = [];
 let editingCollectionUuid: string | null = null;
 let selectedCoverUuid: string | null = null;
 let genreOptionsLoaded = false;
+// Photo membership picker (item 77): which photos belong to the container.
+let collectionSelectedPhotoUuids = new Set<string>();
+let collectionOriginalPhotoUuids = new Set<string>();
 
 /* Populate the "Primary category" select from the GENRE tag taxonomy (item 71). */
 async function loadGenreOptions() {
@@ -1583,34 +1596,77 @@ async function loadGenreOptions() {
   } catch { /* non-critical */ }
 }
 
-/* Build the cover thumbnail picker from an album's photos (item 68). */
-async function loadCoverPicker(uuid: string, currentCoverUuid: string | null) {
+function updateCollectionPhotoCount() {
+  const el = document.getElementById('collection-photo-count');
+  if (el) el.textContent = `${collectionSelectedPhotoUuids.size} selected`;
+}
+
+/* Multi-select picker over the member's own library (item 77). */
+function renderCollectionPhotoPicker() {
+  const picker = document.getElementById('collection-photo-picker')!;
+  picker.innerHTML = '';
+  if (!allPhotos.length) {
+    picker.innerHTML = '<div class="cover-picker-empty">You have no photographs yet — upload some first.</div>';
+    updateCollectionPhotoCount();
+    return;
+  }
+  allPhotos.forEach(p => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cover-pick';
+    btn.dataset.uuid = p.uuid;
+    btn.setAttribute('aria-pressed', String(collectionSelectedPhotoUuids.has(p.uuid)));
+    const thumb = p.urls?.thumbnail ?? p.urls?.medium ?? '';
+    btn.innerHTML = `<img src="${escAttr(thumb)}" alt="${escAttr(p.title ?? '')}" loading="lazy"/>`;
+    btn.addEventListener('click', () => {
+      if (collectionSelectedPhotoUuids.has(p.uuid)) {
+        collectionSelectedPhotoUuids.delete(p.uuid);
+        if (selectedCoverUuid === p.uuid) selectedCoverUuid = null;  // cover must stay a member
+      } else {
+        collectionSelectedPhotoUuids.add(p.uuid);
+      }
+      btn.setAttribute('aria-pressed', String(collectionSelectedPhotoUuids.has(p.uuid)));
+      updateCollectionPhotoCount();
+      renderCollectionCoverOptions();
+    });
+    picker.appendChild(btn);
+  });
+  updateCollectionPhotoCount();
+}
+
+/* Cover options are drawn from the currently-selected photos (item 68 + 77). */
+function renderCollectionCoverOptions() {
   const field  = document.getElementById('collection-cover-field')!;
   const picker = document.getElementById('collection-cover-picker')!;
+  const chosen = allPhotos.filter(p => collectionSelectedPhotoUuids.has(p.uuid));
   picker.innerHTML = '';
-  try {
-    const res = await apiFetch(`${API}/gallery/albums/${uuid}?limit=60`);
-    if (!res.ok) { field.hidden = true; return; }
-    const data = await res.json() as { photos: Array<{ uuid: string; title?: string; urls?: { thumbnail?: string; medium?: string } }> };
-    const photos = data.photos ?? [];
-    if (!photos.length) { field.hidden = true; return; }   // nothing to pick yet
-    field.hidden = false;
-    photos.forEach(p => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'cover-pick';
-      btn.setAttribute('aria-pressed', String(p.uuid === currentCoverUuid));
-      btn.dataset.uuid = p.uuid;
-      const thumb = p.urls?.thumbnail ?? p.urls?.medium ?? '';
-      btn.innerHTML = `<img src="${escAttr(thumb)}" alt="${escAttr(p.title ?? '')}" loading="lazy"/>`;
-      btn.addEventListener('click', () => {
-        selectedCoverUuid = p.uuid;
-        picker.querySelectorAll('.cover-pick').forEach(el => el.setAttribute('aria-pressed', 'false'));
-        btn.setAttribute('aria-pressed', 'true');
-      });
-      picker.appendChild(btn);
+  if (!chosen.length) { field.hidden = true; return; }
+  field.hidden = false;
+  chosen.forEach(p => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cover-pick';
+    btn.dataset.uuid = p.uuid;
+    btn.setAttribute('aria-pressed', String(p.uuid === selectedCoverUuid));
+    const thumb = p.urls?.thumbnail ?? p.urls?.medium ?? '';
+    btn.innerHTML = `<img src="${escAttr(thumb)}" alt="${escAttr(p.title ?? '')}" loading="lazy"/>`;
+    btn.addEventListener('click', () => {
+      selectedCoverUuid = p.uuid;
+      picker.querySelectorAll('.cover-pick').forEach(el => el.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
     });
-  } catch { field.hidden = true; }
+    picker.appendChild(btn);
+  });
+}
+
+/* For edit: the album's current member photo uuids (baseline for diffing). */
+async function fetchAlbumMemberUuids(uuid: string): Promise<string[]> {
+  try {
+    const res = await apiFetch(`${API}/gallery/albums/${uuid}?limit=200`);
+    if (!res.ok) return [];
+    const data = await res.json() as { photos: Array<{ uuid: string }> };
+    return (data.photos ?? []).map(p => p.uuid);
+  } catch { return []; }
 }
 
 /* Attribute-safe escape for interpolated values. */
@@ -1660,9 +1716,11 @@ function renderCollections() {
     b.addEventListener('click', () => deleteCollection(b.dataset.del!)));
 }
 
-function openCollectionModal(uuid?: string) {
+async function openCollectionModal(uuid?: string) {
   editingCollectionUuid = uuid ?? null;
   selectedCoverUuid = null;
+  collectionSelectedPhotoUuids = new Set();
+  collectionOriginalPhotoUuids = new Set();
   const titleInput    = document.getElementById('collection-title-input') as HTMLInputElement;
   const eyebrowInput  = document.getElementById('collection-eyebrow-input') as HTMLInputElement;
   const subtitleInput = document.getElementById('collection-subtitle-input') as HTMLInputElement;
@@ -1687,14 +1745,19 @@ function openCollectionModal(uuid?: string) {
     kindInput.value     = c?.kind ?? 'COLLECTION';
     visInput.value      = c?.visibility ?? 'PUBLIC';
     genreInput.value    = c?.genre ?? '';
-    // Cover selection requires the container's photos — load them lazily.
-    void loadCoverPicker(uuid, c?.cover_photo_uuid ?? null);
+    selectedCoverUuid   = c?.cover_photo_uuid ?? null;
+    // Pre-select the container's current members as the baseline for diffing.
+    const members = await fetchAlbumMemberUuids(uuid);
+    collectionOriginalPhotoUuids = new Set(members);
+    collectionSelectedPhotoUuids = new Set(members);
   } else {
     document.getElementById('collection-modal-title')!.textContent = 'New Collection';
     saveBtn.textContent = 'Create';
     titleInput.value = ''; eyebrowInput.value = ''; subtitleInput.value = '';
     descInput.value = ''; kindInput.value = 'COLLECTION'; visInput.value = 'PUBLIC'; genreInput.value = '';
   }
+  renderCollectionPhotoPicker();
+  renderCollectionCoverOptions();
   document.getElementById('collection-backdrop')!.hidden = false;
   titleInput.focus();
 }
@@ -1717,8 +1780,9 @@ async function saveCollection() {
   const btn = document.getElementById('collection-save-btn') as HTMLButtonElement;
   btn.disabled = true;
   try {
-    // On edit, send cover_photo_uuid only when the user picked one this session.
-    const payload: Record<string, unknown> = {
+    // 1. Create or update metadata (cover is set separately, after membership,
+    //    so the cover is guaranteed to already be a member — item 68 + 77).
+    const body = JSON.stringify({
       title,
       eyebrow:     eyebrow || undefined,
       subtitle:    subtitle || undefined,
@@ -1726,13 +1790,32 @@ async function saveCollection() {
       genre:       genre || undefined,
       kind,
       visibility,
-    };
-    if (editingCollectionUuid && selectedCoverUuid) payload.cover_photo_uuid = selectedCoverUuid;
-    const body = JSON.stringify(payload);
+    });
     const res = editingCollectionUuid
       ? await apiFetch(`${API}/gallery/albums/${editingCollectionUuid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body })
       : await apiFetch(`${API}/gallery/albums`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
     if (!res.ok) { errEl.textContent = 'Could not save. Please try again.'; errEl.hidden = false; return; }
+    const albumUuid = editingCollectionUuid ?? (await res.json() as { uuid: string }).uuid;
+    if (!albumUuid) { errEl.textContent = 'Could not save. Please try again.'; errEl.hidden = false; return; }
+
+    // 2. Sync photo membership (item 77): add newly-selected, remove deselected.
+    const added   = [...collectionSelectedPhotoUuids].filter(u => !collectionOriginalPhotoUuids.has(u));
+    const removed = [...collectionOriginalPhotoUuids].filter(u => !collectionSelectedPhotoUuids.has(u));
+    await Promise.all([
+      ...added.map(u => apiFetch(`${API}/gallery/albums/${albumUuid}/photos`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ photo_uuid: u }),
+      }).catch(() => null)),
+      ...removed.map(u => apiFetch(`${API}/gallery/albums/${albumUuid}/photos/${u}`, { method: 'DELETE' }).catch(() => null)),
+    ]);
+
+    // 3. Set the cover once its photo is guaranteed to be a member.
+    if (selectedCoverUuid) {
+      await apiFetch(`${API}/gallery/albums/${albumUuid}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cover_photo_uuid: selectedCoverUuid }),
+      }).catch(() => null);
+    }
+
     closeCollectionModal();
     await loadCollections();
   } catch {

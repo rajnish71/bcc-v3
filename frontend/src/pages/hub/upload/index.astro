@@ -307,6 +307,12 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .pill--active{background:#141210;color:#FAF8F4;border-color:#141210}
 .pill--active:hover{background:#2A2826;border-color:#2A2826;color:#FAF8F4}
 .pill--dashed{border-style:dashed;color:#8B8378}
+/* Genre pills are created at runtime (item 71/75) so they never receive Astro's
+   scoping attribute — style them via :global or the scoped .pill rules miss. */
+:global(#genre-pills .pill){font-size:12px;font-weight:500;padding:8px 14px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;background:none;cursor:pointer;font-family:var(--font-body);transition:all .15s;white-space:nowrap}
+:global(#genre-pills .pill:hover){border-color:#C9A961;color:#A8843C}
+:global(#genre-pills .pill--active){background:#141210;color:#FAF8F4;border-color:#141210}
+:global(#genre-pills .pill--active:hover){background:#2A2826;border-color:#2A2826;color:#FAF8F4}
 
 /* Keywords */
 .keyword-wrap{display:flex;flex-wrap:wrap;gap:6px}
@@ -735,6 +741,13 @@ function renderExifChips(exif?: ExifData): void {
   qid('exif-chips').innerHTML = chips.map(c => `<span class="exif-chip">${c}</span>`).join('') + gps;
 }
 
+// Split raw input on commas so "a, b, c" adds three separate keywords (item 75).
+function addKeywords(raw: string): void {
+  raw.split(',').map(s => s.trim()).filter(Boolean).forEach(v => {
+    if (!keywords.includes(v)) keywords.push(v);
+  });
+}
+
 function renderKeywords(): void {
   const wrap = qid('keyword-wrap');
   wrap.innerHTML = keywords.map(k =>
@@ -754,17 +767,17 @@ function renderKeywords(): void {
     const inp = document.getElementById('kw-input') as HTMLInputElement;
     inp?.focus();
     inp?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const v = inp.value.trim();
-        if (v && !keywords.includes(v)) keywords.push(v);
-        addingKeyword = false;
-        renderKeywords();
+      // Comma commits the typed keyword(s) but keeps the field open for more.
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        addKeywords(inp.value);
+        if (e.key === ',') { inp.value = ''; renderKeywords(); }
+        else { addingKeyword = false; renderKeywords(); }
       }
       if (e.key === 'Escape') { addingKeyword = false; renderKeywords(); }
     });
     inp?.addEventListener('blur', () => {
-      const v = inp.value.trim();
-      if (v && !keywords.includes(v)) keywords.push(v);
+      addKeywords(inp.value);
       addingKeyword = false;
       renderKeywords();
     });

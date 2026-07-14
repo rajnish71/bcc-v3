@@ -99,6 +99,22 @@ export class GalleryController {
     return this.gallery.getTags(category);
   }
 
+  /** Distinct GENRE tags present on PUBLIC photos — Showcase filter chips (item 76). */
+  @Get('genres')
+  async getPublicGenres() {
+    return this.gallery.getPublicGenres();
+  }
+
+  /** Distinct GENRE tags present on a photographer's visible photos (item 76). */
+  @Get('photographer/:userId/genres')
+  async getPhotographerGenres(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Req() req: any,
+  ) {
+    const requestingUserId: number | null = req.user?.sub ?? null;
+    return this.gallery.getPhotographerGenres(requestingUserId, userId);
+  }
+
   /** All public photo IDs — used by getStaticPaths() at build time. */
   @Get('photos/all-ids')
   async getAllPhotoIds() {

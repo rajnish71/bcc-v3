@@ -1152,6 +1152,20 @@ async function loadMembership(): Promise<void> {
     || memberships.find(m => m.lifecycle_state === 'PENDING')
     || memberships[0];
 
+  // item 72: keep the membership application visible & resumable in the hub
+  // shell. Anyone who is not yet an ACTIVE/APPROVED member gets a clear prompt —
+  // "under review" if they've submitted (PENDING), otherwise "complete it".
+  const isRealMember = !!active && (active.lifecycle_state === 'ACTIVE' || active.lifecycle_state === 'APPROVED');
+  const hasPending   = memberships.some(m => m.lifecycle_state === 'PENDING');
+  if (!isRealMember) {
+    addAttentionItem(
+      hasPending
+        ? 'Your <strong>membership application</strong> is under review — view status'
+        : 'Complete your <strong>membership application</strong> to unlock member benefits',
+      '/hub/membership/apply/',
+    );
+  }
+
   if (!active) return;
 
   const classLabel = active.membership_class_id

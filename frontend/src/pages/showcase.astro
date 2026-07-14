@@ -668,7 +668,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   /* ── Filter chips — load the GENRE taxonomy, then delegate clicks ── */
   async function loadFilterChips() {
     try {
-      const res = await fetch('/api/v1/gallery/tags?category=GENRE');
+      // Only genres that actually have PUBLIC photos (item 76).
+      const res = await fetch('/api/v1/gallery/genres');
       if (!res.ok) return;
       const tags = await res.json() as Array<{ tag_key: string; display_name: string }>;
       const chips = document.getElementById('filter-chips');

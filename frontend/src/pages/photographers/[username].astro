@@ -745,10 +745,13 @@ const { username } = Astro.params;
 .profile-filter-chip:hover { border-color: #C9A961; color: #141210; }
 .profile-filter-chip.is-on { background: linear-gradient(135deg, #C9A961, #A8843C); border-color: #A8843C; color: #FFFFFF; }
 
-/* Justified gallery — inherits the /showcase justified grid (item 70) */
+/* Justified gallery — inherits the /showcase justified grid (item 70).
+   Rows are created at runtime by JS, so they never receive Astro's scoping
+   attribute — the row rule MUST be :global() or it won't apply (CLAUDE.md §4.4,
+   same as /showcase's :global(.grid-row)). */
 .profile-justified-grid { display: flex; flex-direction: column; gap: 0; }
-.profile-jrow { display: flex; gap: 8px; margin-bottom: 8px; }
-.profile-jrow:last-child { margin-bottom: 0; }
+:global(.profile-jrow) { display: flex; gap: 8px; margin-bottom: 8px; }
+:global(.profile-jrow:last-child) { margin-bottom: 0; }
 
 /* Load more — mirrors /showcase load-more control, restyled for the ivory profile surface */
 .profile-load-more-wrap {
@@ -1061,7 +1064,7 @@ function buildJustifiedLayout(
 }
 
 // ── Justified paging state (mirrors /showcase) ─────────────────────────────
-const PROFILE_PAGE_SIZE = 20;              // 20 initial, +20 per load-more
+const PROFILE_PAGE_SIZE = 40;              // 40 initial, +40 per load-more
 let profileBuffer: any[] = [];             // trailing photos awaiting a full row
 let profileTotal = 0;                      // total photos for this photographer
 let profileUserId = 0;                     // owner id, for load-more fetches
@@ -1423,6 +1426,7 @@ async function loadProfile() {
   // Stories / Collections + Journal articles (item 53) — non-blocking
   loadStories(profile.id).catch(() => {});
   loadJournal(profile.id).catch(() => {});
+  loadProfileFilterChips(profile.id).catch(() => {});
 
   // Now load photos
   await loadPhotos(profile.id);
@@ -1711,13 +1715,14 @@ document.getElementById('profile-load-more-btn')?.addEventListener('click', () =
 });
 
 // ── Category filter chips (item 71) ────────────────────────────────────────
-async function loadProfileFilterChips() {
+async function loadProfileFilterChips(userId: number) {
   try {
-    const res = await fetch('/api/v1/gallery/tags?category=GENRE');
+    // Only genres present in this photographer's visible photos (item 76).
+    const res = await fetch(`/api/v1/gallery/photographer/${userId}/genres`);
     if (!res.ok) return;
     const tags = await res.json() as Array<{ tag_key: string; display_name: string }>;
     const strip = document.getElementById('profile-filter');
-    if (!strip || !tags.length) return;
+    if (!strip || !tags.length) return;   // no categories → keep strip hidden
     tags
       .sort((a, b) => a.display_name.localeCompare(b.display_name))
       .forEach(t => {
@@ -1797,7 +1802,6 @@ function esc(str: string): string {
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────
-loadProfileFilterChips().catch(() => {});
 loadProfile().catch(() => {
   setTxt('ph-name', 'Photographer');
   const grid = document.getElementById('portfolio-grid');

@@ -1072,6 +1072,59 @@ export class GalleryService {
   }
 
   // =========================================================================
+  // Distinct genres actually present (item 76) — for filter chips
+  // =========================================================================
+
+  /** GENRE tags assigned to at least one PUBLIC active photo (Showcase chips). */
+  async getPublicGenres(): Promise<{ tag_key: string; display_name: string }[]> {
+    return db
+      .selectFrom('photo_tags as pt')
+      .innerJoin('photo_tag_assignments as pta', 'pta.tag_id', 'pt.id')
+      .innerJoin('photos as p', 'p.id', 'pta.photo_id')
+      .where('pt.category', '=', 'GENRE')
+      .where('pt.is_active', '=', true)
+      .where('p.status', '=', 'ACTIVE')
+      .where('p.visibility', '=', 'PUBLIC')
+      .select(['pt.tag_key', 'pt.display_name'])
+      .distinct()
+      .orderBy('pt.display_name', 'asc')
+      .execute();
+  }
+
+  /** GENRE tags present on a photographer's visible photos (profile chips). */
+  async getPhotographerGenres(
+    requestingUserId: number | null,
+    photographerUserId: number,
+  ): Promise<{ tag_key: string; display_name: string }[]> {
+    const isMember = requestingUserId != null
+      ? await this.isActiveMember(requestingUserId)
+      : false;
+
+    let q = db
+      .selectFrom('photo_tags as pt')
+      .innerJoin('photo_tag_assignments as pta', 'pta.tag_id', 'pt.id')
+      .innerJoin('photos as p', 'p.id', 'pta.photo_id')
+      .where('pt.category', '=', 'GENRE')
+      .where('pt.is_active', '=', true)
+      .where('p.status', '=', 'ACTIVE')
+      .where('p.owner_user_id', '=', photographerUserId);
+
+    // Visibility gating mirrors listPhotos: owner sees all; others see PUBLIC
+    // (+ MEMBERS_ONLY when an active member).
+    if (requestingUserId !== photographerUserId) {
+      q = isMember
+        ? q.where('p.visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
+        : q.where('p.visibility', '=', 'PUBLIC');
+    }
+
+    return q
+      .select(['pt.tag_key', 'pt.display_name'])
+      .distinct()
+      .orderBy('pt.display_name', 'asc')
+      .execute();
+  }
+
+  // =========================================================================
   // Private helpers
   // =========================================================================
 

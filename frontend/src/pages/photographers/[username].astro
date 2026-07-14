@@ -585,21 +585,21 @@ const { username } = Astro.params;
   flex-direction: column;
   gap: 8px;
 }
-.rail-contact-website {
+:global(.rail-contact-website) {
   font-size: 13px;
   font-weight: 600;
   color: var(--gold-600, #A8843C);
   text-decoration: none;
   word-break: break-all;
 }
-.rail-contact-website:hover { text-decoration: underline; }
-.rail-contact-socials {
+:global(.rail-contact-website:hover) { text-decoration: underline; }
+:global(.rail-contact-socials) {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
-.rail-social { display: flex; gap: 6px; }
-.rail-social-link {
+:global(.rail-social-link) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -611,8 +611,8 @@ const { username } = Astro.params;
   text-decoration: none;
   transition: border-color 0.15s, color 0.15s;
 }
-.rail-social-link:hover { border-color: #C9A961; color: #A8843C; }
-.rail-social-link svg { display: block; }
+:global(.rail-social-link:hover) { border-color: #C9A961; color: #A8843C; }
+:global(.rail-social-link svg) { display: block; }
 .rail-note { font-size: 11px; color: #8B8378; margin-top: 2px; }
 .rail-distinctions { font-size: 12px; line-height: 1.8; color: #57514B; }
 .rail-distinctions :is(ul, ol) { padding-left: 16px; margin: 0; }

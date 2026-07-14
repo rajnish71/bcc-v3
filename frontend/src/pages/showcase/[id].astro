@@ -1113,7 +1113,7 @@ const { id } = Astro.params;
     const existingLd = document.getElementById('ld-photograph');
     const ldScript = existingLd || document.createElement('script');
     ldScript.id = 'ld-photograph';
-    (ldScript as HTMLScriptElement).type = 'application/ld+json';
+    ldScript.type = 'application/ld+json';
     ldScript.textContent = JSON.stringify(photoSchema);
     if (!existingLd) document.head.appendChild(ldScript);
 
@@ -1532,11 +1532,11 @@ const { id } = Astro.params;
     const text = encodeURIComponent((photoData?.title || 'Photograph') + ' · Bhopal Camera Club');
     const raw  = decodeURIComponent(url);
 
-    const fb  = document.getElementById('share-fb')  as HTMLAnchorElement | null;
-    const x   = document.getElementById('share-x')   as HTMLAnchorElement | null;
-    const li  = document.getElementById('share-li')  as HTMLAnchorElement | null;
-    const wa  = document.getElementById('share-wa')  as HTMLAnchorElement | null;
-    const cp  = document.getElementById('share-copy') as HTMLButtonElement | null;
+    const fb  = document.getElementById('share-fb');
+    const x   = document.getElementById('share-x');
+    const li  = document.getElementById('share-li');
+    const wa  = document.getElementById('share-wa');
+    const cp  = document.getElementById('share-copy');
 
     if (fb) fb.href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
     if (x)  x.href  = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;

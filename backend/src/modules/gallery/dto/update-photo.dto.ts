@@ -10,7 +10,8 @@ export interface UpdatePhotoDto {
   genre?:
     | 'WILDLIFE' | 'BIRD' | 'STREET' | 'PORTRAIT' | 'LANDSCAPE'
     | 'ARCHITECTURE' | 'MACRO' | 'NIGHT' | 'TRAVEL' | 'AERIAL'
-    | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT' | 'OTHER';
+    | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT'
+    | 'BIRDS_OF_BHOPAL' | 'OTHER';
   visibility?: 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED';
   gps_stripped?: boolean;
 }

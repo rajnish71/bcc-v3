@@ -56,6 +56,20 @@ function maskClass(code: unknown): string {
   return PUBLIC_CLASS_MASK[String(code)] ?? 'member';
 }
 
+// Honorifics suppressed from public display — only Dr. is shown.
+const SUPPRESS_TITLES = new Set(['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Shri', 'Smt.', 'Er.', 'Prof.', 'Capt.', 'Col.', 'Maj.']);
+
+function buildDisplayName(fullName: string | null, nameTitle: string | null): string {
+  const name = (fullName ?? '').trim();
+  // Strip any suppressed honorific already baked into full_name
+  for (const t of SUPPRESS_TITLES) {
+    if (name.startsWith(t + ' ')) return name.slice(t.length + 1).trim();
+  }
+  // Prepend Dr. if name_title says so and it's not already there
+  if (nameTitle === 'Dr.' && !name.startsWith('Dr. ')) return `Dr. ${name}`;
+  return name;
+}
+
 async function batchPhotoCounts(userIds: number[]): Promise<Record<number, number>> {
   if (userIds.length === 0) return {};
 
@@ -169,6 +183,7 @@ export class PhotographerProfilesService {
         'u.id',
         'u.username',
         'u.full_name',
+        'u.name_title',
         'u.bio',
         'u.tagline',
         'u.city',
@@ -218,7 +233,7 @@ export class PhotographerProfilesService {
       .map(r => ({
         id:          r.id,
         username:    r.username!,
-        displayName: r.full_name,
+        displayName: buildDisplayName(r.full_name, r.name_title ?? null),
         tagline:     r.tagline ?? null,
         bio:         r.bio ?? null,
         city:        r.city ?? null,
@@ -262,6 +277,7 @@ export class PhotographerProfilesService {
         'u.id',
         'u.username',
         'u.full_name',
+        'u.name_title',
         'u.bio',
         'u.city',
         'u.state',
@@ -354,7 +370,7 @@ export class PhotographerProfilesService {
       data: {
         id:                    user.id,
         username:              user.username!,
-        displayName:           user.full_name,
+        displayName:           buildDisplayName(user.full_name, user.name_title ?? null),
         tagline:               user.tagline ?? null,
         bio:                   user.bio ?? null,
         city:                  user.city ?? null,

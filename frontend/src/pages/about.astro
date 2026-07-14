@@ -18,18 +18,25 @@ const TIMELINE = [
   { year: 'Jun 2026', title: 'New Platform Launch', desc: 'We launched the bcc.bhopal.info portal, expanding our school curriculum and preparing for our 10th anniversary next year.' },
 ];
 
-const COMMITTEE = [
-  { name: 'Rajnish Khare',   role: 'Core Coordinator',      initials: 'RK',  since: '2015', bio: 'Lead travel and street photographer, and core coordinator managing Bhopal Camera Club operations.' },
-  { name: 'Kshitij Patle',   role: 'Core Coordinator',      initials: 'KP',  since: '2016', bio: 'Energetic travel storyteller documenting remote places, trails, and local interactions.' },
-  { name: 'Rahil Khan',      role: 'Core Coordinator',      initials: 'RK2', since: '2016', bio: 'Contemporary street visual artist capturing dynamic urban moments and frame compositions.' },
-  { name: 'Vikas Gangpari',  role: 'Education Coordinator', initials: 'VG',  since: '2020', bio: "Leads the club's photography school curriculum and organises educational workshops for members." },
-  { name: 'Taurez Anwar',    role: 'Core Coordinator',      initials: 'TA',  since: '2020', bio: 'Core coordinator and wildlife photographer assisting in documentation of natural reserves.' },
-  { name: 'Yogesh More',     role: 'Core Coordinator',      initials: 'YM',  since: '2021', bio: 'Core coordinator supporting club events, member outreach, and photowalk logistics.' },
+const COMMITTEE: Array<{
+  name: string; role: string; initials: string; since: string; bio: string;
+  username?: string; avatar?: string;
+}> = [
+  { name: 'Rajnish Khare',  role: 'Core Coordinator',      initials: 'RK', since: '2015', bio: 'Lead travel and street photographer, and core coordinator managing Bhopal Camera Club operations.',            username: 'rajnishkhare' },
+  { name: 'Kshitij Patle',  role: 'Core Coordinator',      initials: 'KP', since: '2016', bio: 'Energetic travel storyteller documenting remote places, trails, and local interactions.',                      username: 'kshitijpatle' },
+  { name: 'Rahil Khan',     role: 'Core Coordinator',      initials: 'RK', since: '2016', bio: 'Contemporary street visual artist capturing dynamic urban moments and frame compositions.',                     username: 'rahilkhan' },
+  { name: 'Vikas Gangpari', role: 'Education Coordinator', initials: 'VG', since: '2020', bio: "Leads the club's photography school curriculum and organises educational workshops for members.",              avatar: '/images/vikas-gangpari.jpg' },
+  { name: 'Taurez Anwar',   role: 'Core Coordinator',      initials: 'TA', since: '2020', bio: 'Core coordinator and wildlife photographer assisting in documentation of natural reserves.' },
+  { name: 'Yogesh More',    role: 'Core Coordinator',      initials: 'YM', since: '2021', bio: 'Core coordinator supporting club events, member outreach, and photowalk logistics.' },
 ];
 
-const MENTORS = [
-  { name: 'Dr. Anil Bhati',    role: 'Mentor', initials: 'AB', bio: "Renowned nature and wildlife photographer whose guidance has shaped BCC's documentary ethos and international exhibition presence." },
-  { name: 'Sauvik Acharyya',   role: 'Mentor', initials: 'SA', bio: "Street documentarian and long-time BCC contributor whose candid storytelling continues to inspire the club's photographic voice." },
+const MENTORS: Array<{
+  name: string; role: string; initials: string; bio: string;
+  username?: string; avatar?: string;
+}> = [
+  { name: 'Dr. Anil Bhati',  role: 'Mentor', initials: 'AB', bio: "Renowned nature and wildlife photographer whose guidance has shaped BCC's documentary ethos and international exhibition presence." },
+  { name: 'Sauvik Acharyya', role: 'Mentor', initials: 'SA', bio: "Street documentarian and long-time BCC contributor whose candid storytelling continues to inspire the club's photographic voice.", username: 'sauvikacharyya' },
+  { name: 'Kshitij Patle',   role: 'Mentor', initials: 'KP', bio: "Kshitij is the go-to advisor for everyone in the club—whether a youngster, a new member or a senior member. Members regularly seek his guidance on equipment selection, birding practices and composition techniques. He has personally conducted multiple indoor and field workshops across a wide range of photography topics.", username: 'kshitijpatle' },
 ];
 ---
 
@@ -158,21 +165,27 @@ const MENTORS = [
       </div>
 
       <div class="committee-grid" data-gsap="stagger">
-        {COMMITTEE.map(m => (
-          <div class="committee-mat-card">
-            <div class="avatar-ring-container">
-              <div class="committee-avatar-circle">
-                {m.initials}
+        {COMMITTEE.map(m => {
+          const Tag = m.username ? 'a' : 'div';
+          const linkProps = m.username ? { href: `/photographers/${m.username}/` } : {};
+          return (
+            <Tag class={`person-card${m.username ? ' person-card--linked' : ''}`} {...linkProps}>
+              <div class="card-avatar-wrap">
+                {m.avatar
+                  ? <img class="card-avatar-img" src={m.avatar} alt={m.name} loading="lazy" />
+                  : <div class="card-avatar-initials">{m.initials}</div>
+                }
               </div>
-            </div>
-            <div class="committee-info">
-              <h4 class="member-name">{m.name}</h4>
-              <span class="member-role">{m.role}</span>
-              <span class="member-since">Since {m.since}</span>
-              <p class="member-bio">{m.bio}</p>
-            </div>
-          </div>
-        ))}
+              <div class="card-body">
+                <h4 class="card-name">{m.name}</h4>
+                <span class="card-role">{m.role}</span>
+                <span class="card-since">Since {m.since}</span>
+                <p class="card-bio">{m.bio}</p>
+                {m.username && <span class="card-profile-link">View portfolio →</span>}
+              </div>
+            </Tag>
+          );
+        })}
       </div>
     </div>
   </section>
@@ -189,20 +202,26 @@ const MENTORS = [
       </div>
 
       <div class="mentors-grid" data-gsap="stagger">
-        {MENTORS.map(m => (
-          <div class="mentor-mat-card">
-            <div class="avatar-ring-container">
-              <div class="mentor-avatar-circle">
-                {m.initials}
+        {MENTORS.map(m => {
+          const Tag = m.username ? 'a' : 'div';
+          const linkProps = m.username ? { href: `/photographers/${m.username}/` } : {};
+          return (
+            <Tag class={`person-card person-card--mentor${m.username ? ' person-card--linked' : ''}`} {...linkProps}>
+              <div class="card-avatar-wrap">
+                {m.avatar
+                  ? <img class="card-avatar-img" src={m.avatar} alt={m.name} loading="lazy" />
+                  : <div class="card-avatar-initials card-avatar-initials--mentor">{m.initials}</div>
+                }
               </div>
-            </div>
-            <div class="committee-info">
-              <h4 class="member-name">{m.name}</h4>
-              <span class="member-role mentor-role-label">{m.role}</span>
-              <p class="member-bio">{m.bio}</p>
-            </div>
-          </div>
-        ))}
+              <div class="card-body">
+                <h4 class="card-name">{m.name}</h4>
+                <span class="card-role card-role--mentor">{m.role}</span>
+                <p class="card-bio">{m.bio}</p>
+                {m.username && <span class="card-profile-link">View portfolio →</span>}
+              </div>
+            </Tag>
+          );
+        })}
       </div>
     </div>
   </section>
@@ -400,7 +419,7 @@ const MENTORS = [
   line-height: 1.4;
 }
 
-/* Committee */
+/* ── Shared person card (committee + mentors) ── */
 .committee-section {
   background: var(--surface-1);
 }
@@ -409,67 +428,6 @@ const MENTORS = [
   grid-template-columns: 1fr;
   gap: var(--s-3);
 }
-.committee-mat-card {
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  padding: var(--s-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  box-shadow: var(--e-1);
-  border-radius: var(--r-0);
-}
-.avatar-ring-container {
-  align-self: flex-start;
-}
-.committee-avatar-circle {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--r-full);
-  background: var(--forest-gradient);
-  color: var(--surface-0);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid var(--surface-0);
-  box-shadow: 0 0 0 1px var(--hairline-strong);
-}
-.committee-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.member-name {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ink-900);
-}
-.member-role {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gold-600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.member-since {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-400);
-}
-.member-bio {
-  font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--ink-600);
-  margin-top: var(--s-2);
-}
-
-/* Mentors */
 .mentors-section {
   background: var(--surface-0);
   border-top: 1px solid var(--hairline);
@@ -479,32 +437,109 @@ const MENTORS = [
   grid-template-columns: 1fr;
   gap: var(--s-3);
 }
-.mentor-mat-card {
-  background: var(--surface-1);
+
+/* Person card — unified for committee and mentors */
+.person-card {
+  background: var(--surface-0);
   border: 1px solid var(--hairline);
   padding: var(--s-3);
   display: flex;
   flex-direction: column;
-  gap: var(--s-2);
+  gap: var(--s-3);
+  box-shadow: var(--e-1);
   border-radius: var(--r-0);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
-.mentor-avatar-circle {
-  width: 52px;
-  height: 52px;
+.person-card--mentor {
+  background: var(--surface-1);
+  box-shadow: none;
+}
+.person-card--linked {
+  cursor: pointer;
+}
+.person-card--linked:hover {
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 1px var(--gold-500), var(--e-1);
+}
+
+/* Avatar */
+.card-avatar-wrap {
+  align-self: flex-start;
+  width: 64px;
+  height: 64px;
   border-radius: var(--r-full);
-  background: var(--slate-gradient, linear-gradient(135deg, #4a5568 0%, #2d3748 100%));
-  color: var(--surface-0);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
   border: 3px solid var(--surface-0);
   box-shadow: 0 0 0 1px var(--hairline-strong);
 }
-.mentor-role-label {
+.card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.card-avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--forest-gradient, linear-gradient(135deg, #3E5A48 0%, #2A3E32 100%));
+  color: var(--surface-0);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 20px;
+}
+.card-avatar-initials--mentor {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+/* Card body */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.card-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.card-role {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.card-role--mentor {
   color: var(--ink-400);
+}
+.card-since {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+}
+.card-bio {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-600);
+  margin-top: var(--s-1);
+}
+.card-profile-link {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-600);
+  margin-top: var(--s-1);
+  display: inline-block;
+  text-decoration: none;
 }
 
 /* Responsive */
@@ -522,6 +557,13 @@ const MENTORS = [
   }
   .mentors-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .person-card {
+    flex-direction: row;
+  }
+  .card-avatar-wrap {
+    width: 72px;
+    height: 72px;
   }
 }
 @media (min-width: 1024px) {

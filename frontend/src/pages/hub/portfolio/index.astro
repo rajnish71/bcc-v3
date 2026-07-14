@@ -205,6 +205,29 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     </div>
 
     <div class="insp-field">
+      <label class="insp-label" for="insp-genre">Genre</label>
+      <select class="insp-select" id="insp-genre">
+        <option value="">— None —</option>
+        <option value="WILDLIFE">Wildlife</option>
+        <option value="BIRD">Bird</option>
+        <option value="BIRDS_OF_BHOPAL">Birds of Bhopal</option>
+        <option value="STREET">Street</option>
+        <option value="PORTRAIT">Portrait</option>
+        <option value="LANDSCAPE">Landscape</option>
+        <option value="ARCHITECTURE">Architecture</option>
+        <option value="MACRO">Macro</option>
+        <option value="NIGHT">Night</option>
+        <option value="TRAVEL">Travel</option>
+        <option value="AERIAL">Aerial</option>
+        <option value="UNDERWATER">Underwater</option>
+        <option value="ABSTRACT">Abstract</option>
+        <option value="DOCUMENTARY">Documentary</option>
+        <option value="SPORT">Sport</option>
+        <option value="OTHER">Other</option>
+      </select>
+    </div>
+
+    <div class="insp-field">
       <label class="insp-label" for="insp-visibility">Visibility</label>
       <select class="insp-select" id="insp-visibility">
         <option value="PUBLIC">Public — visible to everyone</option>
@@ -1289,6 +1312,7 @@ function populateInspector(p: Photo) {
   (document.getElementById('insp-title') as HTMLInputElement).value = p.title ?? p.caption ?? '';
   (document.getElementById('insp-description') as HTMLTextAreaElement).value = p.description ?? '';
   (document.getElementById('insp-exh-label') as HTMLInputElement).value = p.exhibition_label ?? '';
+  (document.getElementById('insp-genre') as HTMLSelectElement).value = p.genre ?? '';
   (document.getElementById('insp-visibility') as HTMLSelectElement).value = p.visibility ?? 'PUBLIC';
 
   const exifEl = document.getElementById('insp-exif')!;
@@ -1416,12 +1440,13 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
   const title            = (document.getElementById('insp-title') as HTMLInputElement).value.trim();
   const description      = (document.getElementById('insp-description') as HTMLTextAreaElement).value.trim() || null;
   const exhibition_label = (document.getElementById('insp-exh-label') as HTMLInputElement).value.trim() || null;
+  const genre            = (document.getElementById('insp-genre') as HTMLSelectElement).value || null;
   const visibility       = (document.getElementById('insp-visibility') as HTMLSelectElement).value;
 
   const res = await apiFetch(`${API}/gallery/photos/${inspectorUuid}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description, exhibition_label, visibility }),
+    body: JSON.stringify({ title, description, exhibition_label, genre, visibility }),
   });
 
   saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
@@ -1432,7 +1457,7 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
     // Update local cache
     const updated = await res.json() as Photo;
     const idx = allPhotos.findIndex(p => p.uuid === inspectorUuid);
-    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, visibility };
+    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, genre, visibility };
     closeInspector();
     applyFilters();
   } else {

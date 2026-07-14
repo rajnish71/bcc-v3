@@ -14,6 +14,7 @@ interface Props {
   description?: string;
   ogImage?: string;
   bodyClass?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
@@ -21,10 +22,40 @@ const {
   description = 'Bhopal Camera Club — photography community since 2016. Events, exhibitions, workshops, and a curated portfolio of member work.',
   ogImage = '/images/og-default.jpg',
   bodyClass = '',
+  jsonLd,
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://v3bcc.bhopal.info');
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://bcc.bhopal.info');
 const fullTitle = `${title} | Bhopal Camera Club`;
+
+const SITE_URL = 'https://bcc.bhopal.info';
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Bhopal Camera Club',
+  url: SITE_URL,
+  logo: `${SITE_URL}/brand/BCC New Logo Full Black Text.png`,
+  sameAs: [
+    'https://www.instagram.com/bhopalcameraclub',
+    'https://www.facebook.com/bhopalcameraclub',
+  ],
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Bhopal',
+    addressRegion: 'Madhya Pradesh',
+    addressCountry: 'IN',
+  },
+};
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Bhopal Camera Club',
+  url: SITE_URL,
+};
+
+const allSchemas = [organizationSchema, websiteSchema, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])];
 ---
 
 <!doctype html>
@@ -45,6 +76,9 @@ const fullTitle = `${title} | Bhopal Camera Club`;
   <meta name="twitter:card"       content="summary_large_image" />
 
   <link rel="canonical" href={canonicalURL.toString()} />
+
+  <!-- JSON-LD structured data -->
+  <script type="application/ld+json" set:html={JSON.stringify(allSchemas)} />
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />

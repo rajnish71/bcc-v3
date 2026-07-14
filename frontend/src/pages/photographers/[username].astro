@@ -121,6 +121,12 @@ const { username } = Astro.params;
       <aside class="left-rail" id="left-rail">
         <div class="rail-section-head">Profile at a Glance</div>
 
+        <!-- Contact: website + social — shown first, hidden until data loads -->
+        <div class="rail-row rail-contact-block" id="rail-contact-row" hidden>
+          <div class="rail-label">Contact &amp; Links</div>
+          <div class="rail-contact-links" id="rail-contact-links"></div>
+        </div>
+
         <div class="rail-row" id="rail-since-row" hidden>
           <div class="rail-label">Member Since</div>
           <div class="rail-val" id="rail-since">—</div>
@@ -573,6 +579,24 @@ const { username } = Astro.params;
   background: #F4F0E8;
   border: 1px solid #E7E1D6;
   padding: 3px 8px;
+}
+.rail-contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rail-contact-website {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-600, #A8843C);
+  text-decoration: none;
+  word-break: break-all;
+}
+.rail-contact-website:hover { text-decoration: underline; }
+.rail-contact-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .rail-social { display: flex; flex-wrap: wrap; gap: 6px; }
 .rail-social-link {
@@ -1288,8 +1312,29 @@ async function loadProfile() {
     if (el) el.innerHTML = gearGroups.join('');
   }
 
-  // Social handles are shown in the About tab (V6 05 keeps them out of the rail)
+  // Contact block — website + social icons in Portfolio sidebar (item 82)
   const handles = profile.socialHandles ?? {};
+  {
+    const contactRow = document.getElementById('rail-contact-row');
+    const contactLinks = document.getElementById('rail-contact-links');
+    const website = profile.websiteUrl ?? handles['website'] ?? null;
+    const socialPlatforms = Object.keys(handles).filter(p => p !== 'website');
+    if (contactLinks && (website || socialPlatforms.length)) {
+      const parts: string[] = [];
+      if (website) {
+        const display = website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        parts.push(`<a class="rail-contact-website" href="${website.startsWith('http') ? website : 'https://' + website}" target="_blank" rel="noopener noreferrer">${esc(display)}</a>`);
+      }
+      if (socialPlatforms.length) {
+        const icons = socialPlatforms
+          .map(p => `<a class="rail-social-link" href="${socialUrl(p, handles[p])}" target="_blank" rel="noopener noreferrer" title="${p}">${socialIcon(p)}</a>`)
+          .join('');
+        parts.push(`<div class="rail-contact-socials">${icons}</div>`);
+      }
+      contactLinks.innerHTML = parts.join('');
+      if (contactRow) contactRow.hidden = false;
+    }
+  }
 
   // ── Bio Snippet (portfolio tab) ────────────────────────────────────────
   if (profile.bio) {

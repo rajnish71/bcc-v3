@@ -717,7 +717,8 @@ export type PhotoVisibility = 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED'
 export type PhotoGenre =
   | 'WILDLIFE' | 'BIRD' | 'STREET' | 'PORTRAIT' | 'LANDSCAPE'
   | 'ARCHITECTURE' | 'MACRO' | 'NIGHT' | 'TRAVEL' | 'AERIAL'
-  | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT' | 'OTHER';
+  | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT'
+  | 'BIRDS_OF_BHOPAL' | 'OTHER';
 
 export interface PhotosTable {
   id:                 Generated<number>;

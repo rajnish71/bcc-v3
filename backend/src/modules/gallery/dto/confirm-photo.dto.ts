@@ -38,7 +38,8 @@ export interface ConfirmPhotoDto {
   genre?:
     | 'WILDLIFE' | 'BIRD' | 'STREET' | 'PORTRAIT' | 'LANDSCAPE'
     | 'ARCHITECTURE' | 'MACRO' | 'NIGHT' | 'TRAVEL' | 'AERIAL'
-    | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT' | 'OTHER';
+    | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT'
+    | 'BIRDS_OF_BHOPAL' | 'OTHER';
   /** Visibility. Defaults to MEMBERS_ONLY if not provided. */
   visibility?: 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED';
   /** EXIF data extracted by the client. All fields optional. */

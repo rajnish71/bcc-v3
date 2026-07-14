@@ -19,7 +19,9 @@ export async function getStaticPaths() {
   } catch { /* silent */ }
 
   const paths = photos.map((p: any) => ({ params: { id: String(p.id) } }));
-  if (!paths.length) paths.push({ params: { id: 'placeholder' } });
+  // Always include the placeholder shell so Nginx try_files has a valid fallback
+  // for photos uploaded after the last build.
+  paths.push({ params: { id: 'placeholder' } });
   return paths;
 }
 

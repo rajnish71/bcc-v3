@@ -899,15 +899,15 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .cform-textarea { resize: vertical; }
 .cform-error { font-size: 12px; color: #882828; margin-bottom: 10px; }
 
-/* Inspector category pills (item 71) */
+/* Inspector category pills — runtime-created, must use :global() (CLAUDE.md §4.4) */
 .insp-cat-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.insp-cat-pill {
+:global(.insp-cat-pill) {
   font-size: 11px; font-weight: 600; color: #57514B; background: #fff;
   border: 1px solid #D8D2C6; padding: 4px 10px; cursor: pointer; font-family: var(--font-body);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.insp-cat-pill:hover { border-color: #C9A961; }
-.insp-cat-pill.is-on { background: #C9A961; border-color: #A8843C; color: #fff; }
+:global(.insp-cat-pill:hover) { border-color: #C9A961; }
+:global(.insp-cat-pill.is-on) { background: #C9A961; border-color: #A8843C; color: #fff; }
 
 /* Cover picker (item 68) */
 .cover-picker {

@@ -34,6 +34,10 @@ export interface ConfirmPhotoDto {
   title?: string;
   /** Optional caption / story behind the photo. */
   caption?: string;
+  /** Optional long-form description. */
+  description?: string;
+  /** Optional exhibition label (e.g. "Monsoon Arrival, Bhopal — 2024"). */
+  exhibition_label?: string;
   /** Visibility. Defaults to MEMBERS_ONLY if not provided. */
   visibility?: 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED';
   /** EXIF data extracted by the client. All fields optional. */

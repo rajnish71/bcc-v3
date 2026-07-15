@@ -734,6 +734,8 @@ export interface PhotosTable {
   // Content metadata -- all optional, owner sets on /confirm or PATCH.
   title:              Nullable<string>;
   caption:            Nullable<string>;
+  description:        Nullable<string>;
+  exhibition_label:   Nullable<string>;
   width_px:           Nullable<number>;
   height_px:          Nullable<number>;
   // EXIF -- all optional, client-provided on /confirm.

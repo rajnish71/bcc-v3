@@ -80,6 +80,8 @@ function formatPhoto(row: Record<string, unknown>) {
     uuid:              row.uuid,
     title:             row.title ?? null,
     caption:           row.caption ?? null,
+    description:       row.description ?? null,
+    exhibition_label:  row.exhibition_label ?? null,
     visibility:        row.visibility,
     status:            row.status,
     file_format:       row.file_format,
@@ -301,6 +303,8 @@ export class GalleryService {
         confirmed_at:       now,
         title:              dto.title ?? null,
         caption:            dto.caption ?? null,
+        description:        dto.description ?? null,
+        exhibition_label:   dto.exhibition_label ?? null,
         visibility:         dto.visibility ?? 'MEMBERS_ONLY',
         sha256_hash:        dto.sha256_hash ?? null,
         // gps_stripped: Generated<boolean> -- update type expects boolean
@@ -515,11 +519,13 @@ export class GalleryService {
     const updates: Record<string, unknown> = {
       updated_at: toMysqlDatetime(new Date()),
     };
-    if (dto.title        !== undefined) updates.title        = dto.title;
-    if (dto.caption      !== undefined) updates.caption      = dto.caption;
-    if (dto.visibility   !== undefined) updates.visibility   = dto.visibility;
+    if (dto.title            !== undefined) updates.title            = dto.title;
+    if (dto.caption          !== undefined) updates.caption          = dto.caption;
+    if (dto.description      !== undefined) updates.description      = dto.description;
+    if (dto.exhibition_label !== undefined) updates.exhibition_label = dto.exhibition_label;
+    if (dto.visibility       !== undefined) updates.visibility       = dto.visibility;
     // gps_stripped is Generated<boolean>: update type is boolean.
-    if (dto.gps_stripped !== undefined) updates.gps_stripped = !!dto.gps_stripped;
+    if (dto.gps_stripped     !== undefined) updates.gps_stripped     = !!dto.gps_stripped;
 
     await db
       .updateTable('photos')

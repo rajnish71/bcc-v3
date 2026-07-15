@@ -5,13 +5,8 @@
 // EXIF is immutable after /confirm (reflects the actual capture metadata).
 
 export interface UpdatePhotoDto {
-  title?:      string;
-  caption?:    string;
-  genre?:
-    | 'WILDLIFE' | 'BIRD' | 'STREET' | 'PORTRAIT' | 'LANDSCAPE'
-    | 'ARCHITECTURE' | 'MACRO' | 'NIGHT' | 'TRAVEL' | 'AERIAL'
-    | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT'
-    | 'BIRDS_OF_BHOPAL' | 'OTHER';
-  visibility?: 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED';
+  title?:        string;
+  caption?:      string;
+  visibility?:   'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED';
   gps_stripped?: boolean;
 }

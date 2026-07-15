@@ -205,29 +205,6 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     </div>
 
     <div class="insp-field">
-      <label class="insp-label" for="insp-genre">Genre</label>
-      <select class="insp-select" id="insp-genre">
-        <option value="">— None —</option>
-        <option value="WILDLIFE">Wildlife</option>
-        <option value="BIRD">Bird</option>
-        <option value="BIRDS_OF_BHOPAL">Birds of Bhopal</option>
-        <option value="STREET">Street</option>
-        <option value="PORTRAIT">Portrait</option>
-        <option value="LANDSCAPE">Landscape</option>
-        <option value="ARCHITECTURE">Architecture</option>
-        <option value="MACRO">Macro</option>
-        <option value="NIGHT">Night</option>
-        <option value="TRAVEL">Travel</option>
-        <option value="AERIAL">Aerial</option>
-        <option value="UNDERWATER">Underwater</option>
-        <option value="ABSTRACT">Abstract</option>
-        <option value="DOCUMENTARY">Documentary</option>
-        <option value="SPORT">Sport</option>
-        <option value="OTHER">Other</option>
-      </select>
-    </div>
-
-    <div class="insp-field">
       <label class="insp-label" for="insp-visibility">Visibility</label>
       <select class="insp-select" id="insp-visibility">
         <option value="PUBLIC">Public — visible to everyone</option>
@@ -1014,7 +991,6 @@ interface Photo {
   caption?: string | null;
   description?: string | null;
   exhibition_label?: string | null;
-  genre?: string | null;
   visibility?: string;
   status?: string;
   created_at?: string;
@@ -1029,7 +1005,6 @@ let allPhotos: Photo[] = [];
 let filtered: Photo[] = [];
 let selectedUuids = new Set<string>();
 let currentView: 'grid' | 'list' = 'grid';
-let activeGenre = '';
 let inspectorUuid = '';
 let inspectorIndex = 0;
 let pendingDeleteUuids: string[] = [];
@@ -1080,28 +1055,10 @@ async function loadPhotos() {
   applyFilters();
 }
 
-/* ── Genre chips ─────────────────────────────────────────────────────────── */
+/* ── Genre chips (hidden — genre filter uses tag system, not photos.genre) ── */
 function buildGenreChips() {
   const container = document.getElementById('genre-chips');
-  if (!container) return;
-
-  const genres = [...new Set(allPhotos.map(p => p.genre).filter(Boolean) as string[])].sort();
-  if (genres.length === 0) { container.hidden = true; return; }
-
-  container.innerHTML = genres.map(g => `
-    <button class="genre-chip${activeGenre === g ? ' genre-chip--active' : ''}"
-            type="button" data-genre="${g}">${g}</button>
-  `).join('');
-
-  container.querySelectorAll<HTMLButtonElement>('.genre-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeGenre = activeGenre === btn.dataset.genre ? '' : (btn.dataset.genre ?? '');
-      container.querySelectorAll('.genre-chip').forEach(c => {
-        c.classList.toggle('genre-chip--active', (c as HTMLElement).dataset.genre === activeGenre);
-      });
-      applyFilters();
-    });
-  });
+  if (container) container.hidden = true;
 }
 
 /* ── Filtering & sorting ─────────────────────────────────────────────────── */
@@ -1111,12 +1068,11 @@ function applyFilters() {
   const sort   = (document.getElementById('sort-select') as HTMLSelectElement)?.value ?? 'newest';
 
   filtered = allPhotos.filter(p => {
-    if (activeGenre && p.genre !== activeGenre) return false;
     if (status === 'published' && !isPublished(p)) return false;
     if (status === 'drafts'    && !isDraft(p))     return false;
     if (status === 'archived'  && !isArchived(p))  return false;
     if (search) {
-      const haystack = [p.title, p.caption, p.genre].filter(Boolean).join(' ').toLowerCase();
+      const haystack = [p.title, p.caption].filter(Boolean).join(' ').toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     return true;
@@ -1312,7 +1268,6 @@ function populateInspector(p: Photo) {
   (document.getElementById('insp-title') as HTMLInputElement).value = p.title ?? p.caption ?? '';
   (document.getElementById('insp-description') as HTMLTextAreaElement).value = p.description ?? '';
   (document.getElementById('insp-exh-label') as HTMLInputElement).value = p.exhibition_label ?? '';
-  (document.getElementById('insp-genre') as HTMLSelectElement).value = p.genre ?? '';
   (document.getElementById('insp-visibility') as HTMLSelectElement).value = p.visibility ?? 'PUBLIC';
 
   const exifEl = document.getElementById('insp-exif')!;
@@ -1440,13 +1395,12 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
   const title            = (document.getElementById('insp-title') as HTMLInputElement).value.trim();
   const description      = (document.getElementById('insp-description') as HTMLTextAreaElement).value.trim() || null;
   const exhibition_label = (document.getElementById('insp-exh-label') as HTMLInputElement).value.trim() || null;
-  const genre            = (document.getElementById('insp-genre') as HTMLSelectElement).value || null;
   const visibility       = (document.getElementById('insp-visibility') as HTMLSelectElement).value;
 
   const res = await apiFetch(`${API}/gallery/photos/${inspectorUuid}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description, exhibition_label, genre, visibility }),
+    body: JSON.stringify({ title, description, exhibition_label, visibility }),
   });
 
   saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
@@ -1457,7 +1411,7 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
     // Update local cache
     const updated = await res.json() as Photo;
     const idx = allPhotos.findIndex(p => p.uuid === inspectorUuid);
-    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, genre, visibility };
+    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, visibility };
     closeInspector();
     applyFilters();
   } else {
@@ -1563,8 +1517,6 @@ document.getElementById('view-list-btn')?.addEventListener('click', () => {
 document.getElementById('clear-filters-btn')?.addEventListener('click', () => {
   (document.getElementById('search-input') as HTMLInputElement).value = '';
   (document.getElementById('status-filter') as HTMLSelectElement).value = '';
-  activeGenre = '';
-  document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('genre-chip--active'));
   applyFilters();
 });
 
@@ -1589,7 +1541,7 @@ async function loadProfileLink() {
 /* ── Collections & Stories (item 53) ─────────────────────────────────────── */
 interface CollectionItem {
   uuid: string; title: string; description: string | null;
-  eyebrow: string | null; subtitle: string | null; genre: string | null;
+  eyebrow: string | null; subtitle: string | null; genres: string[];
   visibility: string; kind: string; photo_count: number;
   cover_image_url: string | null; cover_photo_uuid: string | null;
 }
@@ -1769,7 +1721,7 @@ async function openCollectionModal(uuid?: string) {
     descInput.value     = c?.description ?? '';
     kindInput.value     = c?.kind ?? 'COLLECTION';
     visInput.value      = c?.visibility ?? 'PUBLIC';
-    genreInput.value    = c?.genre ?? '';
+    genreInput.value    = c?.genres?.[0] ?? '';
     selectedCoverUuid   = c?.cover_photo_uuid ?? null;
     // Pre-select the container's current members as the baseline for diffing.
     const members = await fetchAlbumMemberUuids(uuid);
@@ -1812,7 +1764,7 @@ async function saveCollection() {
       eyebrow:     eyebrow || undefined,
       subtitle:    subtitle || undefined,
       description: description || undefined,
-      genre:       genre || undefined,
+      genres:      genre ? [genre] : undefined,
       kind,
       visibility,
     });

@@ -80,7 +80,6 @@ function formatPhoto(row: Record<string, unknown>) {
     uuid:              row.uuid,
     title:             row.title ?? null,
     caption:           row.caption ?? null,
-    genre:             row.genre ?? null,
     visibility:        row.visibility,
     status:            row.status,
     file_format:       row.file_format,
@@ -123,7 +122,7 @@ function formatAlbum(row: Record<string, unknown>) {
     eyebrow:          row.eyebrow ?? null,
     subtitle:         row.subtitle ?? null,
     description:      row.description ?? null,
-    genre:            row.genre ?? null,
+    genres:           (row.genres as string[] | undefined) ?? [],
     visibility:       row.visibility,
     album_type:       row.album_type,
     kind:             row.kind ?? 'COLLECTION',
@@ -302,7 +301,6 @@ export class GalleryService {
         confirmed_at:       now,
         title:              dto.title ?? null,
         caption:            dto.caption ?? null,
-        genre:              dto.genre ?? null,
         visibility:         dto.visibility ?? 'MEMBERS_ONLY',
         sha256_hash:        dto.sha256_hash ?? null,
         // gps_stripped: Generated<boolean> -- update type expects boolean
@@ -461,7 +459,14 @@ export class GalleryService {
     }
 
     if (opts.genre) {
-      query = query.where('genre', '=', opts.genre as never);
+      const genre = opts.genre;
+      query = query.where('id', 'in', eb =>
+        eb.selectFrom('photo_tag_assignments as pta')
+          .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+          .where('pt.tag_key', '=', genre)
+          .where('pt.category', '=', 'GENRE')
+          .select('pta.photo_id'),
+      );
     }
 
     // Category filter (item 71): match photos assigned the given tag_key.
@@ -512,7 +517,6 @@ export class GalleryService {
     };
     if (dto.title        !== undefined) updates.title        = dto.title;
     if (dto.caption      !== undefined) updates.caption      = dto.caption;
-    if (dto.genre        !== undefined) updates.genre        = dto.genre;
     if (dto.visibility   !== undefined) updates.visibility   = dto.visibility;
     // gps_stripped is Generated<boolean>: update type is boolean.
     if (dto.gps_stripped !== undefined) updates.gps_stripped = !!dto.gps_stripped;
@@ -637,7 +641,6 @@ export class GalleryService {
         eyebrow:       dto.eyebrow ?? null,
         subtitle:      dto.subtitle ?? null,
         description:   dto.description ?? null,
-        genre:         dto.genre ?? null,
         visibility:    dto.visibility ?? 'MEMBERS_ONLY',
         album_type:    'MEMBER_CREATED',
         kind:          dto.kind ?? 'COLLECTION',
@@ -653,8 +656,27 @@ export class GalleryService {
       .selectAll()
       .executeTakeFirstOrThrow();
 
+    // Write genre tag assignments to junction table.
+    if (dto.genres && dto.genres.length > 0) {
+      const genreTags = await db
+        .selectFrom('photo_tags')
+        .where('tag_key', 'in', dto.genres)
+        .where('category', '=', 'GENRE')
+        .where('is_active', '=', true)
+        .select('id')
+        .execute();
+      if (genreTags.length > 0) {
+        await db
+          .insertInto('photo_album_genres')
+          .values(genreTags.map(t => ({ album_id: album.id as number, tag_id: t.id })))
+          .ignore()
+          .execute();
+      }
+    }
+
     return formatAlbum({
       ...(album as Record<string, unknown>),
+      genres:           dto.genres ?? [],
       photo_count:      0,
       cover_photo_uuid: null,
     });
@@ -712,8 +734,15 @@ export class GalleryService {
           coverUuid = coverPhoto.uuid;
           coverImageUrl = photoVariants(coverPhoto.r2_key).medium ?? null;
         }
+        const genreRows = await db
+          .selectFrom('photo_album_genres as pag')
+          .innerJoin('photo_tags as pt', 'pt.id', 'pag.tag_id')
+          .where('pag.album_id', '=', album.id as number)
+          .select('pt.tag_key')
+          .execute();
         return formatAlbum({
           ...(album as Record<string, unknown>),
+          genres:           genreRows.map(r => r.tag_key),
           photo_count:      Number(count?.cnt ?? 0),
           cover_photo_uuid: coverUuid,
           cover_image_url:  coverImageUrl,
@@ -781,9 +810,17 @@ export class GalleryService {
       coverUuid = cover?.uuid ?? null;
     }
 
+    const albumGenres = await db
+      .selectFrom('photo_album_genres as pag')
+      .innerJoin('photo_tags as pt', 'pt.id', 'pag.tag_id')
+      .where('pag.album_id', '=', album.id as number)
+      .select('pt.tag_key')
+      .execute();
+
     return {
       album: formatAlbum({
         ...(album as Record<string, unknown>),
+        genres:           albumGenres.map(r => r.tag_key),
         photo_count:      Number(totalCount?.cnt ?? 0),
         cover_photo_uuid: coverUuid,
       }),
@@ -811,7 +848,6 @@ export class GalleryService {
     if (dto.eyebrow      !== undefined) updates.eyebrow     = dto.eyebrow;
     if (dto.subtitle     !== undefined) updates.subtitle    = dto.subtitle;
     if (dto.description  !== undefined) updates.description = dto.description;
-    if (dto.genre        !== undefined) updates.genre       = dto.genre;
     if (dto.visibility   !== undefined) updates.visibility  = dto.visibility;
     if (dto.kind         !== undefined) updates.kind        = dto.kind;
 
@@ -849,14 +885,46 @@ export class GalleryService {
       .selectAll()
       .executeTakeFirstOrThrow();
 
+    // Update genre junction table (full replacement when dto.genres is present).
+    if (dto.genres !== undefined) {
+      await db
+        .deleteFrom('photo_album_genres')
+        .where('album_id', '=', album.id as number)
+        .execute();
+      if (dto.genres.length > 0) {
+        const genreTags = await db
+          .selectFrom('photo_tags')
+          .where('tag_key', 'in', dto.genres)
+          .where('category', '=', 'GENRE')
+          .where('is_active', '=', true)
+          .select('id')
+          .execute();
+        if (genreTags.length > 0) {
+          await db
+            .insertInto('photo_album_genres')
+            .values(genreTags.map(t => ({ album_id: album.id as number, tag_id: t.id })))
+            .ignore()
+            .execute();
+        }
+      }
+    }
+
     const count = await db
       .selectFrom('photo_album_items')
       .where('album_id', '=', album.id as number)
       .select(eb => eb.fn.count<number>('id').as('cnt'))
       .executeTakeFirst();
 
+    const updatedGenres = await db
+      .selectFrom('photo_album_genres as pag')
+      .innerJoin('photo_tags as pt', 'pt.id', 'pag.tag_id')
+      .where('pag.album_id', '=', album.id as number)
+      .select('pt.tag_key')
+      .execute();
+
     return formatAlbum({
       ...(updated as Record<string, unknown>),
+      genres:           updatedGenres.map(r => r.tag_key),
       photo_count:      Number(count?.cnt ?? 0),
       cover_photo_uuid: dto.cover_photo_uuid ?? null,
     });
@@ -975,7 +1043,14 @@ export class GalleryService {
       .where('photos.visibility', '=', 'PUBLIC');
 
     if (opts.genre) {
-      q = q.where('photos.genre', '=', opts.genre as any);
+      const genre = opts.genre;
+      q = q.where('photos.id', 'in', eb =>
+        eb.selectFrom('photo_tag_assignments as pta')
+          .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+          .where('pt.tag_key', '=', genre)
+          .where('pt.category', '=', 'GENRE')
+          .select('pta.photo_id'),
+      );
     }
 
     // Category filter (item 71): only photos assigned the given tag_key.

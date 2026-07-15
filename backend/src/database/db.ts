@@ -715,11 +715,6 @@ export type PhotoFileFormat =
 
 export type PhotoStatus = 'PROCESSING' | 'ACTIVE' | 'DELETED';
 export type PhotoVisibility = 'PUBLIC' | 'MEMBERS_ONLY' | 'PRIVATE' | 'UNLISTED';
-export type PhotoGenre =
-  | 'WILDLIFE' | 'BIRD' | 'STREET' | 'PORTRAIT' | 'LANDSCAPE'
-  | 'ARCHITECTURE' | 'MACRO' | 'NIGHT' | 'TRAVEL' | 'AERIAL'
-  | 'UNDERWATER' | 'ABSTRACT' | 'DOCUMENTARY' | 'SPORT'
-  | 'BIRDS_OF_BHOPAL' | 'OTHER';
 
 export interface PhotosTable {
   id:                 Generated<number>;
@@ -753,7 +748,6 @@ export interface PhotosTable {
   exif_gps_lat:       Nullable<number>;
   exif_gps_lng:       Nullable<number>;
   gps_stripped:       Generated<boolean>;
-  genre:              Nullable<PhotoGenre>;
   visibility:         Generated<PhotoVisibility>;
   source_event_id:    Nullable<number>;
   view_count:         Generated<number>;
@@ -773,8 +767,6 @@ export interface PhotoAlbumsTable {
   eyebrow:        Nullable<string>;
   subtitle:       Nullable<string>;
   description:    Nullable<string>;
-  // Primary category — a single GENRE tag_key from photo_tags (item 71).
-  genre:          Nullable<string>;
   cover_photo_id: Nullable<number>;
   album_type:     Generated<AlbumType>;
   kind:           Generated<'COLLECTION' | 'STORY'>;
@@ -791,6 +783,12 @@ export interface PhotoAlbumItemsTable {
   photo_id:   number;
   sort_order: Generated<number>;
   added_at:   Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface PhotoAlbumGenresTable {
+  id:       Generated<number>;
+  album_id: number;
+  tag_id:   number;
 }
 
 export type TagCategory = 'GENRE' | 'SUBJECT' | 'LOCATION' | 'EQUIPMENT' | 'CUSTOM';
@@ -967,6 +965,7 @@ export interface DB {
   photos: PhotosTable;
   photo_albums: PhotoAlbumsTable;
   photo_album_items: PhotoAlbumItemsTable;
+  photo_album_genres: PhotoAlbumGenresTable;
   photo_tags: PhotoTagsTable;
   photo_tag_assignments: PhotoTagAssignmentsTable;
   photo_reactions: PhotoReactionsTable;

@@ -214,13 +214,17 @@ export class PhotographerProfilesService {
     // ------------------------------------------------------------------
     let genreSet: Set<number> | null = null;
     if (opts.genre) {
+      const genre = opts.genre;
       const genreRows = await db
         .selectFrom('photos')
-        .where('owner_user_id', 'in', userIds)
-        .where('status', '=', 'ACTIVE')
-        .where('genre', '=', opts.genre as any)
-        .where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
-        .select('owner_user_id')
+        .innerJoin('photo_tag_assignments as pta', 'pta.photo_id', 'photos.id')
+        .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+        .where('photos.owner_user_id', 'in', userIds)
+        .where('photos.status', '=', 'ACTIVE')
+        .where('pt.tag_key', '=', genre)
+        .where('pt.category', '=', 'GENRE')
+        .where('photos.visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
+        .select('photos.owner_user_id')
         .execute();
       genreSet = new Set(genreRows.map(r => r.owner_user_id as number));
     }

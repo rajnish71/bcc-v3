@@ -146,13 +146,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     localStorage.setItem('bcc_token', decodeURIComponent(at));
     localStorage.setItem('bcc_refresh', decodeURIComponent(rt));
 
-    // Fetch user profile
+    // Fetch user profile + identity status
+    let identityPending = false;
     try {
       const res = await fetch(`${API}/users/me`, {
         headers: { Authorization: `Bearer ${decodeURIComponent(at)}` },
       });
       if (res.ok) {
-        const user = await res.json() as { fullName?: string; username?: string; ui?: { portalState: string } };
+        const user = await res.json() as {
+          fullName?: string;
+          username?: string;
+          identityStatus?: string;
+          ui?: { portalState: string };
+        };
         const fullName = user.fullName || 'Member';
         const username = user.username || '';
         const initials = fullName.trim().split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -162,11 +168,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           username,
           ui: user.ui,
         }));
+        identityPending = user.identityStatus === 'IDENTITY_PENDING';
       }
     } catch { /* non-critical -- nav will show fallback */ }
 
     // Clear hash from URL to avoid token leakage on back-navigation
     history.replaceState(null, '', window.location.pathname);
+
+    // IDENTITY-ARCH-001: incomplete identity → collect username before entering Hub
+    if (identityPending) {
+      const intendedDest = isNew ? '/hub/membership/apply/' : '/hub/';
+      window.location.replace(`/auth/identity-complete/?next=${encodeURIComponent(intendedDest)}`);
+      return;
+    }
 
     // New users go to membership apply; returning users go to hub
     window.location.replace(isNew ? '/hub/membership/apply/' : '/hub/');

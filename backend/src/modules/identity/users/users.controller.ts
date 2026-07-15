@@ -25,6 +25,8 @@ export class UsersController {
         'uuid',
         'email',
         'username',
+        'identity_status',
+        'identity_completed_at',
         'full_name',
         'status',
         'email_verified_at',
@@ -43,6 +45,8 @@ export class UsersController {
       uuid: row.uuid,
       email: row.email,
       username: row.username ?? null,
+      identityStatus: row.identity_status,
+      identityCompletedAt: row.identity_completed_at ?? null,
       fullName: row.full_name,
       status: row.status,
       emailVerified: !!row.email_verified_at,
@@ -65,7 +69,10 @@ export class UsersController {
     const term = `%${q.trim()}%`;
     return db
       .selectFrom('users')
-      .select(['id', 'username', 'full_name', 'email', 'status'])
+      .select([
+        'id', 'username', 'full_name', 'email', 'status',
+        'identity_status', 'identity_completed_at',
+      ])
       .where(eb =>
         eb.or([
           eb('username', 'like', term),

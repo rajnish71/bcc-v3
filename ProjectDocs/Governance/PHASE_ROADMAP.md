@@ -1,8 +1,8 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
 **Status:** AUTHORITATIVE — Living Roadmap
-**Version:** 2.5
-**Last Updated:** 2026-07-12 — Feedback Stage 5 tasks F5.1–F5.4 implemented by Claude Code; P0 release blockers identified (mobile nav, homepage links) and fixed by Claude Code
+**Version:** 2.6
+**Last Updated:** 2026-07-15 — IDENTITY-001 Identity Completion Architecture implemented by Claude Code
 
 ---
 
@@ -462,6 +462,28 @@ Soft Launch Activities
 ### F5.4 — SEO Alt-Text — ✅ COMPLETE (Claude Code, 2026-07-12)
 
 - ✅ Canonical SEO alt-text format `"${title} by ${photographerName} · Bhopal Camera Club"` applied to: gallery wall, photographer profile grid, profile lightbox
+
+---
+
+---
+
+## IDENTITY-001 — Identity Completion Architecture
+
+**Status:** ✅ COMPLETE (Claude Code, 2026-07-15)
+
+**Mission:** Every user must complete identity (choose a username) before accessing the Member Hub. `identity_status` is the single authoritative state.
+
+- ✅ **IdentityService implemented** — `reserveUsername()` with pre-write UX check + UPDATE WHERE username IS NULL guard + ER_DUP_ENTRY catch (HTTP 409) for race-condition safety; `markIdentityComplete()` writes `identity_status = IDENTITY_COMPLETE` and `identity_completed_at`
+- ✅ **Identity Status architecture implemented** — `identity_status ENUM('IDENTITY_PENDING','IDENTITY_COMPLETE') NOT NULL DEFAULT 'IDENTITY_PENDING'` column added in migration `0067_add_identity_status.sql`; `identity_completed_at DATETIME NULL` added; existing users backfilled from `username IS NOT NULL`
+- ✅ **Identity Completion workflow implemented** — `/auth/identity-complete/` page (MinimalLayout): loading → auth check → PENDING shows username form with debounced availability check → COMPLETE forwards to `?next`; open-redirect protection enforced
+- ✅ **Hub Identity Guard implemented** — HubLayout performs blocking `/users/me` fetch before revealing Hub frame; `IDENTITY_PENDING` redirects to `/auth/identity-complete/?next=<current path>`; guard also active in `callback.astro` and `signin.astro` immediately after token issuance
+- ✅ **Existing user migration implemented** — migration 0067 backfills `identity_status = IDENTITY_COMPLETE` for all users with an existing username; users without a username start IDENTITY_PENDING and are directed to complete identity on next sign-in
+- ✅ **OAuth integration completed** — `callback.astro` checks `identityStatus` after OAuth token receipt; IDENTITY_PENDING redirects to completion with intended destination (`isNew ? '/hub/membership/apply/' : '/hub/'`) preserved as `?next`
+- ✅ **Username ownership architecture completed** — username is write-once by the user only; UNIQUE INDEX `uq_users_username` (migration 0010) is the final authority; administrators cannot assign usernames; `reserveUsername()` enforces `WHERE username IS NULL` to prevent overwriting an existing username
+
+Architecture authority: `ProjectDocs/Architecture/Identity_Architecture_Freeze_v1_IDENTITY-ARCH-001.md`
+
+HUB-ARCH-001 updated: Amendment 001 (FD-016, FD-017, FD-018) records HubLayout as Identity Guard.
 
 ---
 

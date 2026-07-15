@@ -216,6 +216,52 @@ const activeRoute = Astro.url.pathname;
       return;
     }
 
+    // Identity guard: fetch /users/me before revealing hub (IDENTITY-ARCH-001)
+    let identityStatus = 'IDENTITY_COMPLETE';
+    try {
+      const res = await fetch(`${API}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        // Auth failed mid-session — treat as unauthenticated
+        clearAuth();
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.replace(`/auth/signin/?next=${next}`);
+        return;
+      }
+      const user = await res.json() as {
+        fullName?: string;
+        username?: string;
+        identityStatus?: string;
+        ui?: { portalState: string };
+      };
+
+      identityStatus = user.identityStatus ?? 'IDENTITY_COMPLETE';
+
+      // IDENTITY-ARCH-001: IDENTITY_PENDING → redirect before revealing Hub
+      if (identityStatus === 'IDENTITY_PENDING') {
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.replace(`/auth/identity-complete/?next=${next}`);
+        return;
+      }
+
+      // Update bcc_user cache
+      if (user.fullName) {
+        const initials = user.fullName.trim()
+          .split(/\s+/)
+          .map((w: string) => w[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+        localStorage.setItem('bcc_user', JSON.stringify({
+          displayName: user.fullName,
+          initials,
+          username: user.username ?? '',
+          ui: user.ui,
+        }));
+      }
+    } catch { /* network issue — proceed; identity check failed gracefully */ }
+
     // Resolve role and write to hub-frame (HubSidebar observes this)
     const role = getRoleFromToken(token);
     const frame = document.getElementById('hub-frame');
@@ -225,34 +271,6 @@ const activeRoute = Astro.url.pathname;
     const loading = document.getElementById('hub-loading');
     if (loading) loading.hidden = true;
     if (frame) frame.style.display = '';
-
-    // Refresh bcc_user in localStorage (non-critical)
-    try {
-      const res = await fetch(`${API}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const user = await res.json() as {
-          fullName?: string;
-          username?: string;
-          ui?: { portalState: string };
-        };
-        if (user.fullName) {
-          const initials = user.fullName.trim()
-            .split(/\s+/)
-            .map((w: string) => w[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase();
-          localStorage.setItem('bcc_user', JSON.stringify({
-            displayName: user.fullName,
-            initials,
-            username: user.username ?? '',
-            ui: user.ui,
-          }));
-        }
-      }
-    } catch { /* non-critical */ }
   }
 
   initHub();

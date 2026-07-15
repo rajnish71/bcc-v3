@@ -357,21 +357,36 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       const tokens = await loginRes.json() as { accessToken: string; refreshToken: string };
 
-      // Step 2: fetch display name + username
+      // Step 2: fetch display name + username + identity status
       let fullName = 'Member';
       let username = '';
       let ui: { portalState: string } | undefined = undefined;
+      let identityPending = false;
       const meRes = await fetch(`${API}/users/me`, {
         headers: { Authorization: `Bearer ${tokens.accessToken}` },
       });
       if (meRes.ok) {
-        const me = await meRes.json() as { fullName?: string; username?: string; ui?: { portalState: string } };
+        const me = await meRes.json() as {
+          fullName?: string;
+          username?: string;
+          identityStatus?: string;
+          ui?: { portalState: string };
+        };
         if (me.fullName) fullName = me.fullName;
         if (me.username) username = me.username;
         if (me.ui) ui = me.ui;
+        identityPending = me.identityStatus === 'IDENTITY_PENDING';
       }
 
       storeSession(tokens.accessToken, tokens.refreshToken, fullName, username, ui);
+
+      // IDENTITY-ARCH-001: incomplete identity → collect username before entering Hub
+      if (identityPending) {
+        const next = encodeURIComponent(getRedirectTarget());
+        window.location.replace(`/auth/identity-complete/?next=${next}`);
+        return;
+      }
+
       window.location.replace(getRedirectTarget());
 
     } catch {

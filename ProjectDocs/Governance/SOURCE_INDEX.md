@@ -91,22 +91,22 @@ Architecture/
 ├── BCC\_Unified\_Platform\_Specification\_v3.md
 ├── HUB\_COMPONENT\_ARCHITECTURE\_FREEZE\_v1.0.md
 ├── PHOTO-ASSET-ARCHITECTURE\_FREEZE\_v1.0.md
-└── BCC\_V3\_Stage2\_Reconciliation\_Audit.md
+├── BCC\_V3\_Stage2\_Reconciliation\_Audit.md
+├──PHOTO_STORAGE_AND_DELIVERY_ARCHITECTURE_FREEZE_v1.0_PHOTO-ARCH-002.md
+└──Identity_Architecture_Freeze_v1_IDENTITY-ARCH-001.md
+
+
 
 ```
-
 
 
 \---
 
 
-
 \## Membership
 
 
-
 Contains constitutional membership documents.
-
 
 
 ```

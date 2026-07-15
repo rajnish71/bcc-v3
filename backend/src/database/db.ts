@@ -24,6 +24,8 @@ export interface UsersTable {
   phone_verified_at: ColumnType<Date | null, string | null, string | null>;
   status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
   username: string | null;
+  identity_status: Generated<'IDENTITY_PENDING' | 'IDENTITY_COMPLETE'>;
+  identity_completed_at: ColumnType<Date | null, string | null, string | null>;
   bio: string | null;
   tagline: Nullable<string>;
   awards_html: Nullable<string>;

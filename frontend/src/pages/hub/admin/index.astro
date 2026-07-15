@@ -69,6 +69,21 @@ import HubLayout from '../../../layouts/HubLayout.astro';
           <div id="reset-feedback" class="reset-feedback" hidden></div>
         </form>
       </div>
+
+      <!-- Identity actions panel (revealed alongside reset-panel when a member is selected) -->
+      <div id="identity-panel" class="identity-panel" hidden>
+        <div class="identity-panel__header">
+          <span class="identity-panel__label">Identity Status</span>
+          <span id="identity-status-badge" class="identity-badge"></span>
+        </div>
+        <div id="identity-detail" class="identity-detail"></div>
+        <div class="identity-actions" id="identity-actions" hidden>
+          <button id="btn-send-link"     type="button" class="btn-identity-action">Send Completion Link</button>
+          <button id="btn-send-priority" type="button" class="btn-identity-action btn-identity-action--priority">Send Priority Link</button>
+          <button id="btn-resend-welcome" type="button" class="btn-identity-action btn-identity-action--secondary">Resend Welcome Email</button>
+        </div>
+        <div id="identity-feedback" class="reset-feedback" hidden></div>
+      </div>
     </section>
 
     <!-- ③ SPOTLIGHT MANAGEMENT ─────────────────────────────────────────── -->
@@ -374,6 +389,96 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .reset-feedback.ok    { background: #E8F5E9; color: #1A7A40; }
 .reset-feedback.error { background: #FDECEA; color: #C0392B; }
 
+/* ─── Identity badge ──────────────────────────────────────── */
+.identity-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border: 1px solid;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.identity-badge--pending {
+  background: #FEF3C7;
+  border-color: #FCD34D;
+  color: #92400E;
+}
+.identity-badge--complete {
+  background: #D1FAE5;
+  border-color: #6EE7B7;
+  color: #065F46;
+}
+
+/* Identity status in search result rows */
+.result-row__identity {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 1px 6px;
+  border: 1px solid;
+}
+.result-row__identity--pending  { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+.result-row__identity--complete { background: #D1FAE5; border-color: #6EE7B7; color: #065F46; }
+
+/* ─── Identity panel ──────────────────────────────────────── */
+.identity-panel {
+  max-width: 520px;
+  background: #F8F6F2;
+  border: 1px solid #E7E1D6;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+.identity-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.identity-panel__label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7A7469;
+}
+.identity-detail {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #5A5048;
+  line-height: 1.6;
+}
+.identity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.btn-identity-action {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  background: #141210;
+  color: #fff;
+  white-space: nowrap;
+}
+.btn-identity-action--priority {
+  background: #C0392B;
+}
+.btn-identity-action--secondary {
+  background: transparent;
+  border: 1px solid #7A7469;
+  color: #5A5048;
+}
+.btn-identity-action:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-identity-action:hover:not(:disabled) { opacity: 0.8; }
+
 /* ─── Spotlight management ─────────────────────────────────── */
 .spotlight-current {
   background: #FAF8F4;
@@ -611,6 +716,8 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     username: string | null;
     full_name: string | null;
     email: string | null;
+    identity_status: 'IDENTITY_PENDING' | 'IDENTITY_COMPLETE' | null;
+    identity_completed_at: string | null;
   }
 
   const searchForm    = document.getElementById('search-form')    as HTMLFormElement | null;
@@ -652,25 +759,70 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       if (!members.length) { show(searchEmpty); return; }
 
       if (searchResults) {
-        searchResults.innerHTML = members.map(m => `
-          <div class="result-row" data-uid="${m.id}" data-name="${(m.full_name ?? m.username ?? 'Member').replace(/"/g, '&quot;')}">
-            <div class="result-row__name">${m.full_name ?? m.username ?? 'Unknown'}</div>
-            <div class="result-row__meta">${m.username ? `@${m.username}` : ''} ${m.email ?? ''}</div>
-          </div>
-        `).join('');
+        searchResults.innerHTML = members.map(m => {
+          const isPending = m.identity_status === 'IDENTITY_PENDING' || m.identity_status === null;
+          const badgeCls  = isPending ? 'result-row__identity--pending' : 'result-row__identity--complete';
+          const badgeTxt  = isPending ? 'PENDING' : 'COMPLETE';
+          return `
+            <div class="result-row"
+              data-uid="${m.id}"
+              data-name="${(m.full_name ?? m.username ?? 'Member').replace(/"/g, '&quot;')}"
+              data-identity="${m.identity_status ?? 'IDENTITY_PENDING'}"
+              data-identity-at="${m.identity_completed_at ?? ''}"
+              data-username="${(m.username ?? '').replace(/"/g, '&quot;')}">
+              <div class="result-row__name">${m.full_name ?? m.username ?? 'Unknown'}</div>
+              <div class="result-row__meta">${m.username ? `@${m.username}` : '<em>no username</em>'} · ${m.email ?? ''}</div>
+              <span class="result-row__identity ${badgeCls}">${badgeTxt}</span>
+            </div>
+          `;
+        }).join('');
         show(searchResults);
 
         searchResults.addEventListener('click', (ev) => {
           const row = (ev.target as HTMLElement).closest<HTMLElement>('[data-uid]');
           if (!row) return;
-          const uid  = row.dataset.uid!;
-          const name = row.dataset.name!;
+          const uid        = row.dataset.uid!;
+          const name       = row.dataset.name!;
+          const identityStatus = row.dataset.identity!;
+          const identityAt     = row.dataset.identityAt ?? '';
+          const username       = row.dataset.username ?? '';
+
+          // Password reset panel
           if (resetUserId) resetUserId.value = uid;
           if (resetTargetName) resetTargetName.textContent = `Reset password for: ${name}`;
           if (resetFeedback) { resetFeedback.textContent = ''; resetFeedback.className = 'reset-feedback'; hide(resetFeedback); }
           if (resetPassword) resetPassword.value = '';
           show(resetPanel);
           resetPassword?.focus();
+
+          // Identity panel
+          const identityPanel   = document.getElementById('identity-panel');
+          const statusBadge     = document.getElementById('identity-status-badge');
+          const identityDetail  = document.getElementById('identity-detail');
+          const identityActions = document.getElementById('identity-actions');
+          const identityFeedback= document.getElementById('identity-feedback');
+
+          const isPending = identityStatus === 'IDENTITY_PENDING';
+          if (statusBadge) {
+            statusBadge.textContent = isPending ? 'IDENTITY PENDING' : 'IDENTITY COMPLETE';
+            statusBadge.className = `identity-badge ${isPending ? 'identity-badge--pending' : 'identity-badge--complete'}`;
+          }
+          if (identityDetail) {
+            if (isPending) {
+              identityDetail.innerHTML = `<strong>${name}</strong> has not yet chosen a username.`;
+            } else {
+              identityDetail.innerHTML = `<strong>@${username}</strong> · Completed ${fmtDate(identityAt)}`;
+            }
+          }
+          // Show action buttons only for PENDING users
+          if (identityActions) {
+            identityActions.hidden = !isPending;
+            // Wire identity action buttons to this user (replace prior listeners by setting data attrs)
+            identityActions.dataset.uid  = uid;
+            identityActions.dataset.name = name;
+          }
+          if (identityFeedback) { identityFeedback.textContent = ''; identityFeedback.className = 'reset-feedback'; hide(identityFeedback); }
+          if (identityPanel) show(identityPanel);
         }, { once: true });
       }
     } catch {
@@ -845,6 +997,62 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       hide(spotlightSearchLoading);
       if (spotlightSearchError) { spotlightSearchError.textContent = 'Failed to search photos.'; show(spotlightSearchError); }
     }
+  });
+
+  /* ════════════════════════════════════════════════════════════
+     IDENTITY ACTIONS
+  ════════════════════════════════════════════════════════════ */
+  function identityFeedbackMsg(msg: string, kind: 'ok' | 'error'): void {
+    const el = document.getElementById('identity-feedback');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `reset-feedback ${kind}`;
+    show(el);
+  }
+
+  async function identityAction(endpoint: string, uid: string): Promise<void> {
+    const res = await fetch(`${API}/identity/${endpoint}/${uid}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: '{}',
+    });
+    if (res.ok) {
+      identityFeedbackMsg('Email dispatched.', 'ok');
+    } else {
+      const err = await res.json().catch(() => ({})) as { message?: string };
+      identityFeedbackMsg(`Error: ${err.message ?? res.status}`, 'error');
+    }
+  }
+
+  function getIdentityUid(): string | null {
+    return (document.getElementById('identity-actions') as HTMLElement | null)?.dataset.uid ?? null;
+  }
+
+  document.getElementById('btn-send-link')?.addEventListener('click', async () => {
+    const uid = getIdentityUid(); if (!uid) return;
+    const btn = document.getElementById('btn-send-link') as HTMLButtonElement;
+    btn.disabled = true;
+    try { await identityAction('admin/send-completion-link', uid); }
+    catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
+    finally { btn.disabled = false; }
+  });
+
+  document.getElementById('btn-send-priority')?.addEventListener('click', async () => {
+    const uid = getIdentityUid(); if (!uid) return;
+    const btn = document.getElementById('btn-send-priority') as HTMLButtonElement;
+    btn.disabled = true;
+    try { await identityAction('admin/send-priority-completion-link', uid); }
+    catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
+    finally { btn.disabled = false; }
+  });
+
+  document.getElementById('btn-resend-welcome')?.addEventListener('click', async () => {
+    const uid = getIdentityUid(); if (!uid) return;
+    const btn = document.getElementById('btn-resend-welcome') as HTMLButtonElement;
+    btn.disabled = true;
+    try { await identityAction('admin/resend-welcome', uid); }
+    catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
+    finally { btn.disabled = false; }
   });
 
   /* ── Init ────────────────────────────────────────────────── */

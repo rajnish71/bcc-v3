@@ -877,11 +877,118 @@ HubLayout governs authenticated shell behaviour.
 PHOTO-ARCH-001 governs the photographic asset itself.
 
 ---
+
+# AMENDMENT 001 — IDENTITY GUARD EXTENSION
+
+Document Amendment ID: HUB-ARCH-001-A001
+
+Authority: Human Authority (Rajnish K. Khare)
+
+Date: 2026-07-15
+
+Mission: IDENTITY-001 — Identity Completion Architecture
+
+Status: Approved. Incorporated into this document.
+
+---
+
+## Subject
+
+IDENTITY-001 introduced the Identity Completion Architecture. This amendment
+extends the Authentication Ownership model of HUB-ARCH-001 to record the
+new authentication guard state and the resulting responsibilities of HubLayout.
+
+---
+
+## Extended Authentication Guard State Table
+
+The Auth Guard Behaviour table in the HUB LAYOUT section is extended by one
+additional state:
+
+| Condition | HubLayout Action |
+|---|---|
+| Token absent | Redirect to `/auth/signin/?next=[current path]` |
+| Token present, invalid | Redirect to `/auth/signin/?next=[current path]` |
+| Token valid, role insufficient | Redirect to `/hub/` with insufficient-access state |
+| **Token valid, `identity_status = IDENTITY_PENDING`** | **Redirect to `/auth/identity-complete/?next=[current path]`** |
+| Token valid, role sufficient, identity complete | Resolve session, pass props, render workspace |
+| Token resolution in progress | Show loading state, hide workspace |
+
+The redirect to `/auth/identity-complete/` preserves the intended destination
+as the `?next` query parameter so users arrive at the correct page after
+completing identity.
+
+---
+
+## HubLayout: Identity Guard Responsibility
+
+HubLayout is now both the Authentication Owner (Principle 1, FD-001) and
+the Identity Guard for the Hub.
+
+HubLayout performs a blocking fetch to `/api/v1/users/me` before revealing
+the Hub frame. This fetch serves two purposes:
+
+1. Confirms the token is still valid against the live API (not just locally parseable).
+2. Returns `identityStatus` — the authoritative identity state from the database.
+
+If `identityStatus === 'IDENTITY_PENDING'`, HubLayout redirects to
+`/auth/identity-complete/?next=<encoded current path>` before rendering any
+workspace content.
+
+This check is a blocking guard, not a background fetch. The Hub workspace
+is never revealed to a user whose identity is IDENTITY_PENDING.
+
+---
+
+## Identity Completion Page — Outside HubLayout Scope
+
+The Identity Completion page (`/auth/identity-complete/`) is explicitly
+outside the scope of HubLayout and the Hub shell.
+
+It is governed by:
+
+* Route: `/auth/` namespace
+* Layout: MinimalLayout (BaseLayout with no Hub sidebar or Hub chrome)
+* Document: IDENTITY-ARCH-001
+
+This placement is consistent with the existing Out of Scope declaration:
+> "Authentication pages (`/auth/*`) — governed by MinimalLayout"
+
+Identity Completion is an authentication prerequisite, not a Hub workspace.
+It must not use HubLayout.
+
+---
+
+## Frozen Decision Added
+
+| # | Decision | Frozen State |
+|---|---|---|
+| FD-016 | HubLayout is both Authentication Owner and Identity Guard | FROZEN |
+| FD-017 | HubLayout blocking `/users/me` fetch precedes any workspace reveal | FROZEN |
+| FD-018 | Identity Completion page lives under `/auth/`, uses MinimalLayout, never HubLayout | FROZEN |
+
+---
+
+## Related Documents
+
+* IDENTITY-ARCH-001 — Identity Completion Architecture
+  (`ProjectDocs/Architecture/Identity_Architecture_Freeze_v1_IDENTITY-ARCH-001.md`)
+
+---
+
 Revision History
 
 v1.0
 2026-07-10
 Initial constitutional freeze.
+
+v1.0 + Amendment 001
+2026-07-15
+Identity Guard extension — IDENTITY-001 mission.
+HubLayout now performs blocking identity check via /users/me before Hub reveal.
+New authentication guard state: IDENTITY_PENDING → redirect to /auth/identity-complete/.
+Identity Completion page established under /auth/ with MinimalLayout.
+Frozen decisions FD-016, FD-017, FD-018 added.
 
 Future revisions:
 v1.1

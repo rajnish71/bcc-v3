@@ -1,0 +1,565 @@
+---
+/**
+ * /auth/identity-complete — Identity Completion
+ * Route: /auth/identity-complete/
+ *
+ * IDENTITY-ARCH-001: Every authenticated user must complete their identity
+ * (choose a username) before accessing Hub functionality.
+ *
+ * Layout: BaseLayout (MinimalLayout pattern — no HubSidebar, no Hub chrome).
+ * Guard:  client-side; redirects unauthenticated users to /auth/signin/?next=...
+ *         already-complete users are immediately forwarded to ?next or /hub/.
+ *
+ * Form:
+ *   — Username (always required)
+ *   — Display Name (only shown when full_name is null or empty on the account)
+ *
+ * On success: identity_status → IDENTITY_COMPLETE, redirect to ?next or /hub/.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Complete Your Account" description="Choose a username to complete your Bhopal Camera Club account setup." bodyClass="auth-page">
+  <section class="auth-section">
+    <div class="ic-card" role="main" aria-label="Complete account setup">
+
+      <!-- Logo -->
+      <a href="/" class="auth-logo" aria-label="Bhopal Camera Club home">
+        <img src="/images/bcc-logo-default.png" alt="Bhopal Camera Club" width="160" height="44" loading="eager" />
+      </a>
+
+      <!-- Loading state (while checking auth) -->
+      <div id="ic-loading" class="ic-loading" aria-live="polite">
+        <span class="ic-dot"></span>
+        <span class="ic-dot"></span>
+        <span class="ic-dot"></span>
+      </div>
+
+      <!-- Form (hidden until auth confirmed + IDENTITY_PENDING) -->
+      <div id="ic-form-wrap" hidden>
+        <h1 class="ic-heading">Choose your username</h1>
+        <p class="ic-sub">
+          One last step before you can access your member area.
+          Your username is permanent and cannot be changed later.
+        </p>
+
+        <div id="ic-error" class="ic-banner ic-banner--error" hidden role="alert"></div>
+
+        <!-- Display Name (only shown if account has no name) -->
+        <div id="ic-displayname-field" class="ic-field" hidden>
+          <label class="ic-label" for="ic-displayname">Your name</label>
+          <input
+            id="ic-displayname"
+            type="text"
+            class="ic-input"
+            placeholder="e.g. Rajnish Khare"
+            autocomplete="name"
+            autocapitalize="words"
+          />
+          <span class="ic-hint">This is how your name will appear on the platform.</span>
+        </div>
+
+        <!-- Username -->
+        <div class="ic-field">
+          <label class="ic-label" for="ic-username">Username</label>
+          <div class="ic-username-wrap">
+            <span class="ic-username-prefix">@</span>
+            <input
+              id="ic-username"
+              type="text"
+              class="ic-input ic-input--username"
+              placeholder="yourname"
+              autocomplete="username"
+              autocorrect="off"
+              autocapitalize="none"
+              spellcheck="false"
+              maxlength="30"
+            />
+          </div>
+          <div id="ic-username-status" class="ic-username-status" aria-live="polite"></div>
+          <span class="ic-hint">
+            3–30 characters · lowercase letters, numbers, underscores only · permanent
+          </span>
+        </div>
+
+        <button id="ic-submit-btn" type="button" class="btn btn-gold btn-lg ic-btn" disabled>
+          Complete Setup
+        </button>
+      </div>
+
+      <!-- Already complete (should not normally be seen — user is forwarded) -->
+      <div id="ic-complete" hidden class="ic-complete">
+        <p class="ic-complete-text">Your account is already set up.</p>
+        <a id="ic-complete-link" href="/hub/" class="btn btn-dark btn-md">Go to Member Hub</a>
+      </div>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+/* ─── Auth page shell ───────────────────────────────────── */
+.auth-page { background: var(--surface-1); }
+
+.auth-section {
+  min-height: calc(100vh - 96px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-8) var(--s-3);
+}
+
+.ic-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  box-shadow: var(--e-2);
+  padding: var(--s-8) var(--s-6);
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.auth-logo {
+  display: block;
+  margin: 0 auto var(--s-1);
+  width: fit-content;
+}
+
+/* ─── Loading state ──────────────────────────────────────── */
+.ic-loading {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--s-4) 0;
+}
+.ic-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--ink-300);
+  border-radius: 999px;
+  animation: ic-pulse 1.2s ease-in-out infinite both;
+}
+.ic-dot:nth-child(2) { animation-delay: 0.2s; }
+.ic-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes ic-pulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%            { transform: scale(1);   opacity: 1; }
+}
+
+/* ─── Headings ───────────────────────────────────────────── */
+.ic-heading {
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  text-align: center;
+  margin: 0;
+}
+.ic-sub {
+  font-size: var(--text-small);
+  color: var(--ink-400);
+  text-align: center;
+  margin: calc(-1 * var(--s-1)) 0 0;
+  line-height: 1.6;
+}
+
+/* ─── Banner ─────────────────────────────────────────────── */
+.ic-banner {
+  padding: 10px 14px;
+  border-radius: var(--r-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+.ic-banner--error {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+}
+
+/* ─── Form fields ────────────────────────────────────────── */
+.ic-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ic-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-600);
+  font-family: var(--font-body);
+}
+.ic-input {
+  height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--r-2);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: border-color var(--m-fast);
+  width: 100%;
+  box-sizing: border-box;
+}
+.ic-input:focus {
+  outline: none;
+  border-color: var(--gold-600);
+  box-shadow: 0 0 0 3px rgba(168,132,60,.15);
+}
+.ic-input.is-valid  { border-color: #16A34A; }
+.ic-input.is-error  { border-color: #EF4444; }
+
+.ic-username-wrap {
+  display: flex;
+  align-items: stretch;
+}
+.ic-username-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--hairline-strong);
+  border-right: none;
+  border-radius: var(--r-2) 0 0 var(--r-2);
+  color: var(--ink-400);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  user-select: none;
+}
+.ic-input--username {
+  border-radius: 0 var(--r-2) var(--r-2) 0;
+  font-family: var(--font-mono);
+}
+
+.ic-username-status {
+  font-size: 12px;
+  min-height: 18px;
+  font-family: var(--font-body);
+  padding-left: 2px;
+}
+.ic-username-status.ok    { color: #16A34A; }
+.ic-username-status.error { color: #EF4444; }
+.ic-username-status.checking { color: var(--ink-400); }
+
+.ic-hint {
+  font-size: 11px;
+  color: var(--ink-400);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+/* ─── Submit button ──────────────────────────────────────── */
+.btn-gold {
+  background: var(--gold-gradient, linear-gradient(135deg, #C9A961, #A8843C));
+  color: #141210;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.btn-gold:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-gold:not(:disabled):hover { opacity: 0.88; }
+
+.btn-lg {
+  height: 48px;
+  padding: 0 24px;
+  font-size: 15px;
+  border-radius: var(--r-2);
+}
+
+.ic-btn { width: 100%; justify-content: center; }
+
+/* ─── Already-complete panel ─────────────────────────────── */
+.ic-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4) 0;
+}
+.ic-complete-text {
+  font-size: 14px;
+  color: var(--ink-400);
+  text-align: center;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .ic-card { padding: var(--s-6) var(--s-3); border: none; box-shadow: none; }
+  .auth-section { padding: var(--s-4) var(--s-2); align-items: flex-start; }
+}
+</style>
+
+<script>
+  const API = '/api/v1';
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+
+  function qs<T extends HTMLElement>(id: string): T | null {
+    return document.getElementById(id) as T | null;
+  }
+
+  function getNextUrl(): string {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next');
+    if (next && next.startsWith('/') && !next.startsWith('//')) return next;
+    return '/hub/';
+  }
+
+  function showError(msg: string): void {
+    const el = qs<HTMLElement>('ic-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function hideError(): void {
+    const el = qs<HTMLElement>('ic-error');
+    if (el) el.hidden = true;
+  }
+
+  async function getValidToken(): Promise<string | null> {
+    const token = localStorage.getItem('bcc_token');
+    if (!token) return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (Date.now() < ((payload.exp as number) * 1000) - 60_000) return token;
+
+      const refresh = localStorage.getItem('bcc_refresh');
+      if (!refresh) { clearAuth(); return null; }
+
+      const res = await fetch(`${API}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: refresh }),
+      });
+      if (!res.ok) { clearAuth(); return null; }
+      const data = await res.json() as { accessToken: string; refreshToken: string };
+      localStorage.setItem('bcc_token', data.accessToken);
+      localStorage.setItem('bcc_refresh', data.refreshToken);
+      return data.accessToken;
+    } catch { return null; }
+  }
+
+  function clearAuth(): void {
+    localStorage.removeItem('bcc_token');
+    localStorage.removeItem('bcc_refresh');
+    localStorage.removeItem('bcc_user');
+  }
+
+  // ── Initialise ──────────────────────────────────────────────────────────
+
+  async function init(): Promise<void> {
+    const token = await getValidToken();
+
+    if (!token) {
+      // Not authenticated — go to signin, come back here after
+      const selfUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.replace(`/auth/signin/?next=${selfUrl}`);
+      return;
+    }
+
+    // Fetch current identity state
+    const meRes = await fetch(`${API}/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!meRes.ok) {
+      clearAuth();
+      window.location.replace('/auth/signin/');
+      return;
+    }
+
+    const me = await meRes.json() as {
+      fullName?: string | null;
+      identityStatus?: string;
+      identityCompletedAt?: string | null;
+    };
+
+    const loading = qs<HTMLElement>('ic-loading');
+    if (loading) loading.hidden = true;
+
+    if (me.identityStatus === 'IDENTITY_COMPLETE') {
+      // Already done — forward immediately
+      const completeEl = qs<HTMLElement>('ic-complete');
+      const linkEl     = qs<HTMLAnchorElement>('ic-complete-link');
+      const next = getNextUrl();
+      if (linkEl) linkEl.href = next;
+      if (completeEl) completeEl.hidden = false;
+      setTimeout(() => window.location.replace(next), 800);
+      return;
+    }
+
+    // Show the form
+    const formWrap = qs<HTMLElement>('ic-form-wrap');
+    if (formWrap) formWrap.hidden = false;
+
+    // Show display name field if full_name is missing
+    if (!me.fullName || me.fullName.trim() === '') {
+      const dnField = qs<HTMLElement>('ic-displayname-field');
+      if (dnField) dnField.hidden = false;
+    }
+  }
+
+  // ── Username availability check (debounced) ─────────────────────────────
+
+  let checkTimer: ReturnType<typeof setTimeout> | null = null;
+  let lastChecked = '';
+  let usernameAvailable = false;
+
+  const USERNAME_RE = /^[a-z0-9_]+$/;
+
+  function setUsernameStatus(msg: string, kind: 'ok' | 'error' | 'checking' | ''): void {
+    const el = qs<HTMLElement>('ic-username-status');
+    const input = qs<HTMLInputElement>('ic-username');
+    if (!el || !input) return;
+    el.textContent = msg;
+    el.className = `ic-username-status${kind ? ' ' + kind : ''}`;
+    input.className = `ic-input ic-input--username${kind === 'ok' ? ' is-valid' : kind === 'error' ? ' is-error' : ''}`;
+  }
+
+  async function checkUsername(val: string): Promise<void> {
+    const token = localStorage.getItem('bcc_token');
+    if (!token || !val) return;
+
+    // Client-side quick checks first
+    const lower = val.toLowerCase();
+    if (lower.length < 3) {
+      usernameAvailable = false;
+      setUsernameStatus('Too short (minimum 3 characters)', 'error');
+      updateSubmit();
+      return;
+    }
+    if (lower.length > 30) {
+      usernameAvailable = false;
+      setUsernameStatus('Too long (maximum 30 characters)', 'error');
+      updateSubmit();
+      return;
+    }
+    if (!USERNAME_RE.test(lower)) {
+      usernameAvailable = false;
+      setUsernameStatus('Only lowercase letters, numbers, underscores', 'error');
+      updateSubmit();
+      return;
+    }
+
+    setUsernameStatus('Checking…', 'checking');
+
+    try {
+      const res = await fetch(
+        `${API}/identity/check-username?username=${encodeURIComponent(lower)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!res.ok) { setUsernameStatus('', ''); return; }
+      const data = await res.json() as { available: boolean; reason?: string };
+      lastChecked = lower;
+      usernameAvailable = data.available;
+      if (data.available) {
+        setUsernameStatus('@' + lower + ' is available', 'ok');
+      } else {
+        setUsernameStatus(data.reason ?? 'Not available', 'error');
+      }
+    } catch {
+      setUsernameStatus('', '');
+    }
+    updateSubmit();
+  }
+
+  qs<HTMLInputElement>('ic-username')?.addEventListener('input', (e) => {
+    const val = (e.target as HTMLInputElement).value.toLowerCase();
+    (e.target as HTMLInputElement).value = val; // enforce lowercase in UI
+    usernameAvailable = false;
+    updateSubmit();
+    if (checkTimer) clearTimeout(checkTimer);
+    if (!val) { setUsernameStatus('', ''); return; }
+    checkTimer = setTimeout(() => checkUsername(val), 400);
+  });
+
+  // ── Submit gating ────────────────────────────────────────────────────────
+
+  function updateSubmit(): void {
+    const btn = qs<HTMLButtonElement>('ic-submit-btn');
+    if (!btn) return;
+    btn.disabled = !usernameAvailable;
+  }
+
+  // ── Form submit ──────────────────────────────────────────────────────────
+
+  qs<HTMLButtonElement>('ic-submit-btn')?.addEventListener('click', async () => {
+    hideError();
+
+    const usernameEl  = qs<HTMLInputElement>('ic-username');
+    const displayEl   = qs<HTMLInputElement>('ic-displayname');
+    const btn         = qs<HTMLButtonElement>('ic-submit-btn');
+    if (!usernameEl || !btn) return;
+
+    const username    = usernameEl.value.toLowerCase().trim();
+    const displayName = displayEl?.closest('[hidden]') === null
+      ? (displayEl?.value.trim() ?? '')
+      : '';
+
+    if (!username || !usernameAvailable) {
+      showError('Please choose a valid, available username.');
+      return;
+    }
+
+    const token = localStorage.getItem('bcc_token');
+    if (!token) { window.location.replace('/auth/signin/'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Completing…';
+
+    try {
+      const body: Record<string, string> = { username };
+      if (displayName) body.displayName = displayName;
+
+      const res = await fetch(`${API}/identity/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { message?: string };
+        showError(err.message ?? 'Could not complete setup. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Complete Setup';
+        return;
+      }
+
+      // Update localStorage bcc_user with the new username
+      try {
+        const stored = localStorage.getItem('bcc_user');
+        if (stored) {
+          const user = JSON.parse(stored) as Record<string, unknown>;
+          user.username = username;
+          if (displayName) {
+            user.displayName = displayName;
+            const parts = displayName.trim().split(/\s+/);
+            user.initials = parts.map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+          }
+          localStorage.setItem('bcc_user', JSON.stringify(user));
+        }
+      } catch { /* non-critical */ }
+
+      window.location.replace(getNextUrl());
+
+    } catch {
+      showError('A network error occurred. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Complete Setup';
+    }
+  });
+
+  init();
+</script>

@@ -5,6 +5,7 @@ import { RbacModule } from './modules/identity/rbac/rbac.module';
 import { RegistrationModule } from './modules/identity/registration/registration.module';
 import { UsersModule } from './modules/identity/users/users.module';
 import { AccountSettingsModule } from './modules/identity/account-settings/account-settings.module';
+import { IdentityModule } from './modules/identity/identity/identity.module';
 import { MembershipModule } from './modules/membership/membership.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { EventsModule } from './modules/events/events.module';
@@ -21,6 +22,7 @@ import { HubProfileModule } from './modules/hub/profile/hub-profile.module';
     RegistrationModule,
     UsersModule,
     AccountSettingsModule,
+    IdentityModule,
     MembershipModule,
     NotificationModule,
     EventsModule,

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "baseUrl": "../../backend",
+    "paths": {},
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitAny": false
+  },
+  "include": ["./**/*.ts", "../../backend/src/**/*.ts"],
+  "exclude": ["../../backend/dist"]
+}

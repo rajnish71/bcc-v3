@@ -49,7 +49,7 @@ UPDATE membership_classes
 -- was the only activation trigger. Now that AUTO_AFTER_APPROVAL also fires
 -- activate(), the description must reflect both paths.
 UPDATE notification_types
-  SET description = 'Membership transitions to ACTIVE state (coordinator auto-approval or payment confirmation).'
+  SET trigger_event = 'Membership transitions to ACTIVE state (coordinator auto-approval or payment confirmation).'
   WHERE type_key = 'MEMBERSHIP_ACTIVATED';
 
 INSERT INTO schema_migrations (filename, applied_at)

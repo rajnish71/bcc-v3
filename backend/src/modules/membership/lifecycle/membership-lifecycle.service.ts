@@ -89,7 +89,7 @@ export class MembershipLifecycleService {
         membership.group_membership_type_id,
         'renewal_term_months',
       );
-      fixHint = 'Run seed_0005 or set it via the group entitlements endpoint.';
+      fixHint = 'Configure renewal_term_months for this group membership type via the group entitlements management endpoint.';
     } else {
       if (membership.membership_class_id == null) {
         throw new ConflictException('INDIVIDUAL membership row has no membership_class_id -- data violates the 0026 owner-axis rule.');
@@ -103,14 +103,14 @@ export class MembershipLifecycleService {
       isLifetime = !!cls.is_lifetime;
       holderName = cls.name;
       termRaw = await this.entitlementService.getClassConfigValue(membership.membership_class_id, 'renewal_term_months');
-      fixHint = 'Run seed_0004 or set it via the entitlements endpoint.';
+      fixHint = 'Verify that database migration 0068 has been applied. If already applied, configure renewal_term_months via the class entitlements management endpoint.';
     }
 
     if (isLifetime || !isRenewable) return null;
 
     if (!termRaw) {
       throw new ConflictException(
-        `"${holderName}" is renewable but has no renewal_term_months configured -- refusing to activate with an undefined term. ${fixHint}`,
+        `Membership configuration is incomplete: "${holderName}" is renewable but renewal_term_months is not set in class_entitlements. ${fixHint}`,
       );
     }
     const months = parseInt(termRaw, 10);

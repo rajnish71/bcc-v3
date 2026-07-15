@@ -1203,8 +1203,17 @@ async function loadMembership(): Promise<void> {
         '/hub/membership/'
       );
     }
-  } else {
+  } else if (active.lifecycle_state === 'ACTIVE') {
+    // ACTIVE with null expiry → genuinely lifetime membership class
     if (expiryEl) expiryEl.textContent = 'Lifetime';
+    if (expiryLabelEl) expiryLabelEl.textContent = 'Status';
+  } else {
+    // Not yet active (PENDING awaiting review, APPROVED awaiting activation) —
+    // null expiry here does NOT mean lifetime; show the actual state instead.
+    const stateText = active.lifecycle_state === 'PENDING'   ? 'Pending'
+                    : active.lifecycle_state === 'APPROVED'  ? 'Processing'
+                    : '–';
+    if (expiryEl) expiryEl.textContent = stateText;
     if (expiryLabelEl) expiryLabelEl.textContent = 'Status';
   }
 

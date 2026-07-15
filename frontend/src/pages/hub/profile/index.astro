@@ -957,15 +957,17 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 }
 
 /* ── GENRE GRID ─────────────────────────────────────────────────────────── */
-.genre-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
-.genre-chip {
+/* renderGenreGrid() creates buttons at runtime, so they never receive Astro's
+   scoping data-attribute — use :global() so the selectors reach them. */
+:global(.genre-grid) { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+:global(.genre-chip) {
   font-size:13px; font-weight:500; color:#57514B;
   border:1px solid #D8D2C6; padding:6px 14px; cursor:pointer;
   font-family:var(--font-body); background:#fff; transition:all 0.15s;
   user-select:none;
 }
-.genre-chip:hover { border-color:#C9A961; color:#A8843C; }
-.genre-chip--selected { background:#C9A961; border-color:#A8843C; color:#fff; font-weight:600; }
+:global(.genre-chip:hover) { border-color:#C9A961; color:#A8843C; }
+:global(.genre-chip--selected) { background:#C9A961; border-color:#A8843C; color:#fff; font-weight:600; }
 
 /* ── SOCIAL GRID ─────────────────────────────────────────────────────────── */
 .social-grid { display:flex; flex-direction:column; gap:12px; }

@@ -296,6 +296,7 @@ export interface MembershipClassesTable {
   is_renewable: boolean;
   is_lifetime: boolean;
   is_closed: boolean;
+  activation_mode: 'AUTO_AFTER_APPROVAL' | 'PAYMENT_REQUIRED' | 'MANUAL';
   sort_order: Generated<number>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }

@@ -162,8 +162,8 @@ export class ApplicationWorkflowService {
 
     const isFinalRequiredStage = stageIndex === stages.length - 1;
     if (isFinalRequiredStage) {
-      await this.lifecycle.approve(params.membershipId, params.actorUserId);
-      return { applicationState: 'APPROVED', nextStage: null };
+      const { finalState } = await this.lifecycle.approve(params.membershipId, params.actorUserId);
+      return { applicationState: finalState, nextStage: null };
     }
 
     return { applicationState: 'PENDING', nextStage: stages[stageIndex + 1] };

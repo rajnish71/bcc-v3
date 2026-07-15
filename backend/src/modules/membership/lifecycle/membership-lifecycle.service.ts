@@ -246,9 +246,26 @@ export class MembershipLifecycleService {
   }
 
   // ======================================================================
-  // PENDING -> APPROVED
+  // PENDING -> APPROVED  (and possibly straight on to ACTIVE)
+  //
+  // The final settled state depends on membership_classes.activation_mode:
+  //   AUTO_AFTER_APPROVAL  -> APPROVED is transient; activate() fires
+  //                           immediately and this method returns 'ACTIVE'.
+  //                           MEMBERSHIP_APPLICATION_APPROVED is suppressed
+  //                           (the member is already active; "pay now" copy
+  //                           would be wrong). MEMBERSHIP_ACTIVATED fires via
+  //                           activate().
+  //   PAYMENT_REQUIRED     -> stays APPROVED; MEMBERSHIP_APPLICATION_APPROVED
+  //                           is sent; payment webhook triggers activate().
+  //   MANUAL               -> stays APPROVED; MEMBERSHIP_APPLICATION_APPROVED
+  //                           is sent; admin explicitly calls activate().
+  //   GROUP / no class     -> stays APPROVED (no activation_mode defined for
+  //                           group types yet; conservative default).
   // ======================================================================
-  async approve(membershipId: number, actorUserId: number): Promise<void> {
+  async approve(
+    membershipId: number,
+    actorUserId: number,
+  ): Promise<{ finalState: 'APPROVED' | 'ACTIVE' }> {
     const membership = await this.requireState(membershipId, ['PENDING']);
 
     await db
@@ -266,7 +283,21 @@ export class MembershipLifecycleService {
       newValue: { state: 'APPROVED' },
     });
 
+    if (membership.membership_class_id != null) {
+      const cls = await db
+        .selectFrom('membership_classes')
+        .select('activation_mode')
+        .where('id', '=', membership.membership_class_id)
+        .executeTakeFirst();
+
+      if (cls?.activation_mode === 'AUTO_AFTER_APPROVAL') {
+        await this.activate(membershipId, { type: 'SYSTEM' });
+        return { finalState: 'ACTIVE' };
+      }
+    }
+
     await this.notifyMember(membership, 'MEMBERSHIP_APPLICATION_APPROVED');
+    return { finalState: 'APPROVED' };
   }
 
   // ======================================================================

@@ -4,43 +4,25 @@
 // codebase that is allowed to touch membership_number_pool,
 // membership_number_log, or memberships.number_serial/membership_number.
 //
-// assignPermanentNumber() is called from EXACTLY one place:
+// issueTemporaryIdentifier() is called from EXACTLY one place:
 // MembershipLifecycleService.activate(), inside its transaction, as the
-// final step of APPROVED -> ACTIVE (MEM-007 "Allocation Trigger" -- "Permanent
-// allocation occurs as the final step of membership activation... Application
-// review, payment processing, approval workflows, and temporary identifiers
-// do NOT trigger permanent number assignment"). No other caller should ever
-// invoke it directly.
+// final step of APPROVED -> ACTIVE. Per MEM-007 Amendment 001-B, all
+// non-Founding member activations receive a BCCTempXXXXX identifier at
+// this point. Permanent numbers are NOT issued at activation.
+//
+// assignPermanentNumber() is the sequential auto-allocation path (MP-004).
+// Per Amendment 001-C it is NOT yet wired into the standard lifecycle --
+// sequential auto-allocation begins only AFTER the Super Admin closes the
+// manual batch spreadsheet and updates membership_number_pool.
+// last_allocated_serial. No caller should invoke it until that point.
 //
 // assignReservedNumber() is the one-time migration path (MEM-007 §7) for
-// Founding (00001-00007) and Historical Block (00008-00020) serials. It is
-// NOT wired into the normal application lifecycle -- it exists for the
-// deferred bulk founding/historical member onboarding task (see
-// PHASE_ROADMAP.md "on the horizon"), gated behind Super-Admin-only RBAC at
-// the controller, and is expected to run a handful of times total, ever.
+// Founding (00001-00007) and manual-batch serials. Gated behind
+// Super-Admin-only RBAC at the controller.
 //
-// Membership number format -- CONFIRMED by Rajnish this session:
+// Membership number format (MEM-007 §5):
 //   'BCC' || join_year || LPAD(join_month, 2, '0') || LPAD(serial, 5, '0')
 //   e.g. BCC20260600021
-// This was flagged in Phase 0 as Claude's interpretation reconciling
-// MEM-007 §4 (plain serials) with §5 (BCC+YYYY+MM+serial) -- now resolved,
-// not still open.
-//
-// join_year/join_month for a fresh (non-migrated) membership are set here,
-// at assignment time, to the calendar year/month of activation -- there is
-// no "original joining year" ambiguity for a V3-native applicant the way
-// there is for a legacy/migrated record. This is a documented assumption,
-// not spelled out verbatim in MEM-007 (which is written primarily with
-// historical/migrated records in mind); flag if it should instead be tied
-// to applied_at or approved_at.
-//
-// issueTemporaryIdentifier() exists for the same future migration-import
-// use case as assignReservedNumber() -- it is NOT called anywhere in the
-// standard apply -> approve -> activate flow implemented in this pass. A
-// fresh V3-native applicant simply has no membership_number until ACTIVE;
-// manufacturing a BCCTempXXXXX for every ordinary applicant would misapply
-// a mechanism MEM-007 §6 scopes explicitly to "onboarding, migration, or
-// transitional operations."
 
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import type { Transaction } from 'kysely';

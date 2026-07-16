@@ -51,7 +51,6 @@ import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 import { EmailService } from '../../shared/communication/email.service';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { normalize, validate } from '../../shared/phone.util';
-import { findUserByPhone } from '../../shared/phone-lookup.util';
 
 const EMAIL_VERIFICATION_TTL_HOURS = 24;
 const OTP_TTL_MINUTES = 5;
@@ -193,7 +192,7 @@ export class RegistrationService {
       throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
     }
 
-    const existing = await findUserByPhone(canonical);
+    const existing = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonical).executeTakeFirst();
     if (existing) {
       throw new ConflictException('An account with this phone number already exists');
     }
@@ -257,7 +256,7 @@ export class RegistrationService {
       throw new UnauthorizedException('Incorrect OTP');
     }
 
-    const existingUser = await findUserByPhone(canonical);
+    const existingUser = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonical).executeTakeFirst();
     if (existingUser) {
       throw new ConflictException('An account with this phone number already exists');
     }
@@ -491,7 +490,7 @@ export class RegistrationService {
       if (!validate(canonicalPhone)) {
         throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
       }
-      const existingPhone = await findUserByPhone(canonicalPhone);
+      const existingPhone = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonicalPhone).executeTakeFirst();
       if (existingPhone) throw new ConflictException('An account with this phone number already exists');
     }
 
@@ -586,7 +585,7 @@ export class RegistrationService {
       if (!validate(canonicalPhone)) {
         throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
       }
-      const existingPhone = await findUserByPhone(canonicalPhone);
+      const existingPhone = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonicalPhone).executeTakeFirst();
       if (existingPhone) throw new ConflictException('An account with this phone number already exists');
     }
 

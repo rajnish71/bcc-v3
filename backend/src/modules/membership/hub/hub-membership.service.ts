@@ -23,7 +23,6 @@ import { db } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import type { SubmitMembershipFormDto } from '../dto/submit-membership-form.dto';
 import { normalize, validate } from '../../shared/phone.util';
-import { findUserByPhone } from '../../shared/phone-lookup.util';
 
 const BASIC_MEMBER_CODE = 'BASIC_MEMBER';
 
@@ -129,8 +128,7 @@ export class HubMembershipService {
     if (!validate(canonical)) {
       throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
     }
-    // Exclude the current user — they may already have this phone on their account.
-    const phoneConflict = await findUserByPhone(canonical, userId);
+    const phoneConflict = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonical).where('id', '!=', userId).executeTakeFirst();
     if (phoneConflict) {
       throw new ConflictException('This phone number is already registered to another account');
     }
@@ -278,7 +276,7 @@ export class HubMembershipService {
     if (!validate(canonical)) {
       throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
     }
-    const phoneConflict = await findUserByPhone(canonical, userId);
+    const phoneConflict = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonical).where('id', '!=', userId).executeTakeFirst();
     if (phoneConflict) {
       throw new ConflictException('This phone number is already registered to another account');
     }

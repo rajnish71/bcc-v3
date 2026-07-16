@@ -1,8 +1,7 @@
 // Registration service — phone canonicalization unit tests.
 //
 // These tests exercise the phone-related logic in RegistrationService by:
-//   • Mocking findUserByPhone (the DB lookup helper)
-//   • Mocking db for OTP and user-creation queries
+//   • Mocking the DB phone lookup (simple WHERE phone = canonical after migration 0074)
 //   • Testing normalize+validate behavior, duplicate detection, and canonical storage
 //
 // The service is NOT instantiated via NestJS DI here — we call methods directly
@@ -75,7 +74,6 @@ describe('RegistrationService phone logic — unit contracts', () => {
 
   describe('duplicate detection guard', () => {
     // Simulates the contract that services must check before any phone write.
-    // findUserByPhone is the single lookup — services never do raw WHERE queries.
 
     it('should reject when a canonical form already exists in the DB', async () => {
       // Simulated: findUserByPhone('9876543210') → returns an existing user

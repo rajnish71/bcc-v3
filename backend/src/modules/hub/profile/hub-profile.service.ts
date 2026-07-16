@@ -13,7 +13,6 @@ import type { UpdateSocialDto } from './dto/update-social.dto';
 import type { UpdateGearDto } from './dto/update-gear.dto';
 import type { UpdateDistinctionsDto } from './dto/update-distinctions.dto';
 import { normalize, validate } from '../../shared/phone.util';
-import { findUserByPhone } from '../../shared/phone-lookup.util';
 
 // Fields that must never be modified via the profile PUT endpoint
 const PROTECTED_FIELDS = new Set([
@@ -283,7 +282,7 @@ export class HubProfileService {
       }
       // Explicit duplicate check — excludes the current user so a member can
       // re-save their own phone without triggering a false conflict.
-      const conflict = await findUserByPhone(canonical, userId);
+      const conflict = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonical).where('id', '!=', userId).executeTakeFirst();
       if (conflict) {
         throw new ConflictException('This phone number is already registered to another account');
       }

@@ -768,7 +768,10 @@ V6 component tree stub (expand this into full wireframe):
 
 
 
-6\. LeadershipGrid {committee\[]} - Leadership - The Minds Behind the Club Passionate photographers who volunteer their time to keep BCC thriving. Rajnish, Kshitij, Rahil, Vikas, Ratan, Taurez, Yogesh
+6\. LeadershipGrid {committee\[]} - Leadership - The Minds Behind the Club Passionate photographers who volunteer their time to keep BCC thriving. Coordinators - inherit all text and links from current live site -  Rajnish, Kshitij, Rahil, Bablu, Yogesh, Vikas
+
+Mentors - Dr Anil Bhati, Sauvik Acharyya , Kshitij Patle - inherit all text and information from current live site
+
 
 
 
@@ -1538,7 +1541,7 @@ B. Public Pages
 
 \- V6 05 — Photographer Profile  ✅
 
-\- V6 21 — Canonical Photo Page (Governed by PHOTO-ARCH-001)
+\- V6 21 — Canonical Photo Page (Governed by PHOTO-ARCH-001)  ✅
 
 
 
@@ -1600,6 +1603,36 @@ B. Public Pages
 
 
 
+
+
+Phase E2 — Member Hub UX Architecture Refresh
+
+
+
+Transform the Profile page from a presentation-oriented layout into a dedicated editing workspace while preserving the underlying data architecture, business rules, and V6 visual language.
+
+
+
+Phase E2A – Create the new Profile Editor shell (compact workspace layout).   ✅
+
+Phase E2B – Move existing forms into the new shell without changing functionality.   ✅
+
+Phase E2C – Optimize for 1366×768, tablet, and mobile.   ✅
+
+Phase E2D – Polish spacing, sticky save behavior, keyboard navigation, and accessibility.
+
+Phase E2E – Conduct a final visual reconciliation to ensure the refreshed editor still respects the BCC design language.
+
+
+
+
+
+
+
+
+
+
+
 C.
 
 \### Design Authority Reconciliation : Stage 7 - Bug Fixes to be done along with this bugfixes.md
@@ -1613,22 +1646,6 @@ C.
 \- Remove independent dark card implementation
 
 \- General Design Authority reconciliation
-
-
-
-\---
-
-
-
-D.
-
-\### System Deliverables
-
-
-
-\- V6 98 — token.css
-
-\- V6 99 — systemdesign.md
 
 
 

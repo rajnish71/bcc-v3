@@ -1,0 +1,139 @@
+---
+---
+
+<section class="philosophy-section" aria-labelledby="philosophy-heading" data-gsap="reveal">
+  <div class="container">
+    <div class="philosophy-inner">
+      <!-- Display quote -->
+      <div class="philosophy-quote-wrap">
+        <div class="philosophy-rule" aria-hidden="true"></div>
+        <blockquote class="philosophy-quote">
+          Photography, for us, is three things at once: a discipline worth mastering, a language for documenting the world we live in, and a reason to leave the house and find your people.
+        </blockquote>
+        <div class="philosophy-rule" aria-hidden="true"></div>
+      </div>
+
+      <!-- Mission + Vision -->
+      <div class="philosophy-grid">
+        <div class="philosophy-col">
+          <div class="philosophy-kicker">Mission</div>
+          <h3 class="philosophy-heading" id="philosophy-heading">To build a photography community where every member can learn, grow, and contribute.</h3>
+          <p class="philosophy-body">Bhopal Camera Club exists for photographers at every stage of the craft — the beginner who just picked up their first camera, and the seasoned practitioner who wants to keep growing. We believe that photography learned in community is photography learned more deeply.</p>
+        </div>
+        <div class="philosophy-col">
+          <div class="philosophy-kicker">Vision</div>
+          <h3 class="philosophy-heading">To be the most trusted visual record of Bhopal — a living archive of the city through the eyes of its photographers.</h3>
+          <p class="philosophy-body">Every photowalk we conduct, every image shared in our gallery, every workshop we run adds another layer to a collective document of Bhopal. Over decades, this archive will be something of genuine historical value to this city.</p>
+        </div>
+      </div>
+
+      <!-- Purpose tags -->
+      <div class="philosophy-tags" role="list">
+        <span class="philosophy-tag" role="listitem">Photography as Learning</span>
+        <span class="philosophy-tag" role="listitem">Photography as Documentation</span>
+        <span class="philosophy-tag" role="listitem">Photography as Friendship</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.philosophy-section {
+  background: var(--surface-0);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 72px 0;
+}
+.philosophy-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* Display quote */
+.philosophy-quote-wrap {
+  text-align: center;
+  margin-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+.philosophy-rule {
+  width: 40px;
+  height: 1px;
+  background: var(--gold-500);
+}
+.philosophy-quote {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  color: var(--ink-900);
+  max-width: 780px;
+  font-style: normal;
+  text-wrap: pretty;
+}
+
+/* Mission / Vision grid */
+.philosophy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  margin-bottom: 56px;
+}
+.philosophy-kicker {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 20px;
+  font-family: var(--font-body);
+}
+.philosophy-heading {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  color: var(--ink-900);
+}
+.philosophy-body {
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--ink-600);
+}
+
+/* Tags */
+.philosophy-tags {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.philosophy-tag {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--hairline);
+  padding: 8px 18px;
+  color: var(--ink-600);
+  font-family: var(--font-body);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .philosophy-section {
+    padding: 48px 0;
+  }
+  .philosophy-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .philosophy-quote {
+    font-size: clamp(20px, 5vw, 28px);
+  }
+}
+</style>

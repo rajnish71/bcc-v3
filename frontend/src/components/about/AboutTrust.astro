@@ -1,0 +1,185 @@
+---
+---
+
+<section class="trust-section" aria-labelledby="trust-heading" data-gsap="reveal">
+  <div class="container">
+    <div class="trust-header">
+      <div class="trust-kicker">Trust &amp; Recognition</div>
+      <h2 class="trust-title" id="trust-heading">Institutional Standing</h2>
+    </div>
+
+    <div class="trust-grid">
+      <!-- Registered Society -->
+      <div class="trust-card">
+        <div class="trust-card-kicker">Registered Society</div>
+        <h3 class="trust-card-heading">Bhopal Camera Club</h3>
+        <dl class="trust-specs">
+          <div class="trust-spec">
+            <dt class="spec-label">Registration Act</dt>
+            <dd class="spec-value">MP Society Registrikaran Adhiniyam 1973</dd>
+          </div>
+          <div class="trust-spec">
+            <dt class="spec-label">Registration Date</dt>
+            <dd class="spec-value">October 2019</dd>
+          </div>
+          <div class="trust-spec">
+            <dt class="spec-label">Registration Number</dt>
+            <dd class="spec-value spec-value--muted">[society.regNumber]</dd>
+          </div>
+          <div class="trust-spec trust-spec--last">
+            <dt class="spec-label">Registered City</dt>
+            <dd class="spec-value">Bhopal, Madhya Pradesh</dd>
+          </div>
+        </dl>
+        <p class="trust-body">The club is a registered non-profit society governed by the MP Society Registrikaran Adhiniyam 1973. Its constitution, its membership structure, and its processes are documented and legally recognised — a foundation of institutional trust for members and partners alike.</p>
+      </div>
+
+      <!-- FIP -->
+      <div class="trust-card">
+        <div class="trust-card-kicker">National Federation</div>
+        <h3 class="trust-card-heading">Federation of Indian Photography</h3>
+        <dl class="trust-specs">
+          <div class="trust-spec">
+            <dt class="spec-label">Membership Class</dt>
+            <dd class="spec-value">Corporate Member</dd>
+          </div>
+          <div class="trust-spec">
+            <dt class="spec-label">Member Number</dt>
+            <dd class="spec-value spec-value--gold">CM1098</dd>
+          </div>
+          <div class="trust-spec">
+            <dt class="spec-label">Affiliation</dt>
+            <dd class="spec-value">FIP · India</dd>
+          </div>
+          <div class="trust-spec trust-spec--last">
+            <dt class="spec-label">Future Partnerships</dt>
+            <dd class="spec-value spec-value--muted">Space reserved</dd>
+          </div>
+        </dl>
+        <p class="trust-body">Bhopal Camera Club holds Corporate Membership of the Federation of Indian Photography — the national body for photography organisations in India. This affiliation opens access to national competitions, exhibitions, and a broader community of photography organisations across the country.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.trust-section {
+  background: var(--surface-1);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 96px 0;
+}
+.trust-header {
+  margin-bottom: 40px;
+}
+.trust-kicker {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.trust-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink-900);
+}
+
+/* Grid */
+.trust-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+}
+.trust-card {
+  padding: 48px;
+  border-right: 1px solid var(--hairline);
+}
+.trust-card:last-child {
+  border-right: none;
+}
+.trust-card-kicker {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 28px;
+  font-family: var(--font-body);
+}
+.trust-card-heading {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  color: var(--ink-900);
+}
+
+/* Specs list */
+.trust-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 28px;
+}
+.trust-spec {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--hairline-soft);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.trust-spec--last {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.spec-label {
+  font-size: 12px;
+  color: var(--ink-400);
+  font-family: var(--font-body);
+  flex-shrink: 0;
+}
+.spec-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-900);
+  text-align: right;
+}
+.spec-value--gold {
+  color: var(--gold-500);
+  font-weight: 600;
+}
+.spec-value--muted {
+  color: var(--ink-400);
+}
+.trust-body {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-600);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trust-grid {
+    grid-template-columns: 1fr;
+  }
+  .trust-card {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    padding: 36px 28px;
+  }
+  .trust-card:last-child {
+    border-bottom: none;
+  }
+}
+</style>

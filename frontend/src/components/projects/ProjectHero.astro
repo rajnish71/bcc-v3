@@ -19,6 +19,8 @@ const { title, description, heroImage } = Astro.props;
       class="ph-hero-img"
       src={heroImage}
       alt={`${title} — BCC Special Project`}
+      loading="eager"
+      decoding="async"
     />
   )}
   <div class="ph-hero-gradient" aria-hidden="true"></div>
@@ -36,7 +38,7 @@ const { title, description, heroImage } = Astro.props;
 .ph-hero {
   position: relative;
   width: 100%;
-  min-height: 560px;
+  min-height: 640px;
   background: var(--image-backdrop);
   overflow: hidden;
   display: flex;

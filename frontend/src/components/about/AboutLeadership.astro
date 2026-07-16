@@ -1,0 +1,203 @@
+---
+import { leadership } from '../../data/leadership';
+---
+
+<section class="leadership-section" aria-labelledby="leadership-heading">
+  <div class="container">
+    <div class="leadership-header" data-gsap="reveal">
+      <div class="leadership-kicker">Leadership</div>
+      <h2 class="leadership-title" id="leadership-heading">The Minds Behind the Club</h2>
+      <p class="leadership-intro">BCC is built by its members, governed by volunteers, and run by people who believe in it. Every activity, every photowalk, every workshop has been organised by someone who showed up because they love photography and this club.</p>
+    </div>
+
+    <div class="leadership-grid" data-gsap="stagger">
+      {leadership.map((person, i) => (
+        <div class:list={['leader-card', i === 1 && 'leader-card--alt']}>
+          <!-- Portrait -->
+          <div class="leader-portrait-wrap" aria-hidden="true">
+            {person.avatar ? (
+              <img
+                src={person.avatar}
+                alt={`Portrait of ${person.name}`}
+                class="leader-portrait"
+                loading="lazy"
+                width="88"
+                height="88"
+              />
+            ) : (
+              <div class="leader-portrait-placeholder">
+                <span class="leader-initials">{person.name.split(' ').map(n => n[0]).join('')}</span>
+              </div>
+            )}
+          </div>
+
+          <div class="leader-role">{person.role}</div>
+          <h4 class="leader-name">{person.name}</h4>
+          <div class="leader-location">BCC · Bhopal</div>
+          <p class="leader-bio">{person.bio}</p>
+          {person.username && (
+            <a href={`/photographers/${person.username}/`} class="leader-profile-link">
+              View Profile <span aria-hidden="true">→</span>
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+.leadership-section {
+  background: var(--surface-0);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 96px 0;
+}
+.leadership-header {
+  margin-bottom: 40px;
+}
+.leadership-kicker {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.leadership-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink-900);
+  margin-bottom: 12px;
+}
+.leadership-intro {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-600);
+  max-width: 680px;
+  font-style: italic;
+}
+
+/* Card grid */
+.leadership-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+}
+.leader-card {
+  padding: 40px 36px;
+  border-right: 1px solid var(--hairline);
+}
+.leader-card:last-child {
+  border-right: none;
+}
+.leader-card--alt {
+  background: var(--surface-1);
+}
+
+/* Portrait */
+.leader-portrait-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.leader-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.leader-portrait-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--forest-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.leader-initials {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Card content */
+.leader-role {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-family: var(--font-body);
+}
+.leader-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  color: var(--ink-900);
+}
+.leader-location {
+  font-size: 12px;
+  color: var(--ink-400);
+  margin-bottom: 18px;
+  font-family: var(--font-body);
+}
+.leader-bio {
+  font-size: 13px;
+  line-height: 1.85;
+  color: var(--ink-600);
+  margin-bottom: 20px;
+}
+.leader-profile-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-600);
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: color var(--m-fast);
+}
+.leader-profile-link:hover {
+  color: var(--gold-500);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .leadership-grid {
+    grid-template-columns: 1fr;
+  }
+  .leader-card {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    padding: 32px 28px;
+  }
+  .leader-card:last-child {
+    border-bottom: none;
+  }
+}
+@media (min-width: 640px) and (max-width: 900px) {
+  .leadership-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .leader-card:last-child {
+    border-right: none;
+    grid-column: 1 / -1;
+    border-bottom: none;
+  }
+  .leader-card:nth-child(even) {
+    border-right: none;
+  }
+}
+</style>

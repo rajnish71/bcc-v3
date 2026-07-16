@@ -40,3 +40,23 @@ Bootstrap.md
 SOURCE_INDEX.md
 CLAUDE.md
 
+Repository Locations :
+
+Project Root
+E:\WebProjects\BCC-V3
+
+Authoritative Documentation
+E:\WebProjects\BCC-V3\ProjectDocs
+
+Engineering References
+E:\WebProjects\BCC-V3\docs
+
+Frontend
+E:\WebProjects\BCC-V3\frontend
+
+Backend
+E:\WebProjects\BCC-V3\backend
+
+Sanity Studio
+E:\WebProjects\BCC-V3\studio
+

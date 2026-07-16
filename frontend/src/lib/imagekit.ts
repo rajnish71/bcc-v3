@@ -69,3 +69,21 @@ export function ikSrcset(path: string, widths = [400, 800, 1200, 1600], baseQ = 
 export function ikThumb(path: string): string {
   return ikUrl(path, { w: 32, q: 30, blur: 10, f: 'webp' });
 }
+
+/**
+ * Generic string-path delivery helper.
+ * Local paths (starting with "/") are returned unchanged — no CDN until the file is in R2.
+ * R2-relative paths (no leading slash, no scheme) are routed through ImageKit with WebP conversion.
+ */
+export function imgSrc(src: string, width?: number): string {
+  if (src.startsWith('/') || src.startsWith('http')) return src;
+  return ikUrl(src, { w: width, q: 82, f: 'webp' });
+}
+
+/**
+ * Build an optimised avatar URL from an R2-relative path.
+ * Produces a square, face-focused crop in WebP at the requested size.
+ */
+export function ikAvatarUrl(r2Path: string, size = 200): string {
+  return ikUrl(r2Path, { w: size, h: size, fo: 'face', q: 85, f: 'webp' });
+}

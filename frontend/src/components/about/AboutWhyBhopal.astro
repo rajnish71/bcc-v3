@@ -1,0 +1,238 @@
+---
+import { aboutImages } from '../../data/aboutImages';
+
+const primary = aboutImages.whyBhopalPrimary;
+const secondary = aboutImages.whyBhopalSecondary;
+---
+
+<section class="why-section" aria-labelledby="why-heading" data-gsap="reveal">
+  <div class="container">
+    <div class="why-header">
+      <div class="why-kicker">Why Bhopal</div>
+      <h2 class="why-title" id="why-heading">A City Worth Photographing</h2>
+    </div>
+  </div>
+
+  <!-- Full-width primary photograph -->
+  <div class="why-photo-primary-wrap">
+    <img
+      src={primary.src}
+      alt={primary.alt}
+      class="why-photo-primary"
+      loading="lazy"
+    />
+    <div class="photo-caption-bar" aria-hidden="true">
+      <span class="photo-caption">{primary.caption}</span>
+    </div>
+  </div>
+
+  <!-- Editorial content -->
+  <div class="why-content-wrap">
+    <div class="container">
+      <div class="why-content-grid">
+        <div class="why-col-left">
+          <div class="why-content-kicker">A City Worth Photographing</div>
+          <p class="why-body">Bhopal is one of India's most underrated cities for photography. Its two lakes — Bada Talab and Chhota Talab — offer golden-hour reflections that few cities can match. The Upper Lake at dawn, when the light is still low and the water is still, is one of the finest photographic situations in central India.</p>
+          <p class="why-body">Van Vihar National Park sits at the edge of the city. Winter brings migratory birds to the Bhoj Wetland. The Old City — dense, alive, historically layered — rewards the street photographer who is willing to walk slowly and look carefully.</p>
+          <p class="why-body">Across every season and every light condition, Bhopal offers something exceptional. This is why we have been photographing it for a decade, and why we will still be photographing it a decade from now.</p>
+        </div>
+        <div class="why-col-right">
+          <div class="why-content-kicker">What Bhopal Offers the Photographer</div>
+          <div class="bhopal-subjects" role="list">
+            <div class="subject-item" role="listitem">
+              <div class="subject-name">Upper Lake</div>
+              <div class="subject-desc">Dawn reflections · boat silhouettes</div>
+            </div>
+            <div class="subject-item" role="listitem">
+              <div class="subject-name">Van Vihar</div>
+              <div class="subject-desc">Wildlife · forest light · seasons</div>
+            </div>
+            <div class="subject-item" role="listitem">
+              <div class="subject-name">Taj-ul-Masajid</div>
+              <div class="subject-desc">Heritage · Mughal architecture · night</div>
+            </div>
+            <div class="subject-item" role="listitem">
+              <div class="subject-name">Old City</div>
+              <div class="subject-desc">Street · portraits · layered history</div>
+            </div>
+            <div class="subject-item" role="listitem">
+              <div class="subject-name">Bhoj Wetland</div>
+              <div class="subject-desc">Migratory birds · winter mornings</div>
+            </div>
+            <div class="subject-item" role="listitem">
+              <div class="subject-name">Festivals</div>
+              <div class="subject-desc">Ganesh Chaturthi · Eid · Navratri</div>
+            </div>
+            <div class="subject-item" role="listitem">
+              <div class="subject-name">Monsoon</div>
+              <div class="subject-desc">Dramatic skies · saturated greens</div>
+            </div>
+            <div class="subject-item subject-item--last" role="listitem">
+              <div class="subject-name">Architecture</div>
+              <div class="subject-desc">Temples · mosques · colonial layers</div>
+            </div>
+          </div>
+
+          <!-- Secondary photograph -->
+          <div class="why-photo-secondary-wrap">
+            <img
+              src={secondary.src}
+              alt={secondary.alt}
+              class="why-photo-secondary"
+              loading="lazy"
+            />
+            <div class="photo-caption-bar photo-caption-bar--sm" aria-hidden="true">
+              <span class="photo-caption photo-caption--sm">{secondary.caption}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.why-section {
+  background: var(--surface-0);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 96px 0 0;
+}
+.why-header {
+  margin-bottom: 40px;
+}
+.why-kicker {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.why-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink-900);
+}
+
+/* Primary photo */
+.why-photo-primary-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+}
+.why-photo-primary {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.photo-caption-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(20, 18, 16, 0.6));
+  padding: 24px 32px 18px;
+}
+.photo-caption {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.08em;
+}
+.photo-caption-bar--sm {
+  padding: 16px 14px 10px;
+}
+.photo-caption--sm {
+  font-size: 9px;
+}
+
+/* Content below photo */
+.why-content-wrap {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-top: none;
+  padding: 56px 0;
+}
+.why-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+}
+.why-content-kicker {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 20px;
+  font-family: var(--font-body);
+}
+.why-body {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--ink-600);
+  margin-bottom: 20px;
+}
+.why-body:last-child {
+  margin-bottom: 0;
+}
+
+/* Bhopal subjects grid */
+.bhopal-subjects {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--hairline);
+  margin-bottom: 20px;
+}
+.subject-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hairline);
+  border-right: 1px solid var(--hairline);
+}
+.subject-item:nth-child(even) {
+  border-right: none;
+}
+.subject-item--last,
+.subject-item:nth-last-child(-n+2) {
+  border-bottom: none;
+}
+.subject-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin-bottom: 3px;
+  font-family: var(--font-body);
+}
+.subject-desc {
+  font-size: 11px;
+  color: var(--ink-400);
+  line-height: 1.5;
+  font-family: var(--font-body);
+}
+
+/* Secondary photograph */
+.why-photo-secondary-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.why-photo-secondary {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .why-content-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .why-content-wrap {
+    padding: 40px 0;
+  }
+}
+</style>

@@ -1,0 +1,228 @@
+---
+import { mentors } from '../../data/leadership';
+---
+
+<section class="mentors-section" aria-labelledby="mentors-heading">
+  <div class="container">
+    <div class="mentors-header" data-gsap="reveal">
+      <div class="mentors-kicker">Learning From Masters</div>
+      <h2 class="mentors-title" id="mentors-heading">Learning From Masters</h2>
+      <p class="mentors-intro">Senior photographers whose experience and generosity have shaped BCC's creative direction. Each mentor brings a distinct mastery to the club — and a willingness to share it.</p>
+    </div>
+
+    <div class="mentors-grid" data-gsap="stagger">
+      {mentors.map((mentor, i) => (
+        <div class:list={['mentor-card', i % 2 === 1 && 'mentor-card--alt']}>
+          <!-- Header with portrait -->
+          <div class="mentor-header">
+            <div class="mentor-portrait-wrap" aria-hidden="true">
+              {mentor.avatar ? (
+                <img
+                  src={mentor.avatar}
+                  alt={`Portrait of ${mentor.name}`}
+                  class="mentor-portrait"
+                  loading="lazy"
+                  width="96"
+                  height="96"
+                />
+              ) : (
+                <div class="mentor-portrait-placeholder">
+                  <span class="mentor-initials">{mentor.name.split(' ').map(n => n[0]).join('')}</span>
+                </div>
+              )}
+            </div>
+            <div class="mentor-identity">
+              <h4 class="mentor-name">{mentor.name}</h4>
+              <div class="mentor-expertise">{mentor.expertise}</div>
+              <div class="mentor-role-label">{mentor.role} · Bhopal</div>
+            </div>
+          </div>
+
+          <!-- Biography -->
+          <p class="mentor-bio">{mentor.bio}</p>
+
+          <!-- Contribution -->
+          <div class="mentor-contribution">
+            <div class="contribution-heading">Contribution to BCC</div>
+            <p class="contribution-body">{mentor.contribution}</p>
+          </div>
+
+          {mentor.username && (
+            <a href={`/photographers/${mentor.username}/`} class="mentor-profile-link">
+              View Profile <span aria-hidden="true">→</span>
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+.mentors-section {
+  background: var(--surface-1);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 96px 0;
+}
+.mentors-header {
+  margin-bottom: 40px;
+}
+.mentors-kicker {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.mentors-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink-900);
+  margin-bottom: 12px;
+}
+.mentors-intro {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-600);
+  max-width: 680px;
+}
+
+/* Mentor grid */
+.mentors-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+}
+.mentor-card {
+  padding: 48px;
+  border-right: 1px solid var(--hairline);
+}
+.mentor-card:last-child {
+  border-right: none;
+}
+.mentor-card--alt {
+  background: var(--surface-1);
+}
+
+/* Portrait header */
+.mentor-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.mentor-portrait-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.mentor-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.mentor-portrait-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--gold-600), #7A5E28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mentor-initials {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.mentor-identity {
+  padding-top: 8px;
+}
+.mentor-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  color: var(--ink-900);
+}
+.mentor-expertise {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-family: var(--font-body);
+}
+.mentor-role-label {
+  font-size: 12px;
+  color: var(--ink-400);
+  font-family: var(--font-body);
+}
+
+/* Content */
+.mentor-bio {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-600);
+  margin-bottom: 16px;
+}
+.mentor-contribution {
+  border-top: 1px solid var(--hairline);
+  padding-top: 16px;
+  margin-bottom: 20px;
+}
+.contribution-heading {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-400);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-family: var(--font-body);
+}
+.contribution-body {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-600);
+}
+.mentor-profile-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-600);
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: color var(--m-fast);
+}
+.mentor-profile-link:hover {
+  color: var(--gold-500);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mentors-grid {
+    grid-template-columns: 1fr;
+  }
+  .mentor-card {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    padding: 36px 28px;
+  }
+  .mentor-card:last-child {
+    border-bottom: none;
+  }
+}
+</style>

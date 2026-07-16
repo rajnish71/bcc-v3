@@ -302,119 +302,574 @@ Stage 6
 
 
 
-Stage 7.
+Stage 7 — Pending Tasks \& Bug Fixes
 
-45\. Temp Membership numbers to be displayed in profile dummy card
+A. Critical Profile \& Membership (Highest Priority)
 
 
 
-46\. cover pic in the banner https://bcc.bhopal.info/hub/profile/ should match 16:5 aspect ratio as we decided for cover pic. Also https://bcc.bhopal.info/photographers/{username}/  16:5 banner should be visible entirely on all types of display, adjust its size accordingly, but never crop height. Instead of full edge to edge view on desktop we can reduce to view only within container size
+45\. Complete Photographer Profile Data Migration (Top Priority)
 
 
 
-47\. https://bcc.bhopal.info/photographers/ photographers grid has to be randomly sorted
+Complete the migration of all profile data into both the Member Hub Profile and Public Photographer Profile.
 
 
 
-48\. i. In the about page, let us add Our In house mentors Category, we can make 2 as of now - Dr Anil Bhati - Our Editing and Composition Expert, has taken more than 20+ workshops on Editing and Composition.
+This includes:
 
-Second Mr Sauvik Acharyya - Our Street Photography Mentor, regularly conducts live street photography photowalks and Meetups, encouraging members to find new angles and play with light on street.
 
 
+Camera gear
 
-&#x20;   ii. remove Sauvik Acharyya as Core Coordinator and put yougesh more - add him as Bird Walk Leader and Bird Environmentalist heading our Birds of Bhopal / MP Project
+Biography
 
+Awards \& Recognition
 
+Photography Society Distinctions
 
-&#x20;   iii. in vikas gangpari, write he is our Acitivities co-ordinator, helping us organize Workshops, Photowalks and Meet ups
+Photo Titles
 
+Display photograph
 
+All remaining migrated legacy fields
 
-49\. Home Page Journal card text alignment
 
 
+Private fields (Address, Blood Group, Emergency Contact, etc.) must remain visible only inside the Member Hub and never on public profile pages.
 
-50\. Top Priority in Stage 7 - Hub profile: private fields (address, blood group, emergency contact) visible internally and Display Photo, Biography, ............actually almost 90 per cent of data is missing, camera gears, awards and recognition, distintions migrate everything.
 
-&#x09;Migrate in full as per --> Full field-by-field audit produced: ProjectDocs/SessionSummaries/2026-07-12 - Photographer Profile Data Audit.md. Recovered user\_awards → added to API response + About tab (Awards \& Distinctions card 	Recovered user\_photo\_titles → added to API response + About tab (Photography Society Titles card). Recovered users.awards\_html → exposed in API. Confirmed private fields (address, blood group, emergency contact) correctly 	excluded from public profile
 
+Migration should follow the field-by-field audit documented in:
 
 
-51\. Sauvik photos with missing R2 originals	Need re-upload; lightbox degrades to 800px medium for now but its visible now on lightbox, though i will ask Sauvik to re upload
 
+ProjectDocs/SessionSummaries/2026-07-12 - Photographer Profile Data Audit.md
 
 
-52\. Dr Anil Bhati "Twilight Hours, Maldives" for spotlight hero	Waiting on ImageKit URL -  from you we use store it in Cloudflare R2  uploads/1781579369859-2387d206.jpg our endpoint configured on imagekit for cloudflare folder is https://ik.imagekit.io/duynda7oq/. we should audit entire upload workflow and save it somewhere , so that in future we remember what Cloudflare is doing and what Imagekit is gonna do
 
+~~46. Temporary Membership Card Improvements~~
 
 
-53\. Lightbox: redesigned lightbox to 2-column (left: image + prev/next arrows, right: metadata rail); stacking one above other for mobile --> light box need further refinement. --> still needs lot of refinement and formatting proper allingment
 
+~~Display the temporary Membership Number (BCCTempXXXXX) on the dummy Membership Card shown inside the Member Hub Profile until permanent membership numbering is completed.~~
 
 
-54\. Auto creation of Photographers page once when a new member registers and once approved his page is automatically created without requiring a npm build ( last resort cron job running npm build every few hours )
 
+~~47. Membership Number Finalization \& Data Freeze~~
 
 
-55\. In /Photographers - ( Photographers Directory ) Gallery / Grid - Black Strip in bottom of grid, misaligned and more photographers link working or not to be checked. Featured Photographers should be added as a new section. 3-5 featured photographers every month or 20 featured photographers - homepage on the wall photos to come from these featured photographers. We should ensure they represent all genres. Mainly Wildlife, Street, Travel
 
+~~Once permanent Membership Numbers are manually allotted:~~
 
 
-56\. Please check if all users are able to edit and save Social Media, About and all details in Members Hub Profile. Earlier only admin was able to save it, Sauvik was having issues saving it.
 
+~~assign sequential User IDs and Member IDs~~
 
+~~retire all temporary membership numbers~~
 
-57\. REstore all removed spec/placeholder text from Photo Series, Membership, and Journal sections --> we were not suppose to remove them but rewrite them to make it look more relevant. Just redraft text to make it look more relevant and as per best SEO practice. Major Sections which are now missing are - "Membership three Steps" - make the description , more meaning full, earlier it was  "Three-step educational flow communicating the membership journey. Registration, Application, and Membership Active are presented as distinct milestones.". Similarly under Become a member - Bhopal Camera Club, change following text "Photography community, mentorship, and exhibitions. Three clear steps to membership".
+~~permanently disable hard deletion of members~~
 
+~~prevent editing of permanent membership numbers~~
 
 
-58\. Homepage - Activity - Upcoming activity - no photo card in list view or grid
 
+~~This must conform to MEM-007 permanent numbering rules.~~
 
 
-59\. in hub home when profile edits , sidebar should not scroll , is this possible. Besides Hub Profile page looks very raw, needs to be refined, why everything is scrolling down, it was not designed this way in wireframe, there is tab for everything, each tab should show information about itself only
 
+B. Photographer Profile \& Directory
 
 
-60\. Home Page - Section "One Community. Four Ways To Participate." should have some dummy photos
 
+~~48. Photographer Profile Banner Improvements~~
 
 
-61\. Data cleaning - Once we manually allot permanent membership numbers - User ID and Member ID sequential without immediately after we allot permanent numbers to members. after that no hard delete / edit ever - pending
 
+~~Standardize profile cover banners across:~~
 
 
-62\. Allowing photographers to create Stories / Collections from their Membership Hub - Portfolio Page. Stories will appear on top of their public profile page ( V6 05) /photographers/{username}
 
+~~/hub/profile~~
 
+~~/photographers/{username}~~
 
-63\. Home Page - Hero Spotlight should be admin selectable from admin console. Spotlight, Photo series and Contest images on home page has to be panorama, so we need a system to identify them. other wise system will change their aspect ratio and crop - I think we should have a AI tool to identify and show panorama photos / we would request users to share panorama
 
 
+~~Requirements:~~
 
-64. changes in wireframe V6 05 - /photographers/{username} page - if a member also is author, links to his articles in our /journal section should also appear here
 
 
+~~fixed 16:5 aspect ratio~~
 
-65\. Open items :
+~~entire banner must remain visible on every device~~
 
-&#x09;i. Card 55×87mm portrait 2-sidedDedicated Module 02 revisit session. After Module 06 ( Item, Action needed, When / Card, 55×87mm portrait 2-sided, Dedicated Module 02 revisit session After Module 06 )
+~~never crop vertically~~
 
-&#x09;ii. Facebook login step by step
+~~desktop view may be container width instead of edge-to-edge if required~~
 
 
 
-66\. Social sharing of images, articles, profiles, collection , stories
+49\. Public Photographer Profile Gallery Improvements
 
 
 
-67\. SEO management for all pages -
+Improve the gallery on:
 
-68\. On pages https://bcc.bhopal.info/photographers/{username} on the canonical gallery - shows photo caption below photos. The alignment of entire row is bottom alligned as per text, if caption is more than one line, the top line of photo get misaligned with other photos in the row. I think we should keep row top aligned, so all the photos in row are properly aligned, next row in the grid starts after the ending of caption with maximum text.
 
-69\. Add in terms and conditions and consent forms that uploading photos photographer takes full responsibility. They have full authority including model release and permissions if required to take that photo. in case of any legal notices, photographer and not the club will be responsible.
 
-70\. 
+/photographers/{username}
+
+
+
+Use the same hover overlay as Homepage and Photographer Directory.
+
+Display photo caption inside hover overlay.
+
+Remove captions displayed below photographs.
+
+Keep gallery rows perfectly aligned regardless of caption length.
+
+
+
+50\. Photographer Directory Improvements
+
+
+
+Improve:
+
+
+
+/photographers
+
+
+
+Randomize photographer order on first load.
+
+Add search box.
+
+Add sorting options:
+
+Name
+
+Joining Date
+
+Popularity
+
+Place controls below Membership Type filter.
+
+
+
+51\. Photographer Directory Layout \& Featured Photographers
+
+
+
+Improve Photographer Directory:
+
+
+
+Fix black strip alignment on cards.
+
+Verify "More Photographers" functionality.
+
+Introduce Featured Photographers section.
+
+
+
+Featured photographers should:
+
+
+
+rotate monthly (3–5) or maintain a curated pool (\~20)
+
+represent multiple genres
+
+become the source for Homepage Gallery Wall images.
+
+
+
+52\. Automatic Photographer Page Creation
+
+
+
+When a Membership Application becomes Active:
+
+
+
+Automatically create the photographer's public profile without requiring an npm build.
+
+
+
+If unavoidable, use a scheduled rebuild only as a fallback.
+
+
+
+C. Member Hub Improvements
+
+
+
+53\. Member Hub Profile UI Refinement
+
+
+
+Refine the Member Hub Profile page to match the approved V6 wireframe.
+
+
+
+Sidebar should remain fixed while editing.
+
+Remove unnecessary page scrolling.
+
+Each tab should display only its own content.
+
+Improve spacing and overall polish.
+
+
+
+54\. Verify Profile Editing Permissions
+
+
+
+Verify that every member—not just administrators—can successfully edit and save:
+
+
+
+About
+
+Biography
+
+Social Media
+
+Camera Gear
+
+Profile Details
+
+all remaining editable fields
+
+
+
+55\. Stories \& Collections
+
+
+
+Allow photographers to create Stories / Collections from the Member Hub Portfolio.
+
+
+
+Stories should appear at the top of the public photographer profile (V6 05).
+
+
+
+If the photographer is also an Author, display links to their Journal articles on the same page.
+
+
+
+D. Homepage Improvements
+
+
+
+56\. Homepage Content \& Visual Refinements
+
+
+
+Improve Homepage presentation by:
+
+
+
+fixing Journal card text alignment
+
+adding photographs to "One Community. Four Ways To Participate."
+
+restoring Upcoming Activity images in both grid and list views
+
+
+
+57\. Homepage Editorial Copy Restoration
+
+
+
+Restore and rewrite all removed placeholder/specification text with meaningful editorial copy and SEO-friendly language.
+
+
+
+Examples include:
+
+
+
+Membership Three-Step Journey
+
+Become a Member section
+
+Photo Series
+
+Journal section
+
+any other explanatory content removed during implementation
+
+
+
+58\. Homepage Hero \& Spotlight Management
+
+
+
+Enhance Homepage Spotlight:
+
+
+
+allow Hero Spotlight selection from Admin Console
+
+Hero Spotlight, Photo Series and Contest banners must support panoramic images
+
+introduce panorama flag/detection workflow
+
+document Cloudflare R2 → ImageKit upload workflow for future maintenance
+
+
+
+59\. Homepage Hero Image Content
+
+
+
+Replace temporary Hero Spotlight with:
+
+
+
+Dr. Anil Bhati — Twilight Hours, Maldives
+
+
+
+(using Cloudflare R2 + ImageKit asset pipeline)
+
+
+
+E. About Page Content
+
+
+
+60\. About Page Updates
+
+
+
+Update About page:
+
+
+
+Mentors
+
+
+
+Add:
+
+
+
+Dr. Anil Bhati — Editing \& Composition Mentor
+
+Sauvik Acharyya — Street Photography Mentor
+
+
+
+Core Team
+
+
+
+Remove Sauvik Acharyya as Core Coordinator.
+
+Add Yogesh More as Bird Walk Leader \& Bird Environmentalist leading the Birds of Bhopal / MP Project.
+
+Update Vikas Gangpari designation to Activities Coordinator.
+
+
+
+F. Media \& Gallery
+
+
+
+61\. Missing Original Images Audit
+
+
+
+Audit photographs whose original Cloudflare R2 files are missing.
+
+
+
+Currently known:
+
+
+
+Sauvik Acharyya photographs
+
+
+
+Until originals are restored, continue serving ImageKit medium-resolution fallback.
+
+
+
+62\. Social Sharing
+
+
+
+Implement social sharing for:
+
+
+
+Photographs
+
+Photographer Profiles
+
+Stories
+
+Collections
+
+Journal Articles
+
+
+
+G. SEO \& Legal
+
+
+
+63\. Platform-wide SEO Management
+
+
+
+Implement comprehensive SEO management across all public pages, including metadata, Open Graph, schema, canonical URLs, and structured data.
+
+
+
+64\. Legal \& Photographer Consent
+
+
+
+Update Terms, Conditions and Consent forms to clearly state:
+
+
+
+photographers retain full responsibility for uploaded content
+
+photographers confirm ownership and required permissions/model releases
+
+legal liability remains with the photographer and not Bhopal Camera Club
+
+
+
+H. Deferred Items
+
+
+
+65\. Try if we can manually sort gallery grid on /photographers/{username} without breaking core architecture
+
+
+
+66. Future Modules
+
+
+
+Reserved for later implementation:
+
+
+
+Membership Card Module (55 × 87 mm double-sided card)
+
+Facebook Login / OAuth implementation
+
+
+
+Phase B1
+
+67. On the hub page https://bcc.bhopal.info/hub/portfolio/ there is view public portfolio link - which is going to some vague link - https://bcc.bhopal.info/photographers/1/ please correct that/
+
+
+
+68\. On https://bcc.bhopal.info/hub/ page in main content area there are sections Your Latest Work - Happening at the Club add sections - Your Stories and Collections - and add them on top of everything . thumbnail of one of the image in story / collection and story name under it. infact in story / collection creation , there should be thumbnail selection and default fallback thumbnail for users,
+
+
+
+69\. On https://bcc.bhopal.info/hub/portfolio/ the collection and stories - image is too large, make it small same as portfolio photo size. Story and Collection should have title, eyebrow, subtitle and description plus genre selection. We will later create 2 new wireframes for public VS 22 Story Public Page VS 23 Collection Public Page. We also have to create definition of both Story and Collection and how they are different from each other. no ambiguity
+
+
+
+70\. Photographers profile page ( /photographers/{username} ) should have a justified grid as in showcase ( /showcase ) - exactly same features including more photographs instead of photographers. Initial view should show 20 and every increment 20 each. discard current gallery rules totally and inherit rules from showcase gallery
+
+
+
+71\. In legacy site while uploading photos we had genre category selection boxes - its missing in V3 - every photo in Legacy had categories attached to them, we should import them and attach again asap so that we can filter photos category / genre wise - add few more categories Architecture - Astro, Black \& White, Event, Landscape, Macro, Monuments, Portfolio, Portrait, Street, Travel, Wildlife, Food, Nature, Product, Fashion, Fine Art, Sports, Aerial, Documentary
+
+
+
+72\. Few members who left membership application in between are not seeing any option to complete their memberships and admin cand see their pending approval, create a proper workflow, till the time they successfully submit their membership form, they should be able to see and revert back to incomplete stage, this should be visible inside members hub shell
+
+
+
+73\. Photographers profile page ( /photographers/{username} ) justified grid as in showcase ( /showcase ) , after recent changes grid layout changed to single column, this is not how its rendered on homepage or showcase page - increase Initial view to show 40 instead of 20 and every increment 40 each.
+
+
+
+
+
+74\. following done by you :
+Item 68 — Hub Home "Your Stories \& Collections"
+
+New top section in hub/index.astro fed by GET /gallery/albums; each card = cover thumbnail (radius-0) + name + kind·count, with a branded BCC fallback for containers lacking a cover.
+
+Creation cover selection built into the portfolio modal (see item 69).
+
+⚠️ Placement decision to confirm: I placed it directly under the welcome greeting, above the attention/alerts row (literal reading of "above everything in the main content area"). If you'd rather keep urgent renewal alerts on top, it's a one-line move down — tell me.
+
+Placement in Right side content area of hub shell where currently following :
+
+
+
+75\. upload photo - genre not getting selected, key words - multiple keywords to be accepted separately if comma separated
+
+
+
+76\. https://bcc.bhopal.info/photographers/{username} genre filter - show only those genres whose photos are added, ignore genres whose photographs are not present in photographers portfolio. Same on https://bcc.bhopal.info/showcase/
+Infact
+
+
+
+77\. in the create collection / stories workflow, select photos option should be available to add photos. a proper workflow to be designed and implemented
+
+
+
+78\. Our major rule never to be broken is never to change aspect ratio of photos - never crop or recompose them
+
+. I just noticed few photos on Home PAge Gallery grid / showcase grid are breakeing this rule. I know its difficult to fit in photos exactly in edge to edge alignment, thats why we always maintained justified - you can increase - decrease gap / padding between photos to align them edge to edge but not change aspect ratio or show cropped image. Its a photography page, only original photographers have authority to change composition in their editing suite.
+
+
+
+79\. find the reason and sort it out - one recently uploaded photo is still going to  https://bcc.bhopal.info/showcase/photos/762?ctx=portfolio\&ctxId=rajnishkhare\&ctxLabel=Rajnish+Khare\&ids=762%2C761%2C562 this can not be canonical page
+
+
+
+79a. I think you have changed the canonical photo rule yourself - as per "E:\\WebProjects\\BCC-V3\\ProjectDocs\\Architecture\\PHOTO-ASSET-ARCHITECTURE\_FREEZE\_v1.0.md" the single source of all photo was  https://bcc.bhopal.info/showcase/photos/{number} you , every photo will have this unique id irrespective of from whereever they will be called. you have invented some new slug - https://bcc.bhopal.info/showcase/photos/5ed87c69-0133-43f6-b6fd-1b0164470df5?ctx=portfolio\&ctxId=sauvikacharyya\&ctxLabel=Mr.+Sauvik+Acharyya\&ids=3912338d-878a-471e-93cb-ec74cd2d6a2b%2C2355ac26-b5a8-44f9-886e-5763733d33fd%2C37ea537c-9cd3-48c7-9986-8751f7859e52%2C5ed87c69-0133-43f6-b6fd-1b0164470df5%2Cd485dad5-393c-4bde-a0da-442a34c02a20%2Ca2c83a60-e093-4242-b9f4-fb8f76c22cdb%2C4681b4bc-6325-4a3b-a6fe-6242aa895dce%2C818aa457-e841-4e10-9670-674ac5611e35%2Cee93caa6-cdbf-46aa-9b72-ff9b4c054bf0%2C6f912817-55d6-4cbc-bb92-60af09e7996d%2C5aff85ee-af17-4b5e-99fd-531ffc886d17%2Ca9e25710-23f8-4496-9ca4-1e98587796af%2C169ffb46-2466-4a54-88c4-147537abcf68%2C4a77ec82-54fa-4ece-8dd5-7127dd47671b%2Cb00ab9f6-ea3b-4beb-807f-544f4d4cabb7%2Cb8b3319f-f3f1-43a5-8f75-ad816e6ce1a8%2C8c47308c-1f46-42f1-9067-561a82c61002%2Ce330844d-c2af-4a4b-90c7-6a09dc79da24%2C2283a4d1-d56c-48eb-bf61-5adafd69a7cc%2Cdfadcc00-43c9-4271-b5d9-c688674cf55e which is resulting in 404
+
+\---
+
+
+
+80\. Shall we experiment with more grid options in  https://bcc.bhopal.info/photographers/{username} - justified grid would be default but we should also explore other options that individual photographers can select. Masonary, Editorial CSS, Modular Block .........
+
+
+
+81\. Add a category / genre - Birds of Bhopal - this will be used to create a future page on Birds of Bhopal. Genre addition is now working while adding a new photo. but in edits, it still needs to wired properly. photos without genres, we are not able to select any or change.
+
+
+
+82\. Social Media links and website should appear in 2 different lines and on portfolio tab, first items on left sidebar
+
+
+
+83\. Show title only if it is Dr - Do not show Mr Mrs with name
+
+
+
+84\. On page https://bcc.bhopal.info/hub/ when i am clicking on my photos - inside section "Your Latest Work", its going to https://bcc.bhopal.info/hub/photo/0be284fa-5ff5-4345-9924-aea483971364/ instead of canonical url
+
+
+
+85\. In About Page - Add Kshitij Patle as third Mentor - Mention - Kshitij is a go to advisor to every one in the group, whether a youngster, new member or senior member everyone consults him whether its equipment, Birding Practices or Composition techniques. He has personally taken multiple workshops on field and indoor on multiple topics. Also Coordinators and Mentors - use card with avatar linked to their profiles (All of them are members / users, link their profile page too on card ), Vikas doesnt have a profile , i am uploading his Avatar pic at "E:\\WebProjects\\BCC-V3\\docs\\VikasGangpari.jpeg" import from here and use it as avatar in his card
+
 
 
 
@@ -423,7 +878,197 @@ Second Mr Sauvik Acharyya - Our Street Photography Mentor, regularly conducts li
 
 
 
-\# FEEDBACK SESSIONS 
+86\. In about page Leadership and Mentors -
+
+1. Mentor Card Size, same as Coordinators / Leaders , 3 in a row
+2. please use Avatars from the respective user profile
+3. also make following changes :
+
+Rajnish Khare - Everything ok
+
+
+
+Kshitij Patle - Everything ok
+
+
+
+Rahil Khan - Everything ok
+
+Taurez Anwar - Every thing is ok, once he creates his profile wire it
+
+
+
+Yogesh More - Every thing is ok, once he creates his profile wire it
+
+Vikas Gangpari Every thing is ok, once he creates his profile wire it
+
+Mentors :
+
+Dr Anil Bhati : Everything ok, just linking card to his profile is left.
+
+Sauvik Acharyya : Everything ok
+
+Kshitij Patle :  Everything ok
+
+86. This is the third time i am requesting, whild editing profile  / portfolio not able to add / edit genre categories of any photo not can change Photographic Genres under Public Profile tab on https://bcc.bhopal.info/hub/profile/
+Treat this as urgent
+
+
+
+\---
+
+
+
+87\. new Photo asset management to be implemented after claude memory reset
+
+88. Pages to create after claude reset -
+⬜ V6 31 — Membership Card Design System
+
+&#x09;⬜ V6 98 — token.css
+
+&#x09;⬜ V6 99 — systemdesign.md
+
+&#x09;⬜ V6 02 — About
+
+&#x09;⬜ V6 06 — Activities
+
+&#x09;⬜ V6 07 — Journal
+
+&#x09;⬜ V6 08 — Journal Article
+
+
+
+&#x09;⬜ V6 14 — Membership \& Billing
+
+&#x09;⬜ V6 15 — V6 15 Future Modules Workspace
+
+&#x09;⬜ V6 16 — Collections \& Series
+
+&#x09;⬜ V6 17 Membership Card
+
+&#x09;⬜ V6 18 Notifications
+
+&#x09;✅ ADMIN-ARCH-001 — Administration Console Architecture Freeze v1.0
+
+
+
+
+
+
+
+92\. New Member https://bcc.bhopal.info/photographers/rkkhare1212/ is blank, it shows nothing, just a blank shell
+
+
+
+93 Top Nav menu still shows apply for membership though their membership is approved
+
+
+
+94\. we have to take care of duplicate legacy pages - ├─ /gallery/photographer/rajnishkhare/index.html (+2ms)
+
+
+
+95\. To hard delete once claude is back - Chatgpt session - https://chatgpt.com/share/6a57cb0a-6e04-83e8-8ab5-da5d7821cfc0
+
+| Target        | Action                                                       |
+
+| ------------- | ------------------------------------------------------------ |
+
+| `rkkhare1212` | Remove completely (test account)                             |
+
+| `raghavc`     | Remove completely (test account)                             |
+
+| Afzal Khan    | Retain membership \*\*45\*\*, remove duplicate membership \*\*44\*\* |
+
+
+
+
+
+
+
+96\. upload image - after uploading when image starts showing, a text message should appear that click on image and add caption / description and other details
+
+
+
+97\. change hero image to 16:9 and container width instead of full bleed. after this in admin section design a tool that will identify all 16:9 images and let admin choose multiple images that can be rotated as hero image. 
+
+
+
+98\. ### Future Event \& Contest Engines (Architecture Placeholder)
+
+
+
+The current implementation uses centralized development seed collections exposed through a permanent Service Layer. This is an intentional temporary architecture.
+
+
+
+When the operational backend modules are developed, implement the following engines:
+
+
+
+\- Event Engine
+
+&#x20; - Activities
+
+&#x20; - Photowalks
+
+&#x20; - Workshops
+
+&#x20; - Meetups
+
+&#x20; - Expeditions
+
+&#x20; - Exhibitions
+
+&#x20; - Event lifecycle, registrations, attendance and calendar
+
+
+
+\- Contest Engine
+
+&#x20; - Contest management
+
+&#x20; - Themes
+
+&#x20; - Submission windows
+
+&#x20; - Eligibility rules
+
+&#x20; - Judging workflow
+
+&#x20; - Results publication
+
+&#x20; - Awards and recognitions
+
+
+
+The Service Layer (`src/lib/services/`) is the permanent frontend contract. Future Event and Contest repositories will replace the current seed collections behind these services without requiring changes to page components or homepage layouts.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\---
+
+
+
+\# FEEDBACK SESSIONS
 
 
 
@@ -443,7 +1088,7 @@ Second Mr Sauvik Acharyya - Our Street Photography Mentor, regularly conducts li
 
 
 
-\- ✅ Seed 3 demo activities: Monsoon Photowalk, Composition Workshop, Annual Print Exhibition — `database/migrations/0054\_seed\_demo\_activities.sql`
+\- ✅ Seed 3 demo activities: Monsoon Photowalk, Composition Workshop, Annual Print Exhibition — `database/migrations/0054\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_seed\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_demo\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_activities.sql`
 
 \- ✅ Populate "One Community. Four Ways to Participate." section — 4 club cards with real copy and gradients
 
@@ -451,7 +1096,7 @@ Second Mr Sauvik Acharyya - Our Street Photography Mentor, regularly conducts li
 
 \- ✅ Replace all remaining placeholder/editorial specification text with production-quality copy
 
-\- ✅ Restore Activity thumbnails — backend exposes `banner\_url` via `ikUrl()`, frontend renders or falls back to gradient
+\- ✅ Restore Activity thumbnails — backend exposes `banner\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_url` via `ikUrl()`, frontend renders or falls back to gradient
 
 
 
@@ -461,9 +1106,9 @@ Second Mr Sauvik Acharyya - Our Street Photography Mentor, regularly conducts li
 
 \- ✅ Audit conducted — full field-by-field report at `ProjectDocs/SessionSummaries/2026-07-12 - Photographer Profile Data Audit.md`
 
-\- ✅ Awards (`user\_awards`) and photography society titles (`user\_photo\_titles`) recovered and exposed in API + profile About tab
+\- ✅ Awards (`user\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_awards`) and photography society titles (`user\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_photo\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_titles`) recovered and exposed in API + profile About tab
 
-\- ✅ `users.awards\_html` field recovered to API
+\- ✅ `users.awards\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_html` field recovered to API
 
 \- ✅ Private fields (address, blood group, emergency contact) confirmed correctly excluded from public profile
 
@@ -513,7 +1158,7 @@ These are confirmed production defects. Implementation complete in code; pending
 
 
 
-\*\*Fix:\*\* Added `pointer-events: none` to `.drawer\[aria-hidden="true"]` in `Nav.astro`. When closed the drawer does not intercept clicks; when open (`aria-hidden="false"`) pointer events are restored normally.
+\*\*Fix:\*\* Added `pointer-events: none` to `.drawer\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\[aria-hidden="true"]` in `Nav.astro`. When closed the drawer does not intercept clicks; when open (`aria-hidden="false"`) pointer events are restored normally.
 
 
 
@@ -542,6 +1187,4 @@ These are confirmed production defects. Implementation complete in code; pending
 
 
 \---
-
-
 

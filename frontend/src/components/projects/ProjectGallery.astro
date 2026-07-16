@@ -36,6 +36,7 @@ const { id, projectTitle, apiTag } = Astro.props;
       id={id}
       ariaLabel={`${projectTitle} photo gallery`}
       apiTag={apiTag}
+      photoLinkSuffix={`?genre=${apiTag}`}
       emptyText={`No photographs have been published in this project yet. Check back soon.`}
     />
   </div>

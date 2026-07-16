@@ -1,0 +1,109 @@
+---
+---
+
+<section class="pillars-section" aria-labelledby="pillars-heading">
+  <div class="container">
+    <div class="pillars-grid" data-gsap="stagger">
+      <!-- Community -->
+      <div class="pillar-card">
+        <div class="pillar-kicker">
+          <span class="pillar-rule" aria-hidden="true"></span>
+          Community
+        </div>
+        <h3 class="pillar-heading" id="pillars-heading">Photography becomes meaningful when shared.</h3>
+        <p class="pillar-body">Here, beginners find mentors and experienced photographers find fresh inspiration. No one arrives at their best work alone. Learning happens in the open — on the street, beside a lake, in front of a monument — together. BCC is the community that makes this possible in Bhopal.</p>
+      </div>
+
+      <!-- Craft -->
+      <div class="pillar-card pillar-card--alt">
+        <div class="pillar-kicker">
+          <span class="pillar-rule" aria-hidden="true"></span>
+          Craft
+        </div>
+        <h3 class="pillar-heading">Photography is both art and discipline.</h3>
+        <p class="pillar-body">Through photowalks, workshops, critiques and talks, members develop not just technical skill but creative intention — a distinct way of seeing. The club is a place where a beginner photographer can become a serious one, and where a serious photographer can always find something new to learn.</p>
+      </div>
+
+      <!-- City -->
+      <div class="pillar-card">
+        <div class="pillar-kicker">
+          <span class="pillar-rule" aria-hidden="true"></span>
+          City
+        </div>
+        <h3 class="pillar-heading">Bhopal is our greatest teacher.</h3>
+        <p class="pillar-body">Its lakes, its forests, its architecture, its festivals, its people across changing seasons — BCC has been building a visual archive of this extraordinary city since 2015. Lakes at golden dawn. Van Vihar in winter. The Old City in monsoon light. Bhopal rewards the patient photographer abundantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.pillars-section {
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline);
+}
+.pillars-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+}
+.pillar-card {
+  padding: 48px 40px;
+  border-right: 1px solid var(--hairline);
+}
+.pillar-card:last-child {
+  border-right: none;
+}
+.pillar-card--alt {
+  background: var(--surface-1);
+}
+.pillar-kicker {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-body);
+}
+.pillar-rule {
+  display: block;
+  width: 16px;
+  height: 1px;
+  background: var(--gold-500);
+  flex-shrink: 0;
+}
+.pillar-heading {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  color: var(--ink-900);
+}
+.pillar-body {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-600);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pillars-grid {
+    grid-template-columns: 1fr;
+  }
+  .pillar-card {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    padding: 36px 28px;
+  }
+  .pillar-card:last-child {
+    border-bottom: none;
+  }
+}
+</style>

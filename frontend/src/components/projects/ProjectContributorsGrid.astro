@@ -34,7 +34,7 @@ if (!contributors || contributors.length === 0) return;
       >
         <div class="pcg-avatar">
           {c.avatar
-            ? <img src={c.avatar} alt={c.name} class="pcg-avatar-img" />
+            ? <img src={c.avatar} alt={c.name} class="pcg-avatar-img" loading="lazy" decoding="async" />
             : <span class="pcg-avatar-initials" aria-hidden="true">{c.initials}</span>
           }
         </div>

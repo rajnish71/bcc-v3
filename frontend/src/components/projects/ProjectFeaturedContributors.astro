@@ -44,7 +44,7 @@ const initial = contributors.slice(0, 4);
         <div class="pfc-card-head">
           <div class="pfc-avatar">
             {c.avatar
-              ? <img src={c.avatar} alt={c.name} class="pfc-avatar-img" />
+              ? <img src={c.avatar} alt={c.name} class="pfc-avatar-img" loading="lazy" decoding="async" />
               : <span class="pfc-avatar-initials" aria-hidden="true">{c.initials}</span>
             }
           </div>
@@ -72,7 +72,7 @@ const initial = contributors.slice(0, 4);
     }
 
     const grid = document.getElementById('pfc-grid');
-    if (!grid || contributors.length <= 4) return;
+    if (!grid || contributors.length < 4) return;
 
     const selected = shuffle(contributors).slice(0, 4);
     const cards = grid.querySelectorAll('.pfc-card');

@@ -142,7 +142,7 @@ DELETE FROM otp_codes
 WHERE user_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghavc'));
 
 DELETE FROM magic_links
-WHERE user_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghavc'));
+WHERE email IN (SELECT email FROM users WHERE username IN ('rkkhare1212', 'raghavc'));
 
 DELETE FROM password_reset_tokens
 WHERE user_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghavc'));
@@ -158,7 +158,8 @@ WHERE user_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghav
 
 -- 5g. Delete identity and account records
 DELETE FROM identity_audit_log
-WHERE user_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghavc'));
+WHERE target_user_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghavc'))
+   OR actor_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghavc'));
 
 DELETE FROM pending_email_changes
 WHERE user_id IN (SELECT id FROM users WHERE username IN ('rkkhare1212', 'raghavc'));

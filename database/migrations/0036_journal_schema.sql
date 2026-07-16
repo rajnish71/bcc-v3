@@ -13,8 +13,8 @@
 --             ImageKit/R2 URL). hero_r2_key is reserved for direct R2 uploads.
 -- ============================================================================
 
-INSERT IGNORE INTO schema_migrations (filename, applied_at)
-  VALUES ('0036_journal_schema.sql', NOW());
+SET NAMES utf8mb4;
+START TRANSACTION;
 
 CREATE TABLE IF NOT EXISTS journal_posts (
   id                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -59,3 +59,8 @@ CREATE TABLE IF NOT EXISTS journal_posts (
     ON DELETE SET NULL
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO schema_migrations (filename, applied_at)
+VALUES ('0036_journal_schema.sql', NOW());
+
+COMMIT;

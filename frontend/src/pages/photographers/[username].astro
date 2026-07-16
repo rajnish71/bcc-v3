@@ -1159,7 +1159,7 @@ let profileBuffer: any[] = [];             // trailing photos awaiting a full ro
 let profileTotal = 0;                      // total photos for this photographer
 let profileUserId = 0;                     // owner id, for load-more fetches
 let profileLoading = false;
-let currentProfileTag = '';                // active category filter (tag_key), '' = all
+let currentProfileTag = new URLSearchParams(window.location.search).get('genre') ?? '';  // active category filter; pre-set from ?genre= param
 
 // ── Social link helpers ────────────────────────────────────────────────────
 const SOCIAL_BASE: Record<string, string> = {
@@ -1936,6 +1936,15 @@ async function loadProfileFilterChips(userId: number) {
         strip.appendChild(btn);
       });
     strip.hidden = false;
+
+    // If a genre was pre-set from the URL, activate the matching chip now
+    if (currentProfileTag) {
+      strip.querySelectorAll<HTMLButtonElement>('.profile-filter-chip').forEach(b => {
+        const on = b.dataset.tag === currentProfileTag;
+        b.classList.toggle('is-on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+    }
   } catch { /* non-critical */ }
 }
 

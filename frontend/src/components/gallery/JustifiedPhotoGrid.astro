@@ -1,0 +1,347 @@
+---
+/**
+ * JustifiedPhotoGrid.astro — reusable Flickr-style justified gallery grid.
+ * Used by /showcase and /birds-of-bhopal. Algorithm and behaviour are
+ * identical to the original per-page implementations (no behavioural change).
+ *
+ * Props:
+ *   id              — base id; generates {id}-grid, {id}-skeleton, {id}-empty,
+ *                     {id}-load-more-wrap, {id}-load-more-btn
+ *   ariaLabel       — aria-label on the outer grid element
+ *   apiTag          — if provided, always filter by this tag; if absent the
+ *                     component listens for bcc:set-filter events on the grid element
+ *   photoLinkSuffix — appended to photographer profile hrefs (e.g. "?genre=birds-of-bhopal")
+ *   emptyText       — paragraph text shown in the empty state
+ *
+ * Events dispatched on the grid element:
+ *   bcc:grid-loaded  { detail: { total: number } }  — fired after each reset-fetch
+ *
+ * Events the host page may dispatch to the grid element:
+ *   bcc:set-filter   { detail: { tag: string } }    — changes active filter (filter mode only)
+ */
+interface Props {
+  id: string;
+  ariaLabel?: string;
+  apiTag?: string;
+  photoLinkSuffix?: string;
+  emptyText?: string;
+}
+
+const {
+  id,
+  ariaLabel = 'Photo gallery grid',
+  apiTag,
+  photoLinkSuffix = '',
+  emptyText = 'No photographs found.',
+} = Astro.props;
+---
+
+<div
+  class="justified-grid"
+  id={`${id}-grid`}
+  data-jpgrid={id}
+  data-api-tag={apiTag ?? ''}
+  data-link-suffix={photoLinkSuffix}
+  aria-label={ariaLabel}
+>
+  <!-- Loading skeleton -->
+  <div id={`${id}-skeleton`} class="skeleton-wrap" aria-busy="true">
+    {[
+      [1.78, 0.78, 1.5, 0.85, 1.2],
+      [2.4, 1.4, 0.8, 1.6],
+      [1.0, 1.5, 0.75, 1.3, 0.9],
+    ].map((row) => (
+      <div class="grid-row">
+        {row.map((flex) => (
+          <div class="skel-photo" style={`flex:${flex};height:220px;`}></div>
+        ))}
+      </div>
+    ))}
+  </div>
+</div>
+
+<!-- Load more -->
+<div class="load-more-wrap" id={`${id}-load-more-wrap`} hidden>
+  <button class="load-more-btn" id={`${id}-load-more-btn`}>
+    Load More Photographs
+  </button>
+</div>
+
+<!-- Empty state -->
+<div id={`${id}-empty`} hidden class="gallery-empty">
+  <div class="gallery-empty__icon">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="22.5" stroke="rgba(20,18,16,0.1)" stroke-width="1.5"/>
+      <circle cx="24" cy="24" r="8" stroke="rgba(168,132,60,0.4)" stroke-width="1.5"/>
+      <circle cx="24" cy="24" r="2" fill="rgba(168,132,60,0.6)"/>
+    </svg>
+  </div>
+  <p class="gallery-empty__text">{emptyText}</p>
+  <slot name="empty-actions" />
+</div>
+
+
+<style>
+/* ── Justified grid ── */
+.justified-grid { padding: 8px; }
+
+/* ── Skeleton ── */
+.skeleton-wrap { padding: 0; }
+.skel-photo {
+  background: var(--surface-2);
+  border-radius: 0;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+@keyframes shimmer { 0%,100% { opacity:.4; } 50% { opacity:.7; } }
+
+/* ── Grid rows (global: applied to runtime-created nodes) ── */
+:global(.grid-row) { display: flex; gap: 8px; margin-bottom: 8px; }
+:global(.grid-row:last-child) { margin-bottom: 0; }
+
+/* ── Load more ── */
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  background: #181614;
+  border-top: 1px solid #2C2820;
+  padding: 12px 24px;
+}
+.load-more-btn {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #C9A961;
+  border: 1px solid rgba(201, 169, 97, 0.4);
+  padding: 10px 32px;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.load-more-btn:hover { border-color: #C9A961; }
+
+/* ── Gallery empty ── */
+.gallery-empty {
+  text-align: center;
+  color: var(--ink-600);
+  padding: var(--s-12) 0;
+}
+.gallery-empty__icon { margin-bottom: var(--s-3); display: flex; justify-content: center; }
+.gallery-empty__text { font-size: var(--text-body); color: var(--ink-900); margin-bottom: var(--s-4); }
+</style>
+
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  document.querySelectorAll<HTMLElement>('[data-jpgrid]').forEach(gridEl => {
+    const baseId    = gridEl.dataset.jpgrid!;
+    const apiTag    = gridEl.dataset.apiTag ?? '';
+    const linkSuffix = gridEl.dataset.linkSuffix ?? '';
+
+    const PAGE_SIZE = 24;
+    let allPhotos:   any[] = [];
+    let photoBuffer: any[] = [];
+    let currentFilter = apiTag || 'all';
+
+    const skelEl      = () => document.getElementById(`${baseId}-skeleton`);
+    const emptyEl     = () => document.getElementById(`${baseId}-empty`);
+    const loadMoreWrap = () => document.getElementById(`${baseId}-load-more-wrap`);
+
+    /* ── Justified layout algorithm ── */
+    function buildJustifiedLayout(
+      photos: Array<{ aspect: number; id: string; title: string; photographer: string; photographerUsername: string; imageUrl: string }>,
+      containerWidth: number,
+      targetHeight = 240,
+      gap = 8
+    ) {
+      const rows: Array<{ height: number; photos: typeof photos }> = [];
+      let row: typeof photos = [];
+      let rowWidth = 0;
+
+      const flush = () => {
+        if (!row.length) return;
+        const totalGap = gap * (row.length - 1);
+        const scale    = (containerWidth - totalGap) / rowWidth;
+        const height   = targetHeight * scale;
+        rows.push({ height, photos: row.map(p => ({ ...p, width: p.aspect * height })) });
+        row = [];
+        rowWidth = 0;
+      };
+
+      for (const photo of photos) {
+        const idealW = photo.aspect * targetHeight;
+        row.push(photo);
+        rowWidth += idealW;
+        if (rowWidth + gap * (row.length - 1) >= containerWidth * 0.88) flush();
+      }
+
+      return { rows, leftovers: row };
+    }
+
+    /* ── Render grid ── */
+    function renderGrid(newPhotos: any[], append = false) {
+      if (!append) {
+        gridEl.querySelectorAll('.grid-row').forEach(el => el.remove());
+        photoBuffer = [];
+        allPhotos   = [];
+      }
+
+      const candidates    = [...photoBuffer, ...newPhotos];
+      const containerWidth = gridEl.clientWidth;
+      const { rows, leftovers } = buildJustifiedLayout(candidates, containerWidth);
+      photoBuffer = leftovers;
+
+      const fragment = document.createDocumentFragment();
+
+      rows.forEach((row: any) => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'grid-row';
+
+        row.photos.forEach((p: any) => {
+          const link    = document.createElement('a');
+          link.href     = p.photographerUsername
+            ? `/photographers/${p.photographerUsername}/${linkSuffix}`
+            : `/showcase/${p.id}/`;
+          link.className = 'photo-card vf-card';
+          link.style.cssText = `width:${p.width}px;height:${row.height}px;flex-shrink:0;`;
+          link.setAttribute('data-aspect', String(p.aspect));
+          link.setAttribute('aria-label', p.title || 'Photograph by BCC member');
+
+          const img    = document.createElement('img');
+          img.src      = p.imageUrl ?? '';
+          img.alt      = p.title ?? '';
+          img.loading  = 'lazy';
+          img.decoding = 'async';
+          img.className = 'photo-card__img';
+          img.style.cssText = 'width:100%;height:100%;display:block;';
+          img.onload = () => img.classList.add('loaded');
+
+          const overlay = document.createElement('div');
+          overlay.className = 'photo-overlay';
+          overlay.setAttribute('aria-hidden', 'true');
+
+          const br = document.createElement('span');
+          br.className = 'vf-br'; br.setAttribute('aria-hidden', 'true');
+          const bl = document.createElement('span');
+          bl.className = 'vf-bl'; bl.setAttribute('aria-hidden', 'true');
+
+          if (p.title || p.photographer) {
+            const info = document.createElement('div');
+            info.className = 'photo-card__info';
+            info.setAttribute('aria-hidden', 'true');
+            if (p.title)      { const t  = document.createElement('div'); t.className  = 'photo-card__title';        t.textContent  = p.title;       info.appendChild(t);  }
+            if (p.photographer) { const ph = document.createElement('div'); ph.className = 'photo-card__photographer'; ph.textContent = p.photographer; info.appendChild(ph); }
+            link.appendChild(info);
+          }
+
+          link.appendChild(img);
+          link.appendChild(overlay);
+          link.appendChild(br);
+          link.appendChild(bl);
+          rowEl.appendChild(link);
+
+          allPhotos.push(p);
+        });
+        fragment.appendChild(rowEl);
+      });
+
+      gridEl.appendChild(fragment);
+
+      gsap.from(gridEl.querySelectorAll('.grid-row:not(.was-visible) .photo-card'), {
+        opacity: 0, y: 20, duration: 0.5, stagger: { amount: 0.3, from: 'start' }, ease: 'power2.out',
+      });
+      gridEl.querySelectorAll('.grid-row').forEach(r => r.classList.add('was-visible'));
+    }
+
+    /* ── Fetch photos ── */
+    async function fetchPhotos(reset = true) {
+      if (reset) { photoBuffer = []; allPhotos = []; }
+
+      const offset = allPhotos.length + photoBuffer.length;
+      const params = new URLSearchParams({
+        limit:   String(PAGE_SIZE),
+        offset:  String(offset),
+        shuffle: 'false',
+      });
+      if (currentFilter !== 'all') params.set('tag', currentFilter);
+
+      const skel      = skelEl();
+      const empty     = emptyEl();
+      const loadMore  = loadMoreWrap();
+
+      if (reset) {
+        skel?.removeAttribute('hidden');
+        empty?.setAttribute('hidden', '');
+        loadMore?.setAttribute('hidden', '');
+        gridEl.querySelectorAll('.grid-row').forEach(r => r.remove());
+      }
+
+      try {
+        const res = await fetch(`/api/v1/gallery/feed?${params}`);
+        if (!res.ok) throw new Error('API error');
+        const payload = await res.json();
+        const raw: any[]    = Array.isArray(payload.photos) ? payload.photos : [];
+        const total: number = payload.total ?? raw.length;
+
+        const photos = raw.map((p: any) => ({
+          id:                   p.uuid,
+          title:                p.title ?? '',
+          photographer:         p.photographer?.name ?? '',
+          photographerUsername: p.photographer?.username ?? '',
+          imageUrl:             p.urls?.medium ?? p.urls?.original ?? '',
+          aspect:               (p.width_px && p.height_px) ? p.width_px / p.height_px : 1.5,
+        }));
+
+        skel?.setAttribute('hidden', '');
+
+        if (photos.length === 0 && allPhotos.length === 0 && photoBuffer.length === 0) {
+          empty?.removeAttribute('hidden');
+          return;
+        }
+
+        renderGrid(photos, !reset);
+
+        const hasMore = (allPhotos.length + photoBuffer.length) < total;
+        if (hasMore) loadMore?.removeAttribute('hidden');
+        else         loadMore?.setAttribute('hidden', '');
+
+        if (reset && total > 0) {
+          gridEl.dispatchEvent(new CustomEvent('bcc:grid-loaded', { detail: { total }, bubbles: true }));
+        }
+
+      } catch {
+        skel?.setAttribute('hidden', '');
+        if (allPhotos.length === 0 && photoBuffer.length === 0) empty?.removeAttribute('hidden');
+      }
+    }
+
+    /* ── Load-more button ── */
+    document.getElementById(`${baseId}-load-more-btn`)?.addEventListener('click', () => fetchPhotos(false));
+
+    /* ── Filter changes from host page (filter mode only — when no apiTag) ── */
+    if (!apiTag) {
+      gridEl.addEventListener('bcc:set-filter', (e: Event) => {
+        currentFilter = (e as CustomEvent).detail?.tag ?? 'all';
+        fetchPhotos(true);
+      });
+    }
+
+    /* ── Resize: recompute justified rows ── */
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (allPhotos.length > 0) {
+          const fullSet = [...allPhotos, ...photoBuffer];
+          renderGrid(fullSet, false);
+        }
+      }, 200);
+    });
+
+    /* ── Initial fetch ── */
+    fetchPhotos(true);
+  });
+</script>

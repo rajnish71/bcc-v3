@@ -17,6 +17,7 @@
 // this pass (RegistrationService + RbacGuard/RbacService).
 
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   GoneException,
@@ -49,6 +50,8 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 import { EmailService } from '../../shared/communication/email.service';
 import { CommunicationService } from '../../shared/communication/communication.service';
+import { normalize, validate } from '../../shared/phone.util';
+import { findUserByPhone } from '../../shared/phone-lookup.util';
 
 const EMAIL_VERIFICATION_TTL_HOURS = 24;
 const OTP_TTL_MINUTES = 5;
@@ -185,11 +188,12 @@ export class RegistrationService {
   async requestPhoneOtp(dto: RequestPhoneOtpDto): Promise<{ message: string }> {
     this.assertPhoneOtpEnabled();
 
-    const existing = await db
-      .selectFrom('users')
-      .select('id')
-      .where('phone', '=', dto.phone)
-      .executeTakeFirst();
+    const canonical = normalize(dto.phone);
+    if (!validate(canonical)) {
+      throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+    }
+
+    const existing = await findUserByPhone(canonical);
     if (existing) {
       throw new ConflictException('An account with this phone number already exists');
     }
@@ -202,14 +206,15 @@ export class RegistrationService {
       .insertInto('otp_codes')
       .values({
         user_id: null,
-        phone: dto.phone,
+        phone: canonical,
         code_hash: codeHash,
         purpose: 'REGISTRATION',
         expires_at: toMysqlDatetime(expiresAt),
       })
       .execute();
 
-    console.log(`[otp] would send to ${dto.phone}: code=${code}`);
+    // When a real OTP provider is wired, pass toE164(canonical) as the destination.
+    console.log(`[otp] would send to ${canonical}: code=${code}`);
     return { message: 'OTP sent' };
   }
 
@@ -219,10 +224,18 @@ export class RegistrationService {
   ): Promise<{ user: PublicUser; tokens: TokenPair }> {
     this.assertPhoneOtpEnabled();
 
+    const canonical = normalize(dto.phone);
+    if (!validate(canonical)) {
+      throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+    }
+
+    // OTP records are stored with the canonical phone (written by requestPhoneOtp
+    // which normalizes before inserting). Simple canonical lookup is correct here —
+    // OTPs expire in 5 minutes, so no legacy-format OTP records can exist.
     const row = await db
       .selectFrom('otp_codes')
       .selectAll()
-      .where('phone', '=', dto.phone)
+      .where('phone', '=', canonical)
       .where('purpose', '=', 'REGISTRATION')
       .where('consumed_at', 'is', null)
       .orderBy('created_at', 'desc')
@@ -244,11 +257,7 @@ export class RegistrationService {
       throw new UnauthorizedException('Incorrect OTP');
     }
 
-    const existingUser = await db
-      .selectFrom('users')
-      .select('id')
-      .where('phone', '=', dto.phone)
-      .executeTakeFirst();
+    const existingUser = await findUserByPhone(canonical);
     if (existingUser) {
       throw new ConflictException('An account with this phone number already exists');
     }
@@ -261,7 +270,7 @@ export class RegistrationService {
 
     const { id, uuid } = await this.createBaselineUser({
       email: null,
-      phone: dto.phone,
+      phone: canonical,
       fullName: dto.fullName,
       passwordHash: null,
       registrationMethod: 'PHONE_OTP',
@@ -476,12 +485,13 @@ export class RegistrationService {
       .executeTakeFirst();
     if (existingEmail) throw new ConflictException('An account with this email already exists');
 
+    let canonicalPhone: string | null = null;
     if (dto.phone) {
-      const existingPhone = await db
-        .selectFrom('users')
-        .select('id')
-        .where('phone', '=', dto.phone)
-        .executeTakeFirst();
+      canonicalPhone = normalize(dto.phone);
+      if (!validate(canonicalPhone)) {
+        throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+      }
+      const existingPhone = await findUserByPhone(canonicalPhone);
       if (existingPhone) throw new ConflictException('An account with this phone number already exists');
     }
 
@@ -496,7 +506,7 @@ export class RegistrationService {
 
     const { id } = await this.createBaselineUser({
       email: dto.email,
-      phone: dto.phone ?? null,
+      phone: canonicalPhone,
       fullName: dto.fullName,
       passwordHash,
       registrationMethod: 'ADMIN_CREATED',
@@ -570,12 +580,13 @@ export class RegistrationService {
       .executeTakeFirst();
     if (existingUser) throw new ConflictException('An account with this email already exists');
 
+    let canonicalPhone: string | null = null;
     if (dto.phone) {
-      const existingPhone = await db
-        .selectFrom('users')
-        .select('id')
-        .where('phone', '=', dto.phone)
-        .executeTakeFirst();
+      canonicalPhone = normalize(dto.phone);
+      if (!validate(canonicalPhone)) {
+        throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+      }
+      const existingPhone = await findUserByPhone(canonicalPhone);
       if (existingPhone) throw new ConflictException('An account with this phone number already exists');
     }
 
@@ -588,7 +599,7 @@ export class RegistrationService {
     const passwordHash = await argon2.hash(dto.password);
     const { id, uuid } = await this.createBaselineUser({
       email: row.email,
-      phone: dto.phone ?? null,
+      phone: canonicalPhone,
       fullName: dto.fullName,
       passwordHash,
       registrationMethod: 'INVITATION',
@@ -682,7 +693,7 @@ export class RegistrationService {
       id: row.id,
       uuid: row.uuid,
       email: row.email,
-      phone: row.phone,
+      phone: row.phone ? normalize(row.phone) : null,
       fullName: row.full_name,
       status: row.status,
       registrationMethod: row.registration_method as RegistrationMethod,

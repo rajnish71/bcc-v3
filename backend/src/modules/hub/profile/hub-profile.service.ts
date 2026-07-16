@@ -1,6 +1,7 @@
 import {
   Injectable,
   BadRequestException,
+  ConflictException,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
@@ -11,6 +12,8 @@ import type { UpdateProfileDto } from './dto/update-profile.dto';
 import type { UpdateSocialDto } from './dto/update-social.dto';
 import type { UpdateGearDto } from './dto/update-gear.dto';
 import type { UpdateDistinctionsDto } from './dto/update-distinctions.dto';
+import { normalize, validate } from '../../shared/phone.util';
+import { findUserByPhone } from '../../shared/phone-lookup.util';
 
 // Fields that must never be modified via the profile PUT endpoint
 const PROTECTED_FIELDS = new Set([
@@ -191,7 +194,10 @@ export class HubProfileService {
       middleName: user.middle_name,
       lastName: user.last_name,
       email: user.email,
-      phone: user.phone,
+      // Normalize legacy-format phones (+91 prefix, 0 prefix) to canonical
+      // 10-digit form during the migration window before migration 0074 runs.
+      // After 0074, all stored values are already canonical and this is a no-op.
+      phone: user.phone ? normalize(user.phone) : null,
       gender: user.gender,
       dateOfBirth: user.date_of_birth,
 
@@ -268,7 +274,21 @@ export class HubProfileService {
   async updateProfile(userId: number, dto: UpdateProfileDto) {
     const updateData: Record<string, unknown> = {};
 
-    if (dto.phone !== undefined) updateData.phone = dto.phone ?? null;
+    if (dto.phone !== undefined) {
+      // Normalize even though UpdateProfileDto already enforces ^[6-9]\d{9}$,
+      // to ensure canonical form regardless of how the service is called.
+      const canonical = normalize(dto.phone);
+      if (!validate(canonical)) {
+        throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+      }
+      // Explicit duplicate check — excludes the current user so a member can
+      // re-save their own phone without triggering a false conflict.
+      const conflict = await findUserByPhone(canonical, userId);
+      if (conflict) {
+        throw new ConflictException('This phone number is already registered to another account');
+      }
+      updateData.phone = canonical;
+    }
     if (dto.gender !== undefined) updateData.gender = dto.gender ?? null;
     if (dto.dateOfBirth !== undefined) updateData.date_of_birth = dto.dateOfBirth ? new Date(dto.dateOfBirth).toISOString().split('T')[0] : null;
 

@@ -11,8 +11,8 @@ const CAMERA_SYSTEMS = ['Nikon', 'Canon', 'Sony', 'Fujifilm', 'OM System', 'Othe
 const GALLERY_LAYOUTS = ['justified', 'masonry', 'editorial', 'modular', 'metro', 'magazine'] as const;
 
 export class UpdateProfileDto {
-  // Phone (10 digits only — +91 prefix is fixed)
-  @IsOptional() @IsString() @Matches(/^\d{10}$/) phone?: string;
+  // Phone (10 digits, must start with 6–9 — +91 prefix is added by the platform)
+  @IsOptional() @IsString() @Matches(/^[6-9]\d{9}$/) phone?: string;
 
   @IsOptional() @IsString() @IsIn(GENDERS) gender?: string;
 

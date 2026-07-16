@@ -12,6 +12,7 @@
 //   MEM-007: No BCCTemp number assigned here.
 
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -21,6 +22,8 @@ import { randomUUID } from 'crypto';
 import { db } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import type { SubmitMembershipFormDto } from '../dto/submit-membership-form.dto';
+import { normalize, validate } from '../../shared/phone.util';
+import { findUserByPhone } from '../../shared/phone-lookup.util';
 
 const BASIC_MEMBER_CODE = 'BASIC_MEMBER';
 
@@ -92,7 +95,7 @@ export class HubMembershipService {
     return {
       fullName: user.full_name,
       email: user.email,
-      phone: user.phone ?? null,
+      phone: user.phone ? normalize(user.phone) : null,
       city: user.city ?? null,
       state: user.state ?? null,
       addressLine1: user.address_line1 ?? null,
@@ -122,6 +125,16 @@ export class HubMembershipService {
       );
     }
 
+    const canonical = normalize(dto.phone);
+    if (!validate(canonical)) {
+      throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+    }
+    // Exclude the current user — they may already have this phone on their account.
+    const phoneConflict = await findUserByPhone(canonical, userId);
+    if (phoneConflict) {
+      throw new ConflictException('This phone number is already registered to another account');
+    }
+
     const classId = await this.getBasicMemberClassId();
     const membershipUuid = randomUUID();
     const now = toMysqlDatetime(new Date());
@@ -145,7 +158,7 @@ export class HubMembershipService {
       await trx
         .updateTable('users')
         .set({
-          phone: dto.phone,
+          phone: canonical,
           city: dto.city,
           state: dto.state,
           address_line1: dto.addressLine1,
@@ -213,7 +226,7 @@ export class HubMembershipService {
     return {
       fullName: user.full_name,
       email: user.email,
-      phone: user.phone ?? null,
+      phone: user.phone ? normalize(user.phone) : null,
       city: user.city ?? null,
       state: user.state ?? null,
       addressLine1: user.address_line1 ?? null,
@@ -261,6 +274,15 @@ export class HubMembershipService {
       throw new ConflictException('You already have a pending renewal application');
     }
 
+    const canonical = normalize(dto.phone);
+    if (!validate(canonical)) {
+      throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+    }
+    const phoneConflict = await findUserByPhone(canonical, userId);
+    if (phoneConflict) {
+      throw new ConflictException('This phone number is already registered to another account');
+    }
+
     const classId = await this.getBasicMemberClassId();
     const membershipUuid = randomUUID();
     const now = toMysqlDatetime(new Date());
@@ -284,7 +306,7 @@ export class HubMembershipService {
       await trx
         .updateTable('users')
         .set({
-          phone: dto.phone,
+          phone: canonical,
           city: dto.city,
           state: dto.state,
           address_line1: dto.addressLine1,

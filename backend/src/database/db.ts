@@ -796,7 +796,7 @@ export interface PhotoAlbumGenresTable {
   tag_id:   number;
 }
 
-export type TagCategory = 'GENRE' | 'SUBJECT' | 'LOCATION' | 'EQUIPMENT' | 'CUSTOM';
+export type TagCategory = 'GENRE' | 'SUBJECT' | 'LOCATION' | 'EQUIPMENT' | 'CUSTOM' | 'PROJECT';
 
 export interface PhotoTagsTable {
   id:           Generated<number>;

@@ -200,8 +200,13 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     <div class="insp-exif" id="insp-exif" hidden></div>
 
     <div class="insp-field">
-      <div class="insp-label">Categories</div>
-      <div class="insp-cat-pills" id="insp-categories" role="group" aria-label="Categories"></div>
+      <div class="insp-label">Genres</div>
+      <div class="insp-cat-pills" id="insp-genres" role="group" aria-label="Genres"></div>
+    </div>
+
+    <div class="insp-field">
+      <div class="insp-label">Projects</div>
+      <div class="insp-cat-pills" id="insp-projects" role="group" aria-label="Projects"></div>
     </div>
 
     <div class="insp-field">
@@ -899,7 +904,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .cform-textarea { resize: vertical; }
 .cform-error { font-size: 12px; color: #882828; margin-bottom: 10px; }
 
-/* Inspector category pills — runtime-created, must use :global() (CLAUDE.md §4.4) */
+/* Inspector Genres and Projects pills — runtime-created, must use :global() (CLAUDE.md §4.4) */
 .insp-cat-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 :global(.insp-cat-pill) {
   font-size: 11px; font-weight: 600; color: #57514B; background: #fff;
@@ -1322,57 +1327,110 @@ document.getElementById('insp-next-btn')?.addEventListener('click', () => {
 document.getElementById('insp-close-btn')?.addEventListener('click', closeInspector);
 document.getElementById('insp-scrim')?.addEventListener('click', closeInspector);
 
-/* ── Inspector categories (item 71) — per-photo GENRE tags ───────────────── */
-let inspGenreTags: Array<{ id: number; tag_key: string; display_name: string }> | null = null;
+/* ── Inspector categories (item 71) — per-photo Genres and Projects ─────── */
+type TagRow = { id: number; tag_key: string; display_name: string };
+let inspGenreTags:   TagRow[] | null = null;
+let inspProjectTags: TagRow[] | null = null;
 let inspOriginalTagIds = new Set<number>();
 let inspWorkingTagIds  = new Set<number>();
 
-async function ensureInspGenreTags() {
+const INSP_PROJECT_GENRE_SUGGESTIONS: Record<string, string[]> = {
+  'birds-of-bhopal':       ['bird'],
+  'butterflies-of-bhopal': ['butterflies', 'macro'],
+  'wildlife-of-bhopal':    ['wildlife'],
+  'heritage-of-bhopal':    ['architecture', 'monuments'],
+};
+
+async function ensureInspGenreTags(): Promise<TagRow[]> {
   if (inspGenreTags) return inspGenreTags;
   try {
     const res = await apiFetch(`${API}/gallery/tags?category=GENRE`);
     if (res.ok) {
-      const tags = await res.json() as Array<{ id: number; tag_key: string; display_name: string }>;
+      const tags = await res.json() as TagRow[];
       inspGenreTags = tags.sort((a, b) => a.display_name.localeCompare(b.display_name));
     }
   } catch { /* non-critical */ }
   return inspGenreTags ?? [];
 }
 
-async function renderInspectorCategories(uuid: string) {
-  const wrap = document.getElementById('insp-categories');
-  if (!wrap) return;
-  const tags = await ensureInspGenreTags();
+async function ensureInspProjectTags(): Promise<TagRow[]> {
+  if (inspProjectTags) return inspProjectTags;
+  try {
+    const res = await apiFetch(`${API}/gallery/tags?category=PROJECT`);
+    if (res.ok) {
+      const tags = await res.json() as TagRow[];
+      inspProjectTags = tags.sort((a, b) => a.display_name.localeCompare(b.display_name));
+    }
+  } catch { /* non-critical */ }
+  return inspProjectTags ?? [];
+}
 
-  // Load this photo's current GENRE tags → the baseline for diffing on save.
+function applyInspSuggestions(projectTagKey: string): void {
+  const suggestions = INSP_PROJECT_GENRE_SUGGESTIONS[projectTagKey] ?? [];
+  if (!suggestions.length || !inspGenreTags) return;
+  const genreWrap = document.getElementById('insp-genres');
+  if (!genreWrap) return;
+  suggestions.forEach(genreKey => {
+    const tag = inspGenreTags!.find(t => t.tag_key === genreKey);
+    if (!tag) return;
+    if (!inspWorkingTagIds.has(tag.id)) {
+      inspWorkingTagIds.add(tag.id);
+      const pill = genreWrap.querySelector<HTMLElement>(`[data-tag-id="${tag.id}"]`);
+      if (pill) { pill.classList.add('is-on'); pill.setAttribute('aria-pressed', 'true'); }
+    }
+  });
+}
+
+async function renderInspectorCategories(uuid: string) {
+  const genreWrap   = document.getElementById('insp-genres');
+  const projectWrap = document.getElementById('insp-projects');
+  if (!genreWrap || !projectWrap) return;
+
+  const [genres, projects] = await Promise.all([
+    ensureInspGenreTags(),
+    ensureInspProjectTags(),
+  ]);
+
+  // Load all this photo's current tag IDs — baseline for diffing on save.
   inspOriginalTagIds = new Set();
   try {
     const r = await apiFetch(`${API}/gallery/photos/${uuid}/tags`);
     if (r.ok) {
-      const cur = await r.json() as Array<{ id: number; category: string }>;
-      cur.forEach(t => { if (t.category === 'GENRE') inspOriginalTagIds.add(Number(t.id)); });
+      const cur = await r.json() as Array<{ id: number }>;
+      cur.forEach(t => inspOriginalTagIds.add(Number(t.id)));
     }
   } catch { /* non-critical */ }
   inspWorkingTagIds = new Set(inspOriginalTagIds);
 
-  wrap.innerHTML = '';
-  tags.forEach(t => {
+  function makePill(t: TagRow, isProject = false): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'insp-cat-pill';
     btn.textContent = t.display_name;
+    btn.dataset.tagId = String(t.id);
     const on = inspWorkingTagIds.has(t.id);
     btn.classList.toggle('is-on', on);
     btn.setAttribute('aria-pressed', String(on));
     btn.addEventListener('click', () => {
-      if (inspWorkingTagIds.has(t.id)) inspWorkingTagIds.delete(t.id);
-      else inspWorkingTagIds.add(t.id);
+      const wasOn = inspWorkingTagIds.has(t.id);
+      if (wasOn) {
+        inspWorkingTagIds.delete(t.id);
+      } else {
+        inspWorkingTagIds.add(t.id);
+        if (isProject) applyInspSuggestions(t.tag_key);
+      }
       const active = inspWorkingTagIds.has(t.id);
       btn.classList.toggle('is-on', active);
       btn.setAttribute('aria-pressed', String(active));
     });
-    wrap.appendChild(btn);
-  });
+    return btn;
+  }
+
+  genreWrap.innerHTML = '';
+  genres.forEach(t => genreWrap.appendChild(makePill(t, false)));
+
+  projectWrap.innerHTML = '';
+  projects.forEach(t => projectWrap.appendChild(makePill(t, true)));
 }
 
 // Persist category changes for the current photo (POST added, DELETE removed).

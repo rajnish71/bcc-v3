@@ -397,6 +397,14 @@ bcc.bhopal.info
 
 ✅ **COMPLETE** — bcc.bhopal.info is the canonical production domain.
 
+- ✅ **COMPLETE** — Pre-Production Maintenance Toolkit implemented under `scripts/tools/maintenance/`. Enables safe, transactional deletion of test and terminated users.
+  - `inspect-user` utility: Dynamical dependency collection, custom plans, safety warnings, and JSON reporting mode.
+  - `delete-test-user` utility: Real deletions using sequential handler executions, interactive confirmation validation, transaction lifecycle timing, and post-deletion integrity verifications.
+  - Handler-based architecture: Encapsulates domain logic in 6 pluggable handlers (`auth`, `membership`, `notification`, `profile`, `photo`, `event`).
+  - FK validation: Runtime validation against `INFORMATION_SCHEMA` covering all 51 active foreign keys.
+  - Dry-run verification: 100% read-only simulations of deletions without starting transaction blocks or altering triggers.
+  - Trigger preservation: Preservation of database trigger `trg_prevent_numbered_membership_delete` with byte-for-byte SHA256 checksum validation.
+
 Soft Launch Activities
 
 - Internal testing

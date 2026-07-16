@@ -1,0 +1,85 @@
+import { IMAGES } from './images';
+import type { Activity } from '../../types/activity';
+
+export const FEATURED_ACTIVITIES: Activity[] = [
+  {
+    id: 'feat_act_01',
+    slug: 'pachmarhi-photography-expedition',
+    isSeedData: true,
+    title: 'Pachmarhi Photography Expedition',
+    summary: 'A weekend expedition documenting valleys, waterfalls, colonial bungalows, and sunset views at Dhoopgarh.',
+    venue: 'Pachmarhi Biosphere Reserve',
+    city: 'Pachmarhi',
+    startDate: '2026-09-11',
+    duration: '3 Days',
+    coverImage: IMAGES.FEATURED_EXPEDITION,
+    category: 'Expedition',
+    difficulty: 'Hard',
+    visibility: 'Members Only',
+    registrationRequired: true
+  },
+  {
+    id: 'feat_act_02',
+    slug: 'butterfly-documentation-project',
+    isSeedData: true,
+    title: 'Butterfly Documentation Project',
+    summary: 'A systematic field survey documenting regional butterflies and host plants across forest patches.',
+    venue: 'Laharpur Ecological Park',
+    city: 'Bhopal',
+    startDate: '2026-08-08',
+    duration: '6 hours',
+    coverImage: IMAGES.FEATURED_BUTTERFLY,
+    category: 'Documentation',
+    difficulty: 'Medium',
+    visibility: 'Public',
+    registrationRequired: true
+  },
+  {
+    id: 'feat_act_03',
+    slug: 'van-vihar-bird-census',
+    isSeedData: true,
+    title: 'Van Vihar Bird Census',
+    summary: 'Participate in the annual avian population documentation project organized by the Forest Department.',
+    venue: 'Van Vihar National Park Gate 1',
+    city: 'Bhopal',
+    startDate: '2026-11-15',
+    duration: 'Half Day',
+    coverImage: IMAGES.FEATURED_CENSUS,
+    category: 'Documentation',
+    difficulty: 'Medium',
+    visibility: 'Members Only',
+    registrationRequired: true
+  },
+  {
+    id: 'feat_act_04',
+    slug: 'upper-lake-sunrise-session',
+    isSeedData: true,
+    title: 'Upper Lake Sunrise Session',
+    summary: 'Capture the mist rising over the lake, silhouettes of fishermen, and soft light transitions.',
+    venue: 'Boat Club Ghat',
+    city: 'Bhopal',
+    startDate: '2026-08-15',
+    duration: '2 hours',
+    coverImage: IMAGES.FEATURED_SUNRISE,
+    category: 'Landscape',
+    difficulty: 'Easy',
+    visibility: 'Public',
+    registrationRequired: false
+  },
+  {
+    id: 'feat_act_05',
+    slug: 'night-photography-walk',
+    isSeedData: true,
+    title: 'Night Photography Walk',
+    summary: 'Learn camera settings for capturing low-light city streets, traffic trails, and illuminated landmarks.',
+    venue: 'Bhopal Junction Railway Station Area',
+    city: 'Bhopal',
+    startDate: '2026-08-29',
+    duration: '3 hours',
+    coverImage: IMAGES.FEATURED_NIGHT,
+    category: 'Street',
+    difficulty: 'Medium',
+    visibility: 'Members Only',
+    registrationRequired: true
+  }
+];

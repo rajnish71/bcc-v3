@@ -7,6 +7,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeader from '../components/ui/SectionHeader.astro';
+import { getUpcomingActivities, getPastActivities } from '../lib/services/activity.service';
 
 const TYPES = [
   { value: 'all',         label: 'All' },
@@ -15,6 +16,10 @@ const TYPES = [
   { value: 'exhibition',  label: 'Exhibitions' },
   { value: 'meetup',      label: 'Meetups' },
 ];
+
+// Fetch activities through the Service Layer contract
+const upcomingActivities = await getUpcomingActivities();
+const pastActivities = await getPastActivities();
 ---
 
 <BaseLayout
@@ -144,86 +149,113 @@ const TYPES = [
 }
 </style>
 
-<script>
-  const TAG_CLASSES: Record<string, string> = {
+<script define:vars={{ upcomingActivities, pastActivities }}>
+  const TAG_CLASSES = {
     photowalk:  'tag tag-photowalk',
     workshop:   'tag tag-workshop',
     exhibition: 'tag tag-exhibition',
   };
 
   let currentType = 'all';
-  let pastCursor: string | null = null;
 
-  function formatDate(dateStr: string) {
+  function formatDate(dateStr) {
     const d = new Date(dateStr);
-    return { day: d.getDate().toString().padStart(2,'0'), month: d.toLocaleString('en-IN', { month: 'short' }).toUpperCase() };
+    return { 
+      day: d.getDate().toString().padStart(2, '0'), 
+      month: d.toLocaleString('en-IN', { month: 'short' }).toUpperCase() 
+    };
   }
 
-  function createRow(ev: any) {
+  function createRow(ev) {
     const a = document.createElement('a');
     a.href = `/activities/${ev.slug ?? ev.id}/`;
     a.className = 'act-row';
-    const { day, month } = ev.date ? formatDate(ev.date) : { day: '—', month: '—' };
-    const tc = TAG_CLASSES[ev.type?.toLowerCase()] ?? '';
+    const { day, month } = ev.startDate ? formatDate(ev.startDate) : { day: '—', month: '—' };
+    const tc = TAG_CLASSES[ev.category?.toLowerCase()] ?? '';
     a.innerHTML = `
       <div class="act-date"><div class="act-date__day">${day}</div><div class="act-date__month">${month}</div></div>
-      <div class="act-thumb">${ev.imageUrl ? `<img src="${ev.imageUrl}" alt="" loading="lazy" width="64" height="42" />` : ''}</div>
-      <div><div class="act-title">${ev.title ?? ''}</div><div class="act-meta">${[ev.time, ev.location].filter(Boolean).join(' · ')}</div></div>
+      <div class="act-thumb">${ev.coverImage ? `<img src="${ev.coverImage}" alt="" loading="lazy" width="64" height="42" />` : ''}</div>
+      <div><div class="act-title">${ev.title ?? ''}</div><div class="act-meta">${[ev.duration, ev.venue].filter(Boolean).join(' · ')}</div></div>
       <div class="act-action">Details →</div>
     `;
     return a;
   }
 
-  async function loadUpcoming() {
-    const list = document.getElementById('upcoming-list')!;
-    const params = new URLSearchParams({ upcoming: 'true', limit: '10' });
-    if (currentType !== 'all') params.set('type', currentType);
-    try {
-      const res = await fetch(`/api/v1/events?${params}`);
-      if (!res.ok) return;
-      const { data } = await res.json();
-      const events = Array.isArray(data) ? data : [];
+  function loadUpcoming() {
+    const list = document.getElementById('upcoming-list');
+    if (!list) return;
+    
+    let filtered = upcomingActivities;
+    if (currentType !== 'all') {
+      filtered = upcomingActivities.filter(ev => {
+        const cat = ev.category.toLowerCase();
+        if (currentType === 'photowalk') {
+          return cat.includes('walk') || cat.includes('birding') || cat.includes('street') || cat.includes('nature') || cat.includes('landscape');
+        }
+        return cat.includes(currentType);
+      });
+    }
+    
+    list.innerHTML = '';
+    if (!filtered.length) {
+      list.innerHTML = `<p style="padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);">No upcoming activities right now. Check back soon!</p>`;
+      return;
+    }
+    filtered.forEach(ev => list.appendChild(createRow(ev)));
+  }
+
+  function loadPast(reset = true) {
+    const list = document.getElementById('past-list');
+    const loadWrap = document.getElementById('load-more-wrap');
+    if (!list) return;
+    
+    if (reset) {
       list.innerHTML = '';
-      if (!events.length) { list.innerHTML = `<p style="padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);">No upcoming activities right now. Check back soon!</p>`; return; }
-      events.forEach((ev: any) => list.appendChild(createRow(ev)));
-    } catch { list.innerHTML = ''; }
+    }
+    
+    let filtered = pastActivities;
+    if (currentType !== 'all') {
+      filtered = pastActivities.filter(ev => {
+        const cat = ev.category.toLowerCase();
+        if (currentType === 'photowalk') {
+          return cat.includes('walk') || cat.includes('birding') || cat.includes('street') || cat.includes('nature') || cat.includes('landscape');
+        }
+        return cat.includes(currentType);
+      });
+    }
+    
+    list.innerHTML = '';
+    if (!filtered.length) {
+      list.innerHTML = `<p style="padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);">No past activities match this filter.</p>`;
+      if (loadWrap) loadWrap.setAttribute('hidden', '');
+      return;
+    }
+    filtered.forEach(ev => list.appendChild(createRow(ev)));
+    if (loadWrap) loadWrap.setAttribute('hidden', '');
   }
 
-  async function loadPast(reset = true) {
-    const list    = document.getElementById('past-list')!;
-    const loadWrap = document.getElementById('load-more-wrap')!;
-    if (reset) { list.innerHTML = ''; pastCursor = null; }
-    const params = new URLSearchParams({ past: 'true', limit: '10' });
-    if (currentType !== 'all') params.set('type', currentType);
-    if (pastCursor) params.set('cursor', pastCursor);
-    try {
-      const res = await fetch(`/api/v1/events?${params}`);
-      if (!res.ok) return;
-      const { data, meta } = await res.json();
-      (Array.isArray(data) ? data : []).forEach((ev: any) => list.appendChild(createRow(ev)));
-      pastCursor = meta?.next_cursor ?? null;
-      if (pastCursor) loadWrap.removeAttribute('hidden');
-      else            loadWrap.setAttribute('hidden', '');
-    } catch { /* silent */ }
-  }
-
-  document.querySelectorAll<HTMLButtonElement>('.chip').forEach(btn => {
+  document.querySelectorAll('.chip').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-      btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
+      document.querySelectorAll('.chip').forEach(b => { 
+        b.classList.remove('active'); 
+        b.setAttribute('aria-pressed', 'false'); 
+      });
+      btn.classList.add('active'); 
+      btn.setAttribute('aria-pressed', 'true');
       currentType = btn.dataset.type ?? 'all';
-      loadUpcoming(); loadPast(true);
+      loadUpcoming(); 
+      loadPast(true);
     });
   });
 
-  document.getElementById('load-more-btn')?.addEventListener('click', () => loadPast(false));
   document.getElementById('clear-filter')?.addEventListener('click', () => {
     currentType = 'all';
     document.querySelectorAll('.chip').forEach(b => {
       b.classList.toggle('active', b.dataset.type === 'all');
       b.setAttribute('aria-pressed', b.dataset.type === 'all' ? 'true' : 'false');
     });
-    loadUpcoming(); loadPast(true);
+    loadUpcoming(); 
+    loadPast(true);
   });
 
   loadUpcoming();

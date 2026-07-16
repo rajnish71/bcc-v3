@@ -1,4 +1,4 @@
-﻿---
+---
 /**
  * index.astro — Home Page
  * Hierarchy per BCC_V3_Design_System.md §14 (frozen):
@@ -17,14 +17,34 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeader from '../components/ui/SectionHeader.astro';
+import { getUpcomingActivities, getFeaturedActivities } from '../lib/services/activity.service';
 
-const featuredActivity = {
-  enabled: false, // Set to true to enable featured activity block
-  title: "Monsoon Frames 2026",
-  description: "Bhopal Camera Club's annual monsoon exhibition showcase, presenting selected prints from members at Bharat Bhavan.",
-  meta: "20 Jul 2026 · 11:00 AM · Bharat Bhavan, Bhopal",
-  registerUrl: "/activities/monsoon-reflections-exhibition/",
-  learnMoreUrl: "/activities/monsoon-reflections-exhibition/"
+const upcomingEvents = (await getUpcomingActivities()).slice(0, 3);
+const featuredActs = await getFeaturedActivities();
+const featuredAct = featuredActs[0];
+
+const formatMetaDate = (dateStr: string) => {
+  const d = new Date(dateStr);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = d.toLocaleString('en-IN', { month: 'short' });
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
+};
+
+const featuredActivity = featuredAct ? {
+  enabled: true,
+  title: featuredAct.title,
+  description: featuredAct.summary,
+  meta: `${formatMetaDate(featuredAct.startDate)} · ${featuredAct.duration} · ${featuredAct.venue}, ${featuredAct.city}`,
+  registerUrl: `/activities/${featuredAct.slug ?? featuredAct.id}/`,
+  learnMoreUrl: `/activities/${featuredAct.slug ?? featuredAct.id}/`
+} : {
+  enabled: false,
+  title: "",
+  description: "",
+  meta: "",
+  registerUrl: "",
+  learnMoreUrl: ""
 };
 
 const activeContest = {
@@ -281,19 +301,66 @@ const activeContest = {
       </div>
 
       <div class="events-list" id="events-list" aria-label="Upcoming events list">
-        <!-- Skeleton rows matching new layout exactly -->
-        {[1,2,3].map(() => (
-          <div class="event-row-skel" style="display:grid;grid-template-columns:80px 188px 1fr auto;align-items:center;gap:28px;padding:22px 32px;border-bottom:1px solid #F0EBE0;background:#FFFFFF;">
-            <div class="skel" style="width:50px;height:50px;margin:0 auto;background:#F0EBE0;border-radius:0;"></div>
-            <div class="skel" style="width:188px;height:112px;background:#F0EBE0;border-radius:0;"></div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
-              <div class="skel" style="width:30%;height:9px;background:#F0EBE0;border-radius:0;"></div>
-              <div class="skel" style="width:70%;height:14px;background:#F0EBE0;border-radius:0;"></div>
-              <div class="skel" style="width:45%;height:9px;background:#F0EBE0;border-radius:0;"></div>
-            </div>
-            <div class="skel" style="width:100px;height:36px;background:#F0EBE0;border-radius:0;"></div>
-          </div>
-        ))}
+        {upcomingEvents.map((ev) => {
+          const d = new Date(ev.startDate);
+          const day = d.getDate().toString().padStart(2, '0');
+          const month = d.toLocaleString('en-IN', { month: 'short' }).toUpperCase();
+          const year = d.getFullYear();
+          const monthText = `${month} ${year}`;
+          const time = '07:30 AM'; // default time for mornings in seed records
+
+          let tagClass = 'tag-default';
+          let typeLabel = ev.category;
+          let sA = '#0D1520', sB = '#1A2840';
+          const catNorm = ev.category.toLowerCase();
+          if (catNorm.includes('walk')) {
+            typeLabel = 'Photowalk';
+            tagClass = 'tag-photowalk';
+            sA = '#0C1E30'; sB = '#1B3F5A';
+          } else if (catNorm.includes('workshop')) {
+            typeLabel = 'Workshop';
+            tagClass = 'tag-workshop';
+            sA = '#1E1200'; sB = '#3A2400';
+          } else if (catNorm.includes('exhibition')) {
+            typeLabel = 'Exhibition';
+            tagClass = 'tag-exhibition';
+            sA = '#1A0D0D'; sB = '#321515';
+          }
+
+          const isMembersOnly = ev.visibility === 'Members Only';
+          const isFree = !ev.registrationRequired;
+
+          return (
+            <a href={`/activities/${ev.slug ?? ev.id}/`} class="event-row">
+              <div class="event-row__date">
+                <div class="event-row__day">{day}</div>
+                <div class="event-row__month">{monthText}</div>
+              </div>
+              <div class="event-row__thumb">
+                {ev.coverImage ? (
+                  <img class="event-row__thumb-img" src={ev.coverImage} alt={`${typeLabel}: ${ev.title}`} loading="lazy" />
+                ) : (
+                  <div class="event-row__thumb-gradient" style={`background: linear-gradient(160deg, ${sA} 0%, ${sB} 100%);`}></div>
+                )}
+                <div class:list={["event-row__thumb-tag", tagClass]}>{typeLabel}</div>
+              </div>
+              <div class="event-row__info">
+                <div class="event-row__time-row">
+                  <span class="event-row__time">{time}</span>
+                  {isMembersOnly && <span class="event-row__members-badge">MEMBERS ONLY</span>}
+                  {isFree && <span class="event-row__free-badge">FREE</span>}
+                </div>
+                <h4 class="event-row__title">{ev.title}</h4>
+                <div class="event-row__venue">{ev.venue}</div>
+                {ev.summary && <div class="event-row__desc">{ev.summary.slice(0, 90)}{ev.summary.length > 90 ? '…' : ''}</div>}
+              </div>
+              <span class="event-row__btn">Register →</span>
+            </a>
+          );
+        })}
+        {upcomingEvents.length === 0 && (
+          <p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>
+        )}
       </div>
 
     </div>
@@ -2196,91 +2263,7 @@ const activeContest = {
   })();
 
   /* ── 3. Upcoming events ── */
-  (async () => {
-    const list = document.getElementById('events-list');
-    if (!list) return;
-    try {
-      const res = await fetch('/api/v1/events?upcoming=true&limit=3');
-      if (!res.ok) {
-        list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
-        return;
-      }
-      const evRes = await res.json();
-      // Backend returns { items, total } — handle both key names for safety
-      const events = Array.isArray(evRes.data ?? evRes.items) ? (evRes.data ?? evRes.items) : [];
-      if (!events.length) {
-        list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
-        return;
-      }
-
-      list.innerHTML = '';
-      events.forEach((ev: any) => {
-        const d = ev.starts_at ? new Date(ev.starts_at) : null;
-        const day   = d ? d.getDate().toString().padStart(2,'0') : '—';
-        const month = d ? d.toLocaleString('en-IN', { month: 'short' }).toUpperCase() : '—';
-        const year  = d ? d.getFullYear() : '';
-        const monthText = d ? `${month} ${year}` : '—';
-        const time = d ? d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }) : '—';
-
-        const typeNorm = (ev.event_type ?? '').toUpperCase();
-        let typeLabel = 'Event';
-        let tagClass = 'tag-default';
-        let sA = '#0D1520', sB = '#1A2840'; // fallback gradients — deep slate
-        if (typeNorm === 'PHOTOWALK') {
-          typeLabel = 'Photowalk';
-          tagClass = 'tag-photowalk';
-          sA = '#0C1E30'; sB = '#1B3F5A'; // deep lake blue
-        } else if (typeNorm === 'WORKSHOP') {
-          typeLabel = 'Workshop';
-          tagClass = 'tag-workshop';
-          sA = '#1E1200'; sB = '#3A2400'; // warm amber-dark
-        } else if (typeNorm === 'EXHIBITION' || typeNorm === 'EXHIBITION_EVENT') {
-          typeLabel = 'Exhibition';
-          tagClass = 'tag-exhibition';
-          sA = '#1A0D0D'; sB = '#321515'; // deep gallery burgundy
-        } else if (typeNorm === 'COMPETITION' || typeNorm === 'CONTEST') {
-          typeLabel = 'Contest';
-          tagClass = 'tag-default';
-          sA = '#0A1A14'; sB = '#0F2E22'; // forest green
-        }
-
-        const isMembersOnly = ev.eligibility_mode === 'MEMBERS_ONLY';
-
-        const bannerUrl: string | null = (ev as any).banner_url ?? null;
-        const thumbContent = bannerUrl
-          ? `<img class="event-row__thumb-img" src="${bannerUrl}?tr=w-188,h-112,fo-auto" alt="${typeLabel}: ${ev.title ?? ''}" loading="lazy" />`
-          : `<div class="event-row__thumb-gradient" style="background: linear-gradient(160deg, ${sA} 0%, ${sB} 100%);"></div>`;
-
-        const row = document.createElement('a');
-        row.href = `/activities/${ev.slug ?? ev.id}/`;
-        row.className = 'event-row';
-        row.innerHTML = `
-          <div class="event-row__date">
-            <div class="event-row__day">${day}</div>
-            <div class="event-row__month">${monthText}</div>
-          </div>
-          <div class="event-row__thumb">
-            ${thumbContent}
-            <div class="event-row__thumb-tag ${tagClass}">${typeLabel}</div>
-          </div>
-          <div class="event-row__info">
-            <div class="event-row__time-row">
-              <span class="event-row__time">${time}</span>
-              ${isMembersOnly ? `<span class="event-row__members-badge">MEMBERS ONLY</span>` : ''}
-              ${ev.fee_type === 'FREE' ? `<span class="event-row__free-badge">FREE</span>` : ''}
-            </div>
-            <h4 class="event-row__title">${ev.title ?? 'Upcoming Activity'}</h4>
-            <div class="event-row__venue">${ev.location_name ?? 'BCC Venue'}</div>
-            ${ev.description ? `<div class="event-row__desc">${(ev.description as string).slice(0, 90)}${ev.description.length > 90 ? '…' : ''}</div>` : ''}
-          </div>
-          <span class="event-row__btn">Register →</span>
-        `;
-        list.appendChild(row);
-      });
-    } catch {
-      list.innerHTML = `<p style="padding:var(--s-6) 0;color:var(--ink-400);font-size:var(--text-small);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);">No upcoming activities right now. Check back soon!</p>`;
-    }
-  })();
+  // Statically pre-rendered via Astro from ActivityService
 
   /* ── 4. Journal preview ── */
   (async () => {

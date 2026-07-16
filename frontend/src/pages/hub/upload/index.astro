@@ -109,13 +109,24 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
       <div class="insp-field">
         <div class="insp-label-row">
-          <div class="insp-label">Categories</div>
+          <div class="insp-label">Genres</div>
           <span class="insp-optional">select one or more</span>
         </div>
-        <div class="pill-group" id="genre-pills" role="group" aria-label="Categories">
-          <span class="insp-hint" id="genre-pills-loading">Loading categories…</span>
+        <div class="pill-group" id="genre-pills" role="group" aria-label="Genres">
+          <span class="insp-hint" id="genre-pills-loading">Loading…</span>
         </div>
         <p class="insp-hint">Applies to all photographs in this upload — powers category filtering across the gallery.</p>
+      </div>
+
+      <div class="insp-field">
+        <div class="insp-label-row">
+          <div class="insp-label">Projects</div>
+          <span class="insp-optional">select one or more</span>
+        </div>
+        <div class="pill-group" id="project-pills" role="group" aria-label="Projects">
+          <span class="insp-hint" id="project-pills-loading">Loading…</span>
+        </div>
+        <p class="insp-hint">Long-term curated initiatives. Selecting a Project may suggest related Genres.</p>
       </div>
 
       <div class="insp-field">
@@ -319,12 +330,16 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .pill--active{background:#141210;color:#FAF8F4;border-color:#141210}
 .pill--active:hover{background:#2A2826;border-color:#2A2826;color:#FAF8F4}
 .pill--dashed{border-style:dashed;color:#8B8378}
-/* Genre pills are created at runtime (item 71/75) so they never receive Astro's
+/* Genre and Project pills are created at runtime so they never receive Astro's
    scoping attribute — style them via :global or the scoped .pill rules miss. */
 :global(#genre-pills .pill){font-size:12px;font-weight:500;padding:8px 14px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;background:none;cursor:pointer;font-family:var(--font-body);transition:all .15s;white-space:nowrap}
 :global(#genre-pills .pill:hover){border-color:#C9A961;color:#A8843C}
 :global(#genre-pills .pill--active){background:#141210;color:#FAF8F4;border-color:#141210}
 :global(#genre-pills .pill--active:hover){background:#2A2826;border-color:#2A2826;color:#FAF8F4}
+:global(#project-pills .pill){font-size:12px;font-weight:500;padding:8px 14px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;background:none;cursor:pointer;font-family:var(--font-body);transition:all .15s;white-space:nowrap}
+:global(#project-pills .pill:hover){border-color:#C9A961;color:#A8843C}
+:global(#project-pills .pill--active){background:#141210;color:#FAF8F4;border-color:#141210}
+:global(#project-pills .pill--active:hover){background:#2A2826;border-color:#2A2826;color:#FAF8F4}
 
 /* Keywords */
 .keyword-wrap{display:flex;flex-wrap:wrap;gap:6px}
@@ -445,22 +460,42 @@ let categoriesLoaded = false;
 async function loadCategoryPills(): Promise<void> {
   if (categoriesLoaded) return;
   try {
-    const res = await fetch('/api/v1/gallery/tags?category=GENRE');
-    if (!res.ok) return;
-    const tags = await res.json() as Array<{ id: number; tag_key: string; display_name: string }>;
-    const group = qid('genre-pills');
-    group.innerHTML = '';
-    tags
-      .sort((a, b) => a.display_name.localeCompare(b.display_name))
-      .forEach(t => {
-        categoryTagIds[t.tag_key] = t.id;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'pill';
-        btn.dataset.value = t.tag_key;
-        btn.textContent = t.display_name;
-        group.appendChild(btn);
-      });
+    const [genreRes, projectRes] = await Promise.all([
+      fetch('/api/v1/gallery/tags?category=GENRE'),
+      fetch('/api/v1/gallery/tags?category=PROJECT'),
+    ]);
+    if (genreRes.ok) {
+      const tags = await genreRes.json() as Array<{ id: number; tag_key: string; display_name: string }>;
+      const group = qid('genre-pills');
+      group.innerHTML = '';
+      tags
+        .sort((a, b) => a.display_name.localeCompare(b.display_name))
+        .forEach(t => {
+          categoryTagIds[t.tag_key] = t.id;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'pill';
+          btn.dataset.value = t.tag_key;
+          btn.textContent = t.display_name;
+          group.appendChild(btn);
+        });
+    }
+    if (projectRes.ok) {
+      const tags = await projectRes.json() as Array<{ id: number; tag_key: string; display_name: string }>;
+      const group = qid('project-pills');
+      group.innerHTML = '';
+      tags
+        .sort((a, b) => a.display_name.localeCompare(b.display_name))
+        .forEach(t => {
+          categoryTagIds[t.tag_key] = t.id;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'pill';
+          btn.dataset.value = t.tag_key;
+          btn.textContent = t.display_name;
+          group.appendChild(btn);
+        });
+    }
     categoriesLoaded = true;
   } catch { /* non-critical — pills just stay empty */ }
 }
@@ -1278,6 +1313,42 @@ qid('genre-pills').addEventListener('click', e => {
   btn.classList.toggle('pill--active', selectedCategories.has(val));
 });
 
+// Auto-genre suggestions per Project. Only ADDS genres — never removes.
+// Deselecting a Project leaves any previously suggested genres untouched.
+const PROJECT_GENRE_SUGGESTIONS: Record<string, string[]> = {
+  'birds-of-bhopal':       ['bird'],
+  'butterflies-of-bhopal': ['butterflies', 'macro'],
+  'wildlife-of-bhopal':    ['wildlife'],
+  'heritage-of-bhopal':    ['architecture', 'monuments'],
+};
+
+function applySuggestions(projectKey: string): void {
+  const suggestions = PROJECT_GENRE_SUGGESTIONS[projectKey];
+  if (!suggestions) return;
+  const genreGroup = qid('genre-pills');
+  suggestions.forEach(genreKey => {
+    if (!selectedCategories.has(genreKey)) {
+      selectedCategories.add(genreKey);
+      const pill = genreGroup.querySelector<HTMLElement>(`[data-value="${genreKey}"]`);
+      if (pill) pill.classList.add('pill--active');
+    }
+  });
+}
+
+// Project pills — multi-select; activating a project triggers genre suggestions.
+qid('project-pills').addEventListener('click', e => {
+  const btn = (e.target as Element).closest('.pill') as HTMLElement | null;
+  if (!btn || !btn.dataset.value) return;
+  const val = btn.dataset.value;
+  if (selectedCategories.has(val)) {
+    selectedCategories.delete(val);
+  } else {
+    selectedCategories.add(val);
+    applySuggestions(val);
+  }
+  btn.classList.toggle('pill--active', selectedCategories.has(val));
+});
+
 // Activity pills
 qid('activity-pills').addEventListener('click', e => {
   const btn = (e.target as Element).closest('.pill') as HTMLElement | null;
@@ -1307,6 +1378,7 @@ qid('btn-upload-more').addEventListener('click', () => {
   activeActivity = null; keywords = [];
   selectedCategories.clear();
   qid('genre-pills').querySelectorAll('.pill').forEach(p => p.classList.remove('pill--active'));
+  qid('project-pills').querySelectorAll('.pill').forEach(p => p.classList.remove('pill--active'));
   setPhase('empty');
 });
 

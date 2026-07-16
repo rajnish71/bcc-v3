@@ -1,0 +1,145 @@
+---
+/**
+ * ProjectJoinCTA.astro — Auth-conditional join call to action.
+ * V6 40 §10 — Join This Project
+ * Always rendered. Content changes based on visitor auth/membership state.
+ *
+ * Guest   → "Become a Member" — gold gradient → /join
+ * User    → "Apply for Membership" — dark button → /hub/membership/apply
+ * Member  → "Upload a Photograph" — gold gradient → /hub/upload?project={slug}
+ *
+ * This is the single gold CTA on the page — no other gold CTAs elsewhere.
+ */
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+---
+
+<section class="pjcta container" aria-label="Join this project">
+  <div class="pjcta-band">
+    <div class="pjcta-gold-line" aria-hidden="true"></div>
+    <div class="pjcta-eyebrow">Join This Project</div>
+    <h2 class="pjcta-heading" id="pjcta-heading">Become a Member</h2>
+    <p class="pjcta-desc" id="pjcta-desc">
+      Create a BCC account and apply for membership to contribute your photographs to this project.
+    </p>
+    <a class="pjcta-btn" id="pjcta-btn" href="/join">
+      Become a Member
+    </a>
+  </div>
+</section>
+
+<script define:vars={{ slug }}>
+  (function () {
+    var heading = document.getElementById('pjcta-heading');
+    var desc    = document.getElementById('pjcta-desc');
+    var btn     = document.getElementById('pjcta-btn');
+    if (!heading || !desc || !btn) return;
+
+    var userData = null;
+    try { userData = JSON.parse(localStorage.getItem('bcc_user') || 'null'); } catch (e) {}
+
+    var portalState = userData && userData.ui && userData.ui.portalState;
+
+    if (!userData) {
+      // Guest — default state, already in HTML
+    } else if (portalState === 'MEMBER' || portalState === 'EDITOR' || portalState === 'MODERATOR' || portalState === 'ADMIN') {
+      // Active member / staff
+      heading.textContent = 'Upload a Photograph';
+      desc.textContent    = 'As an active member, contribute your photographs to this project from your Hub.';
+      btn.textContent     = 'Upload a Photograph';
+      btn.href            = '/hub/upload?project=' + slug;
+    } else {
+      // Registered user (portalState === 'USER') — no membership yet
+      heading.textContent = 'Apply for Membership';
+      desc.textContent    = 'Complete your membership application to gain full contributor access to this project.';
+      btn.textContent     = 'Apply for Membership';
+      btn.href            = '/hub/membership/apply';
+      btn.classList.add('pjcta-btn--dark');
+    }
+  })();
+</script>
+
+<style>
+.pjcta {
+  padding-top: var(--s-8);
+  padding-bottom: var(--s-12);
+}
+.pjcta-band {
+  background: var(--surface-deep);
+  padding: 80px 96px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.pjcta-gold-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-500), transparent);
+  pointer-events: none;
+}
+.pjcta-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-500);
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.pjcta-heading {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink-inverse);
+  margin-bottom: 20px;
+  line-height: 1.05;
+}
+.pjcta-desc {
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(250, 248, 244, 0.62);
+  max-width: 540px;
+  margin: 0 auto 40px;
+  font-weight: 300;
+}
+.pjcta-btn {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--gold-gradient);
+  color: #FFFFFF;
+  padding: 16px 48px;
+  border: 1px solid transparent;
+  border-radius: var(--r-1);
+  box-shadow: var(--cta-shadow);
+  text-decoration: none;
+  transition: opacity var(--m-fast);
+  cursor: pointer;
+}
+.pjcta-btn:hover { opacity: 0.92; color: #FFFFFF; }
+
+/* User (no membership) state */
+.pjcta-btn--dark {
+  background: transparent;
+  border-color: rgba(250, 248, 244, 0.25);
+  box-shadow: none;
+}
+.pjcta-btn--dark:hover { border-color: rgba(250, 248, 244, 0.5); opacity: 1; }
+
+@media (max-width: 768px) {
+  .pjcta-band { padding: 56px 40px; }
+}
+@media (max-width: 480px) {
+  .pjcta-band { padding: 48px var(--gutter-mob); }
+  .pjcta-btn { padding: 14px 32px; }
+}
+</style>

@@ -1,0 +1,243 @@
+---
+/**
+ * ProjectFeaturedContributors.astro — 2×2 editorial grid of featured contributors.
+ * V6 40 §06 — Featured Contributors (Conditional)
+ * Omitted entirely from DOM when contributors array is empty.
+ * Client-side Fisher-Yates shuffle selects 4 on each page load.
+ */
+import type { ProjectContributor } from '../../data/projects';
+
+interface Props {
+  projectTitle: string;
+  contributors: ProjectContributor[];
+}
+const { projectTitle, contributors } = Astro.props;
+if (!contributors || contributors.length === 0) return;
+
+// Server renders first 4; client replaces with a shuffled 4
+const initial = contributors.slice(0, 4);
+---
+
+<section
+  class="pfc container"
+  aria-label={`Featured contributors to ${projectTitle}`}
+  data-gsap="reveal"
+  style="opacity:0;transform:translateY(24px)"
+>
+  <div class="pfc-header">
+    <div>
+      <div class="pfc-eyebrow">Featured Contributors</div>
+      <h2 class="pfc-title">The photographers behind {projectTitle}</h2>
+    </div>
+    <a href="/photographers/" class="pfc-see-all" aria-label="See all photographers">
+      See all contributors →
+    </a>
+  </div>
+
+  <div class="pfc-grid" id="pfc-grid">
+    {initial.map(c => (
+      <a
+        href={`/photographers/${c.username}`}
+        class="pfc-card"
+        data-username={c.username}
+      >
+        <div class="pfc-card-head">
+          <div class="pfc-avatar">
+            {c.avatar
+              ? <img src={c.avatar} alt={c.name} class="pfc-avatar-img" />
+              : <span class="pfc-avatar-initials" aria-hidden="true">{c.initials}</span>
+            }
+          </div>
+          <div>
+            <div class="pfc-name">{c.name}</div>
+            <div class="pfc-count">{c.photoCount} photographs in this project</div>
+          </div>
+        </div>
+        <p class="pfc-bio">{c.bio}</p>
+        <span class="pfc-cta" aria-hidden="true">View Profile →</span>
+      </a>
+    ))}
+  </div>
+</section>
+
+<script define:vars={{ contributors }}>
+  (function () {
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    const grid = document.getElementById('pfc-grid');
+    if (!grid || contributors.length <= 4) return;
+
+    const selected = shuffle(contributors).slice(0, 4);
+    const cards = grid.querySelectorAll('.pfc-card');
+
+    selected.forEach((c, i) => {
+      const card = cards[i];
+      if (!card) return;
+      card.href = `/photographers/${c.username}`;
+      card.dataset.username = c.username;
+
+      const avatarEl = card.querySelector('.pfc-avatar');
+      if (avatarEl) {
+        if (c.avatar) {
+          avatarEl.innerHTML = `<img src="${c.avatar}" alt="${c.name}" class="pfc-avatar-img" />`;
+        } else {
+          avatarEl.innerHTML = `<span class="pfc-avatar-initials" aria-hidden="true">${c.initials}</span>`;
+        }
+      }
+      const nameEl = card.querySelector('.pfc-name');
+      if (nameEl) nameEl.textContent = c.name;
+      const countEl = card.querySelector('.pfc-count');
+      if (countEl) countEl.textContent = `${c.photoCount} photographs in this project`;
+      const bioEl = card.querySelector('.pfc-bio');
+      if (bioEl) bioEl.textContent = c.bio;
+    });
+  })();
+</script>
+
+<style>
+.pfc {
+  padding-top: var(--s-8);
+}
+.pfc-header {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  padding: 24px 32px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.pfc-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.pfc-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink-900);
+  margin: 0;
+}
+.pfc-see-all {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  border-bottom: 1px solid var(--gold-500);
+  padding-bottom: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.pfc-see-all:hover { color: var(--gold-600); opacity: 0.8; }
+
+.pfc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--hairline);
+}
+.pfc-card {
+  background: var(--surface-0);
+  padding: 32px 36px;
+  border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--m-fast);
+}
+.pfc-card:hover { background: var(--surface-1); }
+.pfc-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+.pfc-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-full);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface-0);
+  box-shadow: 0 0 0 1px var(--hairline);
+  background: var(--forest-gradient);
+}
+.pfc-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pfc-avatar-initials {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1;
+}
+.pfc-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+.pfc-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-600);
+  letter-spacing: 0.06em;
+}
+.pfc-bio {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--hairline-soft);
+  padding-bottom: 18px;
+  flex: 1;
+}
+.pfc-cta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold-600);
+  border-bottom: 1px solid rgba(168, 132, 60, 0.4);
+  padding-bottom: 2px;
+  display: inline-block;
+  width: fit-content;
+}
+
+@media (max-width: 768px) {
+  .pfc-grid { grid-template-columns: 1fr; }
+  .pfc-card { padding: 24px var(--gutter-mob); }
+  .pfc-title { font-size: 22px; }
+}
+@media (max-width: 480px) {
+  .pfc-bio { display: none; }
+}
+</style>

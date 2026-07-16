@@ -1,0 +1,107 @@
+---
+/**
+ * ProjectStatBand.astro — Four-stat band below the project hero.
+ * V6 40 §04 — Project Statistics
+ * border-top: 3px gold — V6 design token, not decorative.
+ * photoCount is populated live via bcc:grid-loaded from ProjectPage.
+ * contributorCount, subjectCount, lastUpdated are static props.
+ */
+interface Props {
+  gridId: string;
+  contributorCount: number;
+  subjectLabel: string;
+  subjectCount: number;
+  lastUpdated: string;
+}
+const { gridId, contributorCount, subjectLabel, subjectCount, lastUpdated } = Astro.props;
+---
+
+<div class="psb">
+  <div class="psb-stat">
+    <div
+      class="psb-val"
+      id={`${gridId}-stat-photos`}
+      aria-label="Number of photographs"
+    >—</div>
+    <div class="psb-label">Photographs</div>
+  </div>
+
+  <div class="psb-divider" aria-hidden="true"></div>
+
+  <div class="psb-stat">
+    <div class="psb-val">{contributorCount > 0 ? contributorCount : '—'}</div>
+    <div class="psb-label">Contributors</div>
+  </div>
+
+  {subjectLabel && subjectCount > 0 && (
+    <>
+      <div class="psb-divider" aria-hidden="true"></div>
+      <div class="psb-stat">
+        <div class="psb-val">{subjectCount}</div>
+        <div class="psb-label">{subjectLabel}</div>
+      </div>
+    </>
+  )}
+
+  <div class="psb-divider" aria-hidden="true"></div>
+
+  <div class="psb-stat">
+    <div class="psb-val psb-val--text">{lastUpdated}</div>
+    <div class="psb-label">Last Updated</div>
+  </div>
+</div>
+
+<style>
+.psb {
+  border-top: 3px solid var(--gold-600);
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  align-items: stretch;
+}
+.psb-stat {
+  flex: 1;
+  padding: 36px 40px;
+}
+.psb-divider {
+  width: 1px;
+  background: var(--hairline-soft);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+.psb-val {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--ink-900);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.psb-val--text {
+  font-size: 32px;
+  letter-spacing: -0.02em;
+}
+.psb-label {
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-400);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .psb { flex-wrap: wrap; }
+  .psb-stat {
+    flex: 1 0 50%;
+    padding: 24px 24px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .psb-divider { display: none; }
+  .psb-val { font-size: 36px; }
+  .psb-val--text { font-size: 24px; }
+}
+@media (max-width: 400px) {
+  .psb-stat { flex: 1 0 100%; }
+}
+</style>

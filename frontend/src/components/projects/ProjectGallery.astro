@@ -1,0 +1,95 @@
+---
+/**
+ * ProjectGallery.astro — Justified gallery section for Special Project pages.
+ * V6 40 §08 — Project Gallery
+ * Wraps the existing JustifiedPhotoGrid with a section header.
+ * No new gallery implementation — uses the canonical component.
+ */
+import JustifiedPhotoGrid from '../gallery/JustifiedPhotoGrid.astro';
+
+interface Props {
+  id: string;
+  projectTitle: string;
+  apiTag: string;
+}
+const { id, projectTitle, apiTag } = Astro.props;
+---
+
+<section
+  class="pgal container"
+  aria-label={`${projectTitle} photo gallery`}
+>
+  <div class="pgal-header">
+    <div>
+      <div class="pgal-eyebrow">Project Gallery</div>
+      <h2 class="pgal-title">Photos of {projectTitle}</h2>
+    </div>
+    <span
+      class="pgal-count-label"
+      id={`${id}-gallery-count`}
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="pgal-grid-wrap">
+    <JustifiedPhotoGrid
+      id={id}
+      ariaLabel={`${projectTitle} photo gallery`}
+      apiTag={apiTag}
+      emptyText={`No photographs have been published in this project yet. Check back soon.`}
+    />
+  </div>
+</section>
+
+<style>
+.pgal {
+  padding-top: var(--s-6);
+}
+.pgal-header {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  padding: 24px 32px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.pgal-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.pgal-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink-900);
+  margin: 0;
+}
+.pgal-count-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-400);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 4px;
+}
+.pgal-grid-wrap {
+  border: 1px solid var(--hairline);
+  border-top: none;
+}
+
+@media (max-width: 768px) {
+  .pgal-header { padding: 20px var(--gutter-mob); }
+  .pgal-title { font-size: 22px; }
+}
+</style>

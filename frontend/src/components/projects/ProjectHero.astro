@@ -1,0 +1,119 @@
+---
+/**
+ * ProjectHero.astro — Full-bleed image hero for Special Project pages.
+ * V6 40 §03 — Project Hero
+ * Title is the page's single H1. Description overlays bottom-left.
+ * heroImage: ImageKit CDN URL (optional — dark gradient when absent).
+ */
+interface Props {
+  title: string;
+  description: string;
+  heroImage?: string;
+}
+const { title, description, heroImage } = Astro.props;
+---
+
+<div class="ph-hero" data-gsap="image-reveal">
+  {heroImage && (
+    <img
+      class="ph-hero-img"
+      src={heroImage}
+      alt={`${title} — BCC Special Project`}
+    />
+  )}
+  <div class="ph-hero-gradient" aria-hidden="true"></div>
+  <div class="ph-hero-content">
+    <div class="ph-kicker">
+      <span class="ph-kicker-line" aria-hidden="true"></span>
+      BCC Special Project
+    </div>
+    <h1 class="ph-title">{title}</h1>
+    <p class="ph-desc">{description}</p>
+  </div>
+</div>
+
+<style>
+.ph-hero {
+  position: relative;
+  width: 100%;
+  min-height: 560px;
+  background: var(--image-backdrop);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  margin-top: var(--nav-h);
+}
+.ph-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ph-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 18, 16, 0.10) 0%,
+    rgba(20, 18, 16, 0) 40%,
+    rgba(20, 18, 16, 0.78) 100%
+  );
+  pointer-events: none;
+}
+.ph-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 56px 64px;
+  width: 100%;
+}
+.ph-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-500);
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ph-kicker-line {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--gold-500);
+  flex-shrink: 0;
+}
+.ph-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4.5vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.0;
+  color: var(--ink-inverse);
+  margin-bottom: 16px;
+  max-width: 720px;
+}
+.ph-desc {
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(250, 248, 244, 0.78);
+  max-width: 600px;
+  font-weight: 300;
+}
+
+@media (max-width: 1024px) {
+  .ph-hero-content { padding: 44px 40px; }
+}
+@media (max-width: 768px) {
+  .ph-hero { min-height: 440px; }
+  .ph-hero-content { padding: 36px 24px; }
+}
+@media (max-width: 480px) {
+  .ph-hero { min-height: 360px; }
+  .ph-desc { display: none; }
+}
+</style>

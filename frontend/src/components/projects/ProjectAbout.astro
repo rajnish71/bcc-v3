@@ -1,0 +1,87 @@
+---
+/**
+ * ProjectAbout.astro — Editorial project description.
+ * V6 40 §05 — About the Project (Conditional)
+ * Omitted entirely from DOM when paragraphs is empty.
+ */
+interface Props {
+  title: string;
+  paragraphs: string[];
+}
+const { title, paragraphs } = Astro.props;
+if (!paragraphs || paragraphs.length === 0) return;
+---
+
+<section
+  class="pa container"
+  aria-label={`About ${title}`}
+  data-gsap="reveal"
+  style="opacity:0;transform:translateY(24px)"
+>
+  <div class="pa-inner">
+    <div class="pa-kicker">
+      <span class="pa-kicker-line" aria-hidden="true"></span>
+      About This Project
+    </div>
+    <h2 class="pa-title">{title}</h2>
+    <div class="pa-body">
+      {paragraphs.map(p => <p class="pa-p">{p}</p>)}
+    </div>
+  </div>
+</section>
+
+<style>
+.pa {
+  padding-top: var(--s-8);
+}
+.pa-inner {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 40px 56px 48px;
+  max-width: 820px;
+}
+.pa-kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pa-kicker-line {
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--gold-500);
+  flex-shrink: 0;
+}
+.pa-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ink-900);
+  margin-bottom: 24px;
+}
+.pa-p {
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--ink-600);
+  font-weight: 300;
+  margin-bottom: 20px;
+}
+.pa-p:last-child { margin-bottom: 0; }
+
+@media (max-width: 1024px) {
+  .pa-inner { padding: 32px 40px 40px; }
+}
+@media (max-width: 768px) {
+  .pa-inner { padding: 28px var(--gutter-mob) 32px; }
+  .pa-title { font-size: 22px; }
+}
+</style>

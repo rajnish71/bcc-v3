@@ -1,0 +1,13 @@
+---
+/**
+ * /projects/butterflies-of-bhopal
+ * Design authority: V6 40 Special Projects
+ * All layout and logic in ProjectPage.astro — data only here.
+ */
+import ProjectPage from '../../components/projects/ProjectPage.astro';
+import { getProject } from '../../data/projects';
+
+const project = getProject('butterflies-of-bhopal')!;
+---
+
+<ProjectPage project={project} />

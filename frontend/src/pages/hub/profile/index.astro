@@ -13,72 +13,144 @@
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
 import TiptapBio from '../../../components/hub/TiptapBio.astro';
+const maxYear = new Date().getFullYear() + 1;
 ---
 
-<HubLayout title="My Profile" description="Edit your Bhopal Camera Club member profile.">
+<HubLayout title="My Profile" description="Edit your Bhopal Camera Club member profile." hideSidebar={true}>
 
-<!-- ── PROFILE HEADER ──────────────────────────────────────────────────── -->
-<div class="ph" id="ph">
-  <!-- Cover banner -->
-  <div class="ph-cover" id="ph-cover">
-    <div class="ph-cover-stripe" id="ph-cover-stripe"></div>
-    <img id="ph-cover-img" class="ph-cover-img" src="" alt="" hidden />
-    <div class="ph-cover-actions">
-      <label class="ph-cover-btn" for="cover-file-input" title="Change cover photo">↑ Change cover</label>
-      <input type="file" id="cover-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
-    </div>
+<!-- ── WORKSPACE HEADER ────────────────────────────────────────────────── -->
+<div class="ws-header">
+  <div class="ws-header-inner">
+    <a href="/hub/" class="ws-back-btn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back to Member Hub
+    </a>
+    <span class="ws-divider-pipe">/</span>
+    <h1 class="ws-title">Profile Editor</h1>
   </div>
-
-  <!-- Avatar + identity row -->
-  <div class="ph-identity">
-    <div class="ph-avatar-wrap" id="ph-avatar-wrap">
-      <div class="ph-avatar" id="ph-avatar">
-        <span class="ph-avatar-initials" id="ph-initials">—</span>
-        <img id="ph-avatar-img" class="ph-avatar-img" src="" alt="" hidden />
-      </div>
-      <label class="ph-avatar-edit" for="avatar-file-input" title="Change profile photo">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M8.5 1.5L10.5 3.5M1 9l.5 1.5L3 10l7-7-2-2-7 7Z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </label>
-      <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
-    </div>
-    <div class="ph-meta">
-      <div class="ph-name" id="ph-name">—</div>
-      <div class="ph-badges">
-        <span class="ph-tier-badge" id="ph-tier">—</span>
-        <span class="ph-number" id="ph-number" style="font-family:var(--font-mono)">—</span>
-      </div>
-      <a class="ph-public-link" id="ph-public-link" href="#" target="_blank" rel="noopener">View public profile ↗</a>
-    </div>
-    <div class="ph-save-wrap">
-      <span class="ph-status" id="ph-status">All changes saved</span>
-      <button class="ph-save-btn" id="save-btn" type="button">Save Changes</button>
-    </div>
-  </div>
-
-  <!-- Tab strip -->
-  <nav class="ph-tabs" id="ph-tabs" role="tablist" aria-label="Profile sections">
-    <button class="ph-tab ph-tab--active" data-section="identity" role="tab">Identity</button>
-    <button class="ph-tab" data-section="personal" role="tab">Personal</button>
-    <button class="ph-tab" data-section="address" role="tab">Address</button>
-    <button class="ph-tab" data-section="public" role="tab">Public Profile</button>
-    <button class="ph-tab" data-section="social" role="tab">Social</button>
-    <button class="ph-tab" data-section="equipment" role="tab">Equipment</button>
-    <button class="ph-tab" data-section="distinctions" role="tab">Distinctions</button>
-    <button class="ph-tab" data-section="internal" role="tab">Internal</button>
-    <button class="ph-tab" data-section="account" role="tab">Account</button>
-    <button class="ph-tab" data-section="statistics" role="tab">Statistics</button>
-  </nav>
 </div>
+
+<!-- ── STICKY ORIENTATION BAR ──────────────────────────────────────────── -->
+<div class="orientation-bar" id="orientation-bar">
+  <div class="ob-inner">
+    
+    <!-- Column 1: Identity Block -->
+    <div class="ob-left">
+      <div class="ob-avatar">
+        <span class="ob-avatar-initials" id="ph-initials">—</span>
+        <img id="ph-avatar-img" class="ob-avatar-img" src="" alt="" hidden />
+      </div>
+      <div class="ob-meta">
+        <h2 class="ob-name" id="ph-name">—</h2>
+        <div class="ob-submeta">
+          <span class="ob-class" id="ph-tier">—</span>
+          <span class="ob-bullet">•</span>
+          <span class="ob-number" id="ph-number">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Profile Completion -->
+    <div class="ob-center">
+      <div class="ob-completion-text">
+        <span class="ob-completion-label">PROFILE COMPLETION</span>
+        <span class="ob-completion-value">85%</span>
+      </div>
+      <div class="ob-completion-bar-wrap">
+        <div class="ob-completion-bar-fill" style="width: 85%"></div>
+      </div>
+    </div>
+
+    <!-- Column 3: Status & Actions -->
+    <div class="ob-right">
+      <span class="ob-status" id="ph-status">All changes saved</span>
+      <span class="ob-divider-dot">•</span>
+      <a class="ob-view-link" id="ph-public-link" href="#" target="_blank" rel="noopener">Public Profile ↗</a>
+      <button class="ob-save-btn" id="save-btn" type="button">Save Changes</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hidden elements to satisfy JS background/cover image logic -->
+<div id="ph-cover-stripe" style="display:none"></div>
+<img id="ph-cover-img" src="" alt="" hidden />
+<input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
+<input type="file" id="cover-file-input" accept="image/jpeg,image/png,image/webp" class="sr-only" />
 
 <!-- ── MOBILE SAVE BAR ─────────────────────────────────────────────────── -->
 <div class="mobile-save-bar" id="mobile-save-bar">
   <button class="mobile-save-btn" id="mobile-save-btn" type="button">Save Changes</button>
 </div>
 
-<!-- ── SECTIONS ───────────────────────────────────────────────────────── -->
-<div class="profile-body">
+<!-- ── WORKSPACE GRID ─────────────────────────────────────────────────── -->
+<div class="editor-workspace-body">
+
+  <!-- Left Side: Editor Navigator -->
+  <aside class="editor-navigator">
+    <div class="nav-group">
+      <div class="nav-group-label">PROFILE</div>
+      <button class="nav-item nav-item--active" data-section="identity">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Identity
+      </button>
+      <button class="nav-item" data-section="personal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Personal
+      </button>
+      <button class="nav-item" data-section="address">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Address
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">PUBLIC</div>
+      <button class="nav-item" data-section="public">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Public Profile
+      </button>
+      <button class="nav-item" data-section="social">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        Social
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">PORTFOLIO</div>
+      <button class="nav-item" data-section="equipment">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        Equipment
+      </button>
+      <button class="nav-item" data-section="distinctions">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        Distinctions
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">SYSTEM</div>
+      <button class="nav-item" data-section="internal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Internal BCC
+      </button>
+      <button class="nav-item" data-section="account">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Account
+      </button>
+      <button class="nav-item" data-section="statistics">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        Statistics
+      </button>
+    </div>
+  </aside>
+
+  <!-- Right Side: Editor Canvas -->
+  <main class="editor-canvas">
+    <div class="editorial-sheet">
 
   <!-- § Identity -->
   <section class="ps" id="section-identity" data-section="identity">
@@ -94,7 +166,7 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
           </div>
           <div class="ps-avatar-actions">
             <label class="btn-secondary" for="avatar-file-input">Upload photo</label>
-            <button class="btn-text-danger" id="btn-remove-avatar" type="button">Remove</button>
+            <button class="btn-text-danger" id="btn-remove-avatar" type="button" style="display:none">Remove</button>
           </div>
         </div>
         <div class="ps-hint">JPG, PNG, WebP · max 5 MB</div>
@@ -110,7 +182,7 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
           </div>
           <div class="ps-avatar-actions">
             <label class="btn-secondary" for="cover-file-input">Upload cover</label>
-            <button class="btn-text-danger" id="btn-remove-cover" type="button">Remove</button>
+            <button class="btn-text-danger" id="btn-remove-cover" type="button" style="display:none">Remove</button>
           </div>
         </div>
         <div class="ps-hint">JPG, PNG, WebP · max 10 MB</div>
@@ -339,7 +411,7 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
       <div class="ps-field-group">
         <label class="ps-label" for="field-year-joined">Year Joined BCC</label>
         <input class="form-input" type="number" id="field-year-joined" name="yearJoinedBcc"
-          min="2016" max="2030" placeholder="e.g. 2019" />
+          min="1990" max={String(maxYear)} placeholder="e.g. 2019" />
         <div class="ps-hint">Temporary — will be replaced by membership application date after full launch.</div>
       </div>
     </div>
@@ -684,7 +756,10 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
     </div>
   </section>
 
-</div><!-- .profile-body -->
+    </div><!-- .editorial-sheet -->
+  </main>
+
+</div><!-- .editor-workspace-body -->
 
 </HubLayout>
 
@@ -692,114 +767,319 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 /* ── Utilities ─────────────────────────────────────────────────────────────── */
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
 
-/* ── PROFILE HEADER ─────────────────────────────────────────────────────── */
-.ph { background:#fff; border-bottom:1px solid #E7E1D6; position:sticky; top:96px; z-index:50; }
-
-/* Cover — standardised 16:5 ratio (item 48). Whole image stays visible
-   (object-fit:contain, letterboxed). Height is capped so the sticky editing
-   header does not grow tall enough to force extra scrolling. */
-.ph-cover {
-  width:100%; aspect-ratio:16 / 5; max-height:200px;
-  position:relative; overflow:hidden;
-  background:#1A1614;
-}
-.ph-cover-stripe {
-  width:100%; height:100%;
-  background: repeating-linear-gradient(
-    -45deg, #2A2320 0px, #2A2320 10px, #1A1614 10px, #1A1614 20px
-  );
-}
-.ph-cover-img { width:100%; height:100%; object-fit:contain; position:absolute; inset:0; }
-.ph-cover-actions {
-  position:absolute; top:12px; right:16px;
-}
-.ph-cover-btn {
-  font-size:12px; font-weight:600; color:#fff; background:rgba(0,0,0,0.45);
-  border:1px solid rgba(255,255,255,0.3); padding:7px 14px; cursor:pointer;
-  font-family:var(--font-body); backdrop-filter:blur(4px);
-  transition:background 0.15s;
-}
-.ph-cover-btn:hover { background:rgba(0,0,0,0.65); }
-
-/* Identity row */
-.ph-identity {
-  display:flex; align-items:flex-end; gap:16px;
-  padding:0 32px 16px; flex-wrap:wrap;
-}
-.ph-avatar-wrap {
-  position:relative; flex-shrink:0;
-  margin-top:-52px;
-}
-.ph-avatar {
-  width:104px; height:104px; border-radius:999px;
-  background:linear-gradient(135deg, #3E5A48, #2A3D30);
-  border:4px solid #fff;
-  display:flex; align-items:center; justify-content:center; overflow:hidden;
-}
-.ph-avatar-initials {
-  font-family:var(--font-display); font-size:36px; font-weight:700;
-  color:rgba(255,255,255,0.9);
-}
-.ph-avatar-img { width:100%; height:100%; object-fit:cover; }
-.ph-avatar-edit {
-  position:absolute; bottom:4px; right:4px;
-  width:28px; height:28px; border-radius:999px;
-  background:linear-gradient(135deg, #C9A961, #A8843C);
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; color:#fff; border:2px solid #fff;
+/* Scoped to index.astro */
+:global(body) {
+  background-color: #F2EFE9 !important;
+  color: var(--ink-900) !important;
 }
 
-.ph-meta { flex:1; padding-bottom:4px; min-width:180px; }
-.ph-name {
-  font-family:var(--font-display); font-size:22px; font-weight:700;
-  color:#141210; margin-bottom:4px;
+/* Workspace Header */
+.ws-header {
+  background-color: #F2EFE9;
+  border-bottom: 1px solid var(--hairline);
+  padding: 8px var(--gutter);
+  max-width: 1360px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
-.ph-badges { display:flex; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap; }
-.ph-tier-badge {
-  font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
-  background:#F4F0E8; color:#A8843C; padding:3px 10px; border:1px solid #C9A961;
+.ws-header-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-2);
 }
-.ph-number { font-size:12px; color:#8B8378; }
-.ph-public-link {
-  font-size:12px; color:#A8843C; text-decoration:none; font-family:var(--font-body);
+.ws-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  color: var(--ink-400);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--m-fast);
 }
-.ph-public-link:hover { text-decoration:underline; }
+.ws-back-btn:hover {
+  color: var(--gold-600);
+}
+.ws-divider-pipe {
+  color: var(--ink-300);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+}
+.ws-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-800);
+  margin: 0;
+}
 
-.ph-save-wrap {
-  display:flex; align-items:center; gap:12px; flex-shrink:0; margin-left:auto;
-  padding-bottom:8px;
+/* Sticky Orientation Bar */
+.orientation-bar {
+  position: sticky;
+  top: 96px;
+  z-index: 40;
+  background-color: rgba(250, 248, 244, 0.95); /* Ivory surface with transparency */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--hairline);
+  padding: 8px var(--gutter);
+  transition: top var(--m-med);
 }
-.ph-status { font-size:12px; color:#8B8378; font-family:var(--font-body); }
-.ph-status--saving { color:#C9A961; }
-.ph-status--error { color:#882828; }
-.ph-save-btn {
-  font-size:14px; font-weight:600; color:#fff;
-  background:linear-gradient(135deg, #C9A961, #A8843C);
-  border:none; padding:11px 24px; cursor:pointer; font-family:var(--font-body);
-  box-shadow:0 2px 8px rgba(168,132,60,0.3);
-  transition:box-shadow 0.2s, transform 0.15s;
-}
-.ph-save-btn:hover { box-shadow:0 4px 14px rgba(168,132,60,0.4); transform:translateY(-1px); }
-.ph-save-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
 
-/* Tab strip */
-.ph-tabs {
-  display:flex; gap:0; border-top:1px solid #F0EBE0;
-  overflow-x:auto; scrollbar-width:none; padding:0 32px;
+#site-nav.nav--condensed ~ #main-content .orientation-bar {
+  top: 64px;
 }
-.ph-tabs::-webkit-scrollbar { display:none; }
-.ph-tab {
-  font-size:13px; font-weight:500; color:#8B8378;
-  background:none; border:none; padding:10px 16px; cursor:pointer;
-  font-family:var(--font-body); white-space:nowrap; position:relative;
-  border-bottom:2px solid transparent; transition:color 0.15s, border-color 0.15s;
+
+.ob-inner {
+  max-width: 1264px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
 }
-.ph-tab:hover { color:#141210; }
-.ph-tab--active { color:#141210; font-weight:700; border-bottom-color:#C9A961; }
+
+/* Left: Identity Info */
+.ob-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ob-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+  overflow: hidden;
+  background: var(--forest-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline-strong);
+}
+.ob-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ob-avatar-initials {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--surface-0);
+}
+.ob-meta {
+  display: flex;
+  flex-direction: column;
+}
+.ob-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0;
+  line-height: 1.2;
+}
+.ob-submeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+.ob-class {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ink-600);
+}
+.ob-bullet {
+  font-size: 9px;
+  color: var(--ink-400);
+}
+.ob-number {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--ink-400);
+}
+
+/* Center: Profile Completion Placeholder */
+.ob-center {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 140px;
+}
+.ob-completion-text {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1;
+}
+.ob-completion-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-400);
+}
+.ob-completion-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.ob-completion-bar-wrap {
+  width: 100%;
+  height: 2px;
+  background-color: var(--hairline-soft);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.ob-completion-bar-fill {
+  height: 100%;
+  background-color: var(--gold-500);
+  border-radius: 1px;
+}
+
+/* Right: Actions */
+.ob-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ob-status {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-600);
+}
+.ob-status--saving {
+  color: var(--gold-600);
+}
+.ob-status--error {
+  color: #ba1a1a;
+}
+.ob-divider-dot {
+  color: var(--hairline-strong);
+  font-size: 12px;
+  line-height: 1;
+}
+.ob-view-link {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-500);
+  text-decoration: none;
+  transition: color var(--m-fast);
+}
+.ob-view-link:hover {
+  color: var(--gold-600);
+}
+.ob-save-btn {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--surface-0);
+  background: var(--gold-gradient);
+  border: none;
+  padding: 8px 18px;
+  cursor: pointer;
+  box-shadow: var(--cta-shadow);
+  transition: opacity var(--m-fast);
+}
+.ob-save-btn:hover {
+  opacity: 0.9;
+}
+.ob-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Workspace layout columns */
+.editor-workspace-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: var(--s-6);
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 16px var(--gutter);
+  box-sizing: border-box;
+}
+
+/* Left Side: Editor Navigator */
+.editor-navigator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  position: sticky;
+  top: 160px; /* Aligns below SiteHeader + Orientation Bar height with small gap */
+  height: fit-content;
+  align-self: start;
+  transition: top var(--m-med);
+}
+
+#site-nav.nav--condensed ~ #main-content .editor-navigator {
+  top: 128px;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.nav-group-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--ink-400);
+  margin-bottom: 2px;
+  padding-left: 12px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  padding: 6px 12px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-600);
+  cursor: pointer;
+  transition: all var(--m-fast);
+}
+.nav-item:hover {
+  background-color: var(--surface-1);
+  color: var(--ink-900);
+}
+.nav-item--active {
+  border-left-color: var(--gold-600);
+  background-color: var(--surface-0);
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+/* Right Side: Editor Canvas */
+.editor-canvas {
+  min-width: 0;
+}
+.editorial-sheet {
+  background-color: var(--surface-0);
+  border: 1px solid var(--hairline-strong);
+  padding: 32px 40px;
+  box-shadow: none; /* Flat style */
+}
 
 /* ── MOBILE SAVE BAR ─────────────────────────────────────────────────────── */
 .mobile-save-bar {
-  display:none; position:fixed; bottom:64px; left:0; right:0; z-index:100;
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:100;
   padding:12px 16px; background:#fff; border-top:1px solid #E7E1D6;
   box-shadow:0 -4px 12px rgba(0,0,0,0.08);
 }
@@ -808,23 +1088,17 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
   background:linear-gradient(135deg, #C9A961, #A8843C);
   border:none; cursor:pointer; font-family:var(--font-body);
 }
-@media (max-width: 640px) { .mobile-save-bar { display:block; } .ph-save-wrap { display:none; } }
 
 /* ── SECTIONS ────────────────────────────────────────────────────────────── */
-.profile-body { padding:40px 32px 120px; display:flex; flex-direction:column; gap:0; }
-
-/* Tab-panel model (item 50): only the active section is shown, so each tab
-   displays only its own content and there is no long-scroll between sections.
-   Visual layout/fields/spacing remain per the V6 13 wireframe. */
 .ps { display:none; padding-bottom:8px; }
 .ps.ps--active { display:block; animation:ps-fade 0.18s ease; }
 @keyframes ps-fade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
-.ps-head { margin-bottom:24px; }
+.ps-head { margin-bottom: 20px; border-bottom: 1px solid var(--hairline-soft); padding-bottom: 10px; }
 .ps-title {
   font-family:var(--font-display); font-size:18px; font-weight:700;
   color:#141210;
 }
-.ps-row { display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+.ps-row { display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap; }
 .ps-row:last-child { margin-bottom:0; }
 .ps-field-group { display:flex; flex-direction:column; gap:6px; flex:1; min-width:180px; }
 .ps-field-group--full { flex:1 1 100%; }
@@ -957,8 +1231,6 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 }
 
 /* ── GENRE GRID ─────────────────────────────────────────────────────────── */
-/* renderGenreGrid() creates buttons at runtime, so they never receive Astro's
-   scoping data-attribute — use :global() so the selectors reach them. */
 :global(.genre-grid) { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
 :global(.genre-chip) {
   font-size:13px; font-weight:500; color:#57514B;
@@ -1045,24 +1317,93 @@ import TiptapBio from '../../../components/hub/TiptapBio.astro';
 .layout-opt--active .layout-opt-label { color: #A8843C; }
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
-@media (min-width:641px) and (max-width:1199px) {
-  .ph { position:relative; top:auto; }
-  .ph-identity { padding:0 24px 16px; }
-  .ph-tabs { padding:0 24px; }
-  .profile-body { padding:32px 24px 100px; }
-  .stats-grid { grid-template-columns:repeat(2,1fr); }
+@media (max-width: 1024px) {
+  .editor-workspace-body {
+    grid-template-columns: 200px 1fr;
+    gap: var(--s-4);
+    padding: var(--s-3) 24px;
+  }
+  .ws-header {
+    padding: var(--s-3) 24px 0;
+  }
+  .orientation-bar {
+    padding: 12px 24px;
+  }
 }
-@media (max-width:640px) {
-  .ph { position:relative; top:auto; }
-  .ph-identity { padding:0 16px 14px; gap:12px; }
-  .ph-meta .ph-name { font-size:18px; }
-  .ph-tabs { padding:0 16px; }
-  .ph-tab { padding:10px 12px; font-size:12px; }
-  .profile-body { padding:24px 16px 140px; }
-  .ps-row { flex-direction:column; }
+
+@media (max-width: 768px) {
+  .editor-workspace-body {
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+    padding: var(--s-3) 16px;
+  }
+  .ws-header {
+    padding: var(--s-3) 16px 0;
+  }
+  .orientation-bar {
+    padding: 12px 16px;
+    top: 96px;
+  }
+  
+  /* Horizontal scrollable Editor Navigator on Tablet/Mobile */
+  .editor-navigator {
+    flex-direction: row;
+    position: static;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 8px 0;
+    gap: var(--s-2);
+    width: 100%;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .editor-navigator::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-group {
+    flex-direction: row;
+    gap: var(--s-1);
+    align-items: center;
+  }
+  .nav-group-label {
+    display: none; /* Hide group labels on mobile */
+  }
+  .nav-item {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 6px 12px;
+  }
+  .nav-item--active {
+    border-bottom-color: var(--gold-600);
+    border-left-color: transparent;
+  }
+  .editorial-sheet {
+    padding: var(--s-4) var(--s-3);
+  }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
   .social-row { flex-direction:column; align-items:flex-start; }
   .social-label { width:auto; }
+  .mobile-save-bar { display:block; }
+}
+
+@media (max-width: 640px) {
+  .ob-inner {
+    flex-wrap: wrap;
+  }
+  .ob-center {
+    display: none; /* Hide completion percentage on very small viewports */
+  }
+  .ob-right {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+  .ob-view-link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+  }
 }
 </style>
 
@@ -1088,7 +1429,7 @@ function setStatus(msg: string, cls = '') {
   const el = document.getElementById('ph-status');
   if (!el) return;
   el.textContent = msg || 'All changes saved';
-  el.className = `ph-status ${cls}`.trim();
+  el.className = cls ? `ob-status ${cls}` : 'ob-status';
 }
 
 // ── Genre list ──────────────────────────────────────────────────────────────
@@ -1310,7 +1651,7 @@ async function saveAll() {
   const mBtn = document.getElementById('mobile-save-btn') as HTMLButtonElement | null;
   if (btn) btn.disabled = true;
   if (mBtn) mBtn.disabled = true;
-  setStatus('Saving…', 'ph-status--saving');
+  setStatus('Saving…', 'ob-status--saving');
 
   const promises: Promise<any>[] = [];
 
@@ -1391,10 +1732,10 @@ async function saveAll() {
     } else {
       const errs = results.filter(r => !r.ok);
       const msg = await errs[0].json().catch(() => ({})) as {message?: string};
-      setStatus(typeof msg.message === 'string' ? msg.message : 'Save failed', 'ph-status--error');
+      setStatus(typeof msg.message === 'string' ? msg.message : 'Save failed', 'ob-status--error');
     }
   } catch {
-    setStatus('Network error — try again', 'ph-status--error');
+    setStatus('Network error — try again', 'ob-status--error');
   } finally {
     if (btn) btn.disabled = false;
     if (mBtn) mBtn.disabled = false;
@@ -1485,7 +1826,7 @@ function showCover(src: string) {
 
 // ── Tab navigation + IntersectionObserver ─────────────────────────────────
 function initTabs() {
-  document.querySelectorAll<HTMLButtonElement>('.ph-tab').forEach(tab => {
+  document.querySelectorAll<HTMLElement>('.nav-item').forEach(tab => {
     tab.addEventListener('click', () => showSection(tab.dataset.section ?? 'identity'));
   });
   // Show the first section on load — tab-panel model (item 50).
@@ -1501,8 +1842,8 @@ function showSection(sectionKey: string) {
 }
 
 function setActiveTab(sectionKey: string) {
-  document.querySelectorAll<HTMLButtonElement>('.ph-tab').forEach(tab => {
-    tab.classList.toggle('ph-tab--active', tab.dataset.section === sectionKey);
+  document.querySelectorAll<HTMLElement>('.nav-item').forEach(tab => {
+    tab.classList.toggle('nav-item--active', tab.dataset.section === sectionKey);
   });
 }
 

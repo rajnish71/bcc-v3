@@ -36,9 +36,10 @@ interface Props {
   title: string;
   description?: string;
   bodyClass?: string;
+  hideSidebar?: boolean;
 }
 
-const { title, description, bodyClass = '' } = Astro.props;
+const { title, description, bodyClass = '', hideSidebar = false } = Astro.props;
 const activeRoute = Astro.url.pathname;
 ---
 
@@ -52,12 +53,12 @@ const activeRoute = Astro.url.pathname;
   </div>
 
   <!-- Hub frame — hidden until auth resolves -->
-  <div id="hub-frame" class="hub-frame" style="display:none" data-hub-role="member">
+  <div id="hub-frame" class={`hub-frame ${hideSidebar ? 'hub-frame--no-sidebar' : ''}`} style="display:none" data-hub-role="member">
 
-    <div class="hub-grid">
+    <div class={`hub-grid ${hideSidebar ? 'hub-grid--no-sidebar' : ''}`}>
 
       <!-- Navigation shell — single owner (HUB-ARCH-001 Principle 2) -->
-      <HubSidebar activeRoute={activeRoute} />
+      {!hideSidebar && <HubSidebar activeRoute={activeRoute} />}
 
       <!-- Workspace -->
       <div class="hub-workspace" id="hub-workspace">
@@ -128,19 +129,29 @@ const activeRoute = Astro.url.pathname;
   padding: 0 48px;
 }
 
+.hub-grid--no-sidebar {
+  grid-template-columns: 1fr;
+  padding: 0;
+  max-width: none;
+}
+
 @media (min-width: 641px) and (max-width: 1199px) {
-  .hub-grid {
+  .hub-grid:not(.hub-grid--no-sidebar) {
     grid-template-columns: 1fr;
     padding: 0 24px;
   }
 }
 
 @media (max-width: 640px) {
-  .hub-grid {
+  .hub-grid:not(.hub-grid--no-sidebar) {
     grid-template-columns: 1fr;
     padding: 0 16px;
     /* Extra bottom padding for fixed mobile bar */
     padding-bottom: 80px;
+  }
+  .hub-grid.hub-grid--no-sidebar {
+    grid-template-columns: 1fr;
+    padding: 0;
   }
 }
 

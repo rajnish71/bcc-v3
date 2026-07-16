@@ -40,7 +40,7 @@ export class UpdateProfileDto {
   @IsOptional() @IsString() @MaxLength(3000) bio?: string;
 
   // Temporarily user-editable — will be replaced by membership application date on full launch
-  @IsOptional() @IsInt() @Min(2016) yearJoinedBcc?: number;
+  @IsOptional() @IsInt() @Min(1990) yearJoinedBcc?: number;
 
   @IsOptional() @IsString() @IsIn(GALLERY_LAYOUTS) galleryLayout?: string;
 }

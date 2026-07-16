@@ -18,5 +18,8 @@
     "@tiptap/starter-kit": "^3.27.3",
     "astro": "^7.0.2",
     "gsap": "^3.15.0"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.3.0"
   }
 }

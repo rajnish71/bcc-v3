@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BCC Member Profile Editor | Minimal &amp; Elegant</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@600;700&amp;family=Outfit:wght@300;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-secondary-fixed-variant": "#5d4200",
+                "on-tertiary": "#ffffff",
+                "surface-container-high": "#ebe8e2",
+                "on-error-container": "#93000a",
+                "surface-bright": "#fcf9f3",
+                "primary-fixed": "#e8e1dd",
+                "surface-container": "#f0eee8",
+                "gold-accent": "#A8843C",
+                "secondary-fixed-dim": "#eac172",
+                "surface-container-low": "#f6f3ed",
+                "tertiary-fixed": "#e4e2de",
+                "ink-secondary": "#57514B",
+                "on-secondary-container": "#795a15",
+                "on-surface": "#1c1c18",
+                "surface-tint": "#615e5b",
+                "surface-container-highest": "#e5e2dc",
+                "border-hairline": "#E7E1D6",
+                "surface-variant": "#e5e2dc",
+                "secondary-container": "#ffd484",
+                "ink-primary": "#141210",
+                "background": "#fcf9f3",
+                "on-primary-fixed": "#1d1b19",
+                "primary": "#000000",
+                "outline": "#7d766f",
+                "ink-muted": "#8B8378",
+                "error": "#ba1a1a",
+                "surface-container-lowest": "#ffffff",
+                "satin-bg": "#F2EFE9",
+                "gold-light": "#C9A961",
+                "on-tertiary-fixed": "#1b1c1a",
+                "surface-dim": "#dcdad4",
+                "secondary": "#785914",
+                "on-primary-container": "#878380",
+                "ivory-surface": "#FAF8F4",
+                "inverse-surface": "#31312d",
+                "on-primary-fixed-variant": "#494643",
+                "inverse-primary": "#cbc5c2",
+                "on-tertiary-fixed-variant": "#474744",
+                "forest-member": "#3E5A48",
+                "on-primary": "#ffffff",
+                "tertiary": "#000000",
+                "error-container": "#ffdad6",
+                "on-surface-variant": "#4c4640",
+                "primary-container": "#1d1b19",
+                "tertiary-fixed-dim": "#c8c6c3",
+                "secondary-fixed": "#ffdea5",
+                "inverse-on-surface": "#f3f0ea",
+                "on-tertiary-container": "#848481",
+                "tertiary-container": "#1b1c1a",
+                "on-secondary-fixed": "#261900",
+                "on-error": "#ffffff",
+                "surface": "#fcf9f3",
+                "outline-variant": "#cec5bd",
+                "on-secondary": "#ffffff",
+                "on-background": "#1c1c18",
+                "primary-fixed-dim": "#cbc5c2"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "gutter": "24px",
+                "navigator-width": "280px",
+                "sheet-padding": "64px",
+                "margin-page": "48px",
+                "base": "8px",
+                "orientation-bar-height": "64px"
+            },
+            "fontFamily": {
+                "headline-h2": ["Outfit"],
+                "body-lg": ["Inter"],
+                "metadata-tiny": ["JetBrains Mono"],
+                "label-mono": ["JetBrains Mono"],
+                "headline-h1-mobile": ["Outfit"],
+                "display-lg": ["Outfit"],
+                "headline-h1": ["Outfit"],
+                "body-md": ["Inter"],
+                "ui-nav": ["Inter"]
+            },
+            "fontSize": {
+                "headline-h2": ["32px", {"lineHeight": "1.15", "fontWeight": "600"}],
+                "body-lg": ["18px", {"lineHeight": "1.7", "fontWeight": "300"}],
+                "metadata-tiny": ["9px", {"lineHeight": "normal", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                "label-mono": ["11px", {"lineHeight": "normal", "letterSpacing": "0.18em", "fontWeight": "600"}],
+                "headline-h1-mobile": ["36px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                "display-lg": ["72px", {"lineHeight": "1.0", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                "headline-h1": ["48px", {"lineHeight": "1.05", "fontWeight": "700"}],
+                "body-md": ["16px", {"lineHeight": "1.7", "fontWeight": "400"}],
+                "ui-nav": ["13px", {"lineHeight": "normal", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #F2EFE9;
+            color: #141210;
+        }
+        .material-symbols-outlined {
+            font-size: 20px;
+            vertical-align: middle;
+        }
+        .editorial-sheet {
+            box-shadow: 0 8px 32px rgba(20, 18, 16, 0.04);
+        }
+        .input-underline {
+            border: none;
+            border-bottom: 1px solid #E7E1D6;
+            background: transparent;
+            width: 100%;
+            padding: 8px 0;
+            outline: none;
+        }
+        .input-underline:focus {
+            border-bottom-color: #A8843C;
+        }
+        ::selection {
+            background-color: #C9A961;
+            color: white;
+        }
+    </style>
+</head>
+<body class="font-body-md text-ink-primary selection:bg-gold-light selection:text-white">
+<!-- TopNavBar (BCC SiteHeader V6 91) -->
+<header class="bg-ivory-surface dark:bg-surface-container-high text-ink-primary dark:text-on-surface font-body-lg text-body-lg flex justify-between items-center h-orientation-bar-height px-gutter w-full sticky top-0 z-50 backdrop-blur-md border-b border-border-hairline">
+<div class="flex items-center gap-base">
+<span class="font-headline-h2 text-headline-h2 text-ink-primary dark:text-on-surface">BCC Member Profile Editor</span>
+</div>
+<div class="flex items-center gap-gutter">
+<nav class="hidden md:flex items-center gap-gutter">
+<a class="text-gold-accent font-bold hover:text-gold-accent transition-colors" href="#">Workspace</a>
+<a class="text-ink-secondary hover:text-gold-accent transition-colors" href="#">Review</a>
+<a class="text-ink-secondary hover:text-gold-accent transition-colors" href="#">Activity</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-ink-muted hover:text-gold-accent transition-colors">notifications</button>
+<button class="material-symbols-outlined text-ink-muted hover:text-gold-accent transition-colors">settings</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A sophisticated professional portrait of a gallery curator in a high-end photography studio. The lighting is dramatic and moody, utilizing soft-box side lighting that creates deep shadows and elegant highlights. The aesthetic is monochromatic and minimalist, echoing the luxury publication style of a high-end art magazine with clean lines and a focused subject." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOxQD0V31-aY28X1kQvtjBuOZAH4sUdFAT-8doNqy2tLZ16LSUlgHS_8ygW3VLn0q4I5RCpMBXgxND-jQ-Mst4Vgwu-vxgwvyLfozYkPFs8AV54LO-Xi8NTzo0RLwamH596DftrKXGc31LaaF-GqaCm8SKh_WbMt4qcdhBG0_M4MfWSHQowQNZRePGKVlJRRE58ViLJsUj3TkC5ubpIIUy0e0a3FkabgyxVazsABvW6jbNsMdC_2OyC9gjK9g1LJ4lLx5gQOyzpw"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- SideNavBar (Persistent Navigator) -->
+<aside class="fixed left-0 h-screen w-navigator-width bg-satin-bg flex flex-col py-margin-page gap-base border-r border-border-hairline">
+<div class="px-gutter mb-8">
+<span class="font-label-mono text-label-mono text-ink-muted uppercase tracking-widest block mb-2">Member Profile</span>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-ink-primary flex items-center justify-center text-ivory-surface font-bold">JD</div>
+<div>
+<p class="font-ui-nav text-ui-nav font-semibold text-ink-primary">Jane Doe</p>
+<p class="font-label-mono text-[9px] uppercase tracking-tighter text-ink-muted">Active Class A</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-ink-primary border-l-2 border-gold-accent bg-ivory-surface font-semibold pl-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">person_edit</span>
+<span class="font-ui-nav text-ui-nav">Identity</span>
+</a>
+<a class="flex items-center gap-3 text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">photo_library</span>
+<span class="font-ui-nav text-ui-nav">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">gallery_thumbnail</span>
+<span class="font-ui-nav text-ui-nav">Exhibitions</span>
+</a>
+<a class="flex items-center gap-3 text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">article</span>
+<span class="font-ui-nav text-ui-nav">Biography</span>
+</a>
+<a class="flex items-center gap-3 text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">tune</span>
+<span class="font-ui-nav text-ui-nav">Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto mb-16">
+<button class="w-full py-3 px-4 border border-ink-primary text-ink-primary font-ui-nav text-ui-nav hover:bg-ink-primary hover:text-ivory-surface transition-colors">
+                    View Public Profile
+                </button>
+</div>
+<footer class="px-gutter flex flex-col gap-3">
+<a class="flex items-center gap-3 text-ink-muted font-label-mono text-label-mono hover:text-ink-primary" href="#">
+<span class="material-symbols-outlined text-sm">help_outline</span>
+                    Support
+                </a>
+<a class="flex items-center gap-3 text-ink-muted font-label-mono text-label-mono hover:text-ink-primary" href="#">
+<span class="material-symbols-outlined text-sm">logout</span>
+                    Sign Out
+                </a>
+</footer>
+</aside>
+<!-- Main Workspace -->
+<main class="ml-navigator-width flex-1 flex flex-col min-w-0">
+<!-- Orientation Bar -->
+<div class="sticky top-[64px] z-40 bg-ivory-surface/90 backdrop-blur-md h-orientation-bar-height border-b border-border-hairline flex items-center justify-between px-sheet-padding">
+<div class="flex items-center gap-gutter">
+<span class="font-label-mono text-[10px] uppercase text-ink-muted">Section // 01</span>
+<span class="font-label-mono text-[10px] uppercase text-ink-primary tracking-[0.2em] font-bold">Identity Editor</span>
+<span class="font-label-mono text-[10px] uppercase text-ink-muted">Last Saved: 14:22 PM</span>
+</div>
+<div class="flex items-center gap-base">
+<button class="font-label-mono text-[10px] uppercase text-ink-muted px-4 py-2 hover:text-ink-primary transition-colors">Draft</button>
+<button class="bg-gradient-to-br from-gold-light to-gold-accent text-white font-label-mono text-[10px] uppercase px-6 py-2 tracking-widest hover:opacity-90 transition-opacity">Publish Changes</button>
+</div>
+</div>
+<!-- Canvas: Editorial Sheet -->
+<div class="flex-1 px-sheet-padding py-20 flex justify-center bg-satin-bg">
+<div class="editorial-sheet w-full max-w-[1140px] bg-white p-20 flex flex-col gap-24 relative overflow-hidden">
+<!-- Decorative Element -->
+<div class="absolute top-0 right-0 w-32 h-32 border-r border-t border-gold-light/20 -m-4"></div>
+<!-- Hero Header -->
+<section class="grid grid-cols-12 gap-gutter items-start">
+<div class="col-span-8">
+<h1 class="font-headline-h2 text-headline-h2 text-ink-primary mb-4">Member Identity &amp;<br/>Personal Branding</h1>
+<p class="font-body-lg text-body-lg text-ink-secondary max-w-lg">Configure your professional editorial identity. These details will be showcased on your public portfolio sheet and BCC curator listings.</p>
+</div>
+<div class="col-span-4 aspect-square bg-satin-bg relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" data-alt="An artistic, minimalist close-up of high-quality, textured paper stock against a soft neutral background. A single, elegant gold fountain pen rests diagonally across the frame, casting a soft, architectural shadow. The lighting is diffused and warm, emphasizing the tactile quality of the stationery and a high-end workspace aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6RCwSy-xf_6-mjp7cfzCGUeOgon-hl6dxxnPlYJcPpzDdkVJmHmK2pD-RyjSl6VI1syFo0lQ2AiCm88C8C2OcShZtHPa_7nip2NMlyD1pP7UUExBRTCpsjjAjRieCw-9Pe65lfFZxFwP1C5XeT-ZtpS2WZIyjhgOkT9_lOj498_MLa8a83QuXL6kh9MvKV_bKD1kRO0BmnYsGW1fn1HfO9X824jGTPt4bUpUueiGBy_GEVCjyOkT7OH1o5P3B6ug3tI9QIvw0Xg"/>
+</div>
+</section>
+<!-- Form Section: Personal Info -->
+<section class="space-y-16 mt-12">
+<div class="grid grid-cols-12 gap-gutter">
+<div class="col-span-3">
+<span class="font-label-mono text-label-mono text-ink-muted uppercase">Metadata</span>
+<div class="mt-4 border-t border-ink-primary w-8"></div>
+</div>
+<div class="col-span-9 grid grid-cols-2 gap-x-12 gap-y-16">
+<div class="space-y-2">
+<label class="font-label-mono text-label-mono text-ink-muted uppercase">Full Legal Name</label>
+<input class="input-underline font-headline-h2 text-[24px] font-light" type="text" value="Jane Elizabeth Doe"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-mono text-label-mono text-ink-muted uppercase">Professional Title</label>
+<input class="input-underline font-headline-h2 text-[24px] font-light" type="text" value="Senior Editorial Photographer"/>
+</div>
+<div class="col-span-2 space-y-2">
+<label class="font-label-mono text-label-mono text-ink-muted uppercase">Curatorial Philosophy</label>
+<textarea class="input-underline font-body-lg text-body-lg min-h-[120px] resize-none" placeholder="Enter your creative statement...">My work focuses on the intersection of human fragility and the brutalist architecture of modern cities, captured through high-contrast black and white film.</textarea>
+</div>
+</div>
+</div>
+</section>
+<!-- Grid Layout for Portfolio Highlights -->
+<section class="space-y-8 mt-12">
+<div class="flex justify-between items-end border-b border-border-hairline pb-4">
+<h2 class="font-headline-h1 text-headline-h1 text-ink-primary">Photography Assets</h2>
+<button class="font-label-mono text-label-mono text-gold-accent hover:text-ink-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                                ADD NEW MEDIA
+                            </button>
+</div>
+<!-- Bento Grid Photography -->
+<div class="grid grid-cols-12 grid-rows-2 gap-4 h-[600px]">
+<div class="col-span-8 row-span-2 relative group overflow-hidden">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="A vast, high-ceilinged brutalist concrete art gallery with floor-to-ceiling windows. Natural gray daylight floods the space, illuminating a single large-scale minimalist photographic print of a stormy ocean. The floor is polished dark stone, reflecting the soft light and the architectural lines of the space. Professional, silent, and expansive atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDgP7i6VukmvmuJMff-Yi864ctLMYKXEGbkkwhPQjYSNfUTLs4064DbDnY638_D3AbrC8sX7-HQugwqwZJjYzTF7q1YXV-ZTWBxKT_7JpI_0nkyCge_M3q0krv_pa_IscM14ruKdKJqjItQawqDR6A0ogKy3mUQMPA7nb0PYmHaagI3CCuD5zUleweQHn3GYCg8xfhrwILK5DXIM_UgISJ9UZmDRN7BVZ8HwYdo38W2FLq8vfJpJ5zAKkxnVt9_8J1P4t4LZUwabQ')"></div>
+<div class="absolute bottom-0 left-0 p-8 bg-gradient-to-t from-black/50 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="text-white font-label-mono text-label-mono uppercase">Primary Portfolio Cover</span>
+</div>
+</div>
+<div class="col-span-4 relative group overflow-hidden">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="A macro photograph of high-end camera lenses arranged on a black silk surface. The glass of the lenses catches sharp, spectral highlights from an unseen light source. The color palette is deep blacks, silver, and subtle chromatic aberrations in the reflections. Sharp focus and deep depth of field create a high-tech editorial look." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAUO6gxO4I4wS25ZysMX-ty3Fz8ej0BtjI4Z0GHT3aOUwDJuuc6VKeJWH4afQgWdSEngXC5Ed7ke6pq2oe9cTev9zO2Z7gtvD9Jvmzt5MO3phtdm7IGIim4bRbWlwMYofbIdZIiDzaPy0M0y92ftW4WH-h9MbE7a8BaSrmQXWprDGTHLEZGrMbR1Td-vs9YygWZmYNl8lB3p09yV8Ld0tgw6YPlZYPp5dcHCKve0lEohN39Oa3eYMaEjjKJVgTk8Nvln3-W-HvAYw')"></div>
+</div>
+<div class="col-span-4 relative group overflow-hidden">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="An abstract architectural shot of a spiraling white marble staircase in a modern museum. The composition is asymmetrical and geometric, emphasizing the clean lines and smooth textures of the stone. Soft shadows define the curves of the architecture, creating a sense of calm and rhythmic motion in a high-key light environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBaD42soZWYt7QHYx9htlfdGhge_7eXdiDwZUTxChrgDbJ_2MANavLElhEzOQhUyk6LX8tXIuDsJKLE9syOzarl2YwGRxmpCfTwu28-kbc2TxW7zOm06E8oC4Lyva0MQVoCVtQGxkuW-OnDZnxE-9nj0UP0vqOf-2EOEfWFnstPXP6SM-xgq4ShhyOxUp5VCNFm08Sc1LcwgT_grTC1Od6myloVoEVI9zqOdJuirBOspBdI_ngf_PKCSNZn1q77xal2Ikh4NVtylw')"></div>
+</div>
+</div>
+</section>
+<!-- Detailed Settings -->
+<section class="grid grid-cols-12 gap-gutter mt-12 pt-12 border-t border-border-hairline">
+<div class="col-span-4 space-y-6">
+<h3 class="font-label-mono text-label-mono text-ink-primary uppercase tracking-widest">Visibility Settings</h3>
+<div class="flex items-center justify-between py-2 border-b border-border-hairline">
+<span class="font-ui-nav text-ui-nav">Public Profile Searchable</span>
+<div class="w-10 h-5 bg-gold-accent rounded-full relative">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-border-hairline">
+<span class="font-ui-nav text-ui-nav">Show Publication History</span>
+<div class="w-10 h-5 bg-border-hairline rounded-full relative">
+<div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="col-span-1"></div>
+<div class="col-span-7">
+<h3 class="font-label-mono text-label-mono text-ink-primary uppercase tracking-widest mb-6">Affiliations</h3>
+<div class="flex flex-wrap gap-3">
+<span class="px-4 py-2 bg-satin-bg font-label-mono text-label-mono text-ink-secondary border border-border-hairline">MAGNUM PHOTO</span>
+<span class="px-4 py-2 bg-satin-bg font-label-mono text-label-mono text-ink-secondary border border-border-hairline">BCC EDITORIAL FELLOW</span>
+<span class="px-4 py-2 bg-satin-bg font-label-mono text-label-mono text-ink-secondary border border-border-hairline">LEICA AMBASSADOR</span>
+<span class="px-4 py-2 bg-satin-bg font-label-mono text-label-mono text-ink-secondary border border-border-hairline">VOGUE ARCHIVE</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Site Footer (BCC SiteFooter V6 92) -->
+<footer class="bg-satin-bg dark:bg-surface-container-lowest text-ink-muted border-t border-border-hairline">
+<div class="max-w-7xl mx-auto py-base px-gutter flex justify-between items-center h-16">
+<div class="font-label-mono text-label-mono text-ink-muted">
+                        © 2024 BCC Editorial. All rights reserved.
+                    </div>
+<div class="flex gap-gutter items-center">
+<a class="font-label-mono text-label-mono text-ink-muted hover:text-ink-primary transition-opacity duration-200" href="#">Privacy Policy</a>
+<a class="font-label-mono text-label-mono text-ink-muted hover:text-ink-primary transition-opacity duration-200" href="#">Terms of Service</a>
+<a class="font-label-mono text-label-mono text-ink-muted hover:text-ink-primary transition-opacity duration-200" href="#">Member Guidelines</a>
+</div>
+</div>
+</footer>
+</main>
+</div>
+<!-- Micro-interaction Scripts -->
+<script>
+        document.querySelectorAll('.input-underline').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.querySelector('label').style.color = '#A8843C';
+                this.parentElement.querySelector('label').style.transition = 'color 0.3s ease';
+            });
+            input.addEventListener('blur', function() {
+                this.parentElement.querySelector('label').style.color = '';
+            });
+        });
+    </script>
+</body></html>

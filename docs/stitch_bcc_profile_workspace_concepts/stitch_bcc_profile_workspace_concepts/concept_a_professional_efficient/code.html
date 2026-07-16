@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BCC Member Profile Editor | Identity</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        .editorial-sheet {
+            box-shadow: 0 8px 32px rgba(20, 18, 16, 0.04);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F2EFE9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #E7E1D6;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#5d4200",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#ebe8e2",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fcf9f3",
+                        "primary-fixed": "#e8e1dd",
+                        "surface-container": "#f0eee8",
+                        "gold-accent": "#A8843C",
+                        "secondary-fixed-dim": "#eac172",
+                        "surface-container-low": "#f6f3ed",
+                        "tertiary-fixed": "#e4e2de",
+                        "ink-secondary": "#57514B",
+                        "on-secondary-container": "#795a15",
+                        "on-surface": "#1c1c18",
+                        "surface-tint": "#615e5b",
+                        "surface-container-highest": "#e5e2dc",
+                        "border-hairline": "#E7E1D6",
+                        "surface-variant": "#e5e2dc",
+                        "secondary-container": "#ffd484",
+                        "ink-primary": "#141210",
+                        "background": "#fcf9f3",
+                        "on-primary-fixed": "#1d1b19",
+                        "primary": "#000000",
+                        "outline": "#7d766f",
+                        "ink-muted": "#8B8378",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "satin-bg": "#F2EFE9",
+                        "gold-light": "#C9A961",
+                        "on-tertiary-fixed": "#1b1c1a",
+                        "surface-dim": "#dcdad4",
+                        "secondary": "#785914",
+                        "on-primary-container": "#878380",
+                        "ivory-surface": "#FAF8F4",
+                        "inverse-surface": "#31312d",
+                        "on-primary-fixed-variant": "#494643",
+                        "inverse-primary": "#cbc5c2",
+                        "on-tertiary-fixed-variant": "#474744",
+                        "forest-member": "#3E5A48",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#000000",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#4c4640",
+                        "primary-container": "#1d1b19",
+                        "tertiary-fixed-dim": "#c8c6c3",
+                        "secondary-fixed": "#ffdea5",
+                        "inverse-on-surface": "#f3f0ea",
+                        "on-tertiary-container": "#848481",
+                        "tertiary-container": "#1b1c1a",
+                        "on-secondary-fixed": "#261900",
+                        "on-error": "#ffffff",
+                        "surface": "#fcf9f3",
+                        "outline-variant": "#cec5bd",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#1c1c18",
+                        "primary-fixed-dim": "#cbc5c2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "navigator-width": "280px",
+                        "sheet-padding": "64px",
+                        "margin-page": "48px",
+                        "base": "8px",
+                        "orientation-bar-height": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-h2": ["Outfit"],
+                        "body-lg": ["Inter"],
+                        "metadata-tiny": ["JetBrains Mono"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-h1-mobile": ["Outfit"],
+                        "display-lg": ["Outfit"],
+                        "headline-h1": ["Outfit"],
+                        "body-md": ["Inter"],
+                        "ui-nav": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-h2": ["32px", {"lineHeight": "1.15", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.7", "fontWeight": "300"}],
+                        "metadata-tiny": ["9px", {"lineHeight": "normal", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "label-mono": ["11px", {"lineHeight": "normal", "letterSpacing": "0.18em", "fontWeight": "600"}],
+                        "headline-h1-mobile": ["36px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                        "display-lg": ["72px", {"lineHeight": "1.0", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                        "headline-h1": ["48px", {"lineHeight": "1.05", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.7", "fontWeight": "400"}],
+                        "ui-nav": ["13px", {"lineHeight": "normal", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-satin-bg text-ink-primary font-body-md overflow-x-hidden">
+<!-- TopNavBar (BCC SiteHeader V6 91) -->
+<header class="bg-ivory-surface dark:bg-surface-container-high text-ink-primary dark:text-on-surface font-body-lg text-body-lg docked full-width top-0 border-b border-border-hairline flat no shadows flex justify-between items-center h-orientation-bar-height px-gutter w-full sticky top-0 z-50 backdrop-blur-md opacity-90">
+<div class="flex items-center gap-base">
+<span class="font-headline-h2 text-headline-h2 text-ink-primary dark:text-on-surface">BCC Member Profile Editor</span>
+</div>
+<div class="flex items-center gap-gutter">
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-ink-muted hover:text-gold-accent transition-colors font-ui-nav text-ui-nav" href="#">DASHBOARD</a>
+<a class="text-gold-accent font-bold font-ui-nav text-ui-nav" href="#">EDIT PROFILE</a>
+<a class="text-ink-muted hover:text-gold-accent transition-colors font-ui-nav text-ui-nav" href="#">RESOURCES</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-ink-secondary hover:text-gold-accent transition-colors">notifications</button>
+<button class="material-symbols-outlined text-ink-secondary hover:text-gold-accent transition-colors">settings</button>
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio headshot of a photographer in his late 30s with a warm, confident expression. He has short dark hair and a neatly trimmed beard, wearing a charcoal grey linen shirt. The lighting is soft and cinematic, with a clean, minimalist ivory background that matches the high-end editorial aesthetic of a luxury photography publication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQwymeJqIhT7Yxze-Ns8aUTi4kLj0yyQLz3zpA5dH3FfbYQ_m2gIAJum6s74h8j77lbrQvnMsSN7Hj32B6vle0K084w9cedK4dc4bPPDx1wojz5XV15QWtBHLxkKjHNSKwTt1a0chbkFW0aCk_FjRMd0sSsY2nLaKpsFSGe1LyUHXbL81aYGnKP7sz02d73pO3GJFjUe1jxJfD7cspbDRqxVRkWrFBwFcsbACefuSjfA7cSL6x9oo7FEGiA5umrAwCHY3LxL3nYA"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar & Orientation Bar & Content Wrapper -->
+<div class="flex min-h-screen">
+<!-- SideNavBar (Persistent Navigator) -->
+<aside class="bg-satin-bg dark:bg-surface-container text-gold-accent dark:text-gold-light font-ui-nav text-ui-nav fixed left-0 h-screen w-navigator-width border-r border-border-hairline flat no shadows flex flex-col py-margin-page gap-base z-40">
+<div class="px-gutter mb-8">
+<p class="font-label-mono text-label-mono text-ink-muted uppercase tracking-widest">Member Profile</p>
+<p class="text-[10px] text-ink-muted mt-1">Active Class A</p>
+</div>
+<nav class="flex-1 flex flex-col">
+<!-- Identity - Active State Logic -->
+<a class="text-ink-primary border-l-2 border-gold-accent bg-ivory-surface dark:bg-surface-bright font-semibold pl-4 py-3 hover:bg-surface-container-low transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">person_edit</span>
+<span>Identity</span>
+</a>
+<a class="text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">photo_library</span>
+<span>Portfolio</span>
+</a>
+<a class="text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">gallery_thumbnail</span>
+<span>Exhibitions</span>
+</a>
+<a class="text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">article</span>
+<span>Biography</span>
+</a>
+<a class="text-ink-secondary pl-4 py-3 border-l-2 border-transparent hover:bg-surface-container-low transition-all flex items-center gap-3 mt-auto" href="#">
+<span class="material-symbols-outlined">tune</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-base pt-gutter px-gutter flex flex-col gap-3">
+<a class="text-ink-muted hover:text-ink-primary transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+<a class="text-ink-muted hover:text-ink-primary transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-navigator-width flex flex-col min-h-screen">
+<!-- Orientation Bar -->
+<div class="sticky top-orientation-bar-height z-30 bg-ivory-surface h-orientation-bar-height flex items-center justify-between px-gutter border-b border-border-hairline backdrop-blur-md bg-opacity-95">
+<div class="flex items-center gap-4">
+<div class="relative w-10 h-10 flex items-center justify-center">
+<svg class="absolute w-full h-full" viewbox="0 0 36 36">
+<circle class="stroke-border-hairline" cx="18" cy="18" fill="none" r="16" stroke-width="1.5"></circle>
+<circle class="progress-ring-circle stroke-gold-accent" cx="18" cy="18" fill="none" r="16" stroke-dasharray="100.53, 100.53" stroke-dashoffset="15" stroke-width="1.5"></circle>
+</svg>
+<div class="w-7 h-7 rounded-full bg-surface-container overflow-hidden z-10">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar of a professional photographer with warm studio lighting and a clean off-white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkOVnzPfKjF3E4spE4HrLTNNcNdiph2r5mUZ4ClikaPCv2urMKPO7M1sUcEKJXQpo23vJ1hDXApcLxE_sDOLkGVc-RwqrdMNpIVh_F_zIFcREilv4oz5iOGdAVplzf3Nfcoqf2kbbnyQi-t9OfJGtjfaNwOzwDH7xPp8ag5eMfeAZe_qTA4sJgOOK0gVGndDxgTSDELB8J9xP8_61bAnjbyNukgB_vEZxYYiR_ZFLe-6N5Q68lrvoiu6IghvO5OHQk6kR2mTEtvA"/>
+</div>
+</div>
+<div>
+<h2 class="font-body-lg text-body-lg text-ink-primary font-medium leading-none">Arjun Sharma</h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-label-mono text-[9px] text-ink-muted uppercase">Active Class A</span>
+<span class="w-[3px] h-[3px] rounded-full bg-ink-muted opacity-30"></span>
+<span class="font-label-mono text-[9px] text-ink-muted uppercase">CM1098</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end mr-4">
+<span class="font-label-mono text-[9px] text-ink-muted">PROFILE COMPLETION</span>
+<span class="font-label-mono text-ink-primary">85%</span>
+</div>
+<button class="px-6 py-2 border border-gold-accent text-gold-accent font-ui-nav text-ui-nav hover:bg-gold-accent hover:text-ink-primary transition-all duration-300 active:scale-[0.98]">
+                        View Public Profile
+                    </button>
+<button class="px-6 py-2 bg-gradient-to-br from-gold-light to-gold-accent text-ink-primary font-ui-nav text-ui-nav font-bold shadow-sm hover:opacity-90 transition-all active:scale-[0.98]">
+                        Publish Changes
+                    </button>
+</div>
+</div>
+<!-- Canvas: Editorial Sheet -->
+<div class="flex-1 px-sheet-padding py-12 flex justify-center bg-satin-bg">
+<div class="editorial-sheet w-full max-w-[1140px] bg-ivory-surface min-h-[1000px] p-12 md:p-24 relative overflow-hidden">
+<!-- Header Section -->
+<header class="mb-16">
+<span class="font-label-mono text-label-mono text-gold-accent mb-4 block">WORKSPACE / IDENTITY</span>
+<h1 class="font-headline-h1 text-headline-h1 text-ink-primary mb-6">Profile Identity</h1>
+<p class="font-body-lg text-body-lg text-ink-secondary max-w-2xl">
+                            Establish your professional presence. This information forms the core of your editorial profile and determines how institutions interact with your work.
+                        </p>
+</header>
+<!-- Content Grid -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left: Visual Identity -->
+<div class="col-span-12 lg:col-span-5 flex flex-col gap-8">
+<div class="group relative">
+<label class="font-label-mono text-label-mono text-ink-muted mb-3 block">PRIMARY PROFILE IMAGE (3:2 LANDSCAPE)</label>
+<div class="aspect-[3/2] bg-surface-container overflow-hidden border border-border-hairline relative">
+<img class="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-700" data-alt="A breathtaking landscape photograph of the Himalayan mountains at dawn, with a lone trekker in the foreground. The lighting is ethereal and soft, emphasizing textures of snow and rock. The aesthetic is clean, professional, and evocative of high-end editorial photography found in prestigious publications like National Geographic or Monocle. The color palette is dominated by muted blues, greys, and soft ivory whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_8dMjmsMECKgz_BuwnVA3aLF4BIXIO6wf6YO9KqnHyGQOuT5yh9m85ZwnFfohwptJQtHE096RtrpUNMExDWjQnP4NmOk0Tfcs6gPNdUv-8-5QczRpd09GGwV-rrlIYTdqH0JOMDw3TeFiEnyG2ug9fwzIVKmDgRnCwxFCIqzIF4qdBKDVn3Ddd5Wz7odj6TmJunCHd2UfuFYp0tIl8Jtpw6dOnM4UH06r3ehkJ4XCZpmukl22aghTAa5kgASkcdMEzpfwwLrP4Q"/>
+<div class="absolute inset-0 bg-ink-primary bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
+<button class="opacity-0 group-hover:opacity-100 bg-ivory-surface text-ink-primary font-label-mono text-[10px] px-4 py-2 flex items-center gap-2 transition-all shadow-lg">
+<span class="material-symbols-outlined !text-sm">edit</span> REPLACE IMAGE
+                                        </button>
+</div>
+</div>
+<p class="mt-3 font-label-mono text-[9px] text-ink-muted leading-relaxed">
+                                    RECOMMENDED: 2400 x 1600 PX. NATURAL LIGHTING PREFERRED.
+                                </p>
+</div>
+<div class="pt-8 border-t border-border-hairline">
+<label class="font-label-mono text-label-mono text-ink-muted mb-4 block">ACCOUNT STATUS</label>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-satin-bg px-3 py-1.5 rounded-full border border-border-hairline">
+<span class="w-2 h-2 rounded-full bg-forest-member"></span>
+<span class="font-label-mono text-[10px] text-ink-primary">VERIFIED MEMBER</span>
+</div>
+<div class="flex items-center gap-2 bg-satin-bg px-3 py-1.5 rounded-full border border-border-hairline">
+<span class="w-2 h-2 rounded-full bg-gold-accent"></span>
+<span class="font-label-mono text-[10px] text-ink-primary">CLASS A EDITORIAL</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Information Fields -->
+<div class="col-span-12 lg:col-span-7 flex flex-col gap-10">
+<div class="grid grid-cols-2 gap-gutter">
+<div class="col-span-2 md:col-span-1">
+<label class="font-label-mono text-label-mono text-ink-muted mb-1 block">LEGAL NAME</label>
+<input class="w-full bg-transparent border-t-0 border-x-0 border-b border-border-hairline font-body-md text-ink-primary px-0 py-3 focus:ring-0 focus:border-gold-accent transition-colors placeholder:text-ink-muted" placeholder="First Last" type="text" value="Arjun Sharma"/>
+</div>
+<div class="col-span-2 md:col-span-1">
+<label class="font-label-mono text-label-mono text-ink-muted mb-1 block">PROFESSIONAL ALIAS</label>
+<input class="w-full bg-transparent border-t-0 border-x-0 border-b border-border-hairline font-body-md text-ink-primary px-0 py-3 focus:ring-0 focus:border-gold-accent transition-colors placeholder:text-ink-muted" placeholder="Optional" type="text" value="A. Sharma Photography"/>
+</div>
+</div>
+<div>
+<label class="font-label-mono text-label-mono text-ink-muted mb-1 block">PRIMARY SPECIALIZATION</label>
+<select class="w-full bg-transparent border-t-0 border-x-0 border-b border-border-hairline font-body-md text-ink-primary px-0 py-3 focus:ring-0 focus:border-gold-accent transition-colors appearance-none">
+<option>Documentary &amp; Editorial</option>
+<option>Fine Art Photography</option>
+<option>Architecture &amp; Space</option>
+<option>Portraiture</option>
+<option>Commercial Lifestyle</option>
+</select>
+</div>
+<div>
+<label class="font-label-mono text-label-mono text-ink-muted mb-1 block">EDITORIAL CONTACT EMAIL</label>
+<input class="w-full bg-transparent border-t-0 border-x-0 border-b border-border-hairline font-body-md text-ink-primary px-0 py-3 focus:ring-0 focus:border-gold-accent transition-colors placeholder:text-ink-muted" type="email" value="arjun.sharma@bcc-members.com"/>
+</div>
+<div>
+<label class="font-label-mono text-label-mono text-ink-muted mb-1 block">LOCATION / BASE OF OPERATIONS</label>
+<div class="relative">
+<input class="w-full bg-transparent border-t-0 border-x-0 border-b border-border-hairline font-body-md text-ink-primary px-0 py-3 focus:ring-0 focus:border-gold-accent transition-colors placeholder:text-ink-muted" type="text" value="New Delhi, India"/>
+<span class="material-symbols-outlined absolute right-0 bottom-3 text-ink-muted">location_on</span>
+</div>
+</div>
+<div>
+<label class="font-label-mono text-label-mono text-ink-muted mb-3 block">MEMBER TAGLINE</label>
+<textarea class="w-full bg-transparent border-t-0 border-x-0 border-b border-border-hairline font-body-md text-ink-primary px-0 py-3 focus:ring-0 focus:border-gold-accent transition-colors placeholder:text-ink-muted resize-none" placeholder="A brief, high-impact sentence defining your work." rows="3">Capturing the quiet intersection of modern architectural geometry and traditional human ritual in South Asia.</textarea>
+</div>
+<div class="pt-6 flex justify-end gap-4">
+<button class="font-label-mono text-label-mono text-ink-muted hover:text-ink-primary transition-colors py-2 px-4">DISCARD CHANGES</button>
+<button class="bg-ink-primary text-ivory-surface font-label-mono text-label-mono px-8 py-3 hover:opacity-90 transition-all">SAVE DRAFT</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer (BCC SiteFooter V6 92) -->
+<footer class="bg-satin-bg dark:bg-surface-container-lowest text-ink-muted font-label-mono text-label-mono full-width border-t border-border-hairline flat no shadows">
+<div class="max-w-7xl mx-auto py-base px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
+<p>© 2024 BCC Editorial. All rights reserved.</p>
+<div class="flex items-center gap-8">
+<a class="hover:text-ink-primary transition-opacity duration-200" href="#">Privacy Policy</a>
+<a class="hover:text-ink-primary transition-opacity duration-200" href="#">Terms of Service</a>
+<a class="hover:text-ink-primary transition-opacity duration-200" href="#">Member Guidelines</a>
+</div>
+<div class="font-label-mono text-label-mono text-ink-muted">
+                        V6.92.0_STABLE
+                    </div>
+</div>
+</footer>
+</main>
+</div>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Progress Ring Animation
+        const circle = document.querySelector('.progress-ring-circle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100 * circumference);
+            circle.style.strokeDashoffset = offset;
+        }
+
+        // Initialize progress
+        setProgress(85);
+
+        // Sidebar active state logic implementation (Visual only here as its a single page mockup)
+        const navLinks = document.querySelectorAll('aside nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                // If it was a real SPA, we'd prevent default and handle routing
+                // For this UI demo, we'll just toggle the active classes
+                navLinks.forEach(l => {
+                    l.classList.remove('text-ink-primary', 'border-gold-accent', 'bg-ivory-surface', 'font-semibold');
+                    l.classList.add('text-ink-secondary', 'border-transparent');
+                });
+                link.classList.add('text-ink-primary', 'border-gold-accent', 'bg-ivory-surface', 'font-semibold');
+                link.classList.remove('text-ink-secondary', 'border-transparent');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BCC Member Profile Editor</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@600;700&amp;family=Outfit:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#5d4200",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-high": "#ebe8e2",
+                      "on-error-container": "#93000a",
+                      "surface-bright": "#fcf9f3",
+                      "primary-fixed": "#e8e1dd",
+                      "surface-container": "#f0eee8",
+                      "gold-accent": "#A8843C",
+                      "secondary-fixed-dim": "#eac172",
+                      "surface-container-low": "#f6f3ed",
+                      "tertiary-fixed": "#e4e2de",
+                      "ink-secondary": "#57514B",
+                      "on-secondary-container": "#795a15",
+                      "on-surface": "#1c1c18",
+                      "surface-tint": "#615e5b",
+                      "surface-container-highest": "#e5e2dc",
+                      "border-hairline": "#E7E1D6",
+                      "surface-variant": "#e5e2dc",
+                      "secondary-container": "#ffd484",
+                      "ink-primary": "#141210",
+                      "background": "#fcf9f3",
+                      "on-primary-fixed": "#1d1b19",
+                      "primary": "#000000",
+                      "outline": "#7d766f",
+                      "ink-muted": "#8B8378",
+                      "error": "#ba1a1a",
+                      "surface-container-lowest": "#ffffff",
+                      "satin-bg": "#F2EFE9",
+                      "gold-light": "#C9A961",
+                      "on-tertiary-fixed": "#1b1c1a",
+                      "surface-dim": "#dcdad4",
+                      "secondary": "#785914",
+                      "on-primary-container": "#878380",
+                      "ivory-surface": "#FAF8F4",
+                      "inverse-surface": "#31312d",
+                      "on-primary-fixed-variant": "#494643",
+                      "inverse-primary": "#cbc5c2",
+                      "on-tertiary-fixed-variant": "#474744",
+                      "forest-member": "#3E5A48",
+                      "on-primary": "#ffffff",
+                      "tertiary": "#000000",
+                      "error-container": "#ffdad6",
+                      "on-surface-variant": "#4c4640",
+                      "primary-container": "#1d1b19",
+                      "tertiary-fixed-dim": "#c8c6c3",
+                      "secondary-fixed": "#ffdea5",
+                      "inverse-on-surface": "#f3f0ea",
+                      "on-tertiary-container": "#848481",
+                      "tertiary-container": "#1b1c1a",
+                      "on-secondary-fixed": "#261900",
+                      "on-error": "#ffffff",
+                      "surface": "#fcf9f3",
+                      "outline-variant": "#cec5bd",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#1c1c18",
+                      "primary-fixed-dim": "#cbc5c2"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "navigator-width": "280px",
+                      "sheet-padding": "64px",
+                      "margin-page": "48px",
+                      "base": "8px",
+                      "orientation-bar-height": "64px"
+              },
+              "fontFamily": {
+                      "headline-h2": ["Outfit"],
+                      "body-lg": ["Inter"],
+                      "metadata-tiny": ["JetBrains Mono"],
+                      "label-mono": ["JetBrains Mono"],
+                      "headline-h1-mobile": ["Outfit"],
+                      "display-lg": ["Outfit"],
+                      "headline-h1": ["Outfit"],
+                      "body-md": ["Inter"],
+                      "ui-nav": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-h2": ["32px", {"lineHeight": "1.15", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "1.7", "fontWeight": "300"}],
+                      "metadata-tiny": ["9px", {"lineHeight": "normal", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                      "label-mono": ["11px", {"lineHeight": "normal", "letterSpacing": "0.18em", "fontWeight": "600"}],
+                      "headline-h1-mobile": ["36px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "display-lg": ["72px", {"lineHeight": "1.0", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                      "headline-h1": ["48px", {"lineHeight": "1.05", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "1.7", "fontWeight": "400"}],
+                      "ui-nav": ["13px", {"lineHeight": "normal", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .editorial-sheet {
+            box-shadow: 0 4px 24px rgba(20, 18, 16, 0.04);
+        }
+        .canvas-bg {
+            background-color: #F2EFE9;
+            background-image: radial-gradient(circle at 50% 0%, rgba(168, 132, 60, 0.03) 0%, transparent 70%);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E7E1D6; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-satin-bg font-body-md text-ink-primary overflow-x-hidden">
+<!-- TopNavBar (BCC SiteHeader V6 91) -->
+<header class="bg-ivory-surface text-ink-primary font-body-lg text-body-lg flex justify-between items-center h-orientation-bar-height px-gutter w-full sticky top-0 z-50 backdrop-blur-md opacity-90 border-b border-border-hairline">
+<div class="font-headline-h2 text-headline-h2 text-ink-primary">BCC Member Profile Editor</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-8">
+<a class="text-gold-accent font-bold hover:text-gold-accent transition-colors" href="#">Profile</a>
+<a class="text-ink-secondary hover:text-gold-accent transition-colors" href="#">Workspace</a>
+<a class="text-ink-secondary hover:text-gold-accent transition-colors" href="#">Archive</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined cursor-pointer hover:text-gold-accent transition-colors">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-gold-accent transition-colors">settings</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border-hairline bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A sophisticated professional portrait of a member in a minimalist editorial setting, lit with soft natural daylight. The image has a high-end photography aesthetic with muted tones, shallow depth of field, and a focus on clean, modern composition that reflects a luxury creative brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbnKCSPJw7EcoxofVz00dAA4d5upVMVTUPVZo1uGsSSnPjhEt0qtsxfKRf5rT1mLZQ4WD1CTVNK8gBA7B3Y3VjsnoJ0_21CdxlokdsvFZ6wDM_5_bFAs9LSZC9BmBBHtB_EyQe8KG5LvzfJ0MR5e3t91uNHmEwcxEjPBbcSoydkq_HjlIppRNP4SshjssnpKCXLMPV3km9sh79afEelZBF_Qp2_hyF4kmXd5XxXKvYRTso8UsPp_3nwTHDcYe_Bx7IvB_FC9UeTg"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- Persistent Navigator (SideNavBar) -->
+<aside class="hidden md:flex flex-col py-margin-page gap-base bg-[#1A1816] fixed left-0 h-screen w-navigator-width border-r border-border-hairline z-40">
+<div class="px-6 mb-8">
+<div class="font-label-mono text-label-mono text-ink-muted uppercase tracking-widest">Member Profile</div>
+<div class="mt-2 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-gold-accent text-ink-primary font-headline-h2 text-[14px]">JS</div>
+<div>
+<div class="text-white font-semibold text-[13px]">Julian Sterling</div>
+<div class="text-ink-muted text-[11px] font-label-mono uppercase tracking-tighter">Active Class A</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-white border-l-2 border-gold-accent bg-[#2A2724] font-semibold pl-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined text-gold-accent" style="font-variation-settings: 'FILL' 1;">person_edit</span>
+<span class="font-ui-nav text-ui-nav">Identity</span>
+</a>
+<a class="flex items-center gap-3 text-ink-muted hover:bg-surface-container-low pl-4 py-3 border-l-2 border-transparent transition-all" href="#">
+<span class="material-symbols-outlined">photo_library</span>
+<span class="font-ui-nav text-ui-nav">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 text-ink-muted hover:bg-surface-container-low pl-4 py-3 border-l-2 border-transparent transition-all" href="#">
+<span class="material-symbols-outlined">gallery_thumbnail</span>
+<span class="font-ui-nav text-ui-nav">Exhibitions</span>
+</a>
+<a class="flex items-center gap-3 text-ink-muted hover:bg-surface-container-low pl-4 py-3 border-l-2 border-transparent transition-all" href="#">
+<span class="material-symbols-outlined">article</span>
+<span class="font-ui-nav text-ui-nav">Biography</span>
+</a>
+<a class="flex items-center gap-3 text-ink-muted hover:bg-surface-container-low pl-4 py-3 border-l-2 border-transparent transition-all" href="#">
+<span class="material-symbols-outlined">tune</span>
+<span class="font-ui-nav text-ui-nav">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-6 space-y-6">
+<button class="w-full py-3 px-4 border border-gold-accent/30 text-gold-light font-label-mono text-label-mono uppercase tracking-widest hover:bg-gold-accent/10 transition-colors">
+                    View Public Profile
+                </button>
+<div class="space-y-3">
+<a class="flex items-center gap-3 text-ink-muted font-label-mono text-[11px] hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+                        Support
+                    </a>
+<a class="flex items-center gap-3 text-ink-muted font-label-mono text-[11px] hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                        Sign Out
+                    </a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-navigator-width canvas-bg min-h-screen">
+<!-- Orientation Bar (Local Controls) -->
+<div class="h-orientation-bar-height sticky top-orientation-bar-height md:top-0 z-30 bg-ivory-surface/80 backdrop-blur-xl border-b border-border-hairline flex justify-between items-center px-gutter">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="font-label-mono text-label-mono text-ink-muted uppercase">Editing</span>
+<h1 class="font-body-lg text-[16px] font-semibold text-ink-primary">Profile Identity</h1>
+</div>
+<div class="h-4 w-px bg-border-hairline"></div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-forest-member"></span>
+<span class="font-label-mono text-label-mono text-ink-muted uppercase">Draft Saved</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-5 py-2 font-label-mono text-label-mono text-ink-secondary hover:text-ink-primary transition-colors">Preview</button>
+<button class="px-6 py-2 bg-gradient-to-br from-gold-light to-gold-accent text-ink-primary font-label-mono text-label-mono uppercase tracking-widest shadow-lg shadow-gold-accent/10 hover:opacity-90 transition-all active:scale-95">Publish Changes</button>
+</div>
+</div>
+<!-- The Editorial Sheet (Canvas) -->
+<div class="max-w-[1140px] mx-auto py-sheet-padding px-gutter">
+<section class="editorial-sheet bg-ivory-surface min-h-[1000px] rounded-sm overflow-hidden flex flex-col">
+<!-- Hero Photography Section -->
+<div class="relative w-full aspect-[21/9] overflow-hidden group">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A breathtaking natural landscape photograph of a misty mountain range at dawn, captured with high dynamic range and subtle textures. The lighting is ethereal and warm, with golden hues breaking through the fog. The composition is balanced and artistic, reflecting the refined and professional aesthetic of the BCC design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH0Mjt5uj0afNJQUg0AExPBaJiNeLpvHmlBqvQGExCqxek64Fns4ztQVwMpVVtewpHbPvVAsApv7hOM3YqH4HMFW-1yTVYmeZ73m0in1iAIB-J0VfIQm0N7cVbSVhoHR36NIyfunqfiec9C-5sYnYkQZ64aEVb2nV5btgZCe2QFS7lLwswC2AF5nCjSXyw6QG2yhVGiu1gUiMoXGPHMN1F2sN_NjaAkvAs91zP6qO-IBF8UYwcK_kl7qBUZVQCW7bTRE_CO0uQyg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-ink-primary/40 to-transparent"></div>
+<div class="absolute bottom-6 left-8 flex items-end gap-6">
+<div class="w-24 h-24 rounded-full border-4 border-ivory-surface overflow-hidden shadow-xl">
+<img class="w-full h-full object-cover" data-alt="A minimalist close-up portrait of a photographer with an artistic and professional demeanor. The lighting is soft and directional, emphasizing texture and a high-end editorial feel. The background is a neutral warm ivory, matching the BCC brand colors and the sophisticated workspace atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDo8n5CpRI6yZy14RPezzG7y13_EhXBgKIZLa5w6EcBsuFmKs0u9lPrHcK05qwtQXKNPFL7HD4mmVn2m7Y3UvroGNpBwMTZ_RHWF-gWoVbC2gfhUiqSWn5axpzz7_qjYDYli9f7NMn0iZrNNTZdtK89lKnRbRBq3W1YLE9FHe67xI9PtipMzeuyBqckXHZuOZjLHhX4VrKleiq1RpfcYU5M9acRSAxSDA22JOMbqcRvvf-BPlxuSFi4sLQsC4mX_6A0TX6hOW1adQ"/>
+</div>
+<div class="mb-2">
+<h2 class="font-headline-h1 text-white text-[32px] tracking-tight">Julian Sterling</h2>
+<p class="text-white/80 font-label-mono text-label-mono uppercase tracking-widest">Documentary Photographer</p>
+</div>
+</div>
+<button class="absolute top-6 right-8 bg-ivory-surface/20 backdrop-blur-md text-white border border-white/30 px-4 py-2 font-label-mono text-[10px] uppercase hover:bg-ivory-surface/40 transition-colors">Change Cover</button>
+</div>
+<!-- Editor Content -->
+<div class="flex-1 p-16 grid grid-cols-12 gap-12">
+<!-- Left Column: Core Identity -->
+<div class="col-span-12 lg:col-span-7 space-y-12">
+<div class="portfolio-block">
+<label class="font-label-mono text-label-mono text-ink-muted uppercase block mb-4">Artist Statement</label>
+<textarea class="w-full bg-transparent border-b border-border-hairline focus:border-gold-accent outline-none font-body-lg text-body-lg text-ink-primary py-4 resize-none leading-relaxed" placeholder="Craft your narrative here..." rows="4">Focusing on the intersections of nature and human architecture, my work seeks to uncover the quiet moments of permanence in a transient world.</textarea>
+<div class="mt-2 flex justify-end">
+<span class="font-label-mono text-[9px] text-ink-muted uppercase">124 / 500 Words</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-8 portfolio-block">
+<div>
+<label class="font-label-mono text-label-mono text-ink-muted uppercase block mb-2">Primary Medium</label>
+<input class="w-full bg-transparent border-b border-border-hairline focus:border-gold-accent outline-none font-body-md text-ink-primary py-2" type="text" value="Silver Gelatin / Digital"/>
+</div>
+<div>
+<label class="font-label-mono text-label-mono text-ink-muted uppercase block mb-2">Location</label>
+<input class="w-full bg-transparent border-b border-border-hairline focus:border-gold-accent outline-none font-body-md text-ink-primary py-2" type="text" value="London, United Kingdom"/>
+</div>
+</div>
+<div class="portfolio-block pt-8 border-t border-border-hairline">
+<h3 class="font-headline-h2 text-[24px] mb-6">Exhibition Highlights</h3>
+<div class="space-y-6">
+<div class="flex items-start gap-4 group">
+<div class="w-16 h-16 bg-satin-bg flex-shrink-0 flex items-center justify-center border border-border-hairline group-hover:border-gold-accent transition-colors">
+<span class="material-symbols-outlined text-ink-muted group-hover:text-gold-accent">image</span>
+</div>
+<div class="flex-1">
+<input class="w-full bg-transparent border-b border-border-hairline font-semibold text-ink-primary py-1" type="text" value="The Silent Peak"/>
+<input class="w-full bg-transparent border-b border-transparent font-label-mono text-ink-muted py-1" type="text" value="Royal Academy of Arts, 2023"/>
+</div>
+<button class="text-ink-muted hover:text-error transition-colors mt-2">
+<span class="material-symbols-outlined text-[20px]">delete_outline</span>
+</button>
+</div>
+<button class="flex items-center gap-2 font-label-mono text-label-mono text-gold-accent uppercase hover:gap-3 transition-all">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                                        Add Exhibition
+                                    </button>
+</div>
+</div>
+</div>
+<!-- Right Column: Meta & Attributes -->
+<div class="col-span-12 lg:col-span-5 space-y-10">
+<div class="p-8 bg-satin-bg/50 border border-border-hairline rounded-sm">
+<h4 class="font-label-mono text-label-mono text-ink-primary uppercase mb-6 tracking-widest">Visibility Settings</h4>
+<div class="space-y-6">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-ink-secondary">Public Profile</span>
+<div class="w-10 h-5 bg-gold-accent rounded-full relative cursor-pointer">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-ink-secondary">Open to Commisions</span>
+<div class="w-10 h-5 bg-border-hairline rounded-full relative cursor-pointer">
+<div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-border-hairline">
+<p class="font-label-mono text-[10px] text-ink-muted leading-relaxed uppercase">Changes made to visibility are synchronized with the BCC Global Directory every 24 hours.</p>
+</div>
+</div>
+<div class="portfolio-block">
+<label class="font-label-mono text-label-mono text-ink-muted uppercase block mb-4">Social Integration</label>
+<div class="space-y-4">
+<div class="flex items-center gap-3 bg-ivory-surface p-3 border border-border-hairline">
+<span class="material-symbols-outlined text-[20px] text-ink-muted">link</span>
+<input class="flex-1 bg-transparent outline-none font-metadata-tiny text-[11px]" type="text" value="instagram.com/jsterling"/>
+</div>
+<div class="flex items-center gap-3 bg-ivory-surface p-3 border border-border-hairline">
+<span class="material-symbols-outlined text-[20px] text-ink-muted">link</span>
+<input class="flex-1 bg-transparent outline-none font-metadata-tiny text-[11px]" type="text" value="jsterling.photography"/>
+</div>
+</div>
+</div>
+<div class="portfolio-block">
+<label class="font-label-mono text-label-mono text-ink-muted uppercase block mb-4">Metadata Tags</label>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-ivory-surface border border-border-hairline font-label-mono text-[9px] uppercase">Nature</span>
+<span class="px-3 py-1 bg-ivory-surface border border-border-hairline font-label-mono text-[9px] uppercase">Film</span>
+<span class="px-3 py-1 bg-ivory-surface border border-border-hairline font-label-mono text-[9px] uppercase">Monochrome</span>
+<button class="px-3 py-1 border border-dashed border-border-hairline font-label-mono text-[9px] uppercase text-ink-muted hover:border-gold-accent hover:text-gold-accent transition-colors">+ Add Tag</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer (BCC SiteFooter V6 92) -->
+<footer class="bg-satin-bg border-t border-border-hairline mt-margin-page">
+<div class="max-w-7xl mx-auto py-base px-gutter flex flex-col md:flex-row justify-between items-center gap-4 text-ink-muted font-label-mono text-label-mono">
+<div class="flex items-center gap-6">
+<span class="font-label-mono uppercase tracking-widest text-ink-muted">© 2024 BCC Editorial. All rights reserved.</span>
+</div>
+<div class="flex items-center gap-8">
+<a class="hover:text-ink-primary transition-opacity duration-200" href="#">Privacy Policy</a>
+<a class="hover:text-ink-primary transition-opacity duration-200" href="#">Terms of Service</a>
+<a class="hover:text-ink-primary transition-opacity duration-200" href="#">Member Guidelines</a>
+</div>
+</div>
+</footer>
+</main>
+</div>
+<script>
+        // Micro-interactions for inputs
+        document.querySelectorAll('input, textarea').forEach(el => {
+            el.addEventListener('focus', () => {
+                el.parentElement.classList.add('border-gold-accent');
+            });
+            el.addEventListener('blur', () => {
+                el.parentElement.classList.remove('border-gold-accent');
+            });
+        });
+
+        // Toggle simulation for UI
+        document.querySelectorAll('.relative.cursor-pointer').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const dot = this.querySelector('div');
+                if (this.classList.contains('bg-gold-accent')) {
+                    this.classList.replace('bg-gold-accent', 'bg-border-hairline');
+                    dot.classList.replace('right-1', 'left-1');
+                } else {
+                    this.classList.replace('bg-border-hairline', 'bg-gold-accent');
+                    dot.classList.replace('left-1', 'right-1');
+                }
+            });
+        });
+    </script>
+</body></html>

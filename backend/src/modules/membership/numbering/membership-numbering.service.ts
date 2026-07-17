@@ -180,11 +180,56 @@ export class MembershipNumberingService {
   // application lifecycle.
   // --------------------------------------------------------------------
   async issueTemporaryIdentifier(trx: Transaction<DB>, membershipId: number): Promise<string> {
-    const tempIdentifier = `BCCTemp${String(membershipId).padStart(5, '0')}`;
-    await trx
-      .insertInto('membership_temp_identifiers')
-      .values({ membership_id: membershipId, temp_identifier: tempIdentifier, status: 'ACTIVE' })
-      .execute();
-    return tempIdentifier;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (attempts < maxAttempts) {
+      attempts++;
+
+      // Query the lexicographically highest temp_identifier to find the maximum serial.
+      // Use FOR UPDATE to lock the selected row and serialize concurrent executions.
+      const lastTemp = await trx
+        .selectFrom('membership_temp_identifiers')
+        .select('temp_identifier')
+        .orderBy('temp_identifier', 'desc')
+        .limit(1)
+        .forUpdate()
+        .executeTakeFirst();
+
+      let nextSerial = 1;
+      if (lastTemp) {
+        const match = lastTemp.temp_identifier.match(/^BCCTemp(\d+)$/);
+        if (match) {
+          nextSerial = parseInt(match[1], 10) + 1;
+        }
+      }
+
+      const tempIdentifier = `BCCTemp${String(nextSerial).padStart(5, '0')}`;
+
+      try {
+        await trx
+          .insertInto('membership_temp_identifiers')
+          .values({ membership_id: membershipId, temp_identifier: tempIdentifier, status: 'ACTIVE' })
+          .execute();
+        return tempIdentifier;
+      } catch (error: any) {
+        const isDuplicate =
+          error.code === 'ER_DUP_ENTRY' ||
+          error.errno === 1062 ||
+          String(error).includes('Duplicate entry') ||
+          String(error.message).includes('Duplicate entry');
+
+        if (isDuplicate && attempts < maxAttempts) {
+          // If we hit a duplicate key (e.g. from concurrent execution), loop again to fetch the updated highest serial and retry
+          continue;
+        }
+        // Otherwise, throw a meaningful domain error (ConflictException)
+        throw new ConflictException(
+          `Failed to allocate a unique temporary identifier: ${error.message}`
+        );
+      }
+    }
+
+    throw new ConflictException(`Failed to allocate a unique temporary identifier: Max retry attempts reached.`);
   }
 }

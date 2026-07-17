@@ -295,8 +295,28 @@ export class MembershipLifecycleService {
         .executeTakeFirst();
 
       if (cls?.activation_mode === 'AUTO_AFTER_APPROVAL') {
-        await this.activate(membershipId, { type: 'SYSTEM' });
-        return { finalState: 'ACTIVE' };
+        try {
+          await this.activate(membershipId, { type: 'SYSTEM' });
+          return { finalState: 'ACTIVE' };
+        } catch (error) {
+          // Revert the approval state back to PENDING and clear approved_at
+          await db
+            .updateTable('memberships')
+            .set({ lifecycle_state: 'PENDING', approved_at: null })
+            .where('id', '=', membershipId)
+            .execute();
+
+          await logMembershipAudit({
+            membershipId,
+            eventType: 'LIFECYCLE_TRANSITION',
+            actorType: 'SYSTEM',
+            oldValue: { state: 'APPROVED' },
+            newValue: { state: 'PENDING' },
+            notes: `Auto-activation failed, reverting to PENDING. Error: ${error instanceof Error ? error.message : String(error)}`,
+          });
+
+          throw error;
+        }
       }
     }
 

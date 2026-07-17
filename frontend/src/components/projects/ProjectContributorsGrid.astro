@@ -1,11 +1,12 @@
 ---
 /**
  * ProjectContributorsGrid.astro — Dynamic grid of all project contributors.
- * V6 40 §07 — Contributors Grid (Amendment 001: fully dynamic)
+ * V6 40 §07 — Contributors Grid
  *
  * Fetches contributors from /api/v1/projects/contributors at runtime.
  * Random order on every page load.
- * Each card links to the photographer's profile filtered to the project tag.
+ * Card design matches AboutLeadership — same portrait size, label row, name,
+ * stat line, and profile link — for visual consistency across the platform.
  */
 interface Props {
   projectTag: string;
@@ -29,24 +30,28 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
     id={containerId}
     data-project-tag={projectTag}
     data-gsap="stagger"
+    aria-label={`Contributor profiles for ${projectTitle}`}
   >
     <!-- Skeleton cards — replaced by client script -->
-    {Array.from({ length: 4 }).map(() => (
+    {Array.from({ length: 3 }).map(() => (
       <div class="pcg-card pcg-card--skel" aria-hidden="true">
-        <div class="pcg-avatar pcg-avatar--skel"></div>
-        <div class="pcg-info">
-          <div class="pcg-skel-line pcg-skel-name"></div>
-          <div class="pcg-skel-line pcg-skel-count"></div>
-        </div>
+        <div class="pcg-portrait-wrap pcg-portrait-wrap--skel"></div>
+        <div class="pcg-skel pcg-skel--label"></div>
+        <div class="pcg-skel pcg-skel--name"></div>
+        <div class="pcg-skel pcg-skel--count"></div>
+        <div class="pcg-skel pcg-skel--link"></div>
       </div>
     ))}
   </div>
 </section>
 
 <style>
+/* ── Section wrapper ── */
 .pcg {
   padding-top: var(--s-6);
 }
+
+/* ── Header (bordered box above grid, consistent with ProjectGallery) ── */
 .pcg-header {
   background: var(--surface-0);
   border: 1px solid var(--hairline);
@@ -71,99 +76,127 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   color: var(--ink-900);
   margin: 0;
 }
+
+/* ── Card grid — border pattern matches AboutLeadership ── */
 .pcg-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  border: 1px solid var(--hairline);
-}
-.pcg-card {
+  grid-template-columns: repeat(3, 1fr);
   background: var(--surface-0);
-  padding: 18px 20px;
-  border-right: 1px solid var(--hairline-soft);
-  border-bottom: 1px solid var(--hairline-soft);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  text-decoration: none;
-  color: inherit;
-  transition: background var(--m-fast);
-  min-width: 0;
+  /* Top + left borders from the container; right + bottom from each card */
+  border-top: 1px solid var(--hairline);
+  border-left: 1px solid var(--hairline);
 }
-.pcg-card:hover { background: var(--surface-1); }
-.pcg-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-full);
-  flex-shrink: 0;
+
+/* ── Individual card — mirrors leader-card ── */
+.pcg-card {
+  padding: 40px 36px;
+  border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-0);
+}
+
+/* ── Portrait — 88 px circle, matches leader-portrait-wrap ── */
+.pcg-portrait-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--forest-gradient);
+  margin-bottom: 24px;
+  flex-shrink: 0;
 }
-.pcg-avatar-img {
+.pcg-portrait {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-.pcg-avatar-initials {
+.pcg-portrait-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--forest-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pcg-initials {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 22px;
   font-weight: 700;
-  color: #FFFFFF;
-  line-height: 1;
-}
-.pcg-info {
-  flex: 1;
-  min-width: 0;
-}
-.pcg-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 2px;
-  line-height: 1.3;
-}
-.pcg-count {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-400);
-  letter-spacing: 0.02em;
-}
-.pcg-arrow {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--gold-600);
-  flex-shrink: 0;
-  letter-spacing: 0.04em;
+  color: #ffffff;
 }
 
-/* Skeleton state */
+/* ── Card text — mirrors leader-role / leader-name / leader-location ── */
+.pcg-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-family: var(--font-body);
+}
+.pcg-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  color: var(--ink-900);
+}
+.pcg-count {
+  font-size: 12px;
+  color: var(--ink-400);
+  margin-bottom: 20px;
+  font-family: var(--font-body);
+}
+
+/* ── Profile link — matches leader-profile-link ── */
+.pcg-profile-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-600);
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: color var(--m-fast);
+}
+.pcg-profile-link:hover {
+  color: var(--gold-500);
+}
+
+/* ── Skeleton shimmer ── */
 .pcg-card--skel { pointer-events: none; }
-.pcg-avatar--skel {
+.pcg-portrait-wrap--skel {
   background: var(--surface-2);
   animation: pcg-shimmer 1.6s ease-in-out infinite;
 }
-.pcg-skel-line {
+.pcg-skel {
   background: var(--surface-2);
   border-radius: 2px;
   animation: pcg-shimmer 1.6s ease-in-out infinite;
+  margin-bottom: 10px;
 }
-.pcg-skel-name { height: 12px; width: 70%; margin-bottom: 6px; }
-.pcg-skel-count { height: 9px; width: 40%; }
+.pcg-skel--label { height: 9px;  width: 55%; }
+.pcg-skel--name  { height: 14px; width: 72%; margin-bottom: 8px; }
+.pcg-skel--count { height: 10px; width: 45%; margin-bottom: 20px; }
+.pcg-skel--link  { height: 11px; width: 38%; }
 @keyframes pcg-shimmer { 0%,100% { opacity:.4; } 50% { opacity:.7; } }
 
-@media (max-width: 1024px) {
-  .pcg-grid { grid-template-columns: repeat(3, 1fr); }
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .pcg-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 480px) {
-  .pcg-grid { grid-template-columns: repeat(2, 1fr); }
-  .pcg-title { font-size: 20px; }
+  .pcg-grid {
+    grid-template-columns: 1fr;
+  }
+  .pcg-header { padding: 20px var(--gutter-mob); }
+  .pcg-title  { font-size: 20px; }
+  .pcg-card   { padding: 32px 28px; }
 }
 </style>
 
@@ -189,69 +222,81 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
         gridEl.innerHTML = '';
 
         contributors.forEach((c: any) => {
-          const card = document.createElement('a');
-          card.href = c.username
-            ? `/photographers/${c.username}?genre=${encodeURIComponent(projectTag)}`
-            : '#';
+          const card = document.createElement('div');
           card.className = 'pcg-card';
-          card.setAttribute('aria-label', `${c.name} — ${c.photoCount} photographs`);
           card.style.cssText = 'opacity:0;transform:translateY(16px)';
 
-          // Avatar
-          const avatarDiv = document.createElement('div');
-          avatarDiv.className = 'pcg-avatar';
+          /* Portrait */
+          const portraitWrap = document.createElement('div');
+          portraitWrap.className = 'pcg-portrait-wrap';
+          portraitWrap.setAttribute('aria-hidden', 'true');
           if (c.avatarUrl) {
             const img = document.createElement('img');
-            img.src = c.avatarUrl;
-            img.alt = c.name;
-            img.className = 'pcg-avatar-img';
-            img.loading = 'lazy';
-            img.decoding = 'async';
-            avatarDiv.appendChild(img);
+            img.src       = c.avatarUrl;
+            img.alt       = c.name;
+            img.className = 'pcg-portrait';
+            img.loading   = 'lazy';
+            img.decoding  = 'async';
+            portraitWrap.appendChild(img);
           } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'pcg-portrait-placeholder';
             const initials = document.createElement('span');
-            initials.className = 'pcg-avatar-initials';
+            initials.className = 'pcg-initials';
             initials.setAttribute('aria-hidden', 'true');
             initials.textContent = getInitials(c.name);
-            avatarDiv.appendChild(initials);
+            placeholder.appendChild(initials);
+            portraitWrap.appendChild(placeholder);
           }
-          card.appendChild(avatarDiv);
+          card.appendChild(portraitWrap);
 
-          // Info
-          const info = document.createElement('div');
-          info.className = 'pcg-info';
-          const name = document.createElement('div');
-          name.className = 'pcg-name';
+          /* Label */
+          const label = document.createElement('div');
+          label.className   = 'pcg-label';
+          label.textContent = 'Contributor';
+          card.appendChild(label);
+
+          /* Name */
+          const name = document.createElement('h4');
+          name.className   = 'pcg-name';
           name.textContent = c.name;
-          const count = document.createElement('div');
-          count.className = 'pcg-count';
-          count.textContent = `${c.photoCount} photo${c.photoCount === 1 ? '' : 's'}`;
-          info.appendChild(name);
-          info.appendChild(count);
-          card.appendChild(info);
+          card.appendChild(name);
 
-          // Arrow
-          const arrow = document.createElement('span');
-          arrow.className = 'pcg-arrow';
-          arrow.setAttribute('aria-hidden', 'true');
-          arrow.textContent = 'View →';
-          card.appendChild(arrow);
+          /* Photo count */
+          const count = document.createElement('div');
+          count.className   = 'pcg-count';
+          count.textContent = `${c.photoCount} ${c.photoCount === 1 ? 'Photograph' : 'Photographs'}`;
+          card.appendChild(count);
+
+          /* Profile link */
+          if (c.username) {
+            const link = document.createElement('a');
+            link.href      = `/photographers/${c.username}?genre=${encodeURIComponent(projectTag)}`;
+            link.className = 'pcg-profile-link';
+            link.setAttribute('aria-label', `View ${c.name}'s profile`);
+            link.textContent = 'View Profile ';
+            const arrow = document.createElement('span');
+            arrow.setAttribute('aria-hidden', 'true');
+            arrow.textContent = '→';
+            link.appendChild(arrow);
+            card.appendChild(link);
+          }
 
           gridEl.appendChild(card);
         });
 
-        // Animate in
+        /* Animate in — staggered fade+rise matching About page behaviour */
         const cards = Array.from(gridEl.querySelectorAll<HTMLElement>('.pcg-card'));
         cards.forEach((card, i) => {
           setTimeout(() => {
             card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
+            card.style.opacity    = '1';
+            card.style.transform  = 'translateY(0)';
           }, i * 60);
         });
 
       } catch {
-        // Leave skeleton on error — silent failure
+        /* Leave skeleton visible on error — silent failure */
       }
     }
 

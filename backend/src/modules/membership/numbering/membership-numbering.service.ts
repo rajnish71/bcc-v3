@@ -175,9 +175,15 @@ export class MembershipNumberingService {
   }
 
   // --------------------------------------------------------------------
-  // Temporary onboarding identifiers (MEM-007 §6) -- migration/onboarding
-  // use only. See file header: not called anywhere in this pass's standard
-  // application lifecycle.
+  // MEM-007 §6 specifies the format ("BCCTempXXXXX") and purpose of
+  // temporary onboarding identifiers, but does NOT prescribe an allocation
+  // algorithm. The project intentionally uses a monotonic, non-reusing 
+  // sequential allocator where the next temporary identifier is generated 
+  // as MAX(existing) + 1. This is an implementation decision made to 
+  // guarantee uniqueness, operational simplicity, and collision resistance 
+  // (with locking and retries). Future developers must NOT assume this 
+  // sequential allocation strategy is constitutionally mandated.
+  // See: ProjectDocs/Architecture/ADR-001_TEMP_IDENTIFIER_ALLOCATION.md
   // --------------------------------------------------------------------
   async issueTemporaryIdentifier(trx: Transaction<DB>, membershipId: number): Promise<string> {
     let attempts = 0;

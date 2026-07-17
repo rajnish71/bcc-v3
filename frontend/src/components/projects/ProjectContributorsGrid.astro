@@ -87,16 +87,17 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   border-left: 1px solid var(--hairline);
 }
 
-/* ── Individual card — mirrors leader-card ── */
-.pcg-card {
+/* ── Individual card — :global because cards are created by JS at runtime
+   (Astro §4.4: runtime DOM nodes never receive the scoped data attribute) ── */
+:global(.pcg-card) {
   padding: 40px 36px;
   border-right: 1px solid var(--hairline);
   border-bottom: 1px solid var(--hairline);
   background: var(--surface-0);
 }
 
-/* ── Portrait — 88 px circle, matches leader-portrait-wrap ── */
-.pcg-portrait-wrap {
+/* ── Portrait — :global for same reason ── */
+:global(.pcg-portrait-wrap) {
   width: 88px;
   height: 88px;
   border-radius: 50%;
@@ -104,13 +105,13 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   margin-bottom: 24px;
   flex-shrink: 0;
 }
-.pcg-portrait {
+:global(.pcg-portrait) {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-.pcg-portrait-placeholder {
+:global(.pcg-portrait-placeholder) {
   width: 100%;
   height: 100%;
   background: var(--forest-gradient);
@@ -118,15 +119,15 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   align-items: center;
   justify-content: center;
 }
-.pcg-initials {
+:global(.pcg-initials) {
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
   color: #ffffff;
 }
 
-/* ── Card text — mirrors leader-role / leader-name / leader-location ── */
-.pcg-label {
+/* ── Card text ── */
+:global(.pcg-label) {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -135,7 +136,7 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   margin-bottom: 8px;
   font-family: var(--font-body);
 }
-.pcg-name {
+:global(.pcg-name) {
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
@@ -143,15 +144,15 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   margin-bottom: 6px;
   color: var(--ink-900);
 }
-.pcg-count {
+:global(.pcg-count) {
   font-size: 12px;
   color: var(--ink-400);
   margin-bottom: 20px;
   font-family: var(--font-body);
 }
 
-/* ── Profile link — matches leader-profile-link ── */
-.pcg-profile-link {
+/* ── Profile link ── */
+:global(.pcg-profile-link) {
   font-size: 12px;
   font-weight: 600;
   color: var(--gold-600);
@@ -162,7 +163,7 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   text-decoration: none;
   transition: color var(--m-fast);
 }
-.pcg-profile-link:hover {
+:global(.pcg-profile-link:hover) {
   color: var(--gold-500);
 }
 
@@ -196,7 +197,7 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
   }
   .pcg-header { padding: 20px var(--gutter-mob); }
   .pcg-title  { font-size: 20px; }
-  .pcg-card   { padding: 32px 28px; }
+  :global(.pcg-card) { padding: 32px 28px; }
 }
 </style>
 

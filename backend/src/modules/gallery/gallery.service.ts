@@ -486,6 +486,7 @@ export class GalleryService {
 
     const rows = await query
       .orderBy('created_at', 'desc')
+      .orderBy('id', 'desc')
       .limit(limit)
       .offset(offset)
       .execute();

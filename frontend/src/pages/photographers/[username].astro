@@ -1119,6 +1119,7 @@ interface PhotoEntry {
 let allPhotos: PhotoEntry[] = [];
 let profileDisplayName = '';
 let currentGalleryLayout = 'justified';
+const seenPhotoIds = new Set<string | number>();
 
 // ── Justified grid layout — inherited verbatim from /showcase (item 70) ────
 // Rows fill to the container width; the trailing partial row is kept as
@@ -1868,7 +1869,7 @@ async function loadPhotos(userId: number, append = false) {
 
     // On a fresh load, reset the accumulators only after the response arrives
     // (so a failed fetch doesn't wipe the grid).
-    if (!append) { allPhotos = []; profileBuffer = []; grid.innerHTML = ''; }
+    if (!append) { allPhotos = []; profileBuffer = []; seenPhotoIds.clear(); grid.innerHTML = ''; }
 
     if (photos.length === 0 && allPhotos.length === 0) {
       grid.innerHTML = currentProfileTag
@@ -1878,15 +1879,22 @@ async function loadPhotos(userId: number, append = false) {
       return;
     }
 
-    const mapped = photos.map((p: PhotoEntry) => ({
-      ...p,
-      aspect: (p.width_px && p.height_px) ? p.width_px / p.height_px : 1.5,
-      imageUrl: p.urls?.medium ?? p.urls?.original ?? '',
-    }));
+    const mapped = photos
+      .filter((p: PhotoEntry) => {
+        const key = p.id ?? p.uuid;
+        if (key == null || seenPhotoIds.has(key)) return false;
+        seenPhotoIds.add(key);
+        return true;
+      })
+      .map((p: PhotoEntry) => ({
+        ...p,
+        aspect: (p.width_px && p.height_px) ? p.width_px / p.height_px : 1.5,
+        imageUrl: p.urls?.medium ?? p.urls?.original ?? '',
+      }));
 
     // hasMore is computed from what has been *fetched* (rendered + buffered),
     // independent of how many end up in the trailing buffer this page.
-    const fetchedSoFar = offset + mapped.length;
+    const fetchedSoFar = offset + photos.length;
     const hasMore = fetchedSoFar < profileTotal;
     renderProfileGrid(mapped, !hasMore);
 

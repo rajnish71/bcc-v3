@@ -45,6 +45,8 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
         id="showcase"
         ariaLabel="Photo showcase grid"
         emptyText="No photographs match this filter."
+        onePerPhotographer={false}
+        pageSize={24}
       >
         <button slot="empty-actions" class="btn btn-outline btn-md" id="clear-filter-btn">Clear filter</button>
       </JustifiedPhotoGrid>

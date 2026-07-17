@@ -166,6 +166,8 @@ const {
     let allPhotos:   any[] = [];
     let photoBuffer: any[] = [];
     let currentFilter = apiTag || 'all';
+    let isLoading = false;
+    const seenIds = new Set<string>();
 
     const skelEl      = () => document.getElementById(`${baseId}-skeleton`);
     const emptyEl     = () => document.getElementById(`${baseId}-empty`);
@@ -208,9 +210,12 @@ const {
         gridEl.querySelectorAll('.grid-row').forEach(el => el.remove());
         photoBuffer = [];
         allPhotos   = [];
+        seenIds.clear();
       }
 
-      const candidates    = [...photoBuffer, ...newPhotos];
+      // Deduplicate: skip photos whose ID was already rendered (or buffered).
+      const fresh = newPhotos.filter(p => p.id != null && !seenIds.has(String(p.id)));
+      const candidates    = [...photoBuffer, ...fresh];
       const containerWidth = gridEl.clientWidth;
       const { rows, leftovers } = buildJustifiedLayout(candidates, containerWidth);
       photoBuffer = leftovers;
@@ -265,11 +270,14 @@ const {
           rowEl.appendChild(link);
 
           allPhotos.push(p);
+          seenIds.add(String(p.id));
         });
         fragment.appendChild(rowEl);
       });
 
       gridEl.appendChild(fragment);
+      // Track buffered photo IDs so the next Load More request skips them.
+      photoBuffer.forEach(p => { if (p.id != null) seenIds.add(String(p.id)); });
 
       gsap.from(gridEl.querySelectorAll('.grid-row:not(.was-visible) .photo-card'), {
         opacity: 0, y: 20, duration: 0.5, stagger: { amount: 0.3, from: 'start' }, ease: 'power2.out',
@@ -279,7 +287,9 @@ const {
 
     /* ── Fetch photos ── */
     async function fetchPhotos(reset = true) {
-      if (reset) { photoBuffer = []; allPhotos = []; }
+      if (isLoading) return;
+      isLoading = true;
+      if (reset) { photoBuffer = []; allPhotos = []; seenIds.clear(); }
 
       const offset = allPhotos.length + photoBuffer.length;
       const params = new URLSearchParams({
@@ -321,6 +331,7 @@ const {
 
         if (photos.length === 0 && allPhotos.length === 0 && photoBuffer.length === 0) {
           empty?.removeAttribute('hidden');
+          isLoading = false;
           return;
         }
 
@@ -337,6 +348,8 @@ const {
       } catch {
         skel?.setAttribute('hidden', '');
         if (allPhotos.length === 0 && photoBuffer.length === 0) empty?.removeAttribute('hidden');
+      } finally {
+        isLoading = false;
       }
     }
 

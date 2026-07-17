@@ -1,8 +1,8 @@
 ---
-import { aboutImages } from '../../data/aboutImages';
+import { aboutPhotos, photoSrc, photoSrcset, photoCredit } from '../../data/photoRegistry';
 
-const primary = aboutImages.whyBhopalPrimary;
-const secondary = aboutImages.whyBhopalSecondary;
+const primary = aboutPhotos.whyBhopalPrimary;
+const secondary = aboutPhotos.whyBhopalSecondary;
 ---
 
 <section class="why-section" aria-labelledby="why-heading" data-gsap="reveal">
@@ -16,13 +16,15 @@ const secondary = aboutImages.whyBhopalSecondary;
   <!-- Full-width primary photograph -->
   <div class="why-photo-primary-wrap">
     <img
-      src={primary.src}
+      src={photoSrc(primary, 1440)}
+      srcset={photoSrcset(primary, [800, 1200, 1440])}
+      sizes="100vw"
       alt={primary.alt}
       class="why-photo-primary"
       loading="lazy"
     />
     <div class="photo-caption-bar" aria-hidden="true">
-      <span class="photo-caption">{primary.caption}</span>
+      <span class="photo-caption">{photoCredit(primary)}</span>
     </div>
   </div>
 
@@ -76,13 +78,15 @@ const secondary = aboutImages.whyBhopalSecondary;
           <!-- Secondary photograph -->
           <div class="why-photo-secondary-wrap">
             <img
-              src={secondary.src}
+              src={photoSrc(secondary, 720)}
+              srcset={photoSrcset(secondary, [480, 720])}
+              sizes="(max-width: 900px) 100vw, 50vw"
               alt={secondary.alt}
               class="why-photo-secondary"
               loading="lazy"
             />
             <div class="photo-caption-bar photo-caption-bar--sm" aria-hidden="true">
-              <span class="photo-caption photo-caption--sm">{secondary.caption}</span>
+              <span class="photo-caption photo-caption--sm">{photoCredit(secondary)}</span>
             </div>
           </div>
         </div>

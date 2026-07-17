@@ -1,5 +1,5 @@
 ---
-import { aboutImages } from '../../data/aboutImages';
+import { aboutPhotos, photoSrc, photoSrcset, photoCredit } from '../../data/photoRegistry';
 
 interface Props {
   membersCount?: number;
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { membersCount, activitiesCount, photosCount } = Astro.props;
-const img = aboutImages.hero;
+const img = aboutPhotos.hero;
 
 const currentYear = new Date().getFullYear();
 const yearsCount = currentYear - 2015;
@@ -18,7 +18,9 @@ const yearsCount = currentYear - 2015;
   <!-- Full-width hero photograph -->
   <div class="hero-photo-wrap" data-gsap="image-reveal">
     <img
-      src={img.src}
+      src={photoSrc(img, 1920)}
+      srcset={photoSrcset(img, [800, 1200, 1600, 1920])}
+      sizes="100vw"
       alt={img.alt}
       class="hero-photo"
       loading="eager"
@@ -31,7 +33,7 @@ const yearsCount = currentYear - 2015;
       <div class="hero-eyebrow">Bhopal Camera Club · Est. 2015</div>
       <h1 class="hero-title">The Story of<br/>Bhopal Camera Club</h1>
       <p class="hero-intro">We began as a handful of photographers who loved Bhopal and believed that the best way to learn was to go out and make photographs together. A decade later, we are a registered society, a community of hundreds, and a growing visual archive of one of India's most photogenic cities.</p>
-      <div class="hero-photo-credit">{img.caption}</div>
+      <div class="hero-photo-credit">{photoCredit(img)}</div>
     </div>
   </div>
 

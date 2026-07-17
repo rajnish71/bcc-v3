@@ -50,9 +50,12 @@ const chaptersJson = JSON.stringify(chapters);
                   alt={ch.photoAlt || ''}
                   class="chapter-photo"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div class="chapter-photo-caption-bar" aria-hidden="true">
-                  <span class="chapter-photo-caption">{ch.photoLabel}</span>
+                  <span class="chapter-photo-caption">
+                    {ch.photoLabel}{ch.photographer ? ` · Photo: ${ch.photographer}` : ''}
+                  </span>
                 </div>
               </div>
             ) : (

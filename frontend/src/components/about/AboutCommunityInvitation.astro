@@ -1,20 +1,22 @@
 ---
-import { aboutImages } from '../../data/aboutImages';
+import { aboutPhotos, photoSrc, photoSrcset, photoCredit } from '../../data/photoRegistry';
 
-const img = aboutImages.communityPhotowalk;
+const img = aboutPhotos.communityPhotowalk;
 ---
 
 <section class="invitation-section" aria-labelledby="invitation-heading">
   <!-- Community photograph -->
   <div class="invitation-photo-wrap">
     <img
-      src={img.src}
+      src={photoSrc(img, 1440)}
+      srcset={photoSrcset(img, [800, 1200, 1440])}
+      sizes="100vw"
       alt={img.alt}
       class="invitation-photo"
       loading="lazy"
     />
     <div class="invitation-photo-caption-bar" aria-hidden="true">
-      <span class="invitation-photo-caption">{img.caption}</span>
+      <span class="invitation-photo-caption">{photoCredit(img)}</span>
     </div>
   </div>
 

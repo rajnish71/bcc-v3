@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#F2EFE9;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#EFE3C8}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+img{display:block}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#F2EFE9;padding:0 0 160px;" data-screen-label="V6 06 Activities">
+
+<!-- ══ COVER ══ -->
+<header style="background:linear-gradient(180deg,#FFFFFF 0%,#FAF8F4 100%);border-bottom:1px solid #E7E1D6;padding:96px 0 72px;">
+  <div style="max-width:1140px;margin:0 auto;padding:0 48px;">
+    <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:64px;width:auto;margin-bottom:48px;"/>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <span style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#A8843C;font-weight:600;">Design Authority · V6 · July 2026</span>
+      <span style="background:#141210;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">V6 06 ACTIVITIES</span>
+      <span style="background:#3E5A48;color:#FFFFFF;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">INHERITS V6 00 · V6 91 · V6 92</span>
+      <span style="background:#3A2A10;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;border:1px solid rgba(201,169,97,0.3);">PUBLIC FACE · COMMUNITY ARCHIVE</span>
+    </div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(44px,5.5vw,72px);font-weight:700;letter-spacing:-0.03em;line-height:1.0;margin-bottom:28px;">Activities</h1>
+    <p style="font-size:18px;line-height:1.7;color:#57514B;max-width:680px;font-weight:300;margin-bottom:12px;">Authoritative V6 wireframe for the Activities page — the public face of Bhopal Camera Club's community practice. This page answers one question: what does BCC actually do? It must inspire participation while simultaneously serving as a permanent archive of the club's journey.</p>
+    <p style="font-size:13px;line-height:1.7;color:#A3493B;max-width:640px;margin-bottom:12px;font-weight:500;">This is NOT an event management page. NOT a calendar application. NOT Eventbrite. The visual language is Refined Editorial Luxury — large photography, editorial spacing, museum publication, premium typography. No dashboard feeling.</p>
+    <p style="font-size:13px;line-height:1.6;color:#8B8378;max-width:540px;margin-bottom:40px;font-style:italic;">Inherits V6 00 BCC Design Principles, V6 91 SiteHeader, V6 92 SiteFooter. Photography philosophy from V6 00 §05 applies throughout. One conditional section: FeaturedActivity.</p>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;border-top:1px solid #E7E1D6;padding-top:28px;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Route</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;">/activities</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Sections</div><div style="font-size:14px;font-weight:500;">10 — 1 conditional · 1 sticky</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Shared Components</div><div style="font-size:14px;font-weight:500;">SiteHeader · SiteFooter — placeholder only</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Photography</div><div style="font-size:14px;font-weight:500;">Authentic BCC activity photography · No stock</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ 01 — PAGE ARCHITECTURE ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:96px 48px 0;" data-screen-label="01 Architecture">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">01</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Page Architecture</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">BaseLayout composition for /activities. Ten sections ordered top-to-bottom. One conditional section — FeaturedActivity — renders only when admin has enabled a featured activity. One sticky element — ActivityCategories — affixes below the SiteHeader after the PageHero scrolls past. SiteHeader and SiteFooter are shared components, unchanged from V6 91 and V6 92.</p>
+  <div style="border:1px solid #2C2820;background:#141210;overflow:hidden;margin-bottom:32px;">
+    <div style="padding:16px 32px;border-bottom:1px solid #2C2820;display:flex;align-items:center;gap:16px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.12em;">BaseLayout · Route /activities</span>
+      <span style="font-size:11px;color:#57514B;">10 sections · 1 conditional · 1 sticky · 2 shared</span>
+    </div>
+    <sc-for list="{{ tree }}" as="t" hint-placeholder-count="10">
+      <div style="display:flex;align-items:center;padding:9px 32px;border-bottom:1px solid #1E1C1A;background:{{ t.bg }};">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;width:28px;flex-shrink:0;">{{ t.idx }}</div>
+        <div style="width:5px;height:5px;border-radius:50%;background:{{ t.dot }};flex-shrink:0;margin-right:14px;"></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{{ t.nameColor }};min-width:280px;">{{ t.name }}</div>
+        <div style="font-size:12px;color:#57514B;flex:1;padding-right:20px;">{{ t.desc }}</div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:{{ t.tagBg }};color:{{ t.tagColor }};padding:2px 10px;letter-spacing:0.1em;border:1px solid {{ t.tagBorder }};flex-shrink:0;visibility:{{ t.tagVis }};">{{ t.tag }}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Conditional Section</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#37322C;">FeaturedActivity<br/>  → featuredActivity.enabled<br/><br/>When OFF:<br/>  No DOM node<br/>  No placeholder<br/>  No empty state<br/>  Page reflows directly past<br/>  ActivityCategories → UpcomingActivities</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Sticky Element</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#37322C;">ActivityCategories<br/>  position: sticky<br/>  top: 64px (SiteHeader height)<br/>  z-index: 40<br/>  Activates when PageHero bottom<br/>  exits viewport<br/>  box-shadow on sticky state<br/>  background: #FFFFFF solid</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Photography Rule</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#37322C;">Hero: natural ratio · full-width<br/>FeaturedActivity: cover · editorial<br/>  exception — panoramic<br/>Activity cards: 3:2 · cover<br/>  editorial exception<br/>Archive cards: 16:9 · cover<br/>  editorial exception<br/>Gallery: justified rows<br/>  natural ratios · no crop<br/>No object-fit:cover in gallery</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 — SITEHEADER ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="02 SiteHeader">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">02</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">SiteHeader {session}</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:32px;">Shared component. Fully documented in V6 91 SiteHeader. Not redrawn here — placeholder only. "Activities" nav item receives the active gold bottom-border state on this route.</p>
+  <div style="border:1.5px dashed #C9A961;background:rgba(201,169,97,0.03);overflow:hidden;margin-bottom:12px;">
+    <div style="height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;border-bottom:1px solid rgba(201,169,97,0.18);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#C9A961;"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;letter-spacing:0.08em;text-transform:uppercase;">SiteHeader {session} — V6 91</span>
+      </div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;text-transform:uppercase;">Shared Component · Do Not Redraw</span>
+    </div>
+    <div style="padding:14px 40px;display:flex;align-items:center;gap:28px;opacity:0.4;">
+      <div style="width:88px;height:18px;background:#D8D2C6;border-radius:2px;"></div>
+      <div style="display:flex;gap:24px;flex:1;">
+        <div style="width:36px;height:10px;background:#D8D2C6;border-radius:2px;"></div>
+        <div style="width:36px;height:10px;background:#D8D2C6;border-radius:2px;"></div>
+        <div style="width:56px;height:10px;background:#D8D2C6;border-radius:2px;"></div>
+        <div style="width:56px;height:10px;background:#A8843C;border-radius:2px;border-bottom:2px solid #A8843C;"></div>
+        <div style="width:44px;height:10px;background:#D8D2C6;border-radius:2px;"></div>
+        <div style="width:44px;height:10px;background:#D8D2C6;border-radius:2px;"></div>
+      </div>
+      <div style="width:130px;height:28px;background:linear-gradient(135deg,rgba(201,169,97,0.35),rgba(168,132,60,0.35));border-radius:2px;"></div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;">"Activities" nav item receives gold bottom-border active state. All session states per V6 91. Header condenses after 60px scroll (data-gsap="header-condense"). Transparent at rest over hero photography.</p>
+</section>
+
+<!-- ══ 03 — PAGE HERO ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="03 PageHero">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">03</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">PageHero — Activities</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:12px;">Large editorial hero. Photography-first. No CTA. The hero carries the page title "Activities", a 400-word editorial introduction to the club's practice, and four meaningful statistics. The writing should feel like a premium editorial feature — not a promotional brochure. It establishes the club's practice as a coherent creative endeavour, not a list of events.</p>
+  <div style="display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap;">
+    <span style="background:#2A3E32;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">NO CTA IN HERO — editorial introduction only</span>
+    <span style="background:#141210;color:#8B8378;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">Header transparent at rest · dark-glass after 60px scroll</span>
+  </div>
+
+  <div style="border:1px solid #2C2820;overflow:hidden;margin-bottom:12px;">
+    <div style="position:relative;min-height:600px;background:#181410;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(158deg,#181410 0px,#181410 52px,#1C1814 52px,#1C1814 104px);"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,16,0.18) 0%,rgba(20,18,16,0) 28%,rgba(20,18,16,0) 48%,rgba(20,18,16,0.78) 100%);"></div>
+      <div style="position:absolute;top:14px;right:16px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.32);text-align:right;line-height:1.9;">activityHeroImage<br/>Admin-curated · Dashboard → Hero Panel<br/>Preferred: photowalk group at a Bhopal location<br/>natural ratio · full-width · data-gsap="image-reveal"<br/>Not a studio shot · Not a portrait</div>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:64px 72px 0;">
+        <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:18px;">Bhopal Camera Club · /activities</div>
+        <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(48px,5vw,76px);font-weight:700;letter-spacing:-0.03em;color:#FFFFFF;line-height:1.0;margin-bottom:32px;">Activities</h1>
+        <div style="max-width:640px;padding-bottom:56px;">
+          <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:18px;text-wrap:pretty;">For ten years, Bhopal Camera Club has been going out. This is perhaps the simplest and most accurate description of what this club does: it goes out — into the city at dawn, into the wetlands before the birds have finished their first circuits, into the lanes of Old Bhopal where the light falls differently than anywhere else in Central India.</p>
+          <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:18px;text-wrap:pretty;">The club organises monthly photowalks. These are not tours; they are not guided walks with commentary. They are gatherings of people who carry cameras and who have agreed, implicitly, to pay attention to the same place at the same time. What each person makes of that place and time is their own. Over more than a decade of monthly photowalks, this quiet collective attention has accumulated into something no individual photographer could have produced: a record of Bhopal in motion — the construction, the seasons, the light, the people.</p>
+          <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:18px;text-wrap:pretty;">Alongside the photowalks, Chai Per Charcha has become one of the club's most valued institutions. It is an informal monthly gathering with no agenda and no photography — just tea and conversation about making images, about creative work, about Bhopal. These evenings have started more photography projects and more lasting friendships than any formal workshop.</p>
+          <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:18px;text-wrap:pretty;">Workshops occupy a different register. When BCC organises a technical session — on portrait direction, on long-exposure work, on understanding wildlife behaviour before a morning in the forest — there is an expectation of concentrated effort. These sessions are small by design. Ten to fifteen participants working on a single problem with a facilitator who has solved that problem many times.</p>
+          <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:18px;text-wrap:pretty;">Heritage documentation has become one of the club's most significant contributions. Central India is rich in built heritage — stupas, mosques, temples, havelis, colonial-era buildings — much of it under-documented. BCC's archive now contains systematic photography of dozens of sites across Madhya Pradesh, conducted with the rigour of a documentary project rather than the casualness of tourism photography.</p>
+          <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.84);font-weight:300;text-wrap:pretty;">Birds of Bhopal, night photography, wildlife, astro photography, portrait, travel, exhibitions, competitions — the full range of activities reflects a membership that approaches photography seriously across many genres. What unifies it is not a shared aesthetic but a shared commitment to making photographs that matter, in a city that rewards sustained attention.</p>
+          <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.28);letter-spacing:0.1em;">Monthly Photowalk · Upper Lake Shores · Bhopal · Photograph by BCC member</div>
+        </div>
+      </div>
+    </div>
+    <!-- Statistics band -->
+    <div style="background:#FAF8F4;border-top:1px solid #2C2820;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;">
+        <div style="padding:28px 32px;border-right:1px solid #E7E1D6;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:8px;">Active Since</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;color:#A8843C;letter-spacing:-0.03em;line-height:1;margin-bottom:10px;">10+ Years</div>
+          <div style="font-size:13px;line-height:1.75;color:#57514B;text-wrap:pretty;">A decade of monthly photowalks, workshops and community gatherings — the unbroken rhythm of Bhopal Camera Club since 2015.</div>
+        </div>
+        <div style="padding:28px 32px;border-right:1px solid #E7E1D6;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:8px;">Activities Conducted</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;color:#A8843C;letter-spacing:-0.03em;line-height:1;margin-bottom:10px;">450+</div>
+          <div style="font-size:13px;line-height:1.75;color:#57514B;text-wrap:pretty;">Every photowalk, workshop, Chai Per Charcha and exhibition since inception. A continuous record of a community in motion.</div>
+        </div>
+        <div style="padding:28px 32px;border-right:1px solid #E7E1D6;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:8px;">Photographs Archived</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;color:#A8843C;letter-spacing:-0.03em;line-height:1;margin-bottom:10px;">18,000+</div>
+          <div style="font-size:13px;line-height:1.75;color:#57514B;text-wrap:pretty;">Photographs submitted to the BCC archive across all activities. A growing visual library of Central India, made collectively.</div>
+        </div>
+        <div style="padding:28px 32px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:8px;">Total Participants</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;color:#A8843C;letter-spacing:-0.03em;line-height:1;margin-bottom:10px;">2,800+</div>
+          <div style="font-size:13px;line-height:1.75;color:#57514B;text-wrap:pretty;">Total registrations across all activities since 2015. Many members have attended hundreds of sessions; some have missed very few.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:24px;">HERO — Admin-curated photograph. data-gsap="image-reveal" on load. Statistics dynamic from /api/v1/stats/activities · data-gsap="counter" on numerics. SiteHeader transparent over hero · dark-glass after 60px scroll.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Hero Photography Selection</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">Preferred: a photowalk image showing BCC members at a recognisable Bhopal location in early morning light. Not a portrait. Not a studio shot. The image must communicate "these are photographers who go out." Admin-curated from Dashboard → Activities → Hero Panel. Falls back to the most recent activity cover photo.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Editorial Copy Mandate</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">The hero introduction (~400 words) replaces what other platforms would use as a category filter header. It establishes the club's practice as a coherent creative endeavour — not a list of events. Written once, reviewed annually by the committee. No marketing language. No clichés. No superlatives without evidence.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Statistics Data Source</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">/api/v1/stats/activities<br/>  .yearsActive (2015 → now)<br/>  .totalActivities (count all)<br/>  .totalPhotographs (archive)<br/>  .totalParticipants (sum all)<br/>data-gsap="counter" on render<br/>CDN edge cache: 24h TTL<br/>Stale-while-revalidate pattern</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 04 — ACTIVITY CATEGORIES ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="04 ActivityCategories">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">04</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">ActivityCategories — Sticky Filter Bar</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:16px;">The ActivityCategories bar sticks below the SiteHeader after the PageHero scrolls past. It provides search, category filtering, temporal filtering, eligibility filtering, and a view toggle — all without reloading the page. The filter system drives the Upcoming Activities and Past Activities Archive sections simultaneously.</p>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:32px;">When any filter is active, the visible activity count updates immediately — for example "24 activities" collapses to "3 activities" when Heritage is selected with Past filter. The URL reflects the active filter state so filtered views can be shared or bookmarked: /activities?category=heritage&amp;time=past. On page load, active filters are hydrated from URL query parameters, making deep-links and browser history function as expected.</p>
+
+  <div style="border:1px solid #2C2820;overflow:hidden;margin-bottom:12px;">
+    <div style="padding:8px 20px;background:#141210;border-bottom:1px solid #2C2820;display:flex;align-items:center;gap:10px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:#C9A961;"></div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;letter-spacing:0.08em;">STICKY FILTER BAR · position:sticky · top:64px · z-index:40 · background:#FFFFFF</span>
+    </div>
+    <!-- Row 1: search + view toggle -->
+    <div style="background:#FFFFFF;border-bottom:1px solid #E7E1D6;padding:14px 28px;">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;background:#F4F0E8;border:1px solid #E7E1D6;padding:9px 16px;flex:1;min-width:220px;max-width:300px;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="5" stroke="#8B8378" stroke-width="1.5"/><line x1="10" y1="10" x2="13" y2="13" stroke="#8B8378" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-size:13px;color:#8B8378;">Search activities…</span>
+        </div>
+        <div style="flex:1;"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8B8378;">24 activities</span>
+        <div style="display:flex;border:1px solid #D8D2C6;overflow:hidden;">
+          <button style="padding:8px 18px;font-size:11px;font-weight:600;background:#141210;color:#FFFFFF;letter-spacing:0.06em;">LIST</button>
+          <button style="padding:8px 18px;font-size:11px;font-weight:500;color:#8B8378;background:#FFFFFF;letter-spacing:0.06em;">GRID</button>
+        </div>
+      </div>
+    </div>
+    <!-- Row 2: categories -->
+    <div style="background:#FAF8F4;border-bottom:1px solid #E7E1D6;padding:10px 28px;">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;text-transform:uppercase;letter-spacing:0.1em;margin-right:6px;flex-shrink:0;">Category</span>
+        <button style="font-size:12px;font-weight:600;padding:5px 14px;background:#141210;color:#FFFFFF;">All</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Photowalks</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Workshops</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Heritage</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Birds of Bhopal</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Wildlife</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Night Photography</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Astro Photography</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Portrait</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Exhibitions</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Competitions</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Community</button>
+        <button style="font-size:12px;padding:5px 13px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Travel</button>
+      </div>
+    </div>
+    <!-- Row 3: filters -->
+    <div style="background:#F4F0E8;padding:10px 28px;">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;text-transform:uppercase;letter-spacing:0.1em;">Time</span>
+          <button style="font-size:12px;font-weight:600;padding:5px 14px;background:#141210;color:#FFFFFF;">Upcoming</button>
+          <button style="font-size:12px;padding:5px 14px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Past</button>
+        </div>
+        <div style="width:1px;height:20px;background:#D8D2C6;"></div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;text-transform:uppercase;letter-spacing:0.1em;">Eligibility</span>
+          <button style="font-size:12px;font-weight:600;padding:5px 14px;background:#141210;color:#FFFFFF;">Everyone</button>
+          <button style="font-size:12px;padding:5px 14px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Members</button>
+          <button style="font-size:12px;padding:5px 14px;background:#FFFFFF;border:1px solid #E7E1D6;color:#57514B;">Registration Required</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:32px;">STICKY — top:64px · z-index:40. Filter params push to URL: ?category=heritage&amp;time=past&amp;eligibility=members. Hydrated from URL on load. box-shadow added on stick state.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Sticky Behaviour</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">The bar begins inline, immediately below the PageHero statistics band. When the bottom of the PageHero exits the viewport, the bar transitions to sticky — affixing at top:64px below the condensed SiteHeader. A subtle box-shadow appears to signal the sticky state. On mobile, the bar collapses to a single trigger row that expands a filter bottom-sheet on tap.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">API Behaviour</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">/api/v1/activities<br/>  ?category=photowalk<br/>  &amp;time=upcoming<br/>  &amp;eligibility=everyone<br/>  &amp;q=search+term<br/>  &amp;view=list|grid<br/><br/>Target: &lt;200ms response<br/>Loading: skeleton cards<br/>Error: inline error state<br/>No results: empty state copy</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Search Behaviour</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">Full-text search across activity titles, descriptions, locations and coordinator names. Debounced 300ms after last keystroke. Minimum 2 characters before search fires. Search is independent of category and time filters — all apply simultaneously. No results: "No activities found — try a different search or clear filters." Clearing search icon appears once text is entered.</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">View Toggle — List vs Grid</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;"><strong style="color:#141210;">List view (default):</strong> Full editorial cards with large photograph, rich metadata, and complete editorial summary. Preferred for upcoming activities where context matters for registration decisions.<br/><br/><strong style="color:#141210;">Grid view:</strong> 3-column photograph-first cards. Title, date, and location only — no summary text. Preferred for archive browsing where visual scanning replaces reading. User preference persists in localStorage ('bcc-activities-view').</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Responsive Behaviour</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;"><strong style="color:#141210;">Desktop (&gt;1024px):</strong> Full three-row layout as shown. Category pills wrap on overflow.<br/><br/><strong style="color:#141210;">Tablet (768–1024px):</strong> Search and view toggle row one. Categories scroll horizontally (no wrap). Filters row three.<br/><br/><strong style="color:#141210;">Mobile (&lt;768px):</strong> Single trigger row: "Filter · 2 active" with chevron. Tap opens bottom-sheet with all options. Sticky maintained at top:0 (header fully collapses on scroll).</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 05 — FEATURED ACTIVITY ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="05 FeaturedActivity">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">05</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Featured Activity — Conditional</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:16px;">Admin-enabled conditional section. Exactly like the Featured Activity on the Home page. When featuredActivity.enabled is true, a large panoramic editorial banner renders with full activity detail and a register CTA. When false, the section is completely absent from the DOM — no node, no placeholder, no gap. The page flows directly from ActivityCategories into UpcomingActivities.</p>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
+    <span style="background:#3A2A10;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;border:1px solid rgba(201,169,97,0.3);">CONDITIONAL · featuredActivity.enabled</span>
+    <span style="font-size:13px;color:#8B8378;font-style:italic;">Toggle to preview both states:</span>
+    <button onClick="{{ toggleFeat }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:8px 20px;border:1.5px solid #A8843C;color:#A8843C;background:rgba(201,169,97,0.06);">Toggle Featured Activity</button>
+  </div>
+
+  <sc-if value="{{ featEnabled }}" hint-placeholder-val="{{ true }}">
+    <div style="border:1px solid #2C2820;overflow:hidden;margin-bottom:12px;">
+      <div style="padding:8px 20px;background:#141210;border-bottom:1px solid #2C2820;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#3EB87A;">● ENABLED — featuredActivity.enabled === true — Section renders</span>
+      </div>
+      <div style="position:relative;min-height:540px;background:#0E1820;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(155deg,#0E1820 0px,#0E1820 60px,#121C24 60px,#121C24 120px);"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,14,22,0.9) 0%,rgba(10,14,22,0.65) 42%,rgba(10,14,22,0.18) 100%);"></div>
+        <div style="position:absolute;top:14px;right:16px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.28);text-align:right;line-height:1.9;">featuredActivity.coverImage<br/>Panoramic · object-fit:cover · full-bleed<br/>Editorial exception to natural-ratio rule<br/>data-gsap="parallax-soft" · 0.92× scroll</div>
+        <div style="position:relative;height:100%;display:flex;align-items:center;padding:72px;min-height:540px;">
+          <div style="max-width:500px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:rgba(40,72,40,0.9);color:#A8F0A8;padding:3px 10px;">PHOTOWALK</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:rgba(62,184,122,0.18);color:#3EB87A;padding:3px 10px;border:1px solid rgba(62,184,122,0.35);">REGISTRATION OPEN</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);">18 of 30 seats remaining</span>
+            </div>
+            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:14px;">Featured Activity · August 2026</div>
+            <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(30px,3.5vw,52px);font-weight:700;letter-spacing:-0.025em;color:#FFFFFF;line-height:1.05;margin-bottom:20px;text-wrap:pretty;">Monsoon Photowalk —<br/>Upper Lake at the Rains</h2>
+            <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;">
+              <div style="font-size:13px;color:rgba(255,255,255,0.7);"><span style="color:#C9A961;font-weight:600;">Date</span> · 03 Aug 2026 · 06:00 AM</div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.7);"><span style="color:#C9A961;font-weight:600;">Location</span> · Bhadbhada Ghat, Bhopal</div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.7);"><span style="color:#C9A961;font-weight:600;">Led by</span> · Arvind Sharma</div>
+            </div>
+            <div style="width:40px;height:1px;background:#C9A961;margin-bottom:20px;"></div>
+            <p style="font-size:15px;line-height:1.88;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:14px;text-wrap:pretty;">Monsoon transforms the Upper Lake into something that deserves its own vocabulary. The water turns a deep, opaque green; the far shore disappears into monsoon mist; egrets and herons find new perches on half-submerged boulders that surface only in August. This photowalk is one of the most anticipated dates in the BCC calendar for precisely this reason — the conditions are unrepeatable.</p>
+            <p style="font-size:15px;line-height:1.88;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:14px;text-wrap:pretty;">Participants should arrive at Bhadbhada Ghat by 5:45 AM. The light before sunrise on a monsoon morning is exceptional and available for approximately forty minutes — do not arrive late. Bring rain covers for camera and lens; expect to get wet. Umbrellas are actively discouraged. The group walks approximately three kilometres along the shoreline and disperses organically.</p>
+            <p style="font-size:15px;line-height:1.88;color:rgba(255,255,255,0.84);font-weight:300;margin-bottom:30px;text-wrap:pretty;">Open to all — members and non-members equally welcome. No specific equipment requirement beyond a camera of any kind. The walk concludes at the main road at approximately 9:30 AM; a chai session follows at the nearby stall for those who wish to stay.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button style="font-size:13px;font-weight:600;letter-spacing:0.04em;color:#141210;background:linear-gradient(135deg,#C9A961,#A8843C);padding:14px 36px;">Register →</button>
+              <button style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.88);border:1px solid rgba(255,255,255,0.3);padding:13px 28px;">Share Activity</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:8px;">ENABLED — Register → /activities/[featuredActivity.id]/register. Seat count real-time via WebSocket. data-gsap="parallax-soft" on cover image. prefers-reduced-motion: no parallax.</p>
+  </sc-if>
+
+  <sc-if value="{{ featHidden }}" hint-placeholder-val="{{ false }}">
+    <div style="border:2px dashed #D8D2C6;background:#F4F0E8;padding:56px;text-align:center;margin-bottom:12px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8B8378;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;">FeaturedActivity — DISABLED</div>
+      <p style="font-size:14px;color:#8B8378;max-width:480px;margin:0 auto;line-height:1.8;">Section is completely absent from the page. No empty state rendered. No gap in the layout. Page flows directly from ActivityCategories into UpcomingActivities. Admin enables from Dashboard → Activities → Featured Activity toggle.</p>
+    </div>
+    <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:8px;">DISABLED — No DOM node. Page order: ActivityCategories → UpcomingActivities directly.</p>
+  </sc-if>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Data Source</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">featuredActivity ← Admin Dashboard<br/>  .enabled (boolean toggle)<br/>  .coverImage (R2 / ImageKit)<br/>  .title · .description (~250w)<br/>  .date · .time · .location<br/>  .coordinator (member.name)<br/>  .category · .eligibility<br/>  .seatsTotal · .seatsRemaining<br/>  .registrationStatus<br/>  .activityId → register route</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Conditional Logic</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">featuredActivity.enabled === true<br/>  → Section renders<br/>  → Full panoramic banner<br/>  → Register CTA active<br/><br/>false<br/>  → No DOM node<br/>  → No placeholder<br/>  → No empty gap<br/>  → Layout reflows past it</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Seat Count — Real-Time</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">The "seats remaining" count updates via WebSocket subscription to the activity's registration stream. When a participant registers, the count decrements in real-time for all current viewers. When seats reach zero, the Register button transitions to "Join Waitlist" state automatically. When the waitlist also closes, the button becomes inactive.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 06 — UPCOMING ACTIVITIES ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="06 UpcomingActivities">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">06</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Upcoming Activities — What's Happening</h2>
+  </div>
+  <div style="max-width:680px;margin-bottom:40px;">
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">This section contains the full set of current and upcoming activities, ordered by date ascending. Unlike the three-activity preview on the Home page, this section renders every activity that has not yet concluded — which in an active month may be six, eight, or more entries, depending on active filters.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">Each card is built to carry the full weight of an activity's identity. Photography is not decorative — it is the primary signal. A member scrolling quickly can identify the activity's character from the photograph alone before reading a word. The title, location and date confirm what the photograph suggests. The summary text is written for someone who is genuinely considering attending, not someone who needs to be sold on it.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;">Registration status is displayed with the directness that participants deserve: Open, Filling Fast, Waitlist Only, or Closed. The Register button is always visible — the auth and membership gate resolves at the registration step, not here. When seats fill, the button transitions automatically to Waitlist. When the waitlist also closes, the button becomes inactive with a "Closed" label and no further action.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#E7E1D6;margin-bottom:12px;">
+    <sc-for list="{{ upcomingCards }}" as="card" hint-placeholder-count="6">
+      <div style="background:#FFFFFF;">
+        <div style="position:relative;padding-bottom:66.66%;overflow:hidden;background:{{ card.sA }};">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,{{ card.sA }} 0px,{{ card.sA }} 20px,{{ card.sB }} 20px,{{ card.sB }} 40px);"></div>
+          <div style="position:absolute;top:14px;left:14px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:{{ card.typeBg }};color:{{ card.typeColor }};padding:3px 10px;">{{ card.typeLabel }}</span>
+          </div>
+          <sc-if value="{{ card.memberOnly }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;top:14px;right:14px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;background:rgba(20,18,16,0.85);color:#C9A961;padding:3px 10px;">MEMBERS</span>
+            </div>
+          </sc-if>
+          <div style="position:absolute;bottom:10px;left:14px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">activity.coverImage · 3:2 · object-fit cover</div>
+        </div>
+        <div style="padding:28px 32px 32px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#141210;">{{ card.date }}</span>
+            <span style="font-size:11px;color:#C9A961;">·</span>
+            <span style="font-size:12px;color:#8B8378;">{{ card.time }}</span>
+            <span style="font-size:11px;color:#C9A961;">·</span>
+            <span style="font-size:12px;color:#8B8378;">{{ card.duration }}</span>
+          </div>
+          <h3 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.015em;line-height:1.15;margin-bottom:8px;text-wrap:pretty;">{{ card.title }}</h3>
+          <div style="font-size:13px;color:#8B8378;margin-bottom:16px;">{{ card.location }}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+            <span style="font-size:11px;background:#F4F0E8;color:#57514B;padding:3px 10px;">{{ card.difficulty }}</span>
+            <span style="font-size:11px;background:#F4F0E8;color:#57514B;padding:3px 10px;">{{ card.eligibility }}</span>
+            <span style="font-size:11px;background:#F4F0E8;color:#57514B;padding:3px 10px;">{{ card.seats }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:{{ card.regColor }};"></div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:{{ card.regColor }};text-transform:uppercase;letter-spacing:0.08em;">{{ card.regStatus }}</span>
+          </div>
+          <p style="font-size:14px;line-height:1.85;color:#57514B;margin-bottom:24px;text-wrap:pretty;">{{ card.summary }}</p>
+          <div style="display:flex;gap:10px;">
+            <button style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#141210;background:linear-gradient(135deg,#C9A961,#A8843C);padding:11px 24px;flex:1;">Register →</button>
+            <button style="font-size:12px;font-weight:500;color:#57514B;border:1px solid #D8D2C6;padding:10px 18px;">Waitlist</button>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:28px;">WIREFRAME — Production: /api/v1/activities?time=upcoming ordered date ASC. Filter state from ActivityCategories drives this list. Register → /activities/[id]/register. Seat count real-time via WebSocket. Auth + membership gate at registration step — not at card display.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Activity Card Data Schema</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">activity<br/>  .coverImage (ImageKit URL)<br/>  .category · .date · .time<br/>  .duration · .title<br/>  .location · .difficulty<br/>  .eligibility (everyone/members)<br/>  .seatsTotal · .seatsRemaining<br/>  .registrationStatus (enum)<br/>  .summary (250w editorial)<br/>  .requiresMembership (bool)</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Registration Status States</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">Open<br/>  → Register active · green #3E5A48<br/>Filling Fast (≤20% seats left)<br/>  → Register active · amber #8B4A00<br/>Waitlist Only (seats = 0)<br/>  → "Join Waitlist" · amber dot<br/>Closed<br/>  → Button inactive · "Closed"<br/>Members Only<br/>  → MEMBERS badge on photo<br/>  → Auth gate at register step</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Responsive Behaviour</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">Desktop: 2-column grid<br/>  gap: 2px (creates border effect)<br/>Tablet (768–1024px): 2-column<br/>  reduced padding<br/>Mobile (&lt;768px): single column<br/>  full-width cards<br/>Photo: 3:2 fixed ratio · cover<br/>Summary text preserved mobile<br/>Buttons full-width on mobile</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 07 — COMMUNITY CALENDAR ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="07 CommunityCalendar">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">07</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Community Calendar</h2>
+  </div>
+  <div style="max-width:680px;margin-bottom:40px;">
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">The Community Calendar is an editorial month overview — not a booking system, not an event management interface. Its purpose is to give members and prospective members an immediate sense of the rhythm of BCC activity: how frequently the club meets, how the different types of activities are distributed across a month, and where the natural gathering points fall.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">Looking at a single month, a new member can understand instinctively that photowalks happen on the third Sunday, that Chai Per Charcha falls on the fourth Thursday, that workshops are distributed across the month as facilitators allow. This rhythmic legibility is the calendar's core function — not click-to-register, not drag-to-rebook. Those functions exist in the registration flow, not here.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;">The calendar shows the current month by default, with forward navigation to the next two months. It does not display past months — the Past Activities Archive handles the historical record. Each activity marker links to the full activity card below, scrolling the page to that card and briefly highlighting it. The calendar and the Upcoming Activities section are linked navigational elements — they show the same data in two different visual registers.</p>
+  </div>
+
+  <div style="border:1px solid #E7E1D6;overflow:hidden;margin-bottom:12px;background:#FFFFFF;">
+    <div style="padding:20px 32px;border-bottom:1px solid #E7E1D6;display:flex;align-items:center;justify-content:space-between;">
+      <button style="font-size:20px;color:#D8D2C6;padding:4px 12px;font-weight:300;">‹</button>
+      <div style="text-align:center;">
+        <div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.02em;">July 2026</div>
+        <div style="font-size:12px;color:#8B8378;margin-top:4px;font-family:'JetBrains Mono',monospace;letter-spacing:0.06em;">3 activities scheduled</div>
+      </div>
+      <button style="font-size:20px;color:#141210;padding:4px 12px;font-weight:300;">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #E7E1D6;">
+      <div style="padding:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;border-right:1px solid #F0EBE0;">Mon</div>
+      <div style="padding:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;border-right:1px solid #F0EBE0;">Tue</div>
+      <div style="padding:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;border-right:1px solid #F0EBE0;">Wed</div>
+      <div style="padding:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;border-right:1px solid #F0EBE0;">Thu</div>
+      <div style="padding:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;border-right:1px solid #F0EBE0;">Fri</div>
+      <div style="padding:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;border-right:1px solid #F0EBE0;">Sat</div>
+      <div style="padding:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8B8378;">Sun</div>
+    </div>
+    <!-- Week 1: Jul 1=Wed -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #F0EBE0;">
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;background:#FAFAF8;"></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;background:#FAFAF8;"></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">1</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">2</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">3</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">4</div></div>
+      <div style="padding:10px 12px;min-height:76px;"><div style="font-size:13px;font-weight:500;">5</div></div>
+    </div>
+    <!-- Week 2 -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #F0EBE0;">
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">6</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">7</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">8</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">9</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">10</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">11</div></div>
+      <div style="padding:10px 12px;min-height:76px;"><div style="font-size:13px;font-weight:500;">12</div></div>
+    </div>
+    <!-- Week 3: Sun 19 = Photowalk -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #F0EBE0;">
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">13</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">14</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">15</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">16</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">17</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">18</div></div>
+      <div style="padding:10px 12px;min-height:76px;background:rgba(62,90,72,0.05);">
+        <div style="font-size:13px;font-weight:700;color:#3E5A48;margin-bottom:5px;">19</div>
+        <div style="background:#3E5A48;padding:3px 7px;">
+          <div style="font-size:9px;color:#A8F0A8;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Monthly Photowalk</div>
+          <div style="font-size:9px;color:rgba(168,240,168,0.65);">06:00 AM</div>
+        </div>
+      </div>
+    </div>
+    <!-- Week 4: Fri 24=Chai, Sun 26=Birds -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #F0EBE0;">
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">20</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">21</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">22</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">23</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;background:rgba(52,40,8,0.05);">
+        <div style="font-size:13px;font-weight:700;color:#A8843C;margin-bottom:5px;">24</div>
+        <div style="background:#2C1E00;padding:3px 7px;">
+          <div style="font-size:9px;color:#C9A961;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Chai Per Charcha</div>
+          <div style="font-size:9px;color:rgba(201,169,97,0.65);">06:30 PM</div>
+        </div>
+      </div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">25</div></div>
+      <div style="padding:10px 12px;min-height:76px;background:rgba(14,24,40,0.05);">
+        <div style="font-size:13px;font-weight:700;color:#2A5880;margin-bottom:5px;">26</div>
+        <div style="background:#1A2830;padding:3px 7px;">
+          <div style="font-size:9px;color:#A8D8F0;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Birds of Bhopal</div>
+          <div style="font-size:9px;color:rgba(168,216,240,0.65);">05:30 AM</div>
+        </div>
+      </div>
+    </div>
+    <!-- Week 5 -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);">
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">27</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">28</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">29</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">30</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;"><div style="font-size:13px;font-weight:500;">31</div></div>
+      <div style="padding:10px 12px;min-height:76px;border-right:1px solid #F0EBE0;background:#FAFAF8;"></div>
+      <div style="padding:10px 12px;min-height:76px;background:#FAFAF8;"></div>
+    </div>
+    <!-- Legend -->
+    <div style="padding:14px 32px;border-top:1px solid #E7E1D6;background:#FAF8F4;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;text-transform:uppercase;letter-spacing:0.1em;">Legend</span>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;background:#3E5A48;"></div><span style="font-size:12px;color:#57514B;">Photowalk</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;background:#2C1E00;"></div><span style="font-size:12px;color:#57514B;">Community</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;background:#1A2830;"></div><span style="font-size:12px;color:#57514B;">Birds of Bhopal</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;background:#141210;"></div><span style="font-size:12px;color:#57514B;">Workshop</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;background:#080818;"></div><span style="font-size:12px;color:#57514B;">Night Photography</span></div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:28px;">EDITORIAL CALENDAR — Not a booking system. Activity markers link to activity cards below (smooth scroll + 1.5s highlight animation). Month nav: ‹ › · max 3 months ahead · current default. No past months.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Purpose — Editorial Note</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">The calendar communicates rhythm, not logistics. A visitor should understand in ten seconds how active and varied BCC's programme is. It is not the registration interface — it is the visual companion to the Upcoming Activities list, offering a different reading of the same data.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Data Source</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">/api/v1/activities<br/>  ?month=2026-07&upcoming=true<br/>Response: activity[] with<br/>  .date · .title · .category<br/>  .time · .id<br/><br/>Marker click<br/>  → smooth scroll to card<br/>  → highlight 1.5s · gold border</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Design Constraints</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">Maximum one visible activity marker per day cell — truncate with "+N more" if multiple events land on one day. Category colours are consistent with the filter bar vocabulary. Calendar must not feel visually busy — white space inside cells is intentional. Dense months truncate gracefully.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 08 — PAST ACTIVITIES ARCHIVE ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="08 PastActivitiesArchive">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">08</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Our Journey Through Photography</h2>
+  </div>
+  <div style="max-width:680px;margin-bottom:40px;">
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">Every completed activity becomes part of the permanent history of Bhopal Camera Club. This is not a closed archive or a backend record — it is a public chronicle of what the club has done, where it has been, and what its members have made together. The archive grows with every activity that concludes.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">Past activities carry a different weight than upcoming ones. When you look at a record of a photowalk conducted three years ago — the location, the participants, the number of photographs submitted — you are looking at evidence of a community that has shown up consistently, month after month, regardless of season, of schedule, of weather. The archive is the most honest section of the entire platform. It cannot be exaggerated or anticipated. It is simply what happened.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">Each archive card contains the activity's primary photograph, date, location, participant count, and the number of photographs submitted from that session. Two navigation options: the Gallery opens the full collection of photographs from that activity in the platform's justified grid. The Journal opens the written record — a long-form editorial account of the session written by a member, if one exists.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;">Archive entries are ordered reverse-chronologically by default. The ActivityCategories filter applies here too — selecting "Heritage" shows only past heritage activities, which is particularly useful for members researching what has already been documented before proposing a new project. The archive should feel like browsing the back-issues of a photography journal — organised, serious, and deeply rewarding to explore.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#E7E1D6;margin-bottom:12px;">
+    <sc-for list="{{ archiveCards }}" as="arc" hint-placeholder-count="4">
+      <div style="background:#FFFFFF;">
+        <div style="position:relative;padding-bottom:56.25%;overflow:hidden;background:{{ arc.sA }};">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(155deg,{{ arc.sA }} 0px,{{ arc.sA }} 28px,{{ arc.sB }} 28px,{{ arc.sB }} 56px);"></div>
+          <div style="position:absolute;top:14px;left:14px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:rgba(20,18,16,0.72);color:#C9A961;padding:3px 10px;">{{ arc.typeLabel }}</span>
+          </div>
+          <div style="position:absolute;bottom:10px;right:14px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.28);">activity.coverImage · 16:9</div>
+        </div>
+        <div style="padding:28px 32px 32px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid #F0EBE0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8B8378;">{{ arc.date }}</span>
+            <span style="font-size:11px;color:#C9A961;">·</span>
+            <span style="font-size:12px;color:#8B8378;">{{ arc.location }}</span>
+          </div>
+          <h3 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.015em;line-height:1.15;margin-bottom:20px;text-wrap:pretty;">{{ arc.title }}</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+            <div style="background:#FAF8F4;border:1px solid #F0EBE0;padding:14px 18px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;margin-bottom:4px;">{{ arc.participantsLabel }}</div>
+              <div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;color:#141210;letter-spacing:-0.02em;">{{ arc.participants }}</div>
+            </div>
+            <div style="background:#FAF8F4;border:1px solid #F0EBE0;padding:14px 18px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#8B8378;margin-bottom:4px;">{{ arc.photosLabel }}</div>
+              <div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;color:#141210;letter-spacing:-0.02em;">{{ arc.photos }}</div>
+            </div>
+          </div>
+          <p style="font-size:14px;line-height:1.88;color:#57514B;margin-bottom:24px;text-wrap:pretty;">{{ arc.desc }}</p>
+          <div style="display:flex;gap:10px;">
+            <button style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#141210;background:linear-gradient(135deg,#C9A961,#A8843C);padding:10px 24px;flex:1;">Gallery →</button>
+            <button style="font-size:12px;font-weight:500;color:#57514B;border:1px solid #D8D2C6;padding:9px 20px;">Journal</button>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:28px;">ARCHIVE — /api/v1/activities?time=past ordered date DESC. Gallery → /activities/[id]/gallery. Journal → /activities/[id]/journal · disabled when no journal entry exists. Default: 8 per page · "Load more" pagination. Filter state from ActivityCategories applies.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Archive Card Schema</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">activityArchive<br/>  .coverImage (ImageKit)<br/>  .category · .date · .location<br/>  .title · .participantCount<br/>  .photographCount (archive)<br/>  .description (editorial)<br/>  .hasGallery (boolean)<br/>  .hasJournal (boolean)<br/>  .galleryId · .journalId</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Gallery vs Journal</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;"><strong style="color:#141210;">Gallery →</strong> /activities/[id]/gallery: the justified grid of all photographs submitted from that activity. Same grid component used throughout the platform.<br/><br/><strong style="color:#141210;">Journal →</strong> /activities/[id]/journal: long-form editorial account of the session. Journal button is disabled (not hidden) when no journal entry exists for that activity.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Exhibition Variant</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">For Exhibition entries, the "Photographs" count is replaced with "Prints Exhibited" and "Participants" with "Visitors". The card layout is identical. Only the stat labels change per activity.type — the visual design does not vary. Handled via .participantsLabel and .photosLabel fields in the API response.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 09 — MOMENTS WE'VE SHARED ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="09 MomentsWeveShared">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">09</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Moments We've Shared</h2>
+  </div>
+  <div style="max-width:680px;margin-bottom:40px;">
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">These photographs represent something that no activity description can fully capture: what it feels like to be there. The moments that happen when the formal activity is over, or before it has properly begun — a conversation at the chai stall, a member helping another adjust their tripod in the dark, the quiet satisfaction after a walk when everyone spreads out on the grass to look at what they've made.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">This gallery is not a highlights reel or a curated showcase of the club's best photography. It is a record of togetherness — of the social fabric that makes BCC more than a photography group. Some of these photographs are technically exceptional; others are simple, candid and honest. Both kinds belong here for the same reason: they document a community that has shown up for each other, month after month, for more than a decade.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;margin-bottom:16px;">Every photograph in this gallery is linked to its canonical entry in the BCC archive. Clicking a photograph opens the Canonical Photo Page with its full metadata — photographer, activity, date, camera, and any notes the photographer has added. From there, visitors can navigate to the activity gallery or to the photographer's portfolio.</p>
+    <p style="font-size:16px;line-height:1.7;color:#57514B;">The gallery uses a justified row layout with natural aspect ratios — the same grid used across the platform. Photographs are not cropped to fill a container; the container accommodates the photograph. This is not a stylistic preference but a philosophical one: the photograph comes first, the interface second. Rows use a fixed height with photographs growing to fill the row at their natural ratio.</p>
+  </div>
+
+  <!-- Justified gallery rows -->
+  <div style="margin-bottom:12px;">
+    <div style="display:flex;gap:3px;margin-bottom:3px;height:280px;">
+      <div style="flex:1.5;background:#1E2C1E;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#1E2C1E 0px,#1E2C1E 18px,#182218 18px,#182218 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical · 3:2</div></div>
+      </div>
+      <div style="flex:0.75;background:#20180A;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#20180A 0px,#20180A 18px,#181008 18px,#181008 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical · 2:3</div></div>
+      </div>
+      <div style="flex:1.33;background:#0E1820;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#0E1820 0px,#0E1820 18px,#0A1420 18px,#0A1420 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(0deg,rgba(10,14,20,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical · 4:3</div></div>
+      </div>
+      <div style="flex:1.77;background:#1A0C18;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#1A0C18 0px,#1A0C18 18px,#140810 18px,#140810 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical · 16:9</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:3px;margin-bottom:3px;height:240px;">
+      <div style="flex:1.77;background:#080818;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#080818 0px,#080818 18px,#06061A 18px,#06061A 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(10,10,24,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical · 16:9</div></div>
+      </div>
+      <div style="flex:1;background:#1C2C18;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#1C2C18 0px,#1C2C18 18px,#142018 18px,#142018 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical · 1:1</div></div>
+      </div>
+      <div style="flex:1.5;background:#281808;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#281808 0px,#281808 18px,#201008 18px,#201008 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical · 3:2</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:3px;height:200px;">
+      <div style="flex:1;background:#1A1C28;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#1A1C28 0px,#1A1C28 18px,#141820 18px,#141820 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical</div></div>
+      </div>
+      <div style="flex:1.5;background:#20180C;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#20180C 0px,#20180C 18px,#18100A 18px,#18100A 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical</div></div>
+      </div>
+      <div style="flex:0.75;background:#1A0C20;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#1A0C20 0px,#1A0C20 18px,#140818 18px,#140818 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical</div></div>
+      </div>
+      <div style="flex:1.33;background:#0C1C10;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#0C1C10 0px,#0C1C10 18px,#081810 18px,#081810 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical</div></div>
+      </div>
+      <div style="flex:1.77;background:#1C1404;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(145deg,#1C1404 0px,#1C1404 18px,#181004 18px,#181004 36px);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(0deg,rgba(20,18,16,0.55),transparent);"><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);">canonical</div></div>
+      </div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;margin-bottom:28px;">JUSTIFIED GALLERY — Production: canonical photos tagged "moments" by admin. naturalRatio: true · No object-fit:cover. Row height fixed (280/240/200px) · flex-grow fills row at natural ratio. Click → /photos/[id]. Max 24 photographs. Manual curation only — no auto-rotation.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Justified Row Implementation</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.0;color:#57514B;">Row: display:flex · gap:3px<br/>Row height: fixed (280/240/200px)<br/>Photo container: flex-grow:1<br/>  flex-basis: ratio × rowHeight<br/>img: width:100% · height:100%<br/>  object-fit: fill (NOT cover)<br/>No crop. No fixed aspect-ratio.<br/>No object-fit:cover in gallery.<br/>Photos dictate layout — not grid.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Data Source &amp; Curation</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">Admin-curated from approved gallery photos tagged "moments" in the Dashboard. Curators may tag photographs from any activity — not limited to photowalks or community events. The tag applies to any photograph that captures the social or emotional texture of BCC community life. Maximum 24 photographs displayed. No automatic rotation.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Canonical Photo Link</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">Clicking any photograph navigates to its Canonical Photo Page — /photos/[id]. That page contains the full image at natural size, photographer credit, activity origin, date, camera and lens metadata, and photographer notes. From there, visitors may navigate to the activity gallery or the photographer's portfolio.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 10 — SITEFOOTER ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="10 SiteFooter">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">10</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">SiteFooter</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:32px;">Shared component. Fully documented in V6 92 SiteFooter. Not redrawn here — placeholder only. No Activities-specific footer variants.</p>
+  <div style="border:1.5px dashed #C9A961;background:rgba(201,169,97,0.03);overflow:hidden;margin-bottom:12px;">
+    <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;border-bottom:1px solid rgba(201,169,97,0.18);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#C9A961;"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;letter-spacing:0.08em;text-transform:uppercase;">SiteFooter — V6 92</span>
+      </div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;letter-spacing:0.06em;text-transform:uppercase;">Shared Component · Do Not Redraw</span>
+    </div>
+    <div style="padding:24px 40px;opacity:0.35;">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;margin-bottom:28px;">
+        <div><div style="width:80px;height:16px;background:#D8D2C6;border-radius:2px;margin-bottom:12px;"></div><div style="width:100%;height:9px;background:#E7E1D6;border-radius:2px;margin-bottom:6px;"></div><div style="width:85%;height:9px;background:#E7E1D6;border-radius:2px;margin-bottom:6px;"></div><div style="width:70%;height:9px;background:#E7E1D6;border-radius:2px;"></div></div>
+        <div><div style="width:60px;height:11px;background:#D8D2C6;border-radius:2px;margin-bottom:12px;"></div><div style="width:70px;height:9px;background:#E7E1D6;border-radius:2px;margin-bottom:6px;"></div><div style="width:60px;height:9px;background:#E7E1D6;border-radius:2px;margin-bottom:6px;"></div><div style="width:80px;height:9px;background:#E7E1D6;border-radius:2px;"></div></div>
+        <div><div style="width:60px;height:11px;background:#D8D2C6;border-radius:2px;margin-bottom:12px;"></div><div style="width:65px;height:9px;background:#E7E1D6;border-radius:2px;margin-bottom:6px;"></div><div style="width:75px;height:9px;background:#E7E1D6;border-radius:2px;margin-bottom:6px;"></div><div style="width:55px;height:9px;background:#E7E1D6;border-radius:2px;"></div></div>
+        <div><div style="width:60px;height:11px;background:#D8D2C6;border-radius:2px;margin-bottom:12px;"></div><div style="width:70px;height:9px;background:#E7E1D6;border-radius:2px;margin-bottom:6px;"></div><div style="width:60px;height:9px;background:#E7E1D6;border-radius:2px;"></div></div>
+      </div>
+      <div style="height:1px;background:#E7E1D6;margin-bottom:20px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;"><div style="width:180px;height:9px;background:#E7E1D6;border-radius:2px;"></div><div style="width:120px;height:9px;background:#E7E1D6;border-radius:2px;"></div></div>
+    </div>
+  </div>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;">SHARED COMPONENT — V6 92 SiteFooter. No page-specific variants on the /activities route.</p>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { featEnabled: true };
+
+  renderVals() {
+    const featEnabled = this.state.featEnabled;
+    const featHidden = !featEnabled;
+    const toggleFeat = () => this.setState(s => ({ featEnabled: !s.featEnabled }));
+
+    const tree = [
+      { idx:'01', name:'BaseLayout', desc:'Root layout wrapper · background #F2EFE9 · min-height 100vh', dot:'#57514B', bg:'rgba(0,0,0,0)', nameColor:'#8B8378', tag:'', tagBg:'transparent', tagColor:'transparent', tagBorder:'transparent', tagVis:'hidden' },
+      { idx:'02', name:'SiteHeader {session}', desc:'Session-aware navigation · "Activities" nav active · V6 91', dot:'#7AB88A', bg:'rgba(30,42,30,0.18)', nameColor:'#7AB88A', tag:'SHARED', tagBg:'#1E2A1E', tagColor:'#7AB88A', tagBorder:'rgba(62,90,72,0.4)', tagVis:'visible' },
+      { idx:'03', name:'PageHero', desc:'Large editorial hero · title · ~400w editorial copy · 4 statistics', dot:'#C9A961', bg:'rgba(0,0,0,0)', nameColor:'#FFFFFF', tag:'', tagBg:'transparent', tagColor:'transparent', tagBorder:'transparent', tagVis:'hidden' },
+      { idx:'04', name:'ActivityCategories', desc:'Sticky · search · 13 categories · time filter · eligibility · view toggle', dot:'#A8843C', bg:'rgba(0,0,0,0)', nameColor:'#C9A961', tag:'STICKY', tagBg:'#2C1E00', tagColor:'#C9A961', tagBorder:'rgba(201,169,97,0.3)', tagVis:'visible' },
+      { idx:'05', name:'FeaturedActivity', desc:'Admin-enabled · panoramic editorial banner · register CTA', dot:'#E08A3C', bg:'rgba(20,12,0,0.1)', nameColor:'#E8A84C', tag:'CONDITIONAL', tagBg:'#3A2A10', tagColor:'#C9A961', tagBorder:'rgba(201,169,97,0.3)', tagVis:'visible' },
+      { idx:'06', name:'UpcomingActivities', desc:'"What\'s Happening" · 6 editorial cards · register + waitlist CTAs', dot:'#C9A961', bg:'rgba(0,0,0,0)', nameColor:'#FFFFFF', tag:'', tagBg:'transparent', tagColor:'transparent', tagBorder:'transparent', tagVis:'hidden' },
+      { idx:'07', name:'CommunityCalendar', desc:'Editorial month overview · recurring activities · not a booking system', dot:'#C9A961', bg:'rgba(0,0,0,0)', nameColor:'#FFFFFF', tag:'', tagBg:'transparent', tagColor:'transparent', tagBorder:'transparent', tagVis:'hidden' },
+      { idx:'08', name:'PastActivitiesArchive', desc:'"Our Journey Through Photography" · archive cards · gallery + journal', dot:'#C9A961', bg:'rgba(0,0,0,0)', nameColor:'#FFFFFF', tag:'', tagBg:'transparent', tagColor:'transparent', tagBorder:'transparent', tagVis:'hidden' },
+      { idx:'09', name:'MomentsWeveShared', desc:'Justified photographic gallery · canonical photos · emotional narrative', dot:'#C9A961', bg:'rgba(0,0,0,0)', nameColor:'#FFFFFF', tag:'', tagBg:'transparent', tagColor:'transparent', tagBorder:'transparent', tagVis:'hidden' },
+      { idx:'10', name:'SiteFooter', desc:'Shared component · V6 92 · placeholder only', dot:'#7AB88A', bg:'rgba(30,42,30,0.18)', nameColor:'#7AB88A', tag:'SHARED', tagBg:'#1E2A1E', tagColor:'#7AB88A', tagBorder:'rgba(62,90,72,0.4)', tagVis:'visible' },
+    ];
+
+    const upcomingCards = [
+      {
+        sA:'#1E2C1E', sB:'#182218', typeLabel:'PHOTOWALK', typeColor:'#A8F0A8', typeBg:'rgba(40,72,40,0.92)',
+        date:'19 Jul 2026', time:'06:00 AM', duration:'3 hrs',
+        title:'Monthly Photowalk — Upper Lake Shores',
+        location:'Bhadbhada Ghat, Bhopal',
+        difficulty:'All Levels', eligibility:'Open to All', seats:'12 of 25 remaining',
+        regStatus:'Open', regColor:'#3E5A48', memberOnly:false,
+        summary:'The monthly photowalk returns to the Upper Lake shoreline at Bhadbhada — one of the most photographically rewarding locations in Bhopal. At first light, the water holds the colour of the sky while fishermen push their boats out and the city awakens at the edge of the water. Participants should arrive fifteen minutes early. Bring a charged camera and no fixed agenda. The group splits naturally; everyone reconvenes at 9:00 AM at the chai stall near the old bridge.',
+      },
+      {
+        sA:'#0E1C28', sB:'#0A1820', typeLabel:'BIRDS OF BHOPAL', typeColor:'#A8D8F0', typeBg:'rgba(14,40,72,0.92)',
+        date:'26 Jul 2026', time:'05:30 AM', duration:'4 hrs',
+        title:'Birds of Bhopal — Sair Sapata Wetlands',
+        location:'Sair Sapata Lakefront, Bhopal',
+        difficulty:'Intermediate', eligibility:'Members Only', seats:'6 of 15 remaining',
+        regStatus:'Open', regColor:'#3E5A48', memberOnly:true,
+        summary:"Bhopal's wetland ecosystems support over 200 recorded bird species across a single season. This early morning session concentrates on the resident and migratory waders — painted storks, purple herons, and on fortunate mornings, the elusive black-necked stork. The session is conducted without flash photography and with strict silence protocols after 6:30 AM when feeding activity peaks. Participants should bring a lens of at least 300mm effective focal length.",
+      },
+      {
+        sA:'#201808', sB:'#181006', typeLabel:'HERITAGE', typeColor:'#F0D8A8', typeBg:'rgba(60,36,8,0.92)',
+        date:'02 Aug 2026', time:'07:00 AM', duration:'5 hrs',
+        title:'Heritage Walk — Old Bhopal & Moti Masjid',
+        location:'Chowk Bazaar, Old Bhopal',
+        difficulty:'All Levels', eligibility:'Open to All', seats:'18 of 30 remaining',
+        regStatus:'Open', regColor:'#3E5A48', memberOnly:false,
+        summary:'Old Bhopal rewards the patient photographer. The narrow lanes of Chowk Bazaar contain architectural detail most visitors walk past — ornate jharokhas, handpainted wooden shutters, ironwork that has survived three generations. The walk begins at the Moti Masjid gate, moves through the wholesale market at its most active hour, and concludes at Shaukat Mahal, whose hybrid Indo-European facade has been documented by BCC members in every season and every light. A historian from the local documentation society accompanies each walk.',
+      },
+      {
+        sA:'#080818', sB:'#060614', typeLabel:'NIGHT PHOTOGRAPHY', typeColor:'#C8C8F8', typeBg:'rgba(12,12,52,0.92)',
+        date:'09 Aug 2026', time:'08:00 PM', duration:'3.5 hrs',
+        title:'Night Photography — Taj-ul-Masajid Façade',
+        location:'Taj-ul-Masajid, Bhopal',
+        difficulty:'Intermediate', eligibility:'Members Only', seats:'4 of 12 remaining',
+        regStatus:'Filling Fast', regColor:'#8B4A00', memberOnly:true,
+        summary:"The Taj-ul-Masajid — the largest mosque in India — transforms after dark. Floodlighting picks out sandstone and marble in ways that daylight obscures, casting deep shadows beneath the minarets and geometric reflections across the eastern forecourt pool. This session focuses on long exposures, light trail management, and the compositional challenges of a symmetrical architectural subject. Tripods are mandatory. Permission letters will be distributed to registered participants two days in advance.",
+      },
+      {
+        sA:'#180C14', sB:'#120810', typeLabel:'WORKSHOP · PORTRAIT', typeColor:'#F0B8C8', typeBg:'rgba(56,16,36,0.92)',
+        date:'16 Aug 2026', time:'10:00 AM', duration:'6 hrs',
+        title:'Portrait Workshop — Available Light & Direction',
+        location:'BCC Studio, TT Nagar, Bhopal',
+        difficulty:'Intermediate', eligibility:'Members Only', seats:'3 of 10 remaining',
+        regStatus:'Filling Fast', regColor:'#8B4A00', memberOnly:true,
+        summary:'Portrait photography resists rules. This full-day workshop concentrates on the most undervalued skill in portraiture — understanding and directing available light without studio equipment. The session covers window light, overcast outdoor conditions, the relationship between camera position and apparent light source, and directing subjects who are not professional models. Participants work in pairs. Model volunteers are provided. Each participant leaves with an edited portfolio of twelve images, reviewed individually by the facilitator.',
+      },
+      {
+        sA:'#1C1404', sB:'#161008', typeLabel:'COMMUNITY', typeColor:'#F8E8B8', typeBg:'rgba(52,40,8,0.92)',
+        date:'28 Aug 2026', time:'06:30 PM', duration:'2 hrs',
+        title:'Chai Per Charcha — August Edition',
+        location:'Manohar Dairy, New Market, Bhopal',
+        difficulty:'None', eligibility:'Open to All', seats:'Unlimited',
+        regStatus:'Open', regColor:'#3E5A48', memberOnly:false,
+        summary:'Chai Per Charcha is the informal monthly gathering that has become the most important event in the BCC calendar. No agenda, no speaker, no slide deck. Members and prospective members sit over tea and talk about photography, about Bhopal, about anything that connects to making images. Over the years, these evenings have produced photography project ideas, lasting friendships, and the candid conversations about creative work that simply do not happen at formal workshops. No camera required. No membership needed.',
+      },
+    ];
+
+    const archiveCards = [
+      {
+        sA:'#1A2C1A', sB:'#142014', typeLabel:'PHOTOWALK',
+        date:'March 2025', location:'Van Vihar National Park, Bhopal',
+        participants:28, photos:847, participantsLabel:'Participants', photosLabel:'Photographs',
+        title:'Van Vihar Morning — Tigers & Light',
+        desc:"March delivers the best light of the year inside Van Vihar — a low, directional warmth that hits the landscape at a shallow angle and transforms even routine subjects into something worth keeping. Twenty-eight members gathered at the park gate before sunrise and dispersed across the interpretive paths for three and a half hours. The session produced 847 photographs submitted to the BCC archive, fourteen of which were selected for the Members' Gallery exhibition in April. One encounter with a tigress at the waterhole, documented from a respectful distance, generated what remains the club's most shared photograph of 2025.",
+      },
+      {
+        sA:'#201808', sB:'#181006', typeLabel:'HERITAGE',
+        date:'January 2025', location:'Sanchi, Madhya Pradesh',
+        participants:22, photos:1240, participantsLabel:'Participants', photosLabel:'Photographs',
+        title:'Sanchi Stupa — A Day with Stone and Light',
+        desc:"The Great Stupa at Sanchi is one of the oldest stone structures in India and one of the most demanding subjects in Central Indian photography. The circular form resists conventional framing; the carved toranas demand extreme proximity; the surrounding lawn offers no foreground interest. Twenty-two BCC members spent an entire day working through these constraints — arriving at sunrise, staying through the flat midday light, and remaining for the late afternoon when the setting sun strikes the eastern gateway amber. The archive contains 1,240 photographs across all focal lengths and times of day.",
+      },
+      {
+        sA:'#080820', sB:'#060618', typeLabel:'NIGHT PHOTOGRAPHY',
+        date:'November 2024', location:'Bhojpur Temple, Raisen District',
+        participants:16, photos:612, participantsLabel:'Participants', photosLabel:'Photographs',
+        title:'Bhojpur After Dark — Long Exposure Study',
+        desc:"The unfinished Shiva temple at Bhojpur — begun in the eleventh century and never completed — possesses a quality of architectural melancholy that rewards photography precisely because of its incompleteness. The massive unroofed sanctum allows moonlight to fall directly onto the central Shivalinga. This November session, conducted on a nearly full moon, concentrated on long-exposure techniques using only ambient and lunar light. No artificial lighting was introduced. The archive contains 612 photographs and one time-lapse sequence that remains among the most requested items in the BCC digital library.",
+      },
+      {
+        sA:'#181428', sB:'#10101E', typeLabel:'EXHIBITION',
+        date:'August 2024', location:'Bharat Bhavan, Bhopal',
+        participants:1800, photos:34, participantsLabel:'Visitors', photosLabel:'Prints Exhibited',
+        title:'Annual Exhibition 2024 — The Upper Lake Project',
+        desc:"Bhopal's Upper Lake has been photographed continuously by BCC members since the club's formation in 2015. The 2024 Annual Exhibition presented thirty-four prints drawn from nine years of documentation, curated around one theme — how a single body of water changes across seasons, times of day, and a decade of urban development at its perimeter. The exhibition ran five days at Bharat Bhavan and received over 1,800 visitors. Forty-one photographs are now part of the permanent collection at the Bhopal Municipal Documentation Archive.",
+      },
+    ];
+
+    return { tree, featEnabled, featHidden, toggleFeat, upcomingCards, archiveCards };
+  }
+}
+</script>
+</body>
+</html>

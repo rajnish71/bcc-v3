@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#F2EFE9;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#EFE3C8}
+a{color:inherit;text-decoration:none}
+a:hover{color:#141210}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+img{display:block}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#F2EFE9;padding:0 0 160px;">
+
+<!-- ══ COVER ══ -->
+<header style="background:linear-gradient(180deg,#FFFFFF 0%,#FAF8F4 100%);border-bottom:1px solid #E7E1D6;padding:96px 0 72px;">
+  <div style="max-width:1140px;margin:0 auto;padding:0 48px;">
+    <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:64px;width:auto;margin-bottom:48px;"/>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <span style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#A8843C;font-weight:600;">V6 · 60 · July 2026</span>
+      <span style="background:#141210;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">V6 60 GALLERY GRID SYSTEM</span>
+      <span style="background:#3E5A48;color:#FFFFFF;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">DESIGN AUTHORITY</span>
+      <span style="background:#A8843C;color:#FFFFFF;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">CANONICAL</span>
+    </div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(44px,5.5vw,72px);font-weight:700;letter-spacing:-0.03em;line-height:1.0;margin-bottom:28px;">Gallery Grid System</h1>
+    <p style="font-size:18px;line-height:1.7;color:#57514B;max-width:680px;font-weight:300;margin-bottom:12px;">Canonical architecture for every gallery surface in the BCC Unified Platform. Reconciliation of six existing implementations into one shared engine. Public and admin contexts share the same architecture; visual presentation differs by role.</p>
+    <p style="font-size:13px;line-height:1.6;color:#8B8378;max-width:560px;margin-bottom:40px;font-style:italic;">Inherits V6 00 BCC Design Principles · V6 98 token.css · V6 99 System Design Constitution. Frozen. All amendments require design authority review.</p>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;border-top:1px solid #E7E1D6;padding-top:28px;">
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Implementations Reconciled</div><div style="font-size:14px;font-weight:500;color:#141210;">6</div></div>
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Production Layouts</div><div style="font-size:14px;font-weight:500;color:#141210;">5 — Justified · Masonry · Modular · Editorial · Metro</div></div>
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Deprecated</div><div style="font-size:14px;font-weight:500;color:#A3493B;">Magazine → Editorial auto-migration</div></div>
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Photography Rule</div><div style="font-size:14px;font-weight:500;color:#141210;">Natural ratio · No object-fit:cover · No fixed-height cells</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ TOC ══ -->
+<div style="max-width:1140px;margin:0 auto;padding:48px 48px 0;">
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#E7E1D6;border:1px solid #E7E1D6;">
+    <div style="background:#FFFFFF;padding:18px 20px;"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">01</div><div style="font-size:13px;font-weight:500;">Reconciliation</div><div style="font-size:11px;color:#8B8378;margin-top:3px;">All existing components</div></div>
+    <div style="background:#FFFFFF;padding:18px 20px;"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">02</div><div style="font-size:13px;font-weight:500;">Architecture</div><div style="font-size:11px;color:#8B8378;margin-top:3px;">Hierarchy · Responsibilities</div></div>
+    <div style="background:#FFFFFF;padding:18px 20px;"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">03</div><div style="font-size:13px;font-weight:500;">Layout Variants</div><div style="font-size:11px;color:#8B8378;margin-top:3px;">5 production · 1 deprecated</div></div>
+    <div style="background:#FFFFFF;padding:18px 20px;"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">04</div><div style="font-size:13px;font-weight:500;">Photo Cards</div><div style="font-size:11px;color:#8B8378;margin-top:3px;">Public · Admin · Hover states</div></div>
+    <div style="background:#FFFFFF;padding:18px 20px;"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">05–08</div><div style="font-size:13px;font-weight:500;">System Specs</div><div style="font-size:11px;color:#8B8378;margin-top:3px;">Filter · States · API · Deprecation</div></div>
+  </div>
+</div>
+
+<!-- ══ 01 — RECONCILIATION ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:96px 48px 0;" data-screen-label="01 Reconciliation">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">01</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Reconciliation Table</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Every gallery-related component currently in the project. Decision: Keep · Merge into engine · Remove. No working implementation is removed — all are evolved to share the canonical architecture.</p>
+
+  <div style="border:1px solid #2C2820;background:#141210;overflow:hidden;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:220px 80px 80px 80px 1fr;padding:12px 28px;border-bottom:1px solid #2C2820;gap:8px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#57514B;">Component</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#3E5A48;">Keep</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;">Merge</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#A3493B;">Remove</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#57514B;">Notes</span>
+    </div>
+    <sc-for list="{{ reconciliation }}" as="r" hint-placeholder-count="10">
+      <div style="display:grid;grid-template-columns:220px 80px 80px 80px 1fr;padding:10px 28px;border-bottom:1px solid #1E1C1A;gap:8px;align-items:center;background:{{ r.rowBg }};">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#FAF8F4;">{{ r.name }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#57514B;margin-top:2px;">{{ r.source }}</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7AB88A;">{{ r.keep }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#C9A961;">{{ r.merge }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#E07060;">{{ r.remove }}</div>
+        <div style="font-size:11px;color:#8B8378;line-height:1.5;">{{ r.notes }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#3E5A48;font-weight:600;margin-bottom:12px;">Keep — 8 components</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">All production galleries survive.<br/>No working UI is removed.<br/>Architecture is shared;<br/>  surface appearance preserved.<br/>Admin and Public separation<br/>  maintained by context flag.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Merge — shared engine</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">JustifiedCard hover (3 variants)<br/>  → one canonical spec<br/>FilterStrip (2 implementations)<br/>  → one canonical component<br/>Load More (2 variants)<br/>  → one canonical behaviour<br/>Gap token: 8px public · 2px tight</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A3493B;font-weight:600;margin-bottom:12px;">Remove — 0 components</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">Nothing deleted.<br/>Magazine layout deprecated<br/>  with auto-migration path.<br/>Duplicate hover specs merged.<br/>No API breaking changes.<br/>Existing consumers unchanged.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 — ARCHITECTURE ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="02 Architecture">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">02</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Canonical Architecture</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Four-layer separation: Engine → Layout → Card → Theme. Each layer has one responsibility. Layers do not reach past their immediate neighbour. Public and admin contexts share the engine and layout layers; they differ at the Card layer only.</p>
+
+  <!-- Architecture diagram -->
+  <div style="border:1px solid #2C2820;background:#141210;overflow:hidden;margin-bottom:24px;">
+    <div style="padding:18px 32px;border-bottom:1px solid #2C2820;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.12em;">GalleryGridSystem · Canonical Architecture · V6 60</span>
+    </div>
+
+    <!-- Layer 1: Gallery Engine -->
+    <div style="padding:20px 32px;border-bottom:1px solid #2C2820;">
+      <div style="display:flex;align-items:flex-start;gap:32px;">
+        <div style="flex-shrink:0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Layer 1</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#FAF8F4;font-weight:500;">GalleryEngine</div>
+        </div>
+        <div style="flex:1;border-left:2px solid #2C2820;padding-left:28px;">
+          <div style="font-size:12px;color:#8B8378;line-height:1.8;margin-bottom:10px;">Shared core. Context-agnostic. Owns data flow, state, and pagination only.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;background:rgba(201,169,97,0.08);border:1px solid rgba(201,169,97,0.2);padding:3px 10px;">photos[ ]</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;background:rgba(201,169,97,0.08);border:1px solid rgba(201,169,97,0.2);padding:3px 10px;">layout</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;background:rgba(201,169,97,0.08);border:1px solid rgba(201,169,97,0.2);padding:3px 10px;">context</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;background:rgba(201,169,97,0.08);border:1px solid rgba(201,169,97,0.2);padding:3px 10px;">filters</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;background:rgba(201,169,97,0.08);border:1px solid rgba(201,169,97,0.2);padding:3px 10px;">pagination</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;background:rgba(201,169,97,0.08);border:1px solid rgba(201,169,97,0.2);padding:3px 10px;">loading</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;background:rgba(201,169,97,0.08);border:1px solid rgba(201,169,97,0.2);padding:3px 10px;">onPhotoClick</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer 2: Layout Engine -->
+    <div style="padding:20px 32px 20px 64px;border-bottom:1px solid #1E1C1A;">
+      <div style="display:flex;align-items:flex-start;gap:32px;">
+        <div style="flex-shrink:0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Layer 2</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#D8D2C6;">LayoutEngine</div>
+        </div>
+        <div style="flex:1;border-left:2px solid #222018;padding-left:28px;">
+          <div style="font-size:12px;color:#57514B;line-height:1.8;margin-bottom:10px;">Routes photos[ ] to the correct layout algorithm. Computes row geometry for Justified. Provides slot positions for Masonry, Modular, Editorial, Metro.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:rgba(139,131,120,0.08);border:1px solid rgba(139,131,120,0.2);padding:3px 10px;">Justified</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:rgba(139,131,120,0.08);border:1px solid rgba(139,131,120,0.2);padding:3px 10px;">Masonry</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:rgba(139,131,120,0.08);border:1px solid rgba(139,131,120,0.2);padding:3px 10px;">Modular</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:rgba(139,131,120,0.08);border:1px solid rgba(139,131,120,0.2);padding:3px 10px;">Editorial</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;background:rgba(139,131,120,0.08);border:1px solid rgba(139,131,120,0.2);padding:3px 10px;">Metro</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A3493B;background:rgba(163,73,59,0.06);border:1px solid rgba(163,73,59,0.2);padding:3px 10px;text-decoration:line-through;">Magazine</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer 3: Photo Card -->
+    <div style="padding:20px 32px 20px 96px;border-bottom:1px solid #1A1816;">
+      <div style="display:flex;align-items:flex-start;gap:32px;">
+        <div style="flex-shrink:0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Layer 3</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8B8378;">PhotoCard</div>
+        </div>
+        <div style="flex:1;border-left:2px solid #1E1C18;padding-left:28px;">
+          <div style="font-size:12px;color:#3A3830;line-height:1.8;margin-bottom:10px;">The only layer that differs by context. Same interface, different visual treatment. Public: photography-first. Admin: productivity-first.</div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;">
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#7AB88A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.08em;">Public</div>
+              <div style="display:flex;gap:6px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;background:rgba(62,90,72,0.07);border:1px solid rgba(62,90,72,0.2);padding:3px 8px;">JustifiedCard</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#C9A961;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.08em;">Admin</div>
+              <div style="display:flex;gap:6px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;background:rgba(201,169,97,0.06);border:1px solid rgba(201,169,97,0.2);padding:3px 8px;">MattedCard</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer 4: Theme -->
+    <div style="padding:20px 32px 20px 128px;">
+      <div style="display:flex;align-items:flex-start;gap:32px;">
+        <div style="flex-shrink:0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#A8843C;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Layer 4</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3830;">Theme</div>
+        </div>
+        <div style="flex:1;border-left:2px solid #1A1816;padding-left:28px;">
+          <div style="font-size:12px;color:#2A2820;line-height:1.8;">Tokens from V6 98 token.css. Not a separate component — inline styles from the token set. No custom theme objects. No runtime theming.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Component hierarchy table -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;">
+      <div style="padding:14px 20px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Public Context</div>
+      </div>
+      <div style="padding:18px 20px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">GalleryEngine [context="public"]<br/>  └ FilterStrip (optional)<br/>  └ LayoutEngine [layout="justified"]<br/>  &nbsp;&nbsp;&nbsp;└ JustifiedRow[ ]<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ JustifiedCard<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ PhotoImage (natural ratio)<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ HoverOverlay<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ ViewfinderCorners<br/>  └ LoadMore | Pagination<br/>  └ EmptyState (conditional)<br/>  └ SkeletonGrid (while loading)</div>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;">
+      <div style="padding:14px 20px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Admin Context</div>
+      </div>
+      <div style="padding:18px 20px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">GalleryEngine [context="admin"]<br/>  └ AdminToolbar<br/>  &nbsp;&nbsp;&nbsp;├ SearchField<br/>  &nbsp;&nbsp;&nbsp;├ FilterChips<br/>  &nbsp;&nbsp;&nbsp;├ StatusDropdown<br/>  &nbsp;&nbsp;&nbsp;├ SortDropdown<br/>  &nbsp;&nbsp;&nbsp;└ ViewToggle<br/>  └ LayoutEngine [layout="modular"]<br/>  &nbsp;&nbsp;&nbsp;└ MattedCard[ ]<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ PhotoImage<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ StatusBadge<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ FeaturedFlag<br/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ HoverActions (edit · select)<br/>  └ SelectionBar (active when &gt;0 selected)</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Shared Responsibilities</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">GalleryEngine owns:<br/>  photos[ ] data model<br/>  filter state<br/>  pagination / load more<br/>  loading boolean<br/>  empty detection<br/>  onPhotoClick handler<br/>  context flag (public|admin)</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Separated Responsibilities</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">LayoutEngine owns:<br/>  row geometry (Justified)<br/>  slot positions (others)<br/>  responsive breakpoint logic<br/>  gap token resolution<br/><br/>PhotoCard owns:<br/>  visual rendering only<br/>  hover state<br/>  selection state (admin)</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Cross-cutting Rules</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">Natural aspect ratios — always<br/>No object-fit: cover on photos<br/>No fixed-height cells<br/>Exception: CoverBanner (not photos)<br/>Exception: ProjectCard cover<br/>  (cover art, not photograph)<br/>No border-radius on photos<br/>No scale transform on hover</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 03 — LAYOUT VARIANTS ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="03 Layout Variants">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">03</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Layout Variants</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Five production layouts. One deprecated with migration path. Justified is the default for all public galleries. Admin galleries use Modular. Other layouts are available as named props.</p>
+
+  <!-- Layout switcher -->
+  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+    <button onClick="{{ setJustified }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ lJBorder }};background:{{ lJBg }};color:{{ lJColor }};transition:all 0.2s;">Justified</button>
+    <button onClick="{{ setMasonry }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ lMaBorder }};background:{{ lMaBg }};color:{{ lMaColor }};transition:all 0.2s;">Masonry</button>
+    <button onClick="{{ setModular }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ lMoBorder }};background:{{ lMoBg }};color:{{ lMoColor }};transition:all 0.2s;">Modular</button>
+    <button onClick="{{ setEditorial }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ lEBorder }};background:{{ lEBg }};color:{{ lEColor }};transition:all 0.2s;">Editorial</button>
+    <button onClick="{{ setMetro }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ lMtBorder }};background:{{ lMtBg }};color:{{ lMtColor }};transition:all 0.2s;">Metro</button>
+  </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;margin-bottom:20px;">Active layout: {{ layoutName }} · {{ layoutDefault }}</div>
+
+  <!-- JUSTIFIED LAYOUT -->
+  <sc-if value="{{ showJustified }}" hint-placeholder-val="{{ true }}">
+    <div style="border:1px solid #E7E1D6;background:#141210;overflow:hidden;margin-bottom:14px;" data-screen-label="Justified Layout">
+      <div style="display:flex;gap:2px;padding:2px 2px 0;">
+        <div style="flex:1.78;height:220px;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1D1B19 18px,#1D1B19 36px);"></div><div style="position:absolute;inset:0;background:rgba(20,18,16,0.45);opacity:0;transition:opacity 0.25s;" class="hov"></div><div style="position:absolute;top:10px;left:10px;width:16px;height:2px;background:#FFF;opacity:0;" class="hov-br"></div><div style="position:absolute;bottom:8px;left:0;right:0;padding:6px 10px;background:rgba(20,18,16,0.65);opacity:0;" class="hov-cap"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">16:9</div></div>
+        <div style="flex:0.78;height:220px;background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">4:5</div></div>
+        <div style="flex:1.5;height:220px;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">3:2</div></div>
+        <div style="flex:0.85;height:220px;background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">1:1</div></div>
+        <div style="flex:1.2;height:220px;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">5:4</div></div>
+      </div>
+      <div style="display:flex;gap:2px;padding:2px 2px 0;">
+        <div style="flex:2.4;height:180px;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">3:1 panorama</div></div>
+        <div style="flex:1.4;height:180px;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1E1C1A 18px,#1E1C1A 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">7:5</div></div>
+        <div style="flex:0.8;height:180px;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">4:5</div></div>
+        <div style="flex:1.6;height:180px;background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">16:9</div></div>
+      </div>
+      <div style="display:flex;gap:2px;padding:2px;">
+        <div style="flex:1.0;height:190px;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1E1C1A 18px,#1E1C1A 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">1:1</div></div>
+        <div style="flex:1.5;height:190px;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">3:2</div></div>
+        <div style="flex:0.75;height:190px;background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">4:5</div></div>
+        <div style="flex:1.3;height:190px;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">16:10</div></div>
+        <div style="flex:0.9;height:190px;background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">5:4</div></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- MASONRY LAYOUT -->
+  <sc-if value="{{ showMasonry }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#141210;border:1px solid #E7E1D6;overflow:hidden;margin-bottom:14px;" data-screen-label="Masonry Layout">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;padding:2px;">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="height:260px;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1D1B19 18px,#1D1B19 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">4:5</div></div>
+          <div style="height:160px;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">3:2</div></div>
+          <div style="height:200px;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">1:1</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="height:140px;background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">16:9</div></div>
+          <div style="height:280px;background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">3:4</div></div>
+          <div style="height:190px;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1E1C1A 18px,#1E1C1A 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">5:4</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="height:200px;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">3:2</div></div>
+          <div style="height:220px;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">2:3</div></div>
+          <div style="height:190px;background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">4:3</div></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- MODULAR LAYOUT -->
+  <sc-if value="{{ showModular }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#141210;border:1px solid #E7E1D6;overflow:hidden;margin-bottom:14px;" data-screen-label="Modular Layout">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:2px;">
+        <div style="aspect-ratio:1/1;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1D1B19 18px,#1D1B19 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">1:1</div></div>
+        <div style="aspect-ratio:1/1;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1E1C1A 18px,#1E1C1A 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1E1C1A 18px,#1E1C1A 36px);"></div></div>
+        <div style="aspect-ratio:1/1;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div></div>
+      </div>
+      <div style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">Admin: 4-col · 1:1 forced aspect · 16px gap · MattedCard context</div>
+    </div>
+  </sc-if>
+
+  <!-- EDITORIAL LAYOUT -->
+  <sc-if value="{{ showEditorial }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#141210;border:1px solid #E7E1D6;overflow:hidden;margin-bottom:14px;" data-screen-label="Editorial Layout">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:2px;padding:2px 2px 0;">
+        <div style="height:340px;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 24px,#1D1B19 24px,#1D1B19 48px);"></div><div style="position:absolute;bottom:14px;left:16px;"><div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A961;margin-bottom:6px;">Lead Photograph</div><div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#FAF8F4;line-height:1.2;">Rohan Singh · 16:9 or wider</div></div></div>
+        <div style="display:grid;grid-template-rows:1fr 1fr;gap:2px;">
+          <div style="background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">4:3</div></div>
+          <div style="background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div><div style="position:absolute;bottom:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);">3:2</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:2px;padding:2px;">
+        <div style="flex:1;height:180px;background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div></div>
+        <div style="flex:1;height:180px;background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div></div>
+        <div style="flex:1;height:180px;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 18px,#1E1C1A 18px,#1E1C1A 36px);"></div></div>
+        <div style="flex:1;height:180px;background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- METRO LAYOUT -->
+  <sc-if value="{{ showMetro }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#141210;border:1px solid #E7E1D6;overflow:hidden;margin-bottom:14px;" data-screen-label="Metro Layout">
+      <div style="display:grid;grid-template-columns:3fr 2fr 2fr;grid-template-rows:240px 200px;gap:2px;padding:2px;">
+        <div style="grid-row:1/3;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 20px,#1D1B19 20px,#1D1B19 40px);"></div><div style="position:absolute;bottom:10px;left:12px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.25);">Large tile · spans 2 rows</div></div>
+        <div style="background:#1C1A18;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 18px,#201E1C 18px,#201E1C 36px);"></div></div>
+        <div style="background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 18px,#1C1A18 18px,#1C1A18 36px);"></div></div>
+        <div style="background:#1E1C1A;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1E1C1A 0,#1E1C1A 18px,#222020 18px,#222020 36px);"></div></div>
+        <div style="background:#201E1C;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#201E1C 0,#201E1C 18px,#242220 18px,#242220 36px);"></div></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- Layout specs table -->
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:120px 140px 100px 1fr 180px;padding:13px 24px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;gap:8px;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Layout</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Algorithm</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Gap</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Primary Use</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Status</span>
+    </div>
+    <sc-for list="{{ layoutSpecs }}" as="ls" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:120px 140px 100px 1fr 180px;padding:12px 24px;border-bottom:1px solid #F0EBE0;gap:8px;align-items:center;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:{{ ls.nameColor }};">{{ ls.name }}</div>
+        <div style="font-size:12px;color:#57514B;">{{ ls.algo }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">{{ ls.gap }}</div>
+        <div style="font-size:12px;color:#57514B;">{{ ls.use }}</div>
+        <div><span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.08em;padding:3px 9px;background:{{ ls.statusBg }};color:{{ ls.statusColor }};">{{ ls.status }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ══ 04 — PHOTO CARDS ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="04 Photo Cards">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">04</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Photo Cards</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Two cards. Same interface, different context. JustifiedCard for public galleries. MattedCard for admin. Both render the photo at its natural aspect ratio with no cropping.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:32px;">
+
+    <!-- JustifiedCard -->
+    <div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:16px;">JustifiedCard — Public</div>
+      <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Rest</div>
+          <div style="width:220px;height:154px;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 14px,#1E1C1A 14px,#1E1C1A 28px);position:relative;overflow:hidden;flex-shrink:0;">
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#A8843C;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Hover</div>
+          <div style="width:220px;height:154px;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 14px,#1E1C1A 14px,#1E1C1A 28px);position:relative;overflow:hidden;flex-shrink:0;">
+            <div style="position:absolute;inset:0;background:rgba(20,18,16,0.45);"></div>
+            <!-- Viewfinder corners -->
+            <div style="position:absolute;top:10px;left:10px;width:16px;height:2px;background:#FFFFFF;"></div>
+            <div style="position:absolute;top:10px;left:10px;width:2px;height:16px;background:#FFFFFF;"></div>
+            <div style="position:absolute;top:10px;right:10px;width:16px;height:2px;background:#FFFFFF;"></div>
+            <div style="position:absolute;top:10px;right:10px;width:2px;height:16px;background:#FFFFFF;"></div>
+            <div style="position:absolute;bottom:34px;left:10px;width:16px;height:2px;background:#FFFFFF;"></div>
+            <div style="position:absolute;bottom:34px;left:10px;width:2px;height:16px;background:#FFFFFF;"></div>
+            <div style="position:absolute;bottom:34px;right:10px;width:16px;height:2px;background:#FFFFFF;"></div>
+            <div style="position:absolute;bottom:34px;right:10px;width:2px;height:16px;background:#FFFFFF;"></div>
+            <!-- Caption -->
+            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(20,18,16,0.68);padding:8px 10px;">
+              <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;color:#FFFFFF;margin-bottom:1px;">Photographer Name</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.6);">Photo Title · Activity Name</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:2.1;color:#57514B;background:#F4F0E8;border:1px solid #E7E1D6;padding:14px 16px;">Corner brackets: 2px solid #FFFFFF<br/>Corner size: 16×16px · inset 10px<br/>Overlay: rgba(20,18,16, 0.45)<br/>Caption: slide-up 0.25s ease<br/>Caption bg: rgba(20,18,16, 0.68)<br/>Caption content: name · title · activity<br/>Card link: /photographers/[username]<br/>No scale transform. No border-radius.<br/>No object-fit:cover. Natural ratio.</div>
+    </div>
+
+    <!-- MattedCard -->
+    <div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:16px;">MattedCard — Admin</div>
+      <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Rest</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:8px;box-shadow:0 1px 2px rgba(20,18,16,0.04);position:relative;">
+            <span style="position:absolute;top:16px;left:16px;z-index:1;font-size:9px;font-weight:700;letter-spacing:0.1em;color:#141210;background:linear-gradient(135deg,#C9A961,#A8843C);padding:3px 8px;">★ FEATURED</span>
+            <div style="width:160px;aspect-ratio:4/5;background:#1A1816;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1A1816 0,#1A1816 12px,#1D1B19 12px,#1D1B19 24px);"></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:8px;">
+              <div style="font-size:11px;font-weight:600;color:#141210;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Monsoon Light</div>
+              <span style="font-size:9px;font-weight:600;letter-spacing:0.08em;padding:2px 5px;background:#E8EFE9;color:#3E5A48;flex-shrink:0;">PUBLIC</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#A8843C;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Hover</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:8px;box-shadow:0 1px 2px rgba(20,18,16,0.04);position:relative;">
+            <div style="width:160px;aspect-ratio:4/5;background:#1C1A18;position:relative;overflow:hidden;">
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1C1A18 0,#1C1A18 12px,#201E1C 12px,#201E1C 24px);"></div>
+              <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px;">
+                <span style="width:26px;height:26px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;font-size:11px;color:#141210;">✎</span>
+                <span style="width:26px;height:26px;border-radius:999px;background:rgba(255,255,255,0.92);border:1.5px solid #D8D2C6;display:flex;align-items:center;justify-content:center;font-size:11px;color:#141210;">☐</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:8px;">
+              <div style="font-size:11px;font-weight:600;color:#141210;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Talab Chowk</div>
+              <span style="font-size:9px;font-weight:600;letter-spacing:0.08em;padding:2px 5px;background:#FBF0E8;color:#8C6830;flex-shrink:0;">PENDING</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#3E5A48;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Selected</div>
+          <div style="background:#FFFFFF;box-shadow:0 0 0 2px #C9A961 inset,0 1px 2px rgba(20,18,16,0.04);padding:8px;position:relative;">
+            <span style="position:absolute;top:16px;left:16px;z-index:1;width:22px;height:22px;border-radius:999px;background:linear-gradient(135deg,#C9A961,#A8843C);display:flex;align-items:center;justify-content:center;color:#FFFFFF;font-size:11px;font-weight:600;">✓</span>
+            <div style="width:160px;aspect-ratio:3/2;background:#181614;position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#181614 0,#181614 12px,#1C1A18 12px,#1C1A18 24px);"></div></div>
+            <div style="font-size:11px;font-weight:600;color:#141210;margin-top:8px;">Upper Lake</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:2.1;color:#57514B;background:#F4F0E8;border:1px solid #E7E1D6;padding:14px 16px;">Mat: 8px white padding · 1px border #E7E1D6<br/>Shadow: 0 1px 2px rgba(20,18,16,0.04)<br/>FeaturedFlag: gold badge · top-left absolute<br/>StatusBadge: PUBLIC | PENDING | PRIVATE<br/>HoverActions: ✎ edit · ☐ select — top-right<br/>SelectedRing: 0 0 0 2px #C9A961 inset<br/>CheckMark: 22px gold circle · top-left<br/>No caption text on admin cards</div>
+    </div>
+  </div>
+
+  <!-- Status badge spec -->
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:24px;">
+    <div style="padding:14px 24px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Status Badge — Admin Context Only</div>
+    </div>
+    <div style="display:flex;gap:32px;padding:18px 24px;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:9px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;background:#E8EFE9;color:#3E5A48;">PUBLIC</span><span style="font-size:12px;color:#57514B;">Approved and visible</span></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:9px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;background:#FBF0E8;color:#8C6830;">PENDING</span><span style="font-size:12px;color:#57514B;">Awaiting review</span></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:9px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;background:#F4F0E8;color:#57514B;border:1px solid #E7E1D6;">PRIVATE</span><span style="font-size:12px;color:#57514B;">Hidden from public</span></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:9px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;background:#FFF0EE;color:#A3493B;">REJECTED</span><span style="font-size:12px;color:#57514B;">Declined by moderator</span></div>
+    </div>
+    <div style="padding:8px 24px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;">Status badges do not appear on JustifiedCard (public context). Public galleries show only approved photos — no status needed.</div>
+  </div>
+</section>
+
+<!-- ══ 05 — FILTER STRIP ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="05 Filter Strip">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">05</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">FilterStrip</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:16px;">One canonical FilterStrip component with two visual treatments. Public: rectangular pill buttons. Admin: rounded chip buttons. Same state model, different border-radius token.</p>
+  <div style="display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap;">
+    <span style="background:#141210;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">RECONCILED — Showcase + Profile implementations merged here</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;">
+      <div style="padding:12px 20px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Public — Rectangular</div></div>
+      <div style="padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;margin-right:4px;">Filter</span>
+          <button style="font-size:11px;font-weight:600;letter-spacing:0.04em;padding:6px 16px;border:1px solid #A8843C;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;">All</button>
+          <button style="font-size:11px;font-weight:500;letter-spacing:0.04em;padding:6px 16px;border:1px solid #D8D2C6;background:#FFFFFF;color:#57514B;">Photowalks</button>
+          <button style="font-size:11px;font-weight:500;letter-spacing:0.04em;padding:6px 16px;border:1px solid #D8D2C6;background:#FFFFFF;color:#57514B;">Heritage</button>
+          <button style="font-size:11px;font-weight:500;letter-spacing:0.04em;padding:6px 16px;border:1px solid #D8D2C6;background:#FFFFFF;color:#57514B;">Wildlife</button>
+          <button style="font-size:11px;font-weight:500;letter-spacing:0.04em;padding:6px 16px;border:1px solid #D8D2C6;background:#FFFFFF;color:#57514B;">Portraits</button>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.9;color:#8B8378;">border-radius: 0 · Active: gold gradient<br/>Inactive: #FFFFFF bg · #D8D2C6 border<br/>Showcase and Special Projects galleries<br/>Filter by: activity tag or genre</div>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;">
+      <div style="padding:12px 20px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Admin — Rounded Chip</div></div>
+      <div style="padding:16px 20px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="font-size:12px;font-weight:500;padding:7px 16px;border-radius:999px;background:#141210;color:#FAF8F4;">All genres</span>
+          <span style="font-size:12px;font-weight:500;padding:7px 16px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;">Street</span>
+          <span style="font-size:12px;font-weight:500;padding:7px 16px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;">Landscape</span>
+          <span style="font-size:12px;font-weight:500;padding:7px 16px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;">Portrait</span>
+          <span style="font-size:12px;font-weight:500;padding:7px 16px;border-radius:999px;border:1px solid #D8D2C6;color:#57514B;">Macro</span>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.9;color:#8B8378;">border-radius: 999px · Active: #141210 bg<br/>Inactive: white bg · #D8D2C6 border<br/>Portfolio Manager and Upload Queue<br/>Filter by: member's own genre tags</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Shared State Model</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">activeFilter: string<br/>  default: "All"<br/>tags[]: string[ ] from API<br/>  populated from photo data<br/>onFilter(tag): fn<br/>  triggers GalleryEngine requery<br/>Multi-select: Phase 2 only<br/>  single-select for now</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Behaviour</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">"All" always present and first<br/>Selecting "All" resets filter<br/>One active tag at a time<br/>Active tag: visual treatment shifts<br/>Filter: client-side on loaded set<br/>Horizontal scroll on mobile<br/>  No wrapping on &lt;768px<br/>Reset to All on layout change</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Where FilterStrip Appears</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">Showcase: yes · rectangular<br/>Profile Portfolio tab: yes · rectangular<br/>Special Projects: yes · rectangular<br/>Home GalleryWall: no<br/>  (curated 12 · no filter needed)<br/>Portfolio Manager: yes · chip<br/>Upload Queue: no<br/>  (queue, not gallery)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 06 — STATES ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="06 States">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">06</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">States</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Every GalleryEngine instance must handle four states. Skeleton loading, empty state, populated, and load more trigger. Behaviour is identical across all layout variants.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+
+    <!-- Skeleton -->
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;">
+      <div style="padding:12px 20px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Skeleton — Loading State</div>
+      </div>
+      <div style="padding:16px 20px;">
+        <div style="display:flex;gap:2px;margin-bottom:2px;">
+          <div style="flex:1.78;height:120px;background:linear-gradient(90deg,#F0EBE0 25%,#E7E1D6 50%,#F0EBE0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite linear;"></div>
+          <div style="flex:0.78;height:120px;background:linear-gradient(90deg,#EEE9DE 25%,#E5DFD4 50%,#EEE9DE 75%);background-size:200% 100%;animation:shimmer 1.5s infinite linear;animation-delay:0.15s;"></div>
+          <div style="flex:1.5;height:120px;background:linear-gradient(90deg,#F0EBE0 25%,#E7E1D6 50%,#F0EBE0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite linear;animation-delay:0.3s;"></div>
+        </div>
+        <div style="display:flex;gap:2px;margin-bottom:2px;">
+          <div style="flex:2.2;height:100px;background:linear-gradient(90deg,#EEE9DE 25%,#E5DFD4 50%,#EEE9DE 75%);background-size:200% 100%;animation:shimmer 1.5s infinite linear;animation-delay:0.1s;"></div>
+          <div style="flex:1.1;height:100px;background:linear-gradient(90deg,#F0EBE0 25%,#E7E1D6 50%,#F0EBE0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite linear;animation-delay:0.25s;"></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-top:10px;line-height:1.8;">Shimmer: 1.5s linear infinite<br/>Colors: #F0EBE0 → #E7E1D6<br/>Justified row structure preserved<br/>Shown until first data arrives</div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;">
+      <div style="padding:12px 20px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Empty State</div>
+      </div>
+      <div style="padding:16px 20px;">
+        <div style="border:1.5px dashed #D8D2C6;padding:40px 24px;text-align:center;margin-bottom:14px;">
+          <div style="width:48px;height:48px;border:1.5px solid #D8D2C6;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="24" height="24" stroke="#C9B8A0" stroke-width="1.2"/><line x1="2" y1="26" x2="26" y2="2" stroke="#C9B8A0" stroke-width="0.8"/><circle cx="9" cy="8" r="2.5" stroke="#C9B8A0" stroke-width="0.8"/></svg>
+          </div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:#57514B;margin-bottom:6px;">No photographs yet</div>
+          <div style="font-size:13px;color:#8B8378;max-width:220px;margin:0 auto;line-height:1.6;">Approved photographs will appear here once submitted.</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.8;">Public context: "No photographs yet"<br/>Admin context: "Upload your first photograph"<br/>Admin empty: shows gold Upload CTA<br/>Filter active empty: "No results for [tag]"<br/>Never show skeleton after empty confirmed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load More -->
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:24px;">
+    <div style="padding:12px 24px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Load More — Canonical Behaviour</div>
+    </div>
+    <div style="padding:24px;">
+      <div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;">
+        <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+          <button style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:14px 48px;border:1px solid #D8D2C6;color:#57514B;background:#FFFFFF;">Load More Photographs</button>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">REST</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+          <button style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:14px 48px;border:1px solid #A8843C;color:#A8843C;background:rgba(201,169,97,0.04);">Loading…</button>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">LOADING</span>
+        </div>
+        <div style="flex:1;min-width:240px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">Initial batch: 24–48 photos (context-dependent)<br/>Each click: +24 more (public) · +20 more (projects)<br/>Button hidden: when all loaded (total reached)<br/>No full-page reload — append to DOM<br/>data-gsap="stagger" on newly appended rows<br/>Dark context (Special Projects):<br/>  border: 1px solid #D8D2C6 · color: #C9A961<br/>Light context (Showcase):<br/>  standard button above</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 07 — PUBLIC VS ADMIN ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="07 Public vs Admin">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">07</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Public vs Admin</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Same GalleryEngine. Same LayoutEngine. Different card renderer at Layer 3. The context prop routes the card selection and determines which toolbar variant to mount.</p>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr;padding:14px 28px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;gap:16px;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Property</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#3E5A48;font-weight:600;">Public — context="public"</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;">Admin — context="admin"</span>
+    </div>
+    <sc-for list="{{ contextRows }}" as="cr" hint-placeholder-count="10">
+      <div style="display:grid;grid-template-columns:200px 1fr 1fr;padding:13px 28px;border-bottom:1px solid #F0EBE0;gap:16px;align-items:start;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;padding-top:1px;">{{ cr.prop }}</div>
+        <div style="font-size:12px;color:#57514B;line-height:1.65;">{{ cr.pub }}</div>
+        <div style="font-size:12px;color:#57514B;line-height:1.65;">{{ cr.adm }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">What Never Changes</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">Natural aspect ratios: always<br/>No object-fit:cover on photos<br/>No border-radius on photos<br/>No scale transform on hover<br/>Photography rule: always<br/>GalleryEngine interface: identical<br/>LayoutEngine algorithm: identical<br/>Pagination model: identical</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Shared By Both</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">FilterStrip component<br/>Load More behaviour<br/>Empty state component<br/>Skeleton loader<br/>Photo data model (same API)<br/>Responsive breakpoints<br/>Gap token resolution<br/>onPhotoClick handler</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Differs By Context</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">Card renderer: Justified|Matted<br/>Toolbar: FilterStrip|AdminToolbar<br/>Default layout: Justified|Modular<br/>Hover: viewfinder|edit+select<br/>Status badges: absent|present<br/>Featured flags: absent|present<br/>Selection mode: absent|present<br/>SelectionBar: absent|present</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 08 — PROPS API ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="08 Props API">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">08</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Props API &amp; Data Model</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">GalleryEngine props. Every gallery surface in the platform uses this interface. Existing consumers map to these props without breaking changes.</p>
+
+  <div style="border:1px solid #2C2820;background:#141210;overflow:hidden;margin-bottom:24px;">
+    <div style="padding:14px 28px;border-bottom:1px solid #2C2820;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.12em;">GalleryEngine — Props</span>
+    </div>
+    <div style="padding:6px 0 12px;">
+      <sc-for list="{{ propsRows }}" as="pr" hint-placeholder-count="10">
+        <div style="display:grid;grid-template-columns:180px 120px 80px 1fr;padding:8px 28px;border-bottom:1px solid #1A1816;gap:12px;align-items:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#C9A961;">{{ pr.name }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#7AB88A;">{{ pr.type }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;">{{ pr.req }}</div>
+          <div style="font-size:11px;color:#57514B;">{{ pr.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="border:1px solid #2C2820;background:#141210;overflow:hidden;margin-bottom:24px;">
+    <div style="padding:14px 28px;border-bottom:1px solid #2C2820;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;text-transform:uppercase;letter-spacing:0.12em;">Photo — Data Model</span>
+    </div>
+    <div style="padding:16px 28px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#C9A961;">
+      <span style="color:#57514B;">interface </span>Photo <span style="color:#57514B;">{</span><br/>
+      &nbsp;&nbsp;id: <span style="color:#7AB88A;">string</span><br/>
+      &nbsp;&nbsp;imageUrl: <span style="color:#7AB88A;">string</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3A3830;">// ImageKit CDN URL</span><br/>
+      &nbsp;&nbsp;aspectRatio: <span style="color:#7AB88A;">number</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3A3830;">// width/height · from EXIF · e.g. 1.778</span><br/>
+      &nbsp;&nbsp;title: <span style="color:#7AB88A;">string</span><br/>
+      &nbsp;&nbsp;photographerUsername: <span style="color:#7AB88A;">string</span><br/>
+      &nbsp;&nbsp;photographerName: <span style="color:#7AB88A;">string</span><br/>
+      &nbsp;&nbsp;activityName: <span style="color:#7AB88A;">string | null</span><br/>
+      &nbsp;&nbsp;projectSlug: <span style="color:#7AB88A;">string | null</span><br/>
+      &nbsp;&nbsp;tags: <span style="color:#7AB88A;">string[ ]</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3A3830;">// genre / activity tags for filter</span><br/>
+      &nbsp;&nbsp;status: <span style="color:#7AB88A;">'public' | 'pending' | 'private' | 'rejected'</span><br/>
+      &nbsp;&nbsp;isFeatured: <span style="color:#7AB88A;">boolean</span><br/>
+      &nbsp;&nbsp;uploadedAt: <span style="color:#7AB88A;">string</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3A3830;">// ISO 8601</span><br/>
+      <span style="color:#57514B;">}</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">API Endpoints</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:2.2;color:#57514B;">Public:<br/>  /api/v1/gallery<br/>    ?status=approved<br/>    &amp;limit=48<br/>    [&amp;tag=Heritage]<br/>    [&amp;photographer=username]<br/>    [&amp;project=slug]<br/>Admin:<br/>  /api/v1/gallery<br/>    ?memberId=[me]<br/>    [&amp;status=pending|public…]</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Gap Tokens</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#57514B;">--gallery-gap-standard: 8px<br/>  Showcase · Profile · Home<br/><br/>--gallery-gap-tight: 2px<br/>  Special Projects gallery<br/>  (high photo density · dark bg)<br/><br/>--gallery-gap-admin: 16px<br/>  Portfolio Manager<br/>  (matted cards · white bg)</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Row Target Heights</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#57514B;">Desktop 1280+: ~240px<br/>Laptop 1024: ~220px<br/>Tablet 768: 2-col natural stack<br/>Mobile 480: 1-col natural stack<br/><br/>Special Projects: ~220px<br/>  (tighter gap · more density)<br/><br/>Admin Modular: fixed 1:1 cells<br/>  not row-based</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 09 — DEPRECATION ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="09 Deprecation">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">09</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Deprecation Map</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">One layout deprecated. No breaking changes. Existing consumers using Magazine layout receive Editorial automatically. Migration is silent — no code change required at the call site.</p>
+
+  <div style="border:1px solid #2C2820;background:#141210;overflow:hidden;margin-bottom:24px;">
+    <div style="padding:14px 28px;border-bottom:1px solid #2C2820;display:flex;align-items:center;gap:16px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A3493B;text-transform:uppercase;letter-spacing:0.12em;">Deprecated</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;">Magazine layout → auto-migrates to Editorial</span>
+    </div>
+    <div style="padding:20px 28px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#E07060;margin-bottom:8px;text-decoration:line-through;">layout="magazine"</div>
+        <div style="font-size:12px;color:#57514B;background:#2C2820;border:1px solid #3A3830;padding:10px 18px;">Magazine Layout<br/><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;">deprecated · do not use</span></div>
+      </div>
+      <div style="font-size:24px;color:#57514B;font-weight:300;">→</div>
+      <div style="text-align:center;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7AB88A;margin-bottom:8px;">layout="editorial"</div>
+        <div style="font-size:12px;color:#D8D2C6;background:#1E2A1E;border:1px solid rgba(62,90,72,0.4);padding:10px 18px;">Editorial Layout<br/><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;">production · use this</span></div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:2.0;color:#57514B;">LayoutEngine.resolve(layout):<br/>  if layout === "magazine":<br/>    console.warn(DEPRECATION_MSG)<br/>    return "editorial"<br/>  return layout<br/><br/>No call site change needed.<br/>Deprecation warning in dev only.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A3493B;font-weight:600;margin-bottom:10px;">Why Deprecated</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">Magazine was an early layout concept that described a large lead photo with text beside it. Editorial captures this intent more precisely and extends it with a secondary row. Magazine never reached production deployment.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Migration Steps</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">1. No code change at call site<br/>2. LayoutEngine silently remaps<br/>3. Dev console warning logged<br/>4. Replace layout="magazine"<br/>   with layout="editorial"<br/>   in source when convenient<br/>5. Warning disappears</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:22px 26px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#3E5A48;font-weight:600;margin-bottom:10px;">Removal Timeline</div>
+      <div style="font-size:13px;line-height:1.8;color:#57514B;">Magazine alias removed at V7 engine upgrade only. Not before. V6 carries the alias for the full V6 lifecycle. No forced migration sprint required. Teams migrate at their own pace.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 10 — RESPONSIVE ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="10 Responsive">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">10</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Responsive Behaviour</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Justified and Masonry collapse to column stacks below 768px. Modular and Metro reduce column count. Editorial collapses to stacked single-column. Hover captions become persistent labels on touch devices.</p>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:140px 1fr 1fr 1fr 1fr;padding:14px 24px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;gap:8px;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Layout</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Desktop 1280+</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Laptop 1024</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Tablet 768</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Mobile 390</span>
+    </div>
+    <sc-for list="{{ responsiveRows }}" as="rr" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:140px 1fr 1fr 1fr 1fr;padding:12px 24px;border-bottom:1px solid #F0EBE0;gap:8px;align-items:start;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;font-weight:500;">{{ rr.layout }}</div>
+        <div style="font-size:12px;line-height:1.6;color:#57514B;">{{ rr.d }}</div>
+        <div style="font-size:12px;line-height:1.6;color:#57514B;">{{ rr.l }}</div>
+        <div style="font-size:12px;line-height:1.6;color:#57514B;">{{ rr.t }}</div>
+        <div style="font-size:12px;line-height:1.6;color:#57514B;">{{ rr.m }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ══ HANDOFF FOOTER ══ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;">
+  <div style="background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border:1px solid #E7E1D6;padding:56px;text-align:center;">
+    <img src="uploads/BCC Square Logo.png" alt="BCC" style="height:52px;width:auto;margin:0 auto 24px;"/>
+    <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:12px;">V6 60 Gallery Grid System · Design Authority · July 2026</div>
+    <h3 style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px;">Canonical gallery architecture for the BCC Unified Platform</h3>
+    <p style="font-size:14px;line-height:1.8;color:#57514B;max-width:680px;margin:0 auto 28px;">Six implementations reconciled. Zero removed. One shared engine. Public and admin contexts share architecture; cards differ by context. Photography rule applies everywhere: natural ratio, no crop, no cover.</p>
+    <div style="display:flex;justify-content:center;gap:40px;flex-wrap:wrap;border-top:1px solid #E7E1D6;padding-top:28px;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Production Layouts</div><div style="font-size:14px;font-weight:500;">5 — Justified · Masonry · Modular · Editorial · Metro</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Deprecated</div><div style="font-size:14px;font-weight:500;color:#A3493B;">Magazine → Editorial auto-migration</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Status</div><div style="font-size:14px;font-weight:500;color:#3E5A48;">Design Authority · Frozen</div></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+
+class Component extends DCLogic {
+  state = { layout: 'justified' };
+
+  renderVals() {
+    const { layout } = this.state;
+
+    const setL = (l) => () => this.setState({ layout: l });
+    const lBtn = (l) => ({
+      bg: layout === l ? 'linear-gradient(135deg,#C9A961,#A8843C)' : '#FFFFFF',
+      color: layout === l ? '#FFFFFF' : '#57514B',
+      border: layout === l ? '#A8843C' : '#D8D2C6',
+    });
+
+    const jb = lBtn('justified'), mb = lBtn('masonry'), mob = lBtn('modular');
+    const eb = lBtn('editorial'), mtb = lBtn('metro');
+
+    const layoutNames = { justified: 'Justified', masonry: 'Masonry', modular: 'Modular', editorial: 'Editorial', metro: 'Metro' };
+    const layoutDefaults = { justified: 'Default · All public galleries', masonry: 'Production · available as named prop', modular: 'Admin default · Portfolio Manager', editorial: 'Production · special event / project hero', metro: 'Production · mixed-density feature walls' };
+
+    // Reconciliation
+    const reconciliation = [
+      { name: 'Home GalleryWall', source: 'V6 01', keep: '✓', merge: '–', remove: '–', notes: 'Justified · 12 photos · 1/photographer · no filter. Engine: GalleryEngine[public,justified]', rowBg: 'transparent' },
+      { name: 'Showcase GalleryWall', source: 'V6 03', keep: '✓', merge: '–', remove: '–', notes: 'Justified · all approved · no limit · FilterStrip. Engine: GalleryEngine[public,justified]', rowBg: 'rgba(62,90,72,0.04)' },
+      { name: 'Profile Portfolio Gallery', source: 'V6 05', keep: '✓', merge: '–', remove: '–', notes: 'Justified · per-photographer · FilterStrip · genre filter. Same engine as Showcase.', rowBg: 'transparent' },
+      { name: 'Special Projects Gallery', source: 'V6 40', keep: '✓', merge: '–', remove: '–', notes: 'Justified · 2px gap variant · 20+20 load more. Engine: GalleryEngine[public,justified,gap=tight]', rowBg: 'rgba(62,90,72,0.04)' },
+      { name: 'Portfolio Manager Wall', source: 'V6 10', keep: '✓', merge: '–', remove: '–', notes: 'Admin · 4-col · MattedCard · selection state. Engine: GalleryEngine[admin,modular]', rowBg: 'transparent' },
+      { name: 'Upload Queue', source: 'V6 11', keep: '✓', merge: '–', remove: '–', notes: 'Not a gallery display. Ingestion UI — outside GalleryEngine scope.', rowBg: 'rgba(62,90,72,0.04)' },
+      { name: 'Viewfinder Hover (Showcase)', source: 'V6 03', keep: '–', merge: '✓', remove: '–', notes: 'Canonical hover merged from 3 implementations. One spec. See Section 04.', rowBg: 'transparent' },
+      { name: 'FilterStrip (Showcase)', source: 'V6 03', keep: '–', merge: '✓', remove: '–', notes: 'Merged with V6 05 Profile filter. One canonical component, 2 visual treatments.', rowBg: 'rgba(62,90,72,0.04)' },
+      { name: 'FilterStrip (Profile)', source: 'V6 05', keep: '–', merge: '✓', remove: '–', notes: 'Merged into canonical FilterStrip. Rounded chip variant documented in Section 05.', rowBg: 'transparent' },
+      { name: 'Magazine Layout', source: 'V6 xx', keep: '–', merge: '–', remove: '✓', notes: 'Deprecated. Auto-migrates to Editorial. See Section 09. No forced migration sprint.', rowBg: 'rgba(50,16,10,0.08)' },
+    ];
+
+    // Layout specs
+    const layoutSpecs = [
+      { name: 'Justified', nameColor: '#C9A961', algo: 'Flickr algorithm', gap: '8px / 2px', use: 'All public galleries. Home, Showcase, Profile, Projects.', status: 'DEFAULT', statusBg: '#141210', statusColor: '#C9A961' },
+      { name: 'Masonry', nameColor: '#FAF8F4', algo: '3-column cascade', gap: '2px', use: 'Dense editorial collections. Alternative to Justified.', status: 'PRODUCTION', statusBg: '#1E2A1E', statusColor: '#7AB88A' },
+      { name: 'Modular', nameColor: '#FAF8F4', algo: 'CSS grid 4-col', gap: '16px', use: 'Admin Portfolio Manager. MattedCard context.', status: 'PRODUCTION', statusBg: '#1E2A1E', statusColor: '#7AB88A' },
+      { name: 'Editorial', nameColor: '#FAF8F4', algo: 'Lead 2:1 + 2×2 + row', gap: '2px', use: 'Special event hero galleries. Auto-receives Magazine.', status: 'PRODUCTION', statusBg: '#1E2A1E', statusColor: '#7AB88A' },
+      { name: 'Metro', nameColor: '#FAF8F4', algo: 'CSS grid spanning', gap: '2px', use: 'Mixed-density feature walls. Large anchor tile.', status: 'PRODUCTION', statusBg: '#1E2A1E', statusColor: '#7AB88A' },
+      { name: 'Magazine', nameColor: '#E07060', algo: '→ Editorial', gap: '–', use: 'Deprecated. Remapped to Editorial silently.', status: 'DEPRECATED', statusBg: '#3A1610', statusColor: '#E07060' },
+    ];
+
+    // Context comparison
+    const contextRows = [
+      { prop: 'Card renderer', pub: 'JustifiedCard — dark bg, viewfinder hover, caption', adm: 'MattedCard — white mat, status badge, edit actions' },
+      { prop: 'Default layout', pub: 'Justified', adm: 'Modular (4-col grid)' },
+      { prop: 'Toolbar', pub: 'FilterStrip (optional)', adm: 'AdminToolbar: search + chips + status + sort + view' },
+      { prop: 'Hover action', pub: 'Viewfinder corners + overlay + caption slide-up', adm: 'Edit (✎) and Select (☐) revealed at top-right' },
+      { prop: 'Status badges', pub: 'None — only approved photos shown', adm: 'PUBLIC · PENDING · PRIVATE · REJECTED' },
+      { prop: 'Featured flag', pub: 'None — editorial context, not curation', adm: '★ FEATURED gold badge top-left on card' },
+      { prop: 'Selection mode', pub: 'None', adm: 'Gold ring + checkmark. SelectionBar on >0 selected.' },
+      { prop: 'Photo link target', pub: '/photographers/[username] or /photos/[id]', adm: 'Opens photo inspector overlay (right-edge)' },
+      { prop: 'Empty state CTA', pub: 'No CTA — editorial message only', adm: 'Gold "Upload Photograph" CTA button' },
+      { prop: 'Background', pub: '#141210 behind photos (dark gallery ground)', adm: '#FAF8F4 white behind mats (light studio ground)' },
+    ];
+
+    // Props API
+    const propsRows = [
+      { name: 'photos', type: 'Photo[ ]', req: 'required', desc: 'Array of photo objects. See data model below.' },
+      { name: 'layout', type: 'LayoutName', req: 'optional', desc: "Layout variant. Default: 'justified'. Values: justified|masonry|modular|editorial|metro" },
+      { name: 'context', type: 'string', req: 'optional', desc: "Rendering context. Default: 'public'. Values: 'public' | 'admin'" },
+      { name: 'gap', type: 'string', req: 'optional', desc: "Gap token override. Default: 'standard'. Values: 'standard' (8px) | 'tight' (2px) | 'admin' (16px)" },
+      { name: 'filters', type: 'string[ ]', req: 'optional', desc: 'Available filter tags. Empty array = no FilterStrip rendered.' },
+      { name: 'initialFilter', type: 'string', req: 'optional', desc: "Default active filter. Default: 'All'" },
+      { name: 'pageSize', type: 'number', req: 'optional', desc: 'Photos per page / initial load. Default: 48 public, 20 projects.' },
+      { name: 'loading', type: 'boolean', req: 'optional', desc: 'Shows skeleton state when true. Controlled externally.' },
+      { name: 'hasMore', type: 'boolean', req: 'optional', desc: 'Shows Load More button when true.' },
+      { name: 'onLoadMore', type: 'function', req: 'optional', desc: 'Called when Load More is clicked.' },
+      { name: 'onPhotoClick', type: 'function', req: 'optional', desc: 'Called with (photo: Photo) on card click. Defaults: public → navigate, admin → inspector.' },
+      { name: 'rowTargetHeight', type: 'number', req: 'optional', desc: 'Target row height in px for Justified layout. Default: 240.' },
+    ];
+
+    // Responsive rows
+    const responsiveRows = [
+      { layout: 'Justified', d: 'Flex rows ~240px height · 8px gap', l: 'Flex rows ~220px · gap unchanged', t: '2-col natural stack · no row algorithm', m: '1-col · full width · natural height' },
+      { layout: 'Masonry', d: '3 columns · natural heights · 2px gap', l: '3 columns · slightly narrower', t: '2 columns', m: '1 column' },
+      { layout: 'Modular', d: '4-col grid · 1:1 cells · 16px gap', l: '4-col · gap unchanged', t: '3-col grid', m: '2-col grid' },
+      { layout: 'Editorial', d: 'Lead 2:1 + 2-col secondary + row', l: 'Same · condensed widths', t: 'Stacked: lead full-width · 2-col row', m: 'Full-width single column' },
+      { layout: 'Metro', d: 'Spanning grid · large anchor tile', l: 'Same grid · smaller cells', t: '2-col simplified grid', m: '1-col stack' },
+      { layout: 'FilterStrip', d: 'Horizontal flex · wrap allowed', l: 'Horizontal flex', t: 'Horizontal flex', m: 'Horizontal scroll · no wrap · no overflow text' },
+    ];
+
+    return {
+      // Layout switcher
+      setJustified: setL('justified'), setMasonry: setL('masonry'), setModular: setL('modular'), setEditorial: setL('editorial'), setMetro: setL('metro'),
+      lJBg: jb.bg, lJColor: jb.color, lJBorder: jb.border,
+      lMaBg: mb.bg, lMaColor: mb.color, lMaBorder: mb.border,
+      lMoBg: mob.bg, lMoColor: mob.color, lMoBorder: mob.border,
+      lEBg: eb.bg, lEColor: eb.color, lEBorder: eb.border,
+      lMtBg: mtb.bg, lMtColor: mtb.color, lMtBorder: mtb.border,
+      layoutName: layoutNames[layout],
+      layoutDefault: layoutDefaults[layout],
+      showJustified: layout === 'justified',
+      showMasonry: layout === 'masonry',
+      showModular: layout === 'modular',
+      showEditorial: layout === 'editorial',
+      showMetro: layout === 'metro',
+      // Data
+      reconciliation, layoutSpecs, contextRows, propsRows, responsiveRows,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

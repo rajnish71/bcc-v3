@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:340px;height:539px;position:relative;background:#FAF8F4;border:1px solid #E7E1D6;box-shadow:0 18px 50px -12px rgba(20,18,16,0.28),0 2px 8px rgba(20,18,16,0.06);font-family:'Inter',sans-serif;color:#141210;overflow:hidden;">
+
+  <!-- ░░░░░ FRONT ░░░░░ -->
+  <sc-if value="{{ isFront }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;">
+
+    <!-- aperture watermark -->
+    <img src="uploads/favicon 150 x 150.png" alt="" style="position:absolute;width:280px;height:280px;right:-90px;bottom:34px;opacity:0.05;pointer-events:none;"/>
+    <!-- category spine -->
+    <div style="position:absolute;left:0;top:0;bottom:92px;width:4px;background:{{ accent }};"></div>
+
+    <!-- header -->
+    <div style="padding:18px 20px 12px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #E7E1D6;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:44px;width:auto;display:block;"/>
+      <div style="text-align:right;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.16em;color:#A8843C;font-weight:600;">MEMBERSHIP</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.16em;color:#8B8378;margin-top:2px;">FIP AFFILIATED</div>
+      </div>
+    </div>
+
+    <!-- photo -->
+    <div style="padding:18px 20px 2px 22px;display:flex;justify-content:center;">
+      <div style="position:relative;width:236px;height:236px;background:#F0EBE0;border:1px solid #E0D9CC;">
+        <sc-if value="{{ hasPhoto }}" hint-placeholder-val="{{ true }}">
+          <img src="{{ photo }}" alt="Member photograph" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"/>
+        </sc-if>
+        <sc-if value="{{ noPhoto }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#F0EBE0;">
+            <img src="uploads/favicon 150 x 150.png" alt="" style="width:58px;height:58px;opacity:0.22;"/>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;color:#A89F90;">PHOTO PENDING</div>
+          </div>
+        </sc-if>
+        <div style="position:absolute;top:8px;left:8px;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:0.12em;background:rgba(20,18,16,0.7);color:#FFFFFF;padding:3px 7px;">MEMBER</div>
+      </div>
+    </div>
+
+    <!-- name + category -->
+    <div style="padding:14px 20px 0 22px;">
+      <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:{{ nameSize }};line-height:1.05;letter-spacing:-0.015em;color:#141210;">{{ fullName }}</div>
+      <div style="display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:5px 11px 5px 8px;border:1px solid {{ accent }};background:{{ accentSoft }};">
+        <span style="width:7px;height:7px;border-radius:50%;background:{{ accent }};display:block;"></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:{{ accentText }};">{{ category }}</span>
+      </div>
+    </div>
+
+    <!-- details -->
+    <div style="padding:14px 20px 0 22px;display:flex;flex-direction:column;gap:9px;flex:1;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #ECE6DB;padding-bottom:7px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:#8B8378;">MEMBERSHIP&nbsp;NO.</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:0.04em;color:#141210;">{{ membershipNo }}</span>
+      </div>
+      <div style="display:flex;gap:24px;">
+        <div style="flex:1;"><div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:#8B8378;margin-bottom:3px;">ISSUED</div><div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:500;color:#37322C;">{{ issueDate }}</div></div>
+        <div style="flex:1;"><div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:#8B8378;margin-bottom:3px;">VALID&nbsp;THRU</div><div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:500;color:#37322C;">{{ validTill }}</div></div>
+      </div>
+    </div>
+
+    <!-- footer ink bar -->
+    <div style="height:92px;background:#141210;display:flex;align-items:center;gap:14px;padding:0 20px 0 22px;position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,{{ accent }},transparent);"></div>
+      <div style="width:62px;height:62px;background:#FFFFFF;padding:5px;flex-shrink:0;"><img src="qr-sample.svg" alt="Verification QR" style="width:100%;height:100%;display:block;"/></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">SCAN TO VERIFY</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:500;color:#C9A961;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ verifyUrl }}</div>
+        <div style="font-size:8.5px;color:#8B8378;margin-top:5px;letter-spacing:0.02em;">Bhopal Camera Club · Reg. Society</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ░░░░░ BACK ░░░░░ -->
+  <sc-if value="{{ isBack }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;">
+    <img src="uploads/favicon 150 x 150.png" alt="" style="position:absolute;width:260px;height:260px;left:-86px;top:120px;opacity:0.045;pointer-events:none;"/>
+    <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:{{ accent }};"></div>
+
+    <!-- header -->
+    <div style="padding:18px 22px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #E7E1D6;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:32px;width:auto;display:block;"/>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:#8B8378;">REVERSE</div>
+    </div>
+
+    <!-- verification -->
+    <div style="padding:16px 22px 0;display:flex;gap:14px;align-items:center;">
+      <div style="width:74px;height:74px;background:#FFFFFF;border:1px solid #E0D9CC;padding:6px;flex-shrink:0;"><img src="qr-sample.svg" alt="Verification QR" style="width:100%;height:100%;display:block;"/></div>
+      <div>
+        <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:#141210;margin-bottom:5px;">Scan to verify membership</div>
+        <div style="font-size:10.5px;line-height:1.55;color:#57514B;">Confirm this credential's validity in real time at</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:#A8843C;margin-top:3px;">{{ verifyUrl }}</div>
+      </div>
+    </div>
+
+    <div style="height:1px;background:#ECE6DB;margin:15px 22px 0;"></div>
+
+    <!-- contact + club -->
+    <div style="padding:14px 22px 0;display:flex;gap:18px;">
+      <div style="flex:1;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:#8B8378;margin-bottom:6px;">CLUB OFFICE</div>
+        <div style="font-size:10px;line-height:1.55;color:#37322C;">A 503, Aashima Royal City,<br/>Near Pebble Bay, Bagmugalia,<br/>Bhopal&nbsp;–&nbsp;462043, M.P., India</div>
+      </div>
+      <div style="width:128px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:#8B8378;margin-bottom:6px;">CONTACT</div>
+        <div style="font-size:10px;line-height:1.7;color:#37322C;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;">bhopalcameraclub.org</div>
+          <sc-if value="{{ hasEmail }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;overflow:hidden;text-overflow:ellipsis;">{{ email }}</div></sc-if>
+          <sc-if value="{{ hasMobile }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;">{{ mobile }}</div></sc-if>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:1px;background:#ECE6DB;margin:14px 22px 0;"></div>
+
+    <!-- notes -->
+    <div style="padding:13px 22px 0;flex:1;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:#8B8378;margin-bottom:7px;">CONDITIONS</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;gap:8px;font-size:9.5px;line-height:1.4;color:#57514B;"><span style="color:{{ accent }};font-weight:700;">—</span>Membership is personal and non-transferable.</div>
+        <div style="display:flex;gap:8px;font-size:9.5px;line-height:1.4;color:#57514B;"><span style="color:{{ accent }};font-weight:700;">—</span>This card remains the property of Bhopal Camera Club.</div>
+        <div style="display:flex;gap:8px;font-size:9.5px;line-height:1.4;color:#57514B;"><span style="color:{{ accent }};font-weight:700;">—</span>Must be produced on request at all club events.</div>
+      </div>
+    </div>
+
+    <!-- signature footer -->
+    <div style="background:#141210;padding:14px 22px;display:flex;align-items:flex-end;justify-content:space-between;">
+      <div>
+        <div style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;font-style:italic;color:#FAF8F4;letter-spacing:0.01em;">A. Verma</div>
+        <div style="width:96px;height:1px;background:#4A453E;margin:4px 0 5px;"></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:0.12em;color:#8B8378;">AUTHORISED SIGNATORY · PRESIDENT</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:8px;color:#8B8378;letter-spacing:0.04em;">Property of BCC</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#C9A961;margin-top:3px;">{{ membershipNo }}</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:340,&quot;height&quot;:539},&quot;side&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;front&quot;,&quot;back&quot;],&quot;default&quot;:&quot;front&quot;},&quot;fullName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Aarav Mehta&quot;},&quot;membershipNo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;BCC-2026-0045&quot;},&quot;category&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Student Member&quot;,&quot;Individual Member&quot;,&quot;Family Member&quot;,&quot;Senior Member&quot;,&quot;Honorary Member&quot;,&quot;Life Member&quot;,&quot;Patron Member&quot;],&quot;default&quot;:&quot;Life Member&quot;},&quot;issueDate&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;01 Jan 2026&quot;},&quot;validTill&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;31 Dec 2026&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;+91 98XXX XXXXX&quot;},&quot;email&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;aarav@example.com&quot;},&quot;photo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;},&quot;verifyCode&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;},&quot;verifyUrl&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;}}">
+class Component extends DCLogic {
+  // Deterministic 8-char alphanumeric verification code, seeded by membership no.
+  // Unambiguous alphabet (no 0/O/1/I) so it can't be misread on print or guessed.
+  genCode(seed) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let h = 0x811c9dc5;
+    const s = String(seed);
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+    let out = '';
+    for (let i = 0; i < 8; i++) { h = (h * 1103515245 + 12345) >>> 0; out += chars[(h >>> 9) % chars.length]; }
+    return out;
+  }
+  renderVals() {
+    const p = this.props;
+    const side = p.side || 'front';
+    const category = p.category || 'Life Member';
+    const PALETTE = {
+      'Student Member':   { accent:'#1A9DAE', soft:'#E7F3F4', text:'#147A87' },
+      'Individual Member':{ accent:'#3E5A48', soft:'#E9EFEA', text:'#33493B' },
+      'Family Member':    { accent:'#D9733A', soft:'#FBEDE3', text:'#B85B27' },
+      'Senior Member':    { accent:'#6F8F3C', soft:'#EEF2E2', text:'#5A7530' },
+      'Honorary Member':  { accent:'#C8327A', soft:'#FBE7F1', text:'#A82765' },
+      'Life Member':      { accent:'#A8843C', soft:'#F6EEDC', text:'#8A6A2C' },
+      'Patron Member':    { accent:'#8A6A2E', soft:'#F2EAD8', text:'#6F5523' },
+    };
+    const pal = PALETTE[category] || PALETTE['Life Member'];
+    const fullName = p.fullName || 'Member Name';
+    const len = fullName.length;
+    const nameSize = len > 22 ? '17px' : (len > 16 ? '19px' : '22px');
+    const membershipNo = p.membershipNo || 'BCC-2026-0045';
+    const photo = p.photo || '';
+    const mobile = p.mobile || '';
+    const email = p.email || '';
+    return {
+      isFront: side === 'front',
+      isBack: side === 'back',
+      accent: pal.accent,
+      accentSoft: pal.soft,
+      accentText: pal.text,
+      category,
+      fullName,
+      nameSize,
+      membershipNo,
+      photo,
+      hasPhoto: !!photo,
+      noPhoto: !photo,
+      issueDate: p.issueDate || '01 Jan 2026',
+      validTill: p.validTill || '31 Dec 2026',
+      mobile, email,
+      hasMobile: !!mobile,
+      hasEmail: !!email,
+      verifyUrl: p.verifyUrl || 'bcc.org/verify/' + (p.verifyCode || this.genCode(membershipNo)),
+    };
+  }
+}
+</script>
+</body>
+</html>

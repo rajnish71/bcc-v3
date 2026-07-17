@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+<template id="__bundler_thumbnail" data-bg-color="#141210">
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<rect width="200" height="200" fill="#141210"/>
+<rect x="60" y="30" width="80" height="140" rx="2" fill="#FAF8F4"/>
+<circle cx="100" cy="80" r="26" fill="none" stroke="#C9A961" stroke-width="4"/>
+<circle cx="100" cy="80" r="10" fill="#C9A961"/>
+<rect x="72" y="120" width="56" height="6" fill="#E7E1D6"/>
+<rect x="72" y="134" width="40" height="5" fill="#D8D2C6"/>
+</svg>
+</template>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#F2EFE9;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#EFE3C8}
+img{display:block}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+.kick{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#A8843C;font-weight:600}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#8B8378;font-weight:600}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#F2EFE9;padding-bottom:120px;" data-screen-label="Card System Board">
+
+<!-- ═══════════ COVER ═══════════ -->
+<header style="background:#141210;color:#FAF8F4;padding:80px 0 0;position:relative;overflow:hidden;" data-screen-label="Cover">
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#C9A961,transparent);"></div>
+  <img src="uploads/favicon 150 x 150.png" alt="" style="position:absolute;width:520px;height:520px;right:-150px;top:-60px;opacity:0.07;"/>
+  <div style="max-width:1180px;margin:0 auto;padding:0 48px;position:relative;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:54px;">
+      <img src="uploads/favicon 150 x 150.png" alt="BCC" style="width:46px;height:46px;"/>
+      <div style="line-height:1;"><div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.14em;">BHOPAL CAMERA CLUB</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.22em;color:#8B8378;margin-top:4px;">EST. 2016 · AFFILIATED WITH FIP</div></div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#C9A961;font-weight:600;margin-bottom:22px;">Membership Identity Card System · v1 · June 2026</div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(46px,6vw,82px);font-weight:700;letter-spacing:-0.035em;line-height:0.98;margin-bottom:28px;">A membership credential,<br/>not an ID badge.</h1>
+    <p style="font-size:18px;line-height:1.7;color:#C8C1B6;max-width:660px;font-weight:300;margin-bottom:56px;">An implementation-ready, portrait CR80 card system for the BCC Portal — generated automatically from member data. One unified visual language across dashboard preview, mobile wallet, PDF export, home printing and professional PVC printing.</p>
+    <div style="display:flex;gap:0;flex-wrap:wrap;border-top:1px solid #322E29;">
+      <div style="padding:24px 40px 40px 0;border-right:1px solid #322E29;padding-right:40px;"><div class="eyebrow" style="color:#8B8378;margin-bottom:6px;">Format</div><div style="font-size:15px;font-weight:500;">CR80 Portrait · 53.98 × 85.60 mm</div></div>
+      <div style="padding:24px 40px 40px;border-right:1px solid #322E29;"><div class="eyebrow" style="color:#8B8378;margin-bottom:6px;">Categories</div><div style="font-size:15px;font-weight:500;">7 tiers · one unified system</div></div>
+      <div style="padding:24px 0 40px 40px;"><div class="eyebrow" style="color:#8B8378;margin-bottom:6px;">Outputs</div><div style="font-size:15px;font-weight:500;">PDF · PNG · JPG · PVC · Wallet</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════ HERO — INTERACTIVE CARD ═══════════ -->
+<section style="background:linear-gradient(180deg,#FAF8F4,#F2EFE9);border-bottom:1px solid #E7E1D6;padding:80px 0;" data-screen-label="Live Card">
+  <div style="max-width:1180px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:1fr 360px;gap:72px;align-items:center;">
+    <div>
+      <div class="kick" style="margin-bottom:18px;">The Credential</div>
+      <h2 style="font-family:'Outfit',sans-serif;font-size:46px;font-weight:700;letter-spacing:-0.03em;line-height:1.02;margin-bottom:24px;">One card. Seven tiers.<br/>Zero redesigns.</h2>
+      <p style="font-size:16px;line-height:1.75;color:#57514B;max-width:520px;margin-bottom:36px;">Every membership category shares the same architecture — aperture mark, member portrait, mono data block and verification footer. Category is signalled only through a single accent: the left spine, the chip, and the footer hairline. Flip the card and switch tiers below.</p>
+
+      <div style="margin-bottom:14px;" class="eyebrow">Switch category accent</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;max-width:540px;">
+        <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+          <button onClick="{{ c.pick }}" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid {{ c.pillBorder }};background:{{ c.pillBg }};transition:all 0.18s;">
+            <span style="width:8px;height:8px;border-radius:50%;background:{{ c.accent }};display:block;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.06em;color:{{ c.pillText }};">{{ c.short }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <button onClick="{{ flip }}" style="display:inline-flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#FAF8F4;background:#141210;padding:14px 26px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:#C9A961;display:block;"></span>Flip to {{ flipTarget }} side
+      </button>
+    </div>
+
+    <div style="display:flex;justify-content:center;">
+      <div style="perspective:1800px;width:340px;height:539px;">
+        <div style="position:relative;width:100%;height:100%;transition:transform 0.75s cubic-bezier(0.4,0,0.2,1);transform-style:preserve-3d;transform:{{ flipTransform }};">
+          <div style="position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;">
+            <dc-import name="BCC Membership Card" side="front" category="{{ heroCat }}" full-name="Aarav Mehta" membership-no="BCC-2026-0045" photo="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&q=80" issue-date="01 Jan 2026" valid-till="31 Dec 2026" mobile="+91 98XXX XXXXX" email="aarav.mehta@gmail.com" hint-size="340px,539px"></dc-import>
+          </div>
+          <div style="position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);">
+            <dc-import name="BCC Membership Card" side="back" category="{{ heroCat }}" full-name="Aarav Mehta" membership-no="BCC-2026-0045" mobile="+91 98XXX XXXXX" email="aarav.mehta@gmail.com" hint-size="340px,539px"></dc-import>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 01 FRONT ANATOMY ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Front Anatomy">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">01</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Front Side</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">The member photograph is the primary visual focus. Reading order flows top→bottom: identity, portrait, name, credentials, verification.</p>
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:64px;align-items:start;">
+    <div style="position:sticky;top:24px;">
+      <dc-import name="BCC Membership Card" side="front" category="Life Member" full-name="Aarav Mehta" membership-no="BCC-2026-0045" photo="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&q=80" issue-date="01 Jan 2026" valid-till="31 Dec 2026" hint-size="340px,539px"></dc-import>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <sc-for list="{{ frontParts }}" as="f" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:30px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid #E7E1D6;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;font-weight:600;">{{ f.n }}</div>
+          <div>
+            <div style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;margin-bottom:6px;">{{ f.title }}</div>
+            <div style="font-size:14px;line-height:1.65;color:#57514B;">{{ f.body }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 02 BACK ANATOMY ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Back Anatomy">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">02</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Back Side</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">The reverse carries verification, contact, conditions of use and an authorised signature — everything required at the point of a real-world check.</p>
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:64px;align-items:start;">
+    <div style="position:sticky;top:24px;">
+      <dc-import name="BCC Membership Card" side="back" category="Life Member" full-name="Aarav Mehta" membership-no="BCC-2026-0045" mobile="+91 98765 43210" email="aarav.mehta@gmail.com" hint-size="340px,539px"></dc-import>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <sc-for list="{{ backParts }}" as="f" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:30px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid #E7E1D6;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;font-weight:600;">{{ f.n }}</div>
+          <div>
+            <div style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;margin-bottom:6px;">{{ f.title }}</div>
+            <div style="font-size:14px;line-height:1.65;color:#57514B;">{{ f.body }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 03 CATEGORIES ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Categories">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">03</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Seven Categories, One System</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">Each tier is distinguished by a single accent hue drawn from the BCC aperture mark — never a different layout. Grayscale printing degrades gracefully because hierarchy lives in type, not colour.</p>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:40px 24px;">
+    <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:210px;height:333px;margin-bottom:18px;">
+          <div style="width:340px;height:539px;transform:scale(0.618);transform-origin:top left;">
+            <dc-import name="BCC Membership Card" side="front" category="{{ c.name }}" full-name="{{ c.member }}" membership-no="{{ c.no }}" photo="{{ c.photo }}" valid-till="{{ c.valid }}" hint-size="340px,539px"></dc-import>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div style="display:inline-flex;align-items:center;gap:7px;margin-bottom:7px;"><span style="width:9px;height:9px;border-radius:50%;background:{{ c.accent }};display:block;"></span><span style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;">{{ c.name }}</span></div>
+          <div style="font-size:12px;line-height:1.5;color:#8B8378;max-width:200px;">{{ c.desc }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:{{ c.accent }};margin-top:6px;">{{ c.accentHex }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ═══════════ 04 PHOTO + DATA HANDLING ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Resilience">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">04</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Real Database, Real Edge Cases</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">Generated from live portal data, the card must never break. Missing photographs, very long names and absent contact fields all resolve to deliberate states.</p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px 28px;display:flex;flex-direction:column;align-items:center;">
+      <div style="width:240px;height:381px;margin-bottom:22px;"><div style="width:340px;height:539px;transform:scale(0.706);transform-origin:top left;"><dc-import name="BCC Membership Card" side="front" category="Individual Member" full-name="Rohan Iyer" membership-no="BCC-2024-0087" photo="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&q=80" hint-size="340px,539px"></dc-import></div></div>
+      <div class="eyebrow" style="color:#3E7A52;margin-bottom:8px;">Photo present</div>
+      <div style="font-size:13px;line-height:1.6;color:#57514B;text-align:center;">Portrait fills a 4:5-ish frame via <span style="font-family:'JetBrains Mono',monospace;">object-fit:cover</span> with focal-point bias toward the upper third.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px 28px;display:flex;flex-direction:column;align-items:center;">
+      <div style="width:240px;height:381px;margin-bottom:22px;"><div style="width:340px;height:539px;transform:scale(0.706);transform-origin:top left;"><dc-import name="BCC Membership Card" side="front" category="Student Member" full-name="Diya Kulkarni" membership-no="BCC-2026-0210" photo="" hint-size="340px,539px"></dc-import></div></div>
+      <div class="eyebrow" style="color:#A8843C;margin-bottom:8px;">Photo missing</div>
+      <div style="font-size:13px;line-height:1.6;color:#57514B;text-align:center;">Elegant fallback: warm plate, aperture monogram at 22% opacity, <span style="font-family:'JetBrains Mono',monospace;">PHOTO PENDING</span> label. Never a broken image.</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px 28px;display:flex;flex-direction:column;align-items:center;">
+      <div style="width:240px;height:381px;margin-bottom:22px;"><div style="width:340px;height:539px;transform:scale(0.706);transform-origin:top left;"><dc-import name="BCC Membership Card" side="front" category="Honorary Member" full-name="Dr. Lakshmi Venkataraman" membership-no="BCC-2021-0009-LIFE" photo="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500&q=80" hint-size="340px,539px"></dc-import></div></div>
+      <div class="eyebrow" style="color:#A3493B;margin-bottom:8px;">Long name + long ID</div>
+      <div style="font-size:13px;line-height:1.6;color:#57514B;text-align:center;">Name auto-steps 22→19→17px; membership number is mono and ellipsis-clamped on a single line.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 05 MOBILE ═══════════ -->
+<section style="background:#141210;color:#FAF8F4;margin-top:96px;padding:96px 0;" data-screen-label="Mobile Card">
+  <div style="max-width:1180px;margin:0 auto;padding:0 48px;">
+    <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C9A961;">05</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;color:#FAF8F4;">Digital Membership Card</h2></div>
+    <p style="font-size:16px;line-height:1.7;color:#C8C1B6;max-width:620px;margin-bottom:56px;">The same portrait credential, presented as a real object — soft elevation, no flashy effects. Identical on iPhone and Android. Tap to flip; long-press to add to wallet.</p>
+    <div style="display:flex;gap:64px;justify-content:center;align-items:flex-start;flex-wrap:wrap;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+        <x-import component="IOSDevice" from="./ios-frame.jsx" title="My Card" dark="{{ true }}" hint-size="320px,650px">
+          <div style="padding:18px 16px 30px;background:#0F0E0C;min-height:560px;">
+            <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:#8B8378;letter-spacing:0.04em;margin-bottom:4px;">Member Hub</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:#FAF8F4;margin-bottom:18px;">Membership Card</div>
+            <div style="display:flex;justify-content:center;">
+              <div style="width:289px;height:458px;"><div style="width:340px;height:539px;transform:scale(0.85);transform-origin:top left;"><dc-import name="BCC Membership Card" side="front" category="Life Member" full-name="Aarav Mehta" membership-no="BCC-2026-0045" photo="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&q=80" hint-size="340px,539px"></dc-import></div></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <div style="flex:1;text-align:center;background:#1C1A17;border:1px solid #2A2723;padding:13px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#C9A961;">FLIP</div>
+              <div style="flex:1;text-align:center;background:#1C1A17;border:1px solid #2A2723;padding:13px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#C8C1B6;">WALLET</div>
+            </div>
+          </div>
+        </x-import>
+        <div class="eyebrow" style="color:#8B8378;">iOS · Apple Wallet add</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+        <x-import component="AndroidDevice" from="./android-frame.jsx" title="My Card" dark="{{ true }}" hint-size="320px,650px">
+          <div style="padding:18px 16px 30px;background:#0F0E0C;min-height:560px;">
+            <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:#8B8378;letter-spacing:0.04em;margin-bottom:4px;">Member Hub</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:#FAF8F4;margin-bottom:18px;">Membership Card</div>
+            <div style="display:flex;justify-content:center;">
+              <div style="width:289px;height:458px;"><div style="width:340px;height:539px;transform:scale(0.85);transform-origin:top left;"><dc-import name="BCC Membership Card" side="back" category="Life Member" full-name="Aarav Mehta" membership-no="BCC-2026-0045" mobile="+91 98765 43210" email="aarav.mehta@gmail.com" hint-size="340px,539px"></dc-import></div></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <div style="flex:1;text-align:center;background:#1C1A17;border:1px solid #2A2723;padding:13px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#C9A961;">FLIP</div>
+              <div style="flex:1;text-align:center;background:#1C1A17;border:1px solid #2A2723;padding:13px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#C8C1B6;">WALLET</div>
+            </div>
+          </div>
+        </x-import>
+        <div class="eyebrow" style="color:#8B8378;">Android · Google Wallet add</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 06 DASHBOARD ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Dashboard">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">06</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Member Hub Integration</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">How the card lives inside the desktop Member Hub — preview, export actions and the last-generated timestamp. Mobile collapses to a single column.</p>
+
+  <!-- Desktop dashboard -->
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 1px 2px rgba(20,18,16,0.04);margin-bottom:40px;overflow:hidden;">
+    <div style="height:58px;border-bottom:1px solid #E7E1D6;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#FAF8F4;">
+      <div style="display:flex;align-items:center;gap:10px;"><img src="uploads/favicon 150 x 150.png" alt="" style="width:24px;height:24px;"/><span style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;">Member Hub</span><span style="color:#D8D2C6;">/</span><span style="font-size:13px;color:#8B8378;">Membership Card</span></div>
+      <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:#8B8378;">Aarav Mehta</span><span style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#FFFFFF;">AM</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:48px;padding:44px 48px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+        <div style="width:252px;height:400px;"><div style="width:340px;height:539px;transform:scale(0.741);transform-origin:top left;"><dc-import name="BCC Membership Card" side="front" category="Life Member" full-name="Aarav Mehta" membership-no="BCC-2026-0045" photo="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&q=80" hint-size="340px,539px"></dc-import></div></div>
+        <div style="display:flex;gap:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.08em;color:#141210;border-bottom:2px solid #141210;padding-bottom:3px;">FRONT</span><span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.08em;color:#8B8378;padding-bottom:3px;">BACK</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <div class="kick" style="margin-bottom:12px;">Your 2026 Credential</div>
+        <h3 style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px;">Membership Card</h3>
+        <p style="font-size:14px;line-height:1.7;color:#57514B;max-width:440px;margin-bottom:28px;">Your card is generated from your verified profile. Download for your wallet, print at home, or order a professional PVC copy from the club office.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:440px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:15px;font-size:13px;font-weight:600;letter-spacing:0.04em;box-shadow:0 2px 10px rgba(168,132,60,0.3);">Download PDF</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:9px;background:#FFFFFF;border:1px solid #141210;color:#141210;padding:15px;font-size:13px;font-weight:600;letter-spacing:0.04em;">Print Card</div>
+          <div style="display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #E0D9CC;color:#37322C;padding:13px;font-size:12px;font-weight:500;">Download PNG</div>
+          <div style="display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #E0D9CC;color:#37322C;padding:13px;font-size:12px;font-weight:500;">Download JPG</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;border-top:1px solid #ECE6DB;padding-top:16px;max-width:440px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#3E7A52;display:block;"></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;">LAST GENERATED · 04 JUN 2026, 14:32</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile dashboard -->
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:40px;align-items:center;">
+    <div style="border:1px solid #E7E1D6;background:#FAF8F4;border-radius:30px;padding:12px;box-shadow:0 12px 40px rgba(20,18,16,0.1);">
+      <div style="background:#FFFFFF;border-radius:22px;overflow:hidden;">
+        <div style="height:46px;background:#FAF8F4;border-bottom:1px solid #E7E1D6;display:flex;align-items:center;justify-content:space-between;padding:0 18px;"><span style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;">Membership Card</span><span style="font-size:16px;color:#8B8378;">☰</span></div>
+        <div style="padding:22px 18px;display:flex;flex-direction:column;align-items:center;">
+          <div style="width:204px;height:323px;margin-bottom:18px;"><div style="width:340px;height:539px;transform:scale(0.6);transform-origin:top left;"><dc-import name="BCC Membership Card" side="front" category="Life Member" full-name="Aarav Mehta" membership-no="BCC-2026-0045" photo="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&q=80" hint-size="340px,539px"></dc-import></div></div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:9px;">
+            <div style="text-align:center;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:13px;font-size:13px;font-weight:600;">Download PDF</div>
+            <div style="display:flex;gap:9px;"><div style="flex:1;text-align:center;background:#FFFFFF;border:1px solid #E0D9CC;padding:11px;font-size:11px;font-weight:500;">PNG</div><div style="flex:1;text-align:center;background:#FFFFFF;border:1px solid #E0D9CC;padding:11px;font-size:11px;font-weight:500;">JPG</div><div style="flex:1;text-align:center;background:#FFFFFF;border:1px solid #141210;padding:11px;font-size:11px;font-weight:600;">Print</div></div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;margin-top:14px;">LAST GENERATED · 04 JUN 2026</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:14px;">Responsive behaviour</div>
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:480px;">
+        <div style="display:flex;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;font-weight:600;">≥ 960px</span><span style="font-size:14px;line-height:1.6;color:#57514B;">Two columns — card preview left, actions and metadata right.</span></div>
+        <div style="display:flex;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;font-weight:600;">&lt; 960px</span><span style="font-size:14px;line-height:1.6;color:#57514B;">Single column — card centred, primary "Download PDF" full-width, secondary actions in a 3-up row.</span></div>
+        <div style="display:flex;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;font-weight:600;">Card</span><span style="font-size:14px;line-height:1.6;color:#57514B;">Preview never falls below 60% scale to keep QR + text legible; aspect ratio locked at 0.6306.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 07 A4 PRINT ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="A4 Print Sheet">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">07</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">A4 Home-Print Sheet</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:48px;">Nine cards per A4 (3 × 3) with crop marks and 2&nbsp;mm bleed. Front and back sheets are mirrored so duplex printing aligns. Cut along the marks for a precise CR80 trim.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+    <sc-for list="{{ sheets }}" as="s" hint-placeholder-count="2">
+      <div>
+        <div style="background:#FFFFFF;border:1px solid #E0D9CC;box-shadow:0 8px 30px rgba(20,18,16,0.08);padding:30px;position:relative;aspect-ratio:210/297;">
+          <div style="position:absolute;top:11px;left:30px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#B8B0A4;">A4 · 210 × 297 mm</div>
+          <div style="position:absolute;top:11px;right:30px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#B8B0A4;">{{ s.label }}</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;height:100%;align-content:center;">
+            <sc-for list="{{ s.cells }}" as="cell" hint-placeholder-count="9">
+              <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+                <span style="position:absolute;top:-7px;left:-7px;width:9px;height:9px;border-top:1px solid #C0B8AC;border-left:1px solid #C0B8AC;"></span>
+                <span style="position:absolute;top:-7px;right:-7px;width:9px;height:9px;border-top:1px solid #C0B8AC;border-right:1px solid #C0B8AC;"></span>
+                <span style="position:absolute;bottom:-7px;left:-7px;width:9px;height:9px;border-bottom:1px solid #C0B8AC;border-left:1px solid #C0B8AC;"></span>
+                <span style="position:absolute;bottom:-7px;right:-7px;width:9px;height:9px;border-bottom:1px solid #C0B8AC;border-right:1px solid #C0B8AC;"></span>
+                <div style="width:100%;aspect-ratio:53.98/85.6;overflow:hidden;"><div style="width:340px;height:539px;transform:scale({{ s.scale }});transform-origin:top left;"><dc-import name="BCC Membership Card" side="{{ s.side }}" category="Life Member" full-name="Aarav Mehta" membership-no="BCC-2026-0045" photo="{{ cell.photo }}" hint-size="340px,539px"></dc-import></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.06em;">{{ s.caption }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E7E1D6;border:1px solid #E7E1D6;margin-top:40px;">
+    <div style="background:#FFFFFF;padding:22px 24px;"><div class="eyebrow" style="margin-bottom:8px;">Trim size</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#141210;">53.98 × 85.60 mm</div></div>
+    <div style="background:#FFFFFF;padding:22px 24px;"><div class="eyebrow" style="margin-bottom:8px;">Bleed</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#141210;">+2 mm all sides</div></div>
+    <div style="background:#FFFFFF;padding:22px 24px;"><div class="eyebrow" style="margin-bottom:8px;">Safe area</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#141210;">3 mm inset</div></div>
+    <div style="background:#FFFFFF;padding:22px 24px;"><div class="eyebrow" style="margin-bottom:8px;">Resolution</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#141210;">300 dpi / CMYK</div></div>
+  </div>
+</section>
+
+<!-- ═══════════ 08 TYPE + COLOR ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Type & Color">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">08</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Type &amp; Colour System</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">Three typefaces, each with one job. Senior-legible minimums enforced. Every colour is print-safe and holds AA contrast on its paired surface.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;">
+      <div class="eyebrow" style="margin-bottom:20px;">Typefaces</div>
+      <div style="border-bottom:1px solid #F0EBE0;padding-bottom:18px;margin-bottom:18px;"><div style="font-family:'Outfit',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.02em;">Outfit</div><div style="font-size:13px;color:#57514B;margin-top:4px;">Display · names &amp; headings · 600–700</div></div>
+      <div style="border-bottom:1px solid #F0EBE0;padding-bottom:18px;margin-bottom:18px;"><div style="font-size:30px;font-weight:400;">Inter</div><div style="font-size:13px;color:#57514B;margin-top:4px;">Body &amp; conditions · 300–500</div></div>
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:500;">JetBrains Mono</div><div style="font-size:13px;color:#57514B;margin-top:4px;">Data · numbers, dates, IDs, labels</div></div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;">
+      <div class="eyebrow" style="margin-bottom:20px;">Card type scale &amp; minimums</div>
+      <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:16px;padding:11px 0;border-bottom:1px solid #F0EBE0;">
+          <div><span style="font-size:14px;color:#141210;font-weight:500;">{{ t.role }}</span> <span style="font-size:12px;color:#8B8378;">· {{ t.font }}</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A8843C;">{{ t.size }}</div>
+        </div>
+      </sc-for>
+      <div style="font-size:12px;color:#8B8378;line-height:1.6;margin-top:14px;">Minimum 7.5px only for mono micro-labels on print at 300 dpi (≈ 6 pt). Body never below 9.5px. Names scale down, never the data.</div>
+    </div>
+  </div>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:32px;">
+    <div class="eyebrow" style="margin-bottom:20px;">Palette · core + category accents</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:#E7E1D6;border:1px solid #E7E1D6;margin-bottom:1px;">
+      <sc-for list="{{ coreColors }}" as="k" hint-placeholder-count="6">
+        <div style="background:#FFFFFF;"><div style="height:64px;background:{{ k.hex }};"></div><div style="padding:10px 12px;"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#141210;">{{ k.name }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;">{{ k.hex }}</div></div></div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#E7E1D6;border:1px solid #E7E1D6;">
+      <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+        <div style="background:#FFFFFF;"><div style="height:64px;background:{{ c.accent }};"></div><div style="padding:10px 12px;"><div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#141210;">{{ c.short }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#8B8378;">{{ c.accentHex }}</div></div></div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 09 SPECS ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Specs">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">09</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Implementation Specs</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">Everything a frontend developer needs to generate, render and export the card without further design input.</p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+    <sc-for list="{{ specs }}" as="sp" hint-placeholder-count="6">
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+        <div style="font-family:'Outfit',sans-serif;font-size:17px;font-weight:600;margin-bottom:16px;">{{ sp.title }}</div>
+        <sc-for list="{{ sp.rows }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #F4F0E8;font-size:13px;">
+            <span style="color:#57514B;">{{ r.k }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#141210;text-align:right;">{{ r.v }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ═══════════ 10 EXPORT WORKFLOW ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Export">
+  <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">10</span><h2 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:700;letter-spacing:-0.025em;">Export &amp; Extensibility</h2></div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:620px;margin-bottom:48px;">One render pipeline feeds every output. The card is drawn once to a vector layout, then rasterised or vectorised per target.</p>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:40px;">
+    <sc-for list="{{ pipeline }}" as="p" hint-placeholder-count="4">
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:26px 24px;position:relative;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:14px;">{{ p.step }}</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;margin-bottom:8px;">{{ p.title }}</div>
+        <div style="font-size:13px;line-height:1.6;color:#57514B;">{{ p.body }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#141210;color:#FAF8F4;padding:40px 44px;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;">
+    <div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#C9A961;margin-bottom:12px;">FUTURE TARGETS</div>
+      <div style="font-size:15px;line-height:1.7;color:#C8C1B6;max-width:560px;">The same layout token set extends to Apple &amp; Google Wallet passes, event accreditation badges and special-event passes — change the frame, keep the credential.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:320px;">
+      <span style="border:1px solid #4A453E;color:#C8C1B6;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;">Apple Wallet</span>
+      <span style="border:1px solid #4A453E;color:#C8C1B6;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;">Google Wallet</span>
+      <span style="border:1px solid #4A453E;color:#C8C1B6;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;">Event Badge</span>
+      <span style="border:1px solid #4A453E;color:#C8C1B6;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;">Day Pass</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 11 RATIONALE ═══════════ -->
+<section style="max-width:1180px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Rationale">
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:64px;position:relative;overflow:hidden;">
+    <img src="uploads/favicon 150 x 150.png" alt="" style="position:absolute;width:360px;height:360px;right:-110px;bottom:-90px;opacity:0.05;"/>
+    <div style="position:relative;">
+      <div class="kick" style="margin-bottom:18px;">Recommended Direction</div>
+      <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;margin-bottom:24px;max-width:760px;line-height:1.05;">Ivory editorial credential with a single aperture accent.</h2>
+      <p style="font-size:16px;line-height:1.8;color:#37322C;max-width:760px;margin-bottom:36px;">Warm ivory (not corporate white, not government blue) and an ink footer give the card museum-membership gravity. The colourful aperture mark — BCC's strongest equity — does the brand work, while a single category accent keeps seven tiers legible and grayscale-safe. Square photo frames echo darkroom prints; mono data reads as a precise instrument. It is unmistakably a photography society's credential, yet trivial to generate from the database and faithful across PDF, PVC, mobile and home print.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;">
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:10px;">WHY IT FITS BCC</div><div style="font-size:14px;line-height:1.7;color:#57514B;">Photography-first, community-warm, credible. Reads as a respected society, never a workplace badge.</div></div>
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:10px;">WHY IT SCALES</div><div style="font-size:14px;line-height:1.7;color:#57514B;">One template, seven accents, infinite members. New tiers are a colour token, not a redesign.</div></div>
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:10px;">WHY IT LASTS</div><div style="font-size:14px;line-height:1.7;color:#57514B;">Hierarchy is type + hairlines, not effects. Ages over a 5–10 year horizon and survives grayscale.</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;padding:64px 0 0;">
+    <img src="uploads/favicon 150 x 150.png" alt="BCC" style="width:40px;height:40px;margin:0 auto 16px;"/>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#8B8378;">BHOPAL CAMERA CLUB · MEMBERSHIP IDENTITY SYSTEM · 2026</div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { side: 'front', heroCat: 'Life Member' };
+
+  catData() {
+    return [
+      { name:'Student Member',    short:'Student',   accent:'#1A9DAE', soft:'#E7F3F4', text:'#147A87', member:'Diya Kulkarni',    no:'BCC-2026-0210', valid:'31 Dec 2026', photo:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=500&q=80', desc:'Enrolled students with a valid college ID' },
+      { name:'Individual Member', short:'Individual',accent:'#3E5A48', soft:'#E9EFEA', text:'#33493B', member:'Rohan Iyer',       no:'BCC-2024-0087', valid:'31 Dec 2026', photo:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&q=80', desc:'Standard annual membership' },
+      { name:'Family Member',     short:'Family',    accent:'#D9733A', soft:'#FBEDE3', text:'#B85B27', member:'Kavita Sharma',    no:'BCC-2023-0054', valid:'31 Dec 2026', photo:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80', desc:'Two adults + children, one household' },
+      { name:'Senior Member',     short:'Senior',    accent:'#6F8F3C', soft:'#EEF2E2', text:'#5A7530', member:'Vikram Rao',       no:'BCC-2019-0031', valid:'31 Dec 2026', photo:'https://images.unsplash.com/photo-1463453091185-61582044d556?w=500&q=80', desc:'Members aged 60 and above' },
+      { name:'Honorary Member',   short:'Honorary',  accent:'#C8327A', soft:'#FBE7F1', text:'#A82765', member:'Dr. Meera Nair',   no:'BCC-2021-0009', valid:'Lifetime',    photo:'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500&q=80', desc:'Conferred for distinguished service' },
+      { name:'Life Member',       short:'Life',      accent:'#A8843C', soft:'#F6EEDC', text:'#8A6A2C', member:'Aarav Mehta',      no:'BCC-2026-0045', valid:'Lifetime',    photo:'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&q=80', desc:'One-time lifetime membership' },
+      { name:'Patron Member',     short:'Patron',    accent:'#8A6A2E', soft:'#F2EAD8', text:'#6F5523', member:'Ananya Reddy',     no:'BCC-2018-0003', valid:'Lifetime',    photo:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&q=80', desc:'Benefactors & institutional supporters' },
+    ];
+  }
+
+  renderVals() {
+    const heroCat = this.state.heroCat;
+    const cats = this.catData().map(c => {
+      const active = c.name === heroCat;
+      return Object.assign({}, c, {
+        accentHex: c.accent.toUpperCase(),
+        pick: () => this.setState({ heroCat: c.name }),
+        pillBorder: active ? c.accent : '#E0D9CC',
+        pillBg: active ? c.soft : '#FFFFFF',
+        pillText: active ? c.text : '#57514B',
+      });
+    });
+
+    const photoA = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80';
+
+    return {
+      cats,
+      heroCat,
+      flipTransform: this.state.side === 'back' ? 'rotateY(180deg)' : 'rotateY(0deg)',
+      flipTarget: this.state.side === 'back' ? 'front' : 'back',
+      flip: () => this.setState(s => ({ side: s.side === 'front' ? 'back' : 'front' })),
+
+      frontParts: [
+        { n:'A', title:'Identity lockup', body:'Aperture monogram + stacked BHOPAL / CAMERA CLUB wordmark. FIP affiliation noted top-right.' },
+        { n:'B', title:'Member photograph', body:'The hero. Full-width frame, square corners, object-fit cover. Falls back to a monogram plate when absent.' },
+        { n:'C', title:'Name + category chip', body:'Outfit 700, auto-stepping size. Outlined chip with accent dot signals the membership tier.' },
+        { n:'D', title:'Credential block', body:'Membership number, issue and valid-thru dates — all mono for unambiguous scanning by staff.' },
+        { n:'E', title:'Verification footer', body:'Ink bar with QR on a white quiet-zone tile, verify URL in gold, and society registration note.' },
+        { n:'F', title:'Category spine', body:'A 4px accent edge — the quietest possible tier signal, readable even face-down in a wallet.' },
+      ],
+      backParts: [
+        { n:'A', title:'Verification block', body:'Large QR + "Scan to verify membership" with the live verification URL — the focal point of the reverse.' },
+        { n:'B', title:'Club office', body:'Full registered address, set in Inter for reading comfort at small sizes.' },
+        { n:'C', title:'Contact', body:'Website, email and phone in mono. Missing email or phone simply collapse — no empty rows.' },
+        { n:'D', title:'Conditions of use', body:'Non-transferable · property of BCC · must be produced on request. Accent dashes tie back to tier.' },
+        { n:'E', title:'Authorised signature', body:'Ink footer with signatory, rule, title and a repeat of the membership number for cross-check.' },
+      ],
+
+      typeScale: [
+        { role:'Member name', font:'Outfit 700', size:'17–22 px' },
+        { role:'Headings / signature', font:'Outfit 600–700', size:'13–17 px' },
+        { role:'Body & conditions', font:'Inter 400', size:'9.5–11 px' },
+        { role:'Data — No / dates', font:'JetBrains Mono 500', size:'10.5–12 px' },
+        { role:'Micro-labels', font:'JetBrains Mono 600', size:'7.5–8 px' },
+        { role:'Verify URL', font:'JetBrains Mono 500', size:'9.5–10 px' },
+      ],
+
+      coreColors: [
+        { name:'--surface', hex:'#FAF8F4' },
+        { name:'--plate',   hex:'#F0EBE0' },
+        { name:'--ink-900', hex:'#141210' },
+        { name:'--ink-600', hex:'#57514B' },
+        { name:'--ink-400', hex:'#8B8378' },
+        { name:'--gold',    hex:'#C9A961' },
+      ],
+
+      sheets: [
+        { label:'FRONT', side:'front', scale:0.336, caption:'Front sheet · 3 × 3 · crop marks + 2 mm bleed', cells:[1,2,3,4,5,6,7,8,9].map(i=>({ photo:photoA })) },
+        { label:'BACK',  side:'back',  scale:0.336, caption:'Back sheet · mirrored for duplex alignment',       cells:[1,2,3,4,5,6,7,8,9].map(i=>({ photo:photoA })) },
+      ],
+
+      specs: [
+        { title:'Dimensions', rows:[
+          { k:'Trim (CR80)', v:'53.98 × 85.60 mm' },
+          { k:'Aspect ratio', v:'0.6306 (locked)' },
+          { k:'Base render', v:'340 × 539 px' },
+          { k:'Print', v:'638 × 1011 px @300dpi' },
+        ]},
+        { title:'Safe & bleed', rows:[
+          { k:'Bleed', v:'2 mm all sides' },
+          { k:'Safe inset', v:'3 mm' },
+          { k:'Corner radius', v:'0 (PVC) / 3.18 mm die' },
+          { k:'Spine width', v:'4 px ≈ 0.7 mm' },
+        ]},
+        { title:'QR code', rows:[
+          { k:'Min size', v:'14 × 14 mm' },
+          { k:'Quiet zone', v:'≥ 4 modules' },
+          { k:'Contrast', v:'dark-on-white only' },
+          { k:'Payload', v:'bcc.org/member/{id}' },
+        ]},
+        { title:'Photograph', rows:[
+          { k:'Frame ratio', v:'≈ 4 : 5 portrait' },
+          { k:'Fit', v:'object-fit: cover' },
+          { k:'Focal bias', v:'upper third' },
+          { k:'Min source', v:'600 × 750 px' },
+        ]},
+        { title:'Placeholders', rows:[
+          { k:'No photo', v:'monogram plate' },
+          { k:'No email/phone', v:'row collapses' },
+          { k:'Long name', v:'auto 22→17 px' },
+          { k:'Long ID', v:'mono · ellipsis' },
+        ]},
+        { title:'Export', rows:[
+          { k:'PDF', v:'vector · CMYK' },
+          { k:'PNG', v:'transparent · 300dpi' },
+          { k:'JPG', v:'sRGB · q90' },
+          { k:'PVC', v:'front+back · 2 files' },
+        ]},
+      ],
+
+      pipeline: [
+        { step:'01', title:'Bind data', body:'Portal injects member JSON into the layout token set — zero hardcoded content.' },
+        { step:'02', title:'Render layout', body:'Single source draws front + back to a resolution-independent vector tree.' },
+        { step:'03', title:'Rasterise', body:'PNG / JPG via canvas at 300 dpi; PDF stays vector for crisp PVC printing.' },
+        { step:'04', title:'Deliver', body:'Download, print, or queue for professional PVC — last-generated timestamp stored.' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

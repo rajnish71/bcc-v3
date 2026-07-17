@@ -229,6 +229,7 @@ const activeRoute = Astro.url.pathname;
 
     // Identity guard: fetch /users/me before revealing hub (IDENTITY-ARCH-001)
     let identityStatus = 'IDENTITY_COMPLETE';
+    let portalState: string | undefined = undefined;
     try {
       const res = await fetch(`${API}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -248,6 +249,7 @@ const activeRoute = Astro.url.pathname;
       };
 
       identityStatus = user.identityStatus ?? 'IDENTITY_COMPLETE';
+      portalState = user.ui?.portalState;
 
       // IDENTITY-ARCH-001: IDENTITY_PENDING → redirect before revealing Hub
       if (identityStatus === 'IDENTITY_PENDING') {
@@ -274,7 +276,7 @@ const activeRoute = Astro.url.pathname;
     } catch { /* network issue — proceed; identity check failed gracefully */ }
 
     // Resolve role and write to hub-frame (HubSidebar observes this)
-    const role = getRoleFromToken(token);
+    const role = portalState ? portalState.toLowerCase() : getRoleFromToken(token);
     const frame = document.getElementById('hub-frame');
     if (frame) frame.setAttribute('data-hub-role', role);
 

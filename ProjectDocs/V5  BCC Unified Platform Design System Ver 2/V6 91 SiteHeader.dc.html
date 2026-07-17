@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#F2EFE9;color:#141210;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#EFE3C8}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+img{display:block}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#F2EFE9;padding:0 0 160px;" data-screen-label="V6 91 SiteHeader">
+
+<!-- ══════════════════════════════════════════════════════
+     COVER
+══════════════════════════════════════════════════════ -->
+<header style="background:linear-gradient(180deg,#FFFFFF 0%,#FAF8F4 100%);border-bottom:1px solid #E7E1D6;padding:96px 0 72px;">
+  <div style="max-width:1140px;margin:0 auto;padding:0 48px;">
+    <img src="uploads/BCC New Logo Full Black Text.png" alt="Bhopal Camera Club" style="height:64px;width:auto;margin-bottom:48px;"/>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <span style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#A8843C;font-weight:600;">V6 · Step 3 · July 2026</span>
+      <span style="background:#141210;color:#C9A961;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">V6 91 SITEHEADER</span>
+      <span style="background:#3E5A48;color:#FFFFFF;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;">DESIGN AUTHORITY FROZEN</span>
+    </div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(44px,5.5vw,72px);font-weight:700;letter-spacing:-0.03em;line-height:1.0;margin-bottom:28px;">SiteHeader</h1>
+    <p style="font-size:18px;line-height:1.7;color:#57514B;max-width:680px;font-weight:300;margin-bottom:12px;">Complete reusable design reference for the SiteHeader Astro component. Six authenticated states. Two scroll surfaces. Desktop 1280px and Mobile 390px. Every remaining V6 wireframe places this component at top — no further header design required.</p>
+    <p style="font-size:13px;line-height:1.6;color:#8B8378;max-width:540px;margin-bottom:40px;font-style:italic;">Inherits V6 00 BCC Design Principles. Design reference only — no implementation, no tokens, no footer, no pages.</p>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;border-top:1px solid #E7E1D6;padding-top:28px;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Auth States</div><div style="font-size:14px;font-weight:500;">Guest · User · Member · Editor · Moderator · Admin</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Surfaces</div><div style="font-size:14px;font-weight:500;">Transparent rest · Dark glass 60px scroll</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Height</div><div style="font-size:14px;font-weight:500;">96px rest → 64px condensed</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Logo</div><div style="font-size:14px;font-weight:500;">56px rest → 44px condensed → 34px mobile</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════
+     01 — COMPONENT ARCHITECTURE
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:96px 48px 0;" data-screen-label="Architecture">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">01</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Component Architecture</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Three fixed zones. Zone boundaries are preserved across all six role states. Only Zone 3 content and two conditional nav items change between roles.</p>
+
+  <!-- Three-zone diagram -->
+  <div style="border:1px solid #E7E1D6;background:#FFFFFF;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;height:88px;padding:0 32px;background:#FAF8F4;border-bottom:1px solid #E7E1D6;gap:0;">
+      <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding-right:24px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A8843C;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Zone 1</div>
+        <div style="border:1.5px dashed #C9A961;padding:8px 20px;background:rgba(201,169,97,0.06);">
+          <span style="font-size:13px;font-weight:600;color:#141210;">Logo</span>
+        </div>
+      </div>
+      <div style="width:1px;height:56px;background:#E7E1D6;flex-shrink:0;"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0 24px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#3E5A48;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Zone 2</div>
+        <div style="border:1.5px dashed #3E5A48;padding:8px 32px;background:rgba(62,90,72,0.05);">
+          <span style="font-size:13px;font-weight:600;color:#141210;">Navigation</span>
+        </div>
+      </div>
+      <div style="width:1px;height:56px;background:#E7E1D6;flex-shrink:0;"></div>
+      <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:6px;padding-left:24px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#57514B;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Zone 3</div>
+        <div style="border:1.5px dashed #8B8378;padding:8px 20px;background:rgba(139,131,120,0.05);">
+          <span style="font-size:13px;font-weight:600;color:#141210;">Right Rail</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;">
+      <div style="padding:24px 28px;border-right:1px solid #F0EBE0;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Zone 1 — Logo</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">
+          BCC New Logo Full Black Text.png<br/>
+          height: 56px rest → 44px condensed<br/>
+          filter: none → brightness(0) invert(1)<br/>
+          transition: 0.35s cubic-bezier(0.4,0,0.2,1)<br/>
+          min click target: 44×44px · links to /
+        </div>
+      </div>
+      <div style="padding:24px 28px;border-right:1px solid #F0EBE0;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#3E5A48;font-weight:600;margin-bottom:12px;">Zone 2 — Navigation</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">
+          Inter 13px / weight 500 / gap 24px<br/>
+          Active: 2px #A8843C underline<br/>
+          Hover: transition to navActiveColor<br/>
+          Dropdown: ▾ caret + position:relative<br/>
+          Coming Soon: opacity 0.45, cursor:default<br/>
+          Collapses to hamburger at ≤900px
+        </div>
+      </div>
+      <div style="padding:24px 28px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#57514B;font-weight:600;margin-bottom:12px;">Zone 3 — Right Rail</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">
+          Flex row / gap 16px / align-items center<br/>
+          Avatar: 34px circle / r-full / 2px white ring<br/>
+          ▾ caret: 10px, opacity 0.6<br/>
+          CTA max: one primary + avatar<br/>
+          Admin Console: always dark bg + gold text<br/>
+          Mobile: CTAs collapse into drawer
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Position + container spec -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Position &amp; Container</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">position: fixed<br/>top: 0; left: 0; right: 0<br/>z-index: 100<br/>width: 100%<br/>inner: max-width 1280px<br/>padding: 0 40px<br/>justify-content: space-between</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Height &amp; Scroll</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">rest:       96px · transparent<br/>condensed:  64px · dark glass<br/>trigger:    scrollY &gt; 60px<br/>duration:   0.35s power3.out<br/>GSAP hook:  data-gsap="header-condense"<br/>reduced-motion: opacity only</div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:24px 28px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:12px;">Surface Values</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.2;color:#37322C;">rest bg:    rgba(255,255,255,0.97)<br/>glass bg:   rgba(20,18,16,0.92)<br/>glass blur: blur(14px) saturate(180%)<br/>glass shadow: 0 8px 32px<br/>            rgba(20,18,16,.22)<br/>border: 1px solid #E7E1D6 (rest only)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     02 — DESKTOP LIVE DEMO
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Desktop Live Demo">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">02</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Desktop Live Demo</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:28px;">Toggle role and scroll surface. Click Activities, Learn, or the avatar to reveal panels.</p>
+
+  <!-- Controls -->
+  <div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;">
+    <button onClick="{{ setGuest }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ btn_guest_border }};background:{{ btn_guest_bg }};color:{{ btn_guest_color }};">Guest</button>
+    <button onClick="{{ setUser }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ btn_user_border }};background:{{ btn_user_bg }};color:{{ btn_user_color }};">User</button>
+    <button onClick="{{ setMember }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ btn_member_border }};background:{{ btn_member_bg }};color:{{ btn_member_color }};">Member</button>
+    <button onClick="{{ setEditor }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ btn_editor_border }};background:{{ btn_editor_bg }};color:{{ btn_editor_color }};">Editor</button>
+    <button onClick="{{ setModerator }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ btn_moderator_border }};background:{{ btn_moderator_bg }};color:{{ btn_moderator_color }};">Moderator</button>
+    <button onClick="{{ setAdmin }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ btn_admin_border }};background:{{ btn_admin_bg }};color:{{ btn_admin_color }};">Admin</button>
+    <div style="width:1px;background:#D8D2C6;margin:0 4px;"></div>
+    <button onClick="{{ toggleCondensed }}" style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border:1px solid {{ condBorder }};background:{{ condBg }};color:{{ condColor }};">{{ condLabel }}</button>
+  </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;margin-bottom:16px;letter-spacing:0.04em;">↑ Click Activities · Learn · Avatar in header to reveal panels</div>
+
+  <!-- Header demo container -->
+  <div style="border:1px solid #E7E1D6;overflow:visible;margin-bottom:0;">
+    <!-- Simulated page behind header -->
+    <div style="height:280px;background:linear-gradient(180deg,#1C1A18 0%,#2E2A24 50%,#F2EFE9 100%);position:relative;overflow:visible;">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding-top:96px;pointer-events:none;">
+        <div style="text-align:center;opacity:0.22;user-select:none;">
+          <div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;color:#FAF8F4;letter-spacing:-0.02em;">Page content scrolls beneath fixed header</div>
+          <div style="font-size:12px;color:#8B8378;margin-top:8px;letter-spacing:0.08em;text-transform:uppercase;">Simulated backdrop</div>
+        </div>
+      </div>
+
+      <!-- ▓▓▓ THE HEADER ▓▓▓ -->
+      <div style="position:absolute;top:0;left:0;right:0;background:{{ headerBg }};border-bottom:{{ headerBorder }};box-shadow:{{ headerShadow }};backdrop-filter:{{ backdropFilter }};height:{{ headerHeight }};display:flex;align-items:center;padding:0 32px;justify-content:space-between;transition:all 0.35s cubic-bezier(0.4,0,0.2,1);gap:16px;overflow:visible;z-index:10;">
+
+        <!-- ZONE 1: Logo -->
+        <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:{{ logoHeight }};width:auto;filter:{{ logoFilter }};transition:all 0.35s cubic-bezier(0.4,0,0.2,1);flex-shrink:0;cursor:pointer;"/>
+
+        <!-- ZONE 2: Navigation -->
+        <nav style="display:flex;gap:22px;font-size:13px;font-weight:500;color:{{ navColor }};align-items:center;flex:1;justify-content:center;overflow:visible;">
+          <span style="color:{{ navActiveColor }};border-bottom:2px solid #A8843C;padding-bottom:2px;cursor:pointer;">Home</span>
+          <span style="cursor:pointer;">About</span>
+          <span style="cursor:pointer;">Showcase</span>
+
+          <!-- Activities ▾ -->
+          <div style="position:relative;">
+            <span onClick="{{ toggleActivities }}" style="display:flex;align-items:center;gap:4px;cursor:pointer;color:{{ navColor }};">Activities <span style="font-size:10px;opacity:0.65;">▾</span></span>
+            <sc-if value="{{ showActivitiesDropdown }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:calc(100% + 14px);left:0;background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 8px 32px rgba(20,18,16,0.13);min-width:230px;z-index:300;">
+                <div style="padding:8px 0;">
+                  <div style="padding:12px 20px;font-size:13px;color:#141210;cursor:pointer;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:10px;color:#A8843C;font-family:'JetBrains Mono',monospace;">→</span>Photowalks
+                  </div>
+                  <div style="padding:12px 20px;font-size:13px;color:#141210;cursor:pointer;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:10px;color:#A8843C;font-family:'JetBrains Mono',monospace;">→</span>Workshops
+                  </div>
+                  <div style="padding:12px 20px;font-size:13px;color:#141210;cursor:pointer;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:10px;color:#A8843C;font-family:'JetBrains Mono',monospace;">→</span>Meetups
+                  </div>
+                  <div style="height:1px;background:#F0EBE0;margin:4px 0;"></div>
+                  <div style="padding:12px 20px;font-size:13px;display:flex;align-items:center;justify-content:space-between;opacity:0.45;cursor:default;">
+                    <span style="color:#57514B;">Contests</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:2px 7px;color:#8B8378;letter-spacing:0.08em;">COMING SOON</span>
+                  </div>
+                  <div style="padding:12px 20px;font-size:13px;display:flex;align-items:center;justify-content:space-between;opacity:0.45;cursor:default;">
+                    <span style="color:#57514B;">Exhibitions</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:2px 7px;color:#8B8378;letter-spacing:0.08em;">COMING SOON</span>
+                  </div>
+                </div>
+                <div style="padding:10px 20px;border-top:1px solid #F0EBE0;background:#FAF8F4;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.5;">Coming Soon items: opacity 0.45 · cursor:default · never hidden</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- Learn ▾ -->
+          <div style="position:relative;">
+            <span onClick="{{ toggleLearn }}" style="display:flex;align-items:center;gap:4px;cursor:pointer;color:{{ navColor }};opacity:0.55;">Learn <span style="font-size:10px;">▾</span></span>
+            <sc-if value="{{ showLearnDropdown }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:calc(100% + 14px);left:0;background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 8px 32px rgba(20,18,16,0.13);min-width:260px;z-index:300;">
+                <div style="padding:8px 0;">
+                  <div style="padding:12px 20px;font-size:13px;display:flex;align-items:center;justify-content:space-between;opacity:0.45;cursor:default;">
+                    <span style="color:#57514B;">Photography School</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:2px 7px;color:#8B8378;letter-spacing:0.08em;">COMING SOON</span>
+                  </div>
+                </div>
+                <div style="padding:10px 20px;border-top:1px solid #F0EBE0;background:#FAF8F4;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.5;">Phase 4 · Entire Learn section Coming Soon · Greyed, non-interactive · Visible for awareness only</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- Membership — Guest + User only -->
+          <sc-if value="{{ showMembershipNav }}" hint-placeholder-val="{{ true }}">
+            <span style="cursor:pointer;color:{{ navColor }};">Membership</span>
+          </sc-if>
+
+          <!-- Journal (✎ for Editor) -->
+          <span style="color:{{ journalNavColor }};cursor:pointer;">{{ journalNavLabel }}</span>
+
+          <!-- Admin dot — Admin only -->
+          <sc-if value="{{ showAdminNav }}" hint-placeholder-val="{{ false }}">
+            <span style="color:#C9A961;display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A961;display:inline-block;"></span>Admin</span>
+          </sc-if>
+        </nav>
+
+        <!-- ZONE 3: Right Rail -->
+        <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;overflow:visible;">
+
+          <!-- Guest: Sign In + Become a Member -->
+          <sc-if value="{{ showGuestCTAs }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:13px;color:{{ navColor }};cursor:pointer;white-space:nowrap;">Sign In</span>
+            <span style="font-size:11px;font-weight:600;letter-spacing:0.05em;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:12px 22px;border-radius:2px;box-shadow:0 2px 10px rgba(168,132,60,0.3),inset 0 1px 0 rgba(255,255,255,0.2);cursor:pointer;white-space:nowrap;">Become a Member</span>
+          </sc-if>
+
+          <!-- User: Apply for Membership -->
+          <sc-if value="{{ showUserCTA }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:12px;font-weight:600;letter-spacing:0.03em;border:1px solid #D8D2C6;color:{{ navColor }};padding:11px 18px;border-radius:2px;cursor:pointer;white-space:nowrap;">Apply for Membership</span>
+          </sc-if>
+
+          <!-- Member Hub (Member, Editor, Moderator) -->
+          <sc-if value="{{ showMemberHub }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:12px;font-weight:600;border:1px solid #C9A961;color:{{ navActiveColor }};padding:11px 18px;border-radius:2px;background:rgba(201,169,97,0.08);cursor:pointer;white-space:nowrap;">Member Hub</span>
+          </sc-if>
+
+          <!-- Admin Console (Admin only) -->
+          <sc-if value="{{ showAdminConsole }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:12px;font-weight:600;background:#141210;color:#C9A961;padding:11px 18px;border-radius:2px;cursor:pointer;white-space:nowrap;">Admin Console</span>
+          </sc-if>
+
+          <!-- Avatar (all authenticated) -->
+          <sc-if value="{{ showAvatar }}" hint-placeholder-val="{{ false }}">
+            <div style="position:relative;overflow:visible;">
+              <div onClick="{{ toggleAvatar }}" style="display:flex;align-items:center;gap:7px;cursor:pointer;">
+                <span style="width:34px;height:34px;border-radius:50%;background:{{ avatarBg }};display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:{{ avatarColor }};border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;flex-shrink:0;">{{ avatarInitials }}</span>
+                <span style="font-size:10px;color:{{ navColor }};opacity:0.6;">▾</span>
+              </div>
+
+              <!-- Avatar Dropdown -->
+              <sc-if value="{{ showAvatarMenu }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;top:calc(100% + 12px);right:0;background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 8px 32px rgba(20,18,16,0.14);min-width:210px;z-index:300;">
+                  <!-- Identity header -->
+                  <div style="padding:14px 18px;border-bottom:1px solid #F0EBE0;display:flex;align-items:center;gap:12px;background:#FAF8F4;">
+                    <span style="width:36px;height:36px;border-radius:50%;background:{{ avatarBg }};display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:{{ avatarColor }};flex-shrink:0;border:2px solid rgba(255,255,255,0.9);">{{ avatarInitials }}</span>
+                    <div>
+                      <div style="font-size:13px;font-weight:600;color:#141210;line-height:1.3;">{{ avatarName }}</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;text-transform:capitalize;">{{ currentRole }}</div>
+                    </div>
+                  </div>
+                  <!-- Menu items -->
+                  <div style="padding:6px 0;">
+                    <!-- Admin Console first for Admin -->
+                    <sc-if value="{{ isAdminRole }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:11px 18px;font-size:13px;font-weight:600;color:#C9A961;cursor:pointer;background:#141210;display:flex;align-items:center;gap:10px;"><span style="font-size:10px;font-family:'JetBrains Mono',monospace;">◆</span>Admin Console</div>
+                      <div style="padding:11px 18px;font-size:13px;color:#141210;cursor:pointer;">Member Hub</div>
+                    </sc-if>
+                    <div style="padding:11px 18px;font-size:13px;color:#141210;cursor:pointer;">Profile</div>
+                    <!-- My Gallery — not for User -->
+                    <sc-if value="{{ showGallery }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:11px 18px;font-size:13px;color:#141210;cursor:pointer;">My Gallery</div>
+                    </sc-if>
+                    <!-- Journal CMS — Editor only -->
+                    <sc-if value="{{ isEditorRole }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:11px 18px;font-size:13px;color:#2A5A7A;cursor:pointer;display:flex;align-items:center;gap:8px;"><span style="font-size:11px;">✎</span>Journal CMS</div>
+                    </sc-if>
+                    <!-- Moderation Queue — Moderator only -->
+                    <sc-if value="{{ isModeratorRole }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:11px 18px;font-size:13px;color:#141210;cursor:pointer;display:flex;align-items:center;justify-content:space-between;"><span>Moderation Queue</span><span style="width:7px;height:7px;border-radius:50%;background:#C9A961;display:inline-block;"></span></div>
+                    </sc-if>
+                    <!-- Account Settings — User only -->
+                    <sc-if value="{{ isUserRole }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:11px 18px;font-size:13px;color:#57514B;cursor:pointer;">Account Settings</div>
+                    </sc-if>
+                    <!-- Renewals — Member, Editor, Moderator -->
+                    <sc-if value="{{ showRenewals }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:11px 18px;font-size:13px;color:#141210;cursor:pointer;">Renewals</div>
+                    </sc-if>
+                  </div>
+                  <div style="height:1px;background:#F0EBE0;"></div>
+                  <div style="padding:6px 0;">
+                    <div style="padding:11px 18px;font-size:13px;color:#8B8378;cursor:pointer;">Sign Out</div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Annotation cards -->
+    <div style="padding:20px 24px;background:#FAFAF8;border-top:1px solid #E7E1D6;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:14px 16px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:5px;">Current State</div>
+          <div style="font-size:12px;font-weight:600;color:#141210;line-height:1.4;">{{ stateTitle }}</div>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:14px 16px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:5px;">Right Rail</div>
+          <div style="font-size:12px;line-height:1.6;color:#37322C;">{{ stateRightRail }}</div>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:14px 16px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:5px;">Navigation</div>
+          <div style="font-size:12px;line-height:1.6;color:#37322C;">{{ stateNav }}</div>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:14px 16px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:5px;">Design Note</div>
+          <div style="font-size:12px;line-height:1.6;color:#37322C;">{{ stateNote }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8378;letter-spacing:0.05em;margin-top:10px;">DEMO — fixed positioning simulated within document context.</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     03 — ALL STATES STATIC REFERENCE
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="All States Static">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">03</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">All States — Static Reference</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Each role at rest (transparent surface). Written out literally for direct reference. "Home" shown as active nav item across all states.</p>
+
+  <!-- 01 GUEST -->
+  <div style="margin-bottom:4px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;background:#F4F0E8;color:#A8843C;padding:4px 10px;">01 · GUEST</span>
+      <span style="font-size:12px;color:#8B8378;">Unauthenticated</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;height:68px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;gap:12px;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:40px;width:auto;flex-shrink:0;"/>
+      <div style="display:flex;gap:18px;font-size:12px;font-weight:500;color:#57514B;align-items:center;flex:1;justify-content:center;">
+        <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:2px;">Home</span>
+        <span>About</span>
+        <span>Showcase</span>
+        <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        <span style="display:flex;align-items:center;gap:3px;opacity:0.45;">Learn <span style="font-size:9px;">▾</span></span>
+        <span>Membership</span>
+        <span>Journal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:12px;color:#57514B;">Sign In</span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.04em;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:9px 16px;border-radius:2px;white-space:nowrap;box-shadow:0 2px 8px rgba(168,132,60,0.28);">Become a Member</span>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;padding:5px 0;letter-spacing:0.04em;">Single gold CTA rule enforced. Sign In is quiet text. Membership in nav drives discovery. Learn greyed at 0.45 opacity — Coming Soon.</div>
+  </div>
+
+  <!-- 02 USER -->
+  <div style="margin-bottom:4px;margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;background:#F4F0E8;color:#A8843C;padding:4px 10px;">02 · USER</span>
+      <span style="font-size:12px;color:#8B8378;">Authenticated · No Membership · MEM-006 P1</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;height:68px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;gap:12px;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:40px;width:auto;flex-shrink:0;"/>
+      <div style="display:flex;gap:18px;font-size:12px;font-weight:500;color:#57514B;align-items:center;flex:1;justify-content:center;">
+        <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:2px;">Home</span>
+        <span>About</span>
+        <span>Showcase</span>
+        <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        <span style="display:flex;align-items:center;gap:3px;opacity:0.45;">Learn <span style="font-size:9px;">▾</span></span>
+        <span>Membership</span>
+        <span>Journal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:600;border:1px solid #D8D2C6;color:#57514B;padding:9px 14px;border-radius:2px;white-space:nowrap;">Apply for Membership</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="width:32px;height:32px;border-radius:50%;background:#6B6460;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">RU</span>
+          <span style="font-size:9px;color:#57514B;opacity:0.6;">▾</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;padding:5px 0;letter-spacing:0.04em;">Gold CTA replaced with outline "Apply". Grey avatar. Membership nav retained. Registration ≠ Membership (constitutional).</div>
+  </div>
+
+  <!-- 03 MEMBER -->
+  <div style="margin-bottom:4px;margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;background:#EBF0EC;color:#3E5A48;padding:4px 10px;">03 · MEMBER</span>
+      <span style="font-size:12px;color:#8B8378;">Authenticated · Membership ACTIVE</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;height:68px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;gap:12px;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:40px;width:auto;flex-shrink:0;"/>
+      <div style="display:flex;gap:18px;font-size:12px;font-weight:500;color:#57514B;align-items:center;flex:1;justify-content:center;">
+        <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:2px;">Home</span>
+        <span>About</span>
+        <span>Showcase</span>
+        <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        <span style="display:flex;align-items:center;gap:3px;opacity:0.45;">Learn <span style="font-size:9px;">▾</span></span>
+        <span>Journal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:600;border:1px solid #C9A961;color:#141210;padding:9px 14px;border-radius:2px;background:rgba(201,169,97,0.08);white-space:nowrap;">Member Hub</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">AB</span>
+          <span style="font-size:9px;color:#57514B;opacity:0.6;">▾</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;padding:5px 0;letter-spacing:0.04em;">Membership nav removed. All acquisition CTAs gone. Member Hub outline-gold + forest-green avatar.</div>
+  </div>
+
+  <!-- 04 EDITOR -->
+  <div style="margin-bottom:4px;margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;background:#E8EEF2;color:#2A5A7A;padding:4px 10px;">04 · EDITOR</span>
+      <span style="font-size:12px;color:#8B8378;">Authenticated · Content Editor RBAC Role</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;height:68px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;gap:12px;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:40px;width:auto;flex-shrink:0;"/>
+      <div style="display:flex;gap:18px;font-size:12px;font-weight:500;color:#57514B;align-items:center;flex:1;justify-content:center;">
+        <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:2px;">Home</span>
+        <span>About</span>
+        <span>Showcase</span>
+        <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        <span style="display:flex;align-items:center;gap:3px;opacity:0.45;">Learn <span style="font-size:9px;">▾</span></span>
+        <span style="color:#A8843C;font-weight:600;">Journal ✎</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:600;border:1px solid #C9A961;color:#141210;padding:9px 14px;border-radius:2px;background:rgba(201,169,97,0.08);white-space:nowrap;">Member Hub</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2A5A7A,#1A3A5A);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">CE</span>
+          <span style="font-size:9px;color:#57514B;opacity:0.6;">▾</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;padding:5px 0;letter-spacing:0.04em;">Journal ✎ is the only top-nav Editor signal. Teal avatar. Hub sidebar reveals Journal CMS section on entry.</div>
+  </div>
+
+  <!-- 05 MODERATOR -->
+  <div style="margin-bottom:4px;margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;background:#F2EBE3;color:#8B5A2B;padding:4px 10px;">05 · MODERATOR</span>
+      <span style="font-size:12px;color:#8B8378;">Authenticated · Moderator RBAC Role</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;height:68px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;gap:12px;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:40px;width:auto;flex-shrink:0;"/>
+      <div style="display:flex;gap:18px;font-size:12px;font-weight:500;color:#57514B;align-items:center;flex:1;justify-content:center;">
+        <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:2px;">Home</span>
+        <span>About</span>
+        <span>Showcase</span>
+        <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        <span style="display:flex;align-items:center;gap:3px;opacity:0.45;">Learn <span style="font-size:9px;">▾</span></span>
+        <span>Journal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:600;border:1px solid #C9A961;color:#141210;padding:9px 14px;border-radius:2px;background:rgba(201,169,97,0.08);white-space:nowrap;">Member Hub</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8B5A2B,#5A3818);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">MO</span>
+          <span style="font-size:9px;color:#57514B;opacity:0.6;">▾</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;padding:5px 0;letter-spacing:0.04em;">No top-nav Mod indicator. Mod queue accessible only via Hub sidebar. Amber avatar distinguishes from Member/Editor.</div>
+  </div>
+
+  <!-- 06 ADMIN -->
+  <div style="margin-bottom:4px;margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;background:#141210;color:#C9A961;padding:4px 10px;">06 · ADMIN</span>
+      <span style="font-size:12px;color:#8B8378;">Authenticated · Admin Role · Highest Trust</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;height:68px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;gap:12px;">
+      <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:40px;width:auto;flex-shrink:0;"/>
+      <div style="display:flex;gap:18px;font-size:12px;font-weight:500;color:#57514B;align-items:center;flex:1;justify-content:center;">
+        <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:2px;">Home</span>
+        <span>About</span>
+        <span>Showcase</span>
+        <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        <span style="display:flex;align-items:center;gap:3px;opacity:0.45;">Learn <span style="font-size:9px;">▾</span></span>
+        <span>Journal</span>
+        <span style="color:#C9A961;font-weight:600;display:flex;align-items:center;gap:5px;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A961;display:inline-block;"></span>Admin</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:600;background:#141210;color:#C9A961;padding:9px 14px;border-radius:2px;white-space:nowrap;">Admin Console</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="width:32px;height:32px;border-radius:50%;background:#141210;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#C9A961;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">AD</span>
+          <span style="font-size:9px;color:#57514B;opacity:0.6;">▾</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;padding:5px 0;letter-spacing:0.04em;">Admin Console replaces Member Hub. Gold dot in nav. Dark button + gold-on-dark avatar. Visually unambiguous highest-trust state.</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     04 — SCROLL BEHAVIOUR
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Scroll Behaviour">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">04</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Scroll Behaviour — Two Surfaces</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Transparent at rest. Dark glass after 60px scroll. All six states apply to both surfaces. Transition is 0.35s — the same easing governs logo scale, surface, and text colour simultaneously.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:32px;">
+    <!-- REST -->
+    <div>
+      <div style="background:rgba(255,255,255,0.97);border:1px solid #E7E1D6;border-bottom:none;height:80px;display:flex;align-items:center;padding:0 24px;justify-content:space-between;gap:12px;">
+        <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:44px;width:auto;flex-shrink:0;"/>
+        <div style="display:flex;gap:16px;font-size:12px;font-weight:500;color:#57514B;align-items:center;">
+          <span style="color:#141210;border-bottom:2px solid #A8843C;padding-bottom:1px;">Home</span>
+          <span>About</span>
+          <span>Showcase</span>
+          <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:#57514B;">Sign In</span>
+          <span style="font-size:9px;font-weight:600;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:7px 12px;border-radius:2px;">Become a Member</span>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px 24px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Rest — Top of Page</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">
+          height: 96px<br/>
+          background: rgba(255,255,255,0.97)<br/>
+          border-bottom: 1px solid #E7E1D6<br/>
+          backdrop-filter: none<br/>
+          box-shadow: none<br/>
+          logo: 56px · filter none<br/>
+          nav: color #57514B<br/>
+          active: color #141210
+        </div>
+      </div>
+    </div>
+    <!-- CONDENSED / DARK GLASS -->
+    <div>
+      <div style="background:rgba(20,18,16,0.92);backdrop-filter:blur(14px) saturate(180%);border:1px solid rgba(255,255,255,0.06);border-bottom:none;box-shadow:0 8px 32px rgba(20,18,16,0.22);height:80px;display:flex;align-items:center;padding:0 24px;justify-content:space-between;gap:12px;">
+        <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:36px;width:auto;flex-shrink:0;filter:brightness(0) invert(1);"/>
+        <div style="display:flex;gap:16px;font-size:12px;font-weight:500;color:#C8C0B8;align-items:center;">
+          <span style="color:#FFFFFF;border-bottom:2px solid #A8843C;padding-bottom:1px;">Home</span>
+          <span>About</span>
+          <span>Showcase</span>
+          <span style="display:flex;align-items:center;gap:3px;">Activities <span style="font-size:9px;opacity:0.65;">▾</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:#C8C0B8;">Sign In</span>
+          <span style="font-size:9px;font-weight:600;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:7px 12px;border-radius:2px;">Become a Member</span>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:18px 24px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Condensed — After 60px Scroll</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">
+          height: 64px<br/>
+          background: rgba(20,18,16,0.92)<br/>
+          border-bottom: none<br/>
+          backdrop-filter: blur(14px) saturate(180%)<br/>
+          box-shadow: 0 8px 32px rgba(20,18,16,.22)<br/>
+          logo: 44px · filter brightness(0) invert(1)<br/>
+          nav: color #C8C0B8<br/>
+          active: color #FFFFFF
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transition table -->
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;">
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;padding:12px 24px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Property</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Rest Value</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Condensed Value</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Transition</span>
+    </div>
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;padding:12px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">height</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">96px</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">64px</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.35s cubic</span>
+    </div>
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;padding:12px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">background</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">rgba(255,255,255,.97)</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">rgba(20,18,16,.92)</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.35s cubic</span>
+    </div>
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;padding:12px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">logo height</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">56px</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">44px</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.35s cubic</span>
+    </div>
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;padding:12px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">logo filter</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">none</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">brightness(0) invert(1)</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.35s cubic</span>
+    </div>
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;padding:12px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">nav color</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">#57514B</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">#C8C0B8</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.35s cubic</span>
+    </div>
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;padding:12px 24px;align-items:start;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">backdrop-filter</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">none</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">blur(14px) saturate(180%)</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.35s cubic</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     05 — DROPDOWN PANELS
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Dropdown Panels">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">05</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Dropdown Panels</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Two navigation dropdowns. Activities contains active and Coming Soon items. Learn contains only Coming Soon items. Both appear on hover (desktop) and tap (mobile). Coming Soon items are always visible — they drive awareness.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+
+    <!-- Activities dropdown -->
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">Activities ▾</div>
+      <!-- Trigger context -->
+      <div style="background:#FAF8F4;border:1px solid #E7E1D6;border-bottom:none;padding:14px 20px;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:13px;font-weight:500;color:#57514B;">Activities</span>
+        <span style="font-size:10px;color:#57514B;opacity:0.65;">▾</span>
+        <span style="font-size:11px;color:#8B8378;margin-left:8px;">← trigger (nav item)</span>
+      </div>
+      <!-- Dropdown panel -->
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 8px 32px rgba(20,18,16,0.11);">
+        <div style="padding:8px 0;">
+          <div style="padding:13px 20px;font-size:13px;color:#141210;cursor:pointer;display:flex;align-items:center;gap:10px;border-left:2px solid transparent;">
+            <span style="font-size:10px;color:#A8843C;font-family:'JetBrains Mono',monospace;">→</span>
+            <span>Photowalks</span>
+          </div>
+          <div style="padding:13px 20px;font-size:13px;color:#141210;cursor:pointer;display:flex;align-items:center;gap:10px;border-left:2px solid transparent;">
+            <span style="font-size:10px;color:#A8843C;font-family:'JetBrains Mono',monospace;">→</span>
+            <span>Workshops</span>
+          </div>
+          <div style="padding:13px 20px;font-size:13px;color:#141210;cursor:pointer;display:flex;align-items:center;gap:10px;border-left:2px solid transparent;">
+            <span style="font-size:10px;color:#A8843C;font-family:'JetBrains Mono',monospace;">→</span>
+            <span>Meetups</span>
+          </div>
+          <div style="height:1px;background:#F0EBE0;margin:6px 0;"></div>
+          <div style="padding:13px 20px;font-size:13px;display:flex;align-items:center;justify-content:space-between;opacity:0.45;cursor:default;">
+            <span style="color:#57514B;">Contests</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:2px 8px;color:#8B8378;letter-spacing:0.08em;text-transform:uppercase;">Coming Soon</span>
+          </div>
+          <div style="padding:13px 20px;font-size:13px;display:flex;align-items:center;justify-content:space-between;opacity:0.45;cursor:default;">
+            <span style="color:#57514B;">Exhibitions</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:2px 8px;color:#8B8378;letter-spacing:0.08em;text-transform:uppercase;">Coming Soon</span>
+          </div>
+        </div>
+        <div style="padding:10px 20px;border-top:1px solid #F0EBE0;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.7;">Active items → #141210 · cursor pointer<br/>Coming Soon → opacity 0.45 · cursor default · never hidden<br/>Hover: border-left 2px #A8843C transitions in</div>
+        </div>
+      </div>
+
+      <!-- Spec -->
+      <div style="margin-top:16px;background:#FFFFFF;border:1px solid #E7E1D6;padding:18px 20px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#A8843C;font-weight:600;margin-bottom:10px;">Panel Spec</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2.1;color:#57514B;">position: absolute<br/>top: calc(100% + 12px)<br/>left: 0<br/>min-width: 230px<br/>background: #FFFFFF<br/>border: 1px solid #E7E1D6<br/>box-shadow: 0 8px 32px rgba(20,18,16,.12)<br/>z-index: 200<br/>open: hover (desktop) · tap (mobile)</div>
+      </div>
+    </div>
+
+    <!-- Learn dropdown -->
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">Learn ▾</div>
+      <div style="background:#FAF8F4;border:1px solid #E7E1D6;border-bottom:none;padding:14px 20px;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:13px;font-weight:500;color:#57514B;opacity:0.55;">Learn</span>
+        <span style="font-size:10px;color:#57514B;opacity:0.5;">▾</span>
+        <span style="font-size:11px;color:#8B8378;margin-left:8px;">← greyed trigger at 0.55 opacity</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 8px 32px rgba(20,18,16,0.11);">
+        <div style="padding:8px 0;">
+          <div style="padding:13px 20px;font-size:13px;display:flex;align-items:center;justify-content:space-between;opacity:0.45;cursor:default;">
+            <span style="color:#57514B;">Photography School</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:2px 8px;color:#8B8378;letter-spacing:0.08em;text-transform:uppercase;">Coming Soon</span>
+          </div>
+        </div>
+        <div style="padding:10px 20px;border-top:1px solid #F0EBE0;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.7;">Phase 4 · All Learn items Coming Soon<br/>Nav trigger itself greyed at 0.55 opacity<br/>Dropdown still opens — shows planned scope<br/>Never hidden — drives membership intent</div>
+        </div>
+      </div>
+
+      <!-- Avatar menus header -->
+      <div style="margin-top:40px;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">Avatar Menu — All 6 Roles</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+        <!-- User menu -->
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">User</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 4px 16px rgba(20,18,16,0.08);">
+            <div style="padding:12px 16px;border-bottom:1px solid #F0EBE0;background:#FAF8F4;display:flex;align-items:center;gap:10px;">
+              <span style="width:28px;height:28px;border-radius:50%;background:#6B6460;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#FFFFFF;flex-shrink:0;">RU</span>
+              <div><div style="font-size:12px;font-weight:600;color:#141210;">R. User</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">user</div></div>
+            </div>
+            <div style="padding:5px 0;">
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Profile</div>
+              <div style="padding:9px 16px;font-size:12px;color:#57514B;">Account Settings</div>
+              <div style="height:1px;background:#F0EBE0;margin:3px 0;"></div>
+              <div style="padding:9px 16px;font-size:12px;color:#8B8378;">Sign Out</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Member menu -->
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Member</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 4px 16px rgba(20,18,16,0.08);">
+            <div style="padding:12px 16px;border-bottom:1px solid #F0EBE0;background:#FAF8F4;display:flex;align-items:center;gap:10px;">
+              <span style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#FFFFFF;flex-shrink:0;">AB</span>
+              <div><div style="font-size:12px;font-weight:600;color:#141210;">A. Bhopal</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">member</div></div>
+            </div>
+            <div style="padding:5px 0;">
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Profile</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">My Gallery</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Renewals</div>
+              <div style="height:1px;background:#F0EBE0;margin:3px 0;"></div>
+              <div style="padding:9px 16px;font-size:12px;color:#8B8378;">Sign Out</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editor menu -->
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Content Editor</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 4px 16px rgba(20,18,16,0.08);">
+            <div style="padding:12px 16px;border-bottom:1px solid #F0EBE0;background:#FAF8F4;display:flex;align-items:center;gap:10px;">
+              <span style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2A5A7A,#1A3A5A);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#FFFFFF;flex-shrink:0;">CE</span>
+              <div><div style="font-size:12px;font-weight:600;color:#141210;">C. Editor</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">editor</div></div>
+            </div>
+            <div style="padding:5px 0;">
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Profile</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">My Gallery</div>
+              <div style="padding:9px 16px;font-size:12px;color:#2A5A7A;display:flex;align-items:center;gap:6px;"><span style="font-size:11px;">✎</span>Journal CMS</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Renewals</div>
+              <div style="height:1px;background:#F0EBE0;margin:3px 0;"></div>
+              <div style="padding:9px 16px;font-size:12px;color:#8B8378;">Sign Out</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Moderator menu -->
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Moderator</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 4px 16px rgba(20,18,16,0.08);">
+            <div style="padding:12px 16px;border-bottom:1px solid #F0EBE0;background:#FAF8F4;display:flex;align-items:center;gap:10px;">
+              <span style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#8B5A2B,#5A3818);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#FFFFFF;flex-shrink:0;">MO</span>
+              <div><div style="font-size:12px;font-weight:600;color:#141210;">M. Oderate</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">moderator</div></div>
+            </div>
+            <div style="padding:5px 0;">
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Profile</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">My Gallery</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;display:flex;align-items:center;justify-content:space-between;"><span>Moderation Queue</span><span style="width:6px;height:6px;border-radius:50%;background:#C9A961;"></span></div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Renewals</div>
+              <div style="height:1px;background:#F0EBE0;margin:3px 0;"></div>
+              <div style="padding:9px 16px;font-size:12px;color:#8B8378;">Sign Out</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin menu -->
+        <div style="grid-column:span 2;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Admin</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D6;box-shadow:0 4px 16px rgba(20,18,16,0.08);max-width:220px;">
+            <div style="padding:12px 16px;border-bottom:1px solid #F0EBE0;background:#FAF8F4;display:flex;align-items:center;gap:10px;">
+              <span style="width:28px;height:28px;border-radius:50%;background:#141210;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#C9A961;flex-shrink:0;">AD</span>
+              <div><div style="font-size:12px;font-weight:600;color:#141210;">Admin User</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8B8378;">admin</div></div>
+            </div>
+            <div style="padding:5px 0;">
+              <div style="padding:9px 16px;font-size:12px;font-weight:600;color:#C9A961;background:#141210;display:flex;align-items:center;gap:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;">◆</span>Admin Console</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Member Hub</div>
+              <div style="padding:9px 16px;font-size:12px;color:#141210;">Profile</div>
+              <div style="height:1px;background:#F0EBE0;margin:3px 0;"></div>
+              <div style="padding:9px 16px;font-size:12px;color:#8B8378;">Sign Out</div>
+            </div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-top:8px;line-height:1.6;">Admin Console always appears first. Dark row at top. No Renewals for Admin — constitutional role, not a membership.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     06 — MOBILE HEADER — DRAWER CLOSED
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Mobile Drawer Closed">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">06</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Mobile — Drawer Closed</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Breakpoint ≤900px. Navigation collapses. Logo + contextual right-rail element + hamburger. Four key states shown at 390px. Touch targets minimum 44px.</p>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- Guest mobile -->
+    <div style="flex:0 0 auto;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Guest</div>
+      <div style="width:320px;border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #E7E1D6;background:rgba(255,255,255,0.97);">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:28px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.04em;background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:7px 11px;border-radius:2px;white-space:nowrap;">Join</span>
+            <div style="display:flex;flex-direction:column;gap:4px;padding:8px;cursor:pointer;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.7;">Logo 28px · "Join" gold chip (condensed CTA)<br/>Full "Become a Member" label in drawer<br/>Sign In accessible via drawer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User mobile -->
+    <div style="flex:0 0 auto;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">User</div>
+      <div style="width:320px;border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #E7E1D6;background:rgba(255,255,255,0.97);">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:28px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:32px;height:32px;border-radius:50%;background:#6B6460;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">RU</span>
+            <div style="display:flex;flex-direction:column;gap:4px;padding:8px;cursor:pointer;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.7;">Avatar visible at 32px · "Apply for Membership"<br/>appears in drawer · No gold chip<br/>Menu accessible via drawer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Member mobile -->
+    <div style="flex:0 0 auto;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Member · Editor · Moderator</div>
+      <div style="width:320px;border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #E7E1D6;background:rgba(255,255,255,0.97);">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:28px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">AB</span>
+            <div style="display:flex;flex-direction:column;gap:4px;padding:8px;cursor:pointer;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.7;">Forest avatar · Member Hub in drawer<br/>Avatar touch target ≥44px<br/>Drawer contains full member menu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin mobile -->
+    <div style="flex:0 0 auto;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Admin</div>
+      <div style="width:320px;border:1px solid #E7E1D6;background:#FFFFFF;">
+        <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #E7E1D6;background:rgba(255,255,255,0.97);">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:28px;width:auto;"/>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.04em;background:#141210;color:#C9A961;padding:7px 11px;border-radius:2px;white-space:nowrap;">Console</span>
+            <span style="width:32px;height:32px;border-radius:50%;background:#141210;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:#C9A961;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1px #E7E1D6;">AD</span>
+            <div style="display:flex;flex-direction:column;gap:4px;padding:8px;cursor:pointer;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+              <span style="width:18px;height:1.5px;background:#141210;display:block;"></span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px;background:#FAF8F4;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;line-height:1.7;">Admin Console chip + gold avatar always visible<br/>Unmistakable Admin identity in mobile header<br/>Full console in drawer</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     07 — MOBILE DRAWER OPEN
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Mobile Drawer Open">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">07</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Mobile — Drawer Open</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Full-screen overlay. Slides in from right (0.28s ease-out). Backdrop dims page content at 40% opacity. Three key states: Guest, Member, Admin. Drawer stacks all nav + CTAs vertically with generous touch targets.</p>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- Guest Drawer -->
+    <div style="flex:0 0 auto;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Guest — Drawer Open</div>
+      <div style="width:320px;background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;">
+        <!-- Drawer header -->
+        <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #E7E1D6;background:#FFFFFF;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:28px;width:auto;"/>
+          <div style="font-size:18px;color:#141210;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">✕</div>
+        </div>
+        <!-- Drawer nav -->
+        <div style="padding:8px 0;border-bottom:1px solid #E7E1D6;">
+          <div style="padding:15px 20px;font-size:15px;font-weight:500;color:#141210;border-left:3px solid #A8843C;">Home</div>
+          <div style="padding:15px 20px;font-size:15px;font-weight:500;color:#57514B;">About</div>
+          <div style="padding:15px 20px;font-size:15px;font-weight:500;color:#57514B;">Showcase</div>
+          <!-- Activities expanded inline -->
+          <div style="padding:15px 20px;font-size:15px;font-weight:500;color:#57514B;display:flex;justify-content:space-between;align-items:center;">Activities <span style="font-size:11px;opacity:0.6;">▾</span></div>
+          <div style="padding:0 0 4px 36px;background:#FAF8F4;">
+            <div style="padding:10px 20px;font-size:13px;color:#57514B;">Photowalks</div>
+            <div style="padding:10px 20px;font-size:13px;color:#57514B;">Workshops</div>
+            <div style="padding:10px 20px;font-size:13px;color:#57514B;">Meetups</div>
+            <div style="padding:10px 20px;font-size:13px;color:#8B8378;opacity:0.55;display:flex;justify-content:space-between;"><span>Contests</span><span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:1px 6px;">SOON</span></div>
+            <div style="padding:10px 20px;font-size:13px;color:#8B8378;opacity:0.55;display:flex;justify-content:space-between;"><span>Exhibitions</span><span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:#F4F0E8;padding:1px 6px;">SOON</span></div>
+          </div>
+          <div style="padding:15px 20px;font-size:15px;font-weight:500;color:#57514B;opacity:0.5;display:flex;justify-content:space-between;align-items:center;">Learn <span style="font-size:9px;background:#F4F0E8;padding:2px 6px;font-family:'JetBrains Mono',monospace;">SOON</span></div>
+          <div style="padding:15px 20px;font-size:15px;font-weight:500;color:#57514B;">Membership</div>
+          <div style="padding:15px 20px;font-size:15px;font-weight:500;color:#57514B;">Journal</div>
+        </div>
+        <!-- Drawer footer CTAs -->
+        <div style="padding:20px 16px;display:flex;flex-direction:column;gap:10px;background:#FAF8F4;">
+          <div style="background:linear-gradient(135deg,#C9A961,#A8843C);color:#FFFFFF;padding:14px;text-align:center;font-size:13px;font-weight:600;border-radius:2px;cursor:pointer;">Become a Member</div>
+          <div style="text-align:center;font-size:13px;color:#57514B;padding:10px;cursor:pointer;">Sign In</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Member Drawer -->
+    <div style="flex:0 0 auto;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Member — Drawer Open</div>
+      <div style="width:320px;background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;">
+        <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #E7E1D6;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:28px;width:auto;"/>
+          <div style="font-size:18px;color:#141210;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">✕</div>
+        </div>
+        <!-- Identity strip -->
+        <div style="padding:16px 20px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;display:flex;align-items:center;gap:12px;">
+          <span style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3E5A48,#2A3E32);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#FFFFFF;flex-shrink:0;">AB</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#141210;">A. Bhopal</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;">Active Member</div>
+          </div>
+        </div>
+        <!-- Nav -->
+        <div style="padding:8px 0;border-bottom:1px solid #E7E1D6;">
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#141210;border-left:3px solid #A8843C;">Home</div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;">About</div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;">Showcase</div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;display:flex;justify-content:space-between;align-items:center;">Activities <span style="font-size:10px;opacity:0.6;">▾</span></div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;opacity:0.5;display:flex;justify-content:space-between;align-items:center;">Learn <span style="font-size:9px;background:#F4F0E8;padding:1px 6px;font-family:'JetBrains Mono',monospace;">SOON</span></div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;">Journal</div>
+        </div>
+        <!-- Member actions -->
+        <div style="padding:8px 0;border-bottom:1px solid #E7E1D6;">
+          <div style="padding:12px 20px;font-size:13px;color:#141210;">Profile</div>
+          <div style="padding:12px 20px;font-size:13px;color:#141210;">My Gallery</div>
+          <div style="padding:12px 20px;font-size:13px;color:#141210;">Renewals</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="border:1px solid #C9A961;color:#141210;padding:13px;text-align:center;font-size:13px;font-weight:600;border-radius:2px;background:rgba(201,169,97,0.08);cursor:pointer;margin-bottom:8px;">Member Hub</div>
+          <div style="text-align:center;font-size:13px;color:#8B8378;padding:10px;cursor:pointer;">Sign Out</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Drawer -->
+    <div style="flex:0 0 auto;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Admin — Drawer Open</div>
+      <div style="width:320px;background:#FFFFFF;border:1px solid #E7E1D6;overflow:hidden;">
+        <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #E7E1D6;">
+          <img src="uploads/BCC New Logo Full Black Text.png" alt="BCC" style="height:28px;width:auto;"/>
+          <div style="font-size:18px;color:#141210;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">✕</div>
+        </div>
+        <!-- Admin identity strip - dark -->
+        <div style="padding:16px 20px;border-bottom:1px solid #2A2620;background:#141210;display:flex;align-items:center;gap:12px;">
+          <span style="width:36px;height:36px;border-radius:50%;background:#141210;border:1.5px solid #C9A961;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#C9A961;flex-shrink:0;">AD</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#FAF8F4;">Admin User</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A961;">admin</div>
+          </div>
+        </div>
+        <!-- Nav -->
+        <div style="padding:8px 0;border-bottom:1px solid #E7E1D6;">
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#141210;border-left:3px solid #A8843C;">Home</div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;">About</div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;">Showcase</div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;display:flex;justify-content:space-between;align-items:center;">Activities <span style="font-size:10px;opacity:0.6;">▾</span></div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;opacity:0.5;display:flex;justify-content:space-between;align-items:center;">Learn <span style="font-size:9px;background:#F4F0E8;padding:1px 6px;font-family:'JetBrains Mono',monospace;">SOON</span></div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:500;color:#57514B;">Journal</div>
+          <div style="padding:14px 20px;font-size:14px;font-weight:600;color:#C9A961;display:flex;align-items:center;gap:8px;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A961;"></span>Admin</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="background:#141210;color:#C9A961;padding:13px;text-align:center;font-size:13px;font-weight:600;border-radius:2px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;">◆</span>Admin Console</div>
+          <div style="text-align:center;font-size:13px;color:#8B8378;padding:10px;cursor:pointer;">Sign Out</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Drawer animation spec -->
+  <div style="margin-top:40px;background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">Drawer Animation Spec</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:6px;">Open</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;color:#57514B;">translateX(100%) → translateX(0)<br/>duration: 0.28s<br/>easing: ease-out<br/>backdrop: opacity 0 → 0.4</div></div>
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:6px;">Close</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;color:#57514B;">translateX(0) → translateX(100%)<br/>duration: 0.22s<br/>easing: ease-in<br/>backdrop: opacity 0.4 → 0</div></div>
+      <div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;margin-bottom:6px;">Triggers</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;color:#57514B;">Hamburger tap → open<br/>✕ button tap → close<br/>Backdrop tap → close<br/>Escape key → close<br/>Nav link tap → close</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     08 — BEHAVIOUR & ANIMATION
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Behaviour and Animation">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">08</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Behaviour &amp; Animation</h2>
+  </div>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:240px 1fr 200px 160px;padding:12px 24px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Behaviour</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Detail</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Timing / Easing</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">GSAP Hook</span>
+    </div>
+    <div style="display:grid;grid-template-columns:240px 1fr 200px 160px;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:500;color:#141210;">Scroll condense</span>
+      <span style="font-size:13px;color:#57514B;line-height:1.6;padding-right:16px;">After 60px scroll: height shrinks, surface darkens, logo inverts. All properties transition simultaneously.</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.35s · power3.out</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">header-condense</span>
+    </div>
+    <div style="display:grid;grid-template-columns:240px 1fr 200px 160px;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:500;color:#141210;">Dropdown open</span>
+      <span style="font-size:13px;color:#57514B;line-height:1.6;padding-right:16px;">Fade + 8px vertical slide from trigger point. Closes on outside click, Escape, or nav-away.</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.18s · power2.out</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">—</span>
+    </div>
+    <div style="display:grid;grid-template-columns:240px 1fr 200px 160px;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:500;color:#141210;">Avatar menu open</span>
+      <span style="font-size:13px;color:#57514B;line-height:1.6;padding-right:16px;">Same as dropdown. Right-aligned. Closes on outside click or Escape.</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.18s · power2.out</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">—</span>
+    </div>
+    <div style="display:grid;grid-template-columns:240px 1fr 200px 160px;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:500;color:#141210;">Drawer open</span>
+      <span style="font-size:13px;color:#57514B;line-height:1.6;padding-right:16px;">Full-screen overlay slides in from right. Backdrop dims to 40% black. Body scroll locked while open.</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.28s open · 0.22s close</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">—</span>
+    </div>
+    <div style="display:grid;grid-template-columns:240px 1fr 200px 160px;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:500;color:#141210;">Nav hover</span>
+      <span style="font-size:13px;color:#57514B;line-height:1.6;padding-right:16px;">Item transitions to navActiveColor. Underline does not extend on hover — it is reserved for the current route only.</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">0.15s · ease</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">—</span>
+    </div>
+    <div style="display:grid;grid-template-columns:240px 1fr 200px 160px;padding:14px 24px;align-items:start;">
+      <span style="font-size:13px;font-weight:500;color:#141210;">prefers-reduced-motion</span>
+      <span style="font-size:13px;color:#57514B;line-height:1.6;padding-right:16px;">All GSAP transforms disabled. Colour and opacity changes remain — they are not vestibular triggers.</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#57514B;">immediate · no easing</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">—</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     09 — ACCESSIBILITY & RESPONSIVE
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Accessibility and Responsive">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">09</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Accessibility &amp; Responsive</h2>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">Accessibility Requirements</div>
+      <div style="font-size:13px;line-height:2;color:#57514B;">
+        <strong style="color:#141210;font-weight:600;">Role:</strong> <span style="font-family:'JetBrains Mono',monospace;">role="banner"</span> on <span style="font-family:'JetBrains Mono',monospace;">&lt;header&gt;</span><br/>
+        <strong style="color:#141210;font-weight:600;">Nav:</strong> <span style="font-family:'JetBrains Mono',monospace;">role="navigation" aria-label="Main"</span><br/>
+        <strong style="color:#141210;font-weight:600;">Hamburger:</strong> <span style="font-family:'JetBrains Mono',monospace;">aria-label="Open menu" aria-expanded</span><br/>
+        <strong style="color:#141210;font-weight:600;">Dropdowns:</strong> <span style="font-family:'JetBrains Mono',monospace;">aria-haspopup aria-expanded</span><br/>
+        <strong style="color:#141210;font-weight:600;">Avatar menu:</strong> <span style="font-family:'JetBrains Mono',monospace;">aria-label="Account menu"</span><br/>
+        <strong style="color:#141210;font-weight:600;">Touch targets:</strong> minimum 44×44px on all interactive elements<br/>
+        <strong style="color:#141210;font-weight:600;">Focus trap:</strong> keyboard focus trapped inside open drawer<br/>
+        <strong style="color:#141210;font-weight:600;">Skip link:</strong> <span style="font-family:'JetBrains Mono',monospace;">"Skip to main content"</span> first focusable element<br/>
+        <strong style="color:#141210;font-weight:600;">Current page:</strong> <span style="font-family:'JetBrains Mono',monospace;">aria-current="page"</span> on active nav link<br/>
+        <strong style="color:#141210;font-weight:600;">Coming Soon:</strong> <span style="font-family:'JetBrains Mono',monospace;">aria-disabled="true"</span> + visually hidden label
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #E7E1D6;padding:28px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#A8843C;font-weight:600;margin-bottom:16px;">Responsive Breakpoints</div>
+      <div style="background:#FFFFFF;border:1px solid #E7E1D6;">
+        <div style="display:grid;grid-template-columns:120px 1fr;padding:10px 16px;border-bottom:1px solid #F0EBE0;background:#FAF8F4;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;font-weight:600;">Breakpoint</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8B8378;font-weight:600;">Behaviour</span>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;padding:10px 16px;border-bottom:1px solid #F0EBE0;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">&gt;900px</span>
+          <span style="font-size:12px;color:#57514B;line-height:1.6;">Full desktop nav. All items visible. Dropdowns on hover.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;padding:10px 16px;border-bottom:1px solid #F0EBE0;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">600–900px</span>
+          <span style="font-size:12px;color:#57514B;line-height:1.6;">Hamburger drawer. Logo 28px. CTA chips only in header.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;padding:10px 16px;border-bottom:1px solid #F0EBE0;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">&lt;600px</span>
+          <span style="font-size:12px;color:#57514B;line-height:1.6;">Same as 600–900px. Safe area insets via env(safe-area-inset-*).</span>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;padding:10px 16px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A8843C;">Tablet</span>
+          <span style="font-size:12px;color:#57514B;line-height:1.6;">Follows 600–900px rules. Landscape may show partial desktop nav.</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:13px;line-height:1.8;color:#57514B;">
+        <strong style="color:#141210;font-weight:600;">Sticky behaviour:</strong> Header is always sticky. No hide-on-scroll — the nav is always accessible. The condensed surface is the "scrolled" affordance.<br/>
+        <strong style="color:#141210;font-weight:600;">Safe areas:</strong> Padding respects <span style="font-family:'JetBrains Mono',monospace;font-size:12px;">env(safe-area-inset-top)</span> on iPhone notch/Dynamic Island. Drawer uses <span style="font-family:'JetBrains Mono',monospace;font-size:12px;">env(safe-area-inset-bottom)</span> for bottom padding.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     10 — ANNOTATION INDEX
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;" data-screen-label="Annotation Index">
+  <div style="display:flex;align-items:baseline;gap:20px;margin-bottom:16px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A8843C;">10</span>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.025em;">Annotation Index</h2>
+  </div>
+  <p style="font-size:16px;line-height:1.7;color:#57514B;max-width:680px;margin-bottom:40px;">Complete element reference for implementation and downstream wireframe use.</p>
+
+  <div style="background:#FFFFFF;border:1px solid #E7E1D6;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:12px 24px;border-bottom:1px solid #E7E1D6;background:#FAF8F4;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Element</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Visible When</span>
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;font-weight:600;">Specification</span>
+    </div>
+    <!-- Logo -->
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Logo</span>
+      <span style="font-size:12px;color:#8B8378;">Always</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">BCC New Logo Full Black Text.png · Links to / · 56px rest / 44px condensed / 34px mobile · Inverts to white on dark glass · Transition 0.35s</span>
+    </div>
+    <!-- Nav items -->
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Home</span>
+      <span style="font-size:12px;color:#8B8378;">All roles</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Links to / · Active state: 2px underline #A8843C · aria-current="page" on current route</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">About</span>
+      <span style="font-size:12px;color:#8B8378;">All roles</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Links to /about · Standard nav item</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Showcase</span>
+      <span style="font-size:12px;color:#8B8378;">All roles</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Links to /showcase · Canonical gallery route (not /gallery)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Activities ▾</span>
+      <span style="font-size:12px;color:#8B8378;">All roles</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Dropdown: Photowalks, Workshops, Meetups (active) · Contests, Exhibitions (Coming Soon: opacity 0.45, cursor default, aria-disabled) · Opens on hover desktop / tap mobile</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Learn ▾</span>
+      <span style="font-size:12px;color:#8B8378;">All roles</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Opacity 0.55 on trigger. Dropdown: Photography School (Coming Soon). Entire section Phase 4. Never hidden — drives awareness.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Membership</span>
+      <span style="font-size:12px;color:#8B8378;">Guest · User only</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Links to /join · Hidden for Member, Editor, Moderator, Admin — they have no need for the acquisition flow</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Journal</span>
+      <span style="font-size:12px;color:#8B8378;">All roles</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Links to /journal · Standard for all except Editor, who sees "Journal ✎" in color #A8843C (rest) / #C9A961 (condensed)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">● Admin</span>
+      <span style="font-size:12px;color:#8B8378;">Admin only</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Gold dot + "Admin" text in #C9A961 · Links to /admin · Never visible to lower roles · Weight 600</span>
+    </div>
+    <!-- Right rail -->
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Sign In</span>
+      <span style="font-size:12px;color:#8B8378;">Guest only</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Text link · navColor · Links to /auth/signin · No button treatment</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Become a Member</span>
+      <span style="font-size:12px;color:#8B8378;">Guest only</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">gold-gradient CTA · Single gold CTA rule · Links to /join · 12px 22px padding · radius 2px · shadow: 0 2px 10px rgba(168,132,60,.3)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Apply for Membership</span>
+      <span style="font-size:12px;color:#8B8378;">User only</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Outline button · border: 1px solid #D8D2C6 · color: navColor · radius 2px · No gold</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Member Hub</span>
+      <span style="font-size:12px;color:#8B8378;">Member · Editor · Moderator</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Outline-gold button · border: 1px solid #C9A961 · background: rgba(201,169,97,.08) · Links to /hub</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Admin Console</span>
+      <span style="font-size:12px;color:#8B8378;">Admin only</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Dark button · background: #141210 · color: #C9A961 · Never outline. Links to /admin · Highest-trust visual treatment.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;border-bottom:1px solid #F0EBE0;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Avatar</span>
+      <span style="font-size:12px;color:#8B8378;">All except Guest</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">34px circle · r-full · 2px rgba(255,255,255,.9) ring · 1px #E7E1D6 outline · Initials: Outfit 11px weight 700 · Colours: User grey / Member forest / Editor teal / Mod amber / Admin dark-gold</span>
+    </div>
+    <div style="display:grid;grid-template-columns:180px 140px 1fr;padding:14px 24px;align-items:start;">
+      <span style="font-size:13px;font-weight:600;color:#141210;">Hamburger</span>
+      <span style="font-size:12px;color:#8B8378;">≤900px always</span>
+      <span style="font-size:12px;line-height:1.8;color:#57514B;">Two 18px hairlines · 44×44px touch target · Transforms to ✕ when drawer open · aria-expanded reflects state</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     HANDOFF FOOTER
+══════════════════════════════════════════════════════ -->
+<section style="max-width:1140px;margin:0 auto;padding:120px 48px 0;">
+  <div style="background:linear-gradient(180deg,#FFFFFF,#FAF8F4);border:1px solid #E7E1D6;padding:56px;text-align:center;">
+    <img src="uploads/BCC Square Logo.png" alt="BCC" style="height:48px;width:auto;margin:0 auto 24px;"/>
+    <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#A8843C;font-weight:600;margin-bottom:12px;">V6 Design Authority · Step 3 · July 2026</div>
+    <h3 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px;">SiteHeader — Complete Design Reference</h3>
+    <p style="font-size:14px;line-height:1.8;color:#57514B;max-width:600px;margin:0 auto 32px;">This document is the complete and final design specification for the SiteHeader component. Every remaining V6 wireframe places SiteHeader at the top of the page using this reference — no further header design is required.</p>
+    <div style="display:flex;justify-content:center;gap:48px;flex-wrap:wrap;padding-top:28px;border-top:1px solid #E7E1D6;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Inherits</div><div style="font-size:13px;font-weight:500;">V6 00 BCC Design Principles</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">States</div><div style="font-size:13px;font-weight:500;">6 Auth × 2 Surfaces = 12 header variants</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Layouts</div><div style="font-size:13px;font-weight:500;">Desktop 1280px · Mobile 390px</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#8B8378;margin-bottom:4px;">Constitutional</div><div style="font-size:13px;font-weight:500;">MEM-006 P1 enforced throughout</div></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+
+class Component extends DCLogic {
+  state = { role: 'guest', condensed: false, dropdown: null };
+
+  renderVals() {
+    const { role, condensed, dropdown } = this.state;
+
+    const isGuest     = role === 'guest';
+    const isUser      = role === 'user';
+    const isMember    = role === 'member';
+    const isEditor    = role === 'editor';
+    const isModerator = role === 'moderator';
+    const isAdmin     = role === 'admin';
+    const hasMembership = isMember || isEditor || isModerator || isAdmin;
+
+    // ── Surface ──────────────────────────────────────────────
+    const headerBg       = condensed ? 'rgba(20,18,16,0.92)' : 'rgba(255,255,255,0.97)';
+    const headerHeight   = condensed ? '64px' : '96px';
+    const headerBorder   = condensed ? 'none' : '1px solid #E7E1D6';
+    const headerShadow   = condensed ? '0 8px 32px rgba(20,18,16,0.22)' : 'none';
+    const backdropFilter = condensed ? 'blur(14px) saturate(180%)' : 'none';
+    const logoHeight     = condensed ? '44px' : '56px';
+    const logoFilter     = condensed ? 'brightness(0) invert(1)' : 'none';
+    const navColor       = condensed ? '#C8C0B8' : '#57514B';
+    const navActiveColor = condensed ? '#FFFFFF' : '#141210';
+
+    // ── Right Rail ───────────────────────────────────────────
+    const showGuestCTAs    = isGuest;
+    const showUserCTA      = isUser;
+    const showMemberHub    = hasMembership && !isAdmin;
+    const showAdminConsole = isAdmin;
+    const showAvatar       = !isGuest;
+
+    // ── Navigation ───────────────────────────────────────────
+    const showMembershipNav = isGuest || isUser;
+    const showAdminNav      = isAdmin;
+    const journalNavLabel   = isEditor ? 'Journal ✎' : 'Journal';
+    const journalNavColor   = isEditor ? (condensed ? '#C9A961' : '#A8843C') : navColor;
+
+    // ── Dropdowns ────────────────────────────────────────────
+    const showActivitiesDropdown = dropdown === 'activities';
+    const showLearnDropdown      = dropdown === 'learn';
+    const showAvatarMenu         = dropdown === 'avatar';
+
+    // ── Avatar ───────────────────────────────────────────────
+    const avatarMap = {
+      user:      { initials: 'RU', bg: '#6B6460',                                      color: '#FFFFFF', label: 'Registered User',  name: 'R. User' },
+      member:    { initials: 'AB', bg: 'linear-gradient(135deg,#3E5A48,#2A3E32)',       color: '#FFFFFF', label: 'Active Member',     name: 'A. Bhopal' },
+      editor:    { initials: 'CE', bg: 'linear-gradient(135deg,#2A5A7A,#1A3A5A)',       color: '#FFFFFF', label: 'Content Editor',    name: 'C. Editor' },
+      moderator: { initials: 'MO', bg: 'linear-gradient(135deg,#8B5A2B,#5A3818)',       color: '#FFFFFF', label: 'Moderator',         name: 'M. Oderate' },
+      admin:     { initials: 'AD', bg: '#141210',                                        color: '#C9A961', label: 'Administrator',     name: 'Admin User' },
+    };
+    const av = avatarMap[role] || {};
+
+    // Avatar menu role flags
+    const isEditorRole    = isEditor;
+    const isModeratorRole = isModerator;
+    const isAdminRole     = isAdmin;
+    const isUserRole      = isUser;
+    const showRenewals    = (isMember || isEditor || isModerator);
+    const showGallery     = hasMembership || isUser;
+
+    // ── Segment buttons ──────────────────────────────────────
+    const seg = (active) => ({
+      bg:     active ? '#141210' : '#FFFFFF',
+      color:  active ? '#FAF8F4' : '#57514B',
+      border: active ? '#141210' : '#D8D2C6',
+    });
+    const g = seg(isGuest), u = seg(isUser), m = seg(isMember),
+          e = seg(isEditor), mo = seg(isModerator), a = seg(isAdmin);
+
+    // ── State descriptions ───────────────────────────────────
+    const stateInfo = {
+      guest: {
+        title:     'Guest — Unauthenticated',
+        rightRail: '"Sign In" text · "Become a Member" gold gradient CTA',
+        nav:       'All public nav incl. Membership. Learn greyed at 0.55 opacity.',
+        note:      'Single gold CTA rule: one gradient-gold element only.',
+      },
+      user: {
+        title:     'User — Authenticated, No Membership',
+        rightRail: '"Apply for Membership" outline button · Grey avatar ▾',
+        nav:       'Membership nav retained. All public nav visible.',
+        note:      'MEM-006 P1: Registration ≠ Membership. Outline replaces gold.',
+      },
+      member: {
+        title:     'Member — Active Membership',
+        rightRail: '"Member Hub" outline-gold button · Forest-green avatar ▾',
+        nav:       'Membership nav removed. Hub entry replaces all acquisition.',
+        note:      'All acquisition CTAs gone. Hub anchors the right rail.',
+      },
+      editor: {
+        title:     'Content Editor — RBAC Role',
+        rightRail: '"Member Hub" outline-gold button · Teal avatar ▾',
+        nav:       'Journal ✎ signals content editing. Same hub as Member.',
+        note:      'Journal ✎ is the only top-nav Editor signal.',
+      },
+      moderator: {
+        title:     'Moderator — RBAC Role',
+        rightRail: '"Member Hub" outline-gold button · Amber avatar ▾',
+        nav:       'Standard member navigation. Mod queue is Hub-internal.',
+        note:      'No top-nav Mod indicator. Badge in avatar dropdown only.',
+      },
+      admin: {
+        title:     'Admin — Highest Trust State',
+        rightRail: '"Admin Console" dark button · Gold-on-dark avatar ▾',
+        nav:       'Admin nav item with gold dot appears. All nav visible.',
+        note:      'Admin Console replaces Member Hub. Visually distinct.',
+      },
+    };
+    const sd = stateInfo[role];
+
+    // ── Actions ──────────────────────────────────────────────
+    const setRole = (r) => () => this.setState({ role: r, dropdown: null });
+    const toggleDropdown = (d) => () =>
+      this.setState((s) => ({ dropdown: s.dropdown === d ? null : d }));
+
+    return {
+      // Role setters
+      setGuest:     setRole('guest'),
+      setUser:      setRole('user'),
+      setMember:    setRole('member'),
+      setEditor:    setRole('editor'),
+      setModerator: setRole('moderator'),
+      setAdmin:     setRole('admin'),
+      toggleCondensed: () => this.setState((s) => ({ condensed: !s.condensed, dropdown: null })),
+
+      // Dropdown toggles
+      toggleActivities: toggleDropdown('activities'),
+      toggleLearn:      toggleDropdown('learn'),
+      toggleAvatar:     toggleDropdown('avatar'),
+
+      // Segment buttons
+      btn_guest_bg: g.bg,     btn_guest_color: g.color,     btn_guest_border: g.border,
+      btn_user_bg: u.bg,      btn_user_color: u.color,      btn_user_border: u.border,
+      btn_member_bg: m.bg,    btn_member_color: m.color,    btn_member_border: m.border,
+      btn_editor_bg: e.bg,    btn_editor_color: e.color,    btn_editor_border: e.border,
+      btn_moderator_bg: mo.bg, btn_moderator_color: mo.color, btn_moderator_border: mo.border,
+      btn_admin_bg: a.bg,     btn_admin_color: a.color,     btn_admin_border: a.border,
+
+      // Condensed toggle button
+      condBg:    condensed ? '#A8843C' : '#FFFFFF',
+      condColor: condensed ? '#FFFFFF' : '#57514B',
+      condBorder: condensed ? '#A8843C' : '#D8D2C6',
+      condLabel: condensed ? 'Scrolled (60px) ✓' : 'Rest (top of page)',
+
+      // Header surface
+      headerBg, headerHeight, headerBorder, headerShadow, backdropFilter,
+      logoHeight, logoFilter, navColor, navActiveColor,
+
+      // Right rail
+      showGuestCTAs, showUserCTA, showMemberHub, showAdminConsole, showAvatar,
+
+      // Navigation
+      showMembershipNav, showAdminNav, journalNavLabel, journalNavColor,
+
+      // Dropdowns
+      showActivitiesDropdown, showLearnDropdown, showAvatarMenu,
+
+      // Avatar
+      avatarInitials: av.initials || '',
+      avatarBg:       av.bg      || '',
+      avatarColor:    av.color   || '',
+      avatarLabel:    av.label   || '',
+      avatarName:     av.name    || '',
+      currentRole:    role,
+
+      // Avatar menu flags
+      isEditorRole, isModeratorRole, isAdminRole, isUserRole,
+      showRenewals, showGallery,
+
+      // State annotations
+      stateTitle:     sd.title,
+      stateRightRail: sd.rightRail,
+      stateNav:       sd.nav,
+      stateNote:      sd.note,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

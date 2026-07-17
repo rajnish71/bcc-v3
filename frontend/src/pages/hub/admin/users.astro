@@ -907,28 +907,6 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     return localStorage.getItem('bcc_token');
   }
 
-  function getRoleFromToken(token: string): string {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return 'member';
-      const payload = JSON.parse(atob(parts[1]));
-      return payload.role ?? 'member';
-    } catch {
-      return 'member';
-    }
-  }
-
-  // Client-side access guard
-  const activeToken = getToken();
-  if (activeToken) {
-    const userRole = getRoleFromToken(activeToken);
-    if (userRole !== 'admin') {
-      window.location.replace('/hub/');
-    }
-  } else {
-    window.location.replace('/auth/signin/');
-  }
-
   function authHeaders(): Record<string, string> {
     const t = getToken();
     return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : {};

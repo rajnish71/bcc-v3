@@ -25,6 +25,19 @@ interface Props {
   apiTag?: string;
   photoLinkSuffix?: string;
   emptyText?: string;
+  /**
+   * When false, fetches ALL photos sorted by date (no per-photographer dedup).
+   * Default true — one representative photo per photographer.
+   */
+  onePerPhotographer?: boolean;
+  /** Initial page size and Load More increment. Default 24. */
+  pageSize?: number;
+  /**
+   * When true, passes shuffle=true to the feed API (random contributor order,
+   * random photo per contributor). Default false — deterministic ordering.
+   * Use true for the Project Highlights grid.
+   */
+  shuffle?: boolean;
 }
 
 const {
@@ -33,6 +46,9 @@ const {
   apiTag,
   photoLinkSuffix = '',
   emptyText = 'No photographs found.',
+  onePerPhotographer = true,
+  pageSize = 24,
+  shuffle = false,
 } = Astro.props;
 ---
 
@@ -42,6 +58,9 @@ const {
   data-jpgrid={id}
   data-api-tag={apiTag ?? ''}
   data-link-suffix={photoLinkSuffix}
+  data-one-per-photographer={onePerPhotographer ? 'true' : 'false'}
+  data-page-size={String(pageSize)}
+  data-shuffle={shuffle ? 'true' : 'false'}
   aria-label={ariaLabel}
 >
   <!-- Loading skeleton -->
@@ -137,11 +156,13 @@ const {
   gsap.registerPlugin(ScrollTrigger);
 
   document.querySelectorAll<HTMLElement>('[data-jpgrid]').forEach(gridEl => {
-    const baseId    = gridEl.dataset.jpgrid!;
-    const apiTag    = gridEl.dataset.apiTag ?? '';
-    const linkSuffix = gridEl.dataset.linkSuffix ?? '';
+    const baseId             = gridEl.dataset.jpgrid!;
+    const apiTag             = gridEl.dataset.apiTag ?? '';
+    const linkSuffix         = gridEl.dataset.linkSuffix ?? '';
+    const onePerPhotographer = gridEl.dataset.onePerPhotographer !== 'false';
+    const PAGE_SIZE          = parseInt(gridEl.dataset.pageSize ?? '24', 10);
+    const shufflePhotos      = gridEl.dataset.shuffle === 'true';
 
-    const PAGE_SIZE = 24;
     let allPhotos:   any[] = [];
     let photoBuffer: any[] = [];
     let currentFilter = apiTag || 'all';
@@ -262,9 +283,10 @@ const {
 
       const offset = allPhotos.length + photoBuffer.length;
       const params = new URLSearchParams({
-        limit:   String(PAGE_SIZE),
-        offset:  String(offset),
-        shuffle: 'false',
+        limit:                String(PAGE_SIZE),
+        offset:               String(offset),
+        shuffle:              shufflePhotos ? 'true' : 'false',
+        one_per_photographer: onePerPhotographer ? 'true' : 'false',
       });
       if (currentFilter !== 'all') params.set('tag', currentFilter);
 

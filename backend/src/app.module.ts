@@ -14,6 +14,7 @@ import { PhotographerProfilesModule } from './modules/photographer-profiles/phot
 import { JournalModule } from './modules/journal/journal.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { HubProfileModule } from './modules/hub/profile/hub-profile.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { HubProfileModule } from './modules/hub/profile/hub-profile.module';
     JournalModule,
     ContactModule,
     HubProfileModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
 })

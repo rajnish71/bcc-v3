@@ -63,18 +63,20 @@ export class GalleryController {
   /** Public photo feed (PUBLIC visibility only). */
   @Get('feed')
   async publicFeed(
-    @Query('genre')  genre?: string,
-    @Query('tag')    tag?: string,
-    @Query('limit')  limit?: string,
-    @Query('offset') offset?: string,
-    @Query('shuffle') shuffle?: string,
+    @Query('genre')                genre?: string,
+    @Query('tag')                  tag?: string,
+    @Query('limit')                limit?: string,
+    @Query('offset')               offset?: string,
+    @Query('shuffle')              shuffle?: string,
+    @Query('one_per_photographer') onePerPhotographer?: string,
   ) {
     return this.gallery.getPublicFeed({
       genre,
       tag,
-      limit:   limit   ? parseInt(limit, 10)  : 20,
-      offset:  offset  ? parseInt(offset, 10) : 0,
-      shuffle: shuffle !== 'false',
+      limit:               limit   ? parseInt(limit, 10)  : 20,
+      offset:              offset  ? parseInt(offset, 10) : 0,
+      shuffle:             shuffle !== 'false',
+      onePerPhotographer:  onePerPhotographer !== 'false',
     });
   }
 

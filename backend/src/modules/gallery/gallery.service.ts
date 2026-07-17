@@ -1031,10 +1031,16 @@ export class GalleryService {
     limit?: number;
     offset?: number;
     shuffle?: boolean;
+    onePerPhotographer?: boolean;
   }): Promise<{ photos: ReturnType<typeof formatPhoto>[]; total: number }> {
     // Dedicated JOIN query so every feed item carries photographer credit.
     // Keeps listPhotos() untouched — other callers are unaffected.
-    const limit  = Math.min(opts.limit  ?? 20, 100);
+    //
+    // The limit ceiling (200) applies only to the paginated all-photos path,
+    // where it becomes a SQL LIMIT. For the one-per-photographer path all
+    // rows are already loaded into memory so no ceiling is enforced — the
+    // caller can request all contributors by passing a high limit.
+    const paginatedLimit = Math.min(opts.limit ?? 20, 200);
     const offset = opts.offset ?? 0;
 
     let q = db
@@ -1068,6 +1074,49 @@ export class GalleryService {
           .where('pt.tag_key', '=', tag)
           .select('pta.photo_id'),
       );
+    }
+
+    // Full-archive mode: paginate all matching photos without per-photographer dedup
+    if (opts.onePerPhotographer === false) {
+      const pagedRows = await q
+        .orderBy('photos.created_at', 'desc')
+        .orderBy('photos.id', 'desc')
+        .limit(paginatedLimit)
+        .offset(offset)
+        .execute();
+
+      // Count total without pagination (separate query to avoid subquery complexity)
+      let countQ = db
+        .selectFrom('photos')
+        .where('photos.status', '=', 'ACTIVE')
+        .where('photos.visibility', '=', 'PUBLIC');
+      if (opts.genre) {
+        const genre = opts.genre;
+        countQ = countQ.where('photos.id', 'in', eb =>
+          eb.selectFrom('photo_tag_assignments as pta')
+            .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+            .where('pt.tag_key', '=', genre)
+            .where('pt.category', '=', 'GENRE')
+            .select('pta.photo_id'),
+        );
+      }
+      if (opts.tag) {
+        const tag = opts.tag;
+        countQ = countQ.where('photos.id', 'in', eb =>
+          eb.selectFrom('photo_tag_assignments as pta')
+            .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+            .where('pt.tag_key', '=', tag)
+            .select('pta.photo_id'),
+        );
+      }
+      const countRow = await countQ
+        .select(eb => eb.fn.count<number>('photos.id').as('cnt'))
+        .executeTakeFirst();
+
+      return {
+        photos: pagedRows.map(r => formatPhoto(r as Record<string, unknown>)),
+        total:  Number(countRow?.cnt ?? 0),
+      };
     }
 
     // Retrieve approved public photographs
@@ -1109,8 +1158,17 @@ export class GalleryService {
       shuffle(userIds);
     }
 
-    // Select a maximum of `limit` photographers from the `offset` position
-    const selectedUserIds = userIds.slice(offset, offset + limit);
+    // -----------------------------------------------------------------------------
+    // onePerPhotographer mode intentionally returns EVERY contributor.
+    //
+    // The SQL query has already materialized all matching rows, so applying an
+    // additional in-memory limit provides no database protection and would
+    // incorrectly omit contributors from Project Highlights.
+    //
+    // Pagination and response ceilings apply ONLY to the standard gallery
+    // (onePerPhotographer=false) path.
+    // -----------------------------------------------------------------------------
+    const selectedUserIds = userIds;
 
     // For each selected photographer, select ONE representative photograph
     const selectedRows: typeof allRows = [];

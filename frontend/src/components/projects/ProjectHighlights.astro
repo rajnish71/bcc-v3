@@ -1,0 +1,88 @@
+---
+/**
+ * ProjectHighlights.astro — One representative photograph per contributor.
+ * V6 40 §ProjectHighlights
+ *
+ * Placed between About and Contributors. Shows the breadth of the project
+ * through the eyes of all contributors — each photographer appears once,
+ * in a different random order on every page load.
+ *
+ * Clicking a photograph opens the photographer's profile filtered to the
+ * project's tag, so visitors discover photographers rather than individual
+ * photographs.
+ *
+ * Uses JustifiedPhotoGrid with shuffle=true and onePerPhotographer=true
+ * so all gallery infrastructure (layout algorithm, GSAP animations, empty
+ * state, resize handling) is shared — no duplicate implementation.
+ */
+import JustifiedPhotoGrid from '../gallery/JustifiedPhotoGrid.astro';
+
+interface Props {
+  gridId: string;
+  projectTag: string;
+  projectTitle: string;
+}
+const { gridId, projectTag, projectTitle } = Astro.props;
+---
+
+<section
+  class="phl container"
+  aria-label={`Project highlights — ${projectTitle}`}
+>
+  <div class="phl-header">
+    <div class="phl-eyebrow">Project Highlights</div>
+    <h2 class="phl-title">Through the Eyes of Our Contributors</h2>
+  </div>
+
+  <div class="phl-grid-wrap">
+    <JustifiedPhotoGrid
+      id={`${gridId}-highlights`}
+      ariaLabel={`Highlight photographs from ${projectTitle}`}
+      apiTag={projectTag}
+      photoLinkSuffix={`?genre=${projectTag}`}
+      onePerPhotographer={true}
+      shuffle={true}
+      pageSize={200}
+      emptyText="No highlights available yet."
+    />
+  </div>
+</section>
+
+<style>
+.phl {
+  padding-top: var(--s-6);
+}
+.phl-header {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  padding: 28px 32px 22px;
+}
+.phl-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.phl-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink-900);
+  margin: 0;
+}
+.phl-grid-wrap {
+  border: 1px solid var(--hairline);
+  border-top: none;
+}
+
+@media (max-width: 768px) {
+  .phl-header { padding: 20px var(--gutter-mob); }
+  .phl-title { font-size: 20px; }
+}
+</style>

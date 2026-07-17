@@ -1,18 +1,20 @@
 ---
 /**
- * ProjectGallery.astro — Justified gallery section for Special Project pages.
- * V6 40 §08 — Project Gallery
- * Wraps the existing JustifiedPhotoGrid with a section header.
- * No new gallery implementation — uses the canonical component.
+ * ProjectGallery.astro — Permanent archive gallery for Special Project pages.
+ * V6 40 §08 — Project Gallery (Amendment 001: all photos, no photographer limit)
+ *
+ * Shows every photograph tagged with the project — not one-per-photographer.
+ * 20 photographs initially, Load More adds 20 more until exhausted.
+ * Clicking a photo opens the photographer's profile filtered to this project.
  */
 import JustifiedPhotoGrid from '../gallery/JustifiedPhotoGrid.astro';
 
 interface Props {
   id: string;
   projectTitle: string;
-  apiTag: string;
+  projectTag: string;
 }
-const { id, projectTitle, apiTag } = Astro.props;
+const { id, projectTitle, projectTag } = Astro.props;
 ---
 
 <section
@@ -35,8 +37,10 @@ const { id, projectTitle, apiTag } = Astro.props;
     <JustifiedPhotoGrid
       id={id}
       ariaLabel={`${projectTitle} photo gallery`}
-      apiTag={apiTag}
-      photoLinkSuffix={`?genre=${apiTag}`}
+      apiTag={projectTag}
+      photoLinkSuffix={`?genre=${projectTag}`}
+      onePerPhotographer={false}
+      pageSize={20}
       emptyText={`No photographs have been published in this project yet. Check back soon.`}
     />
   </div>

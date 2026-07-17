@@ -1,19 +1,16 @@
 ---
 /**
- * ProjectStatBand.astro — Four-stat band below the project hero.
- * V6 40 §04 — Project Statistics
- * border-top: 3px gold — V6 design token, not decorative.
- * photoCount is populated live via bcc:grid-loaded from ProjectPage.
- * contributorCount, subjectCount, lastUpdated are static props.
+ * ProjectStatBand.astro — Three-stat band below the project hero.
+ * V6 40 §04 — Project Statistics (Amendment 001: all stats are dynamic)
+ *
+ * All values start as "—" and are populated by the ProjectPage client script
+ * which fetches /api/v1/projects/stats. IDs are keyed to gridId so a single
+ * page can host multiple bands without conflict (reserved for future use).
  */
 interface Props {
   gridId: string;
-  contributorCount: number;
-  subjectLabel: string;
-  subjectCount: number;
-  lastUpdated: string;
 }
-const { gridId, contributorCount, subjectLabel, subjectCount, lastUpdated } = Astro.props;
+const { gridId } = Astro.props;
 ---
 
 <div class="psb">
@@ -29,24 +26,22 @@ const { gridId, contributorCount, subjectLabel, subjectCount, lastUpdated } = As
   <div class="psb-divider" aria-hidden="true"></div>
 
   <div class="psb-stat">
-    <div class="psb-val">{contributorCount > 0 ? contributorCount : '—'}</div>
+    <div
+      class="psb-val"
+      id={`${gridId}-stat-contributors`}
+      aria-label="Number of contributors"
+    >—</div>
     <div class="psb-label">Contributors</div>
   </div>
-
-  {subjectLabel && subjectCount > 0 && (
-    <>
-      <div class="psb-divider" aria-hidden="true"></div>
-      <div class="psb-stat">
-        <div class="psb-val">{subjectCount}</div>
-        <div class="psb-label">{subjectLabel}</div>
-      </div>
-    </>
-  )}
 
   <div class="psb-divider" aria-hidden="true"></div>
 
   <div class="psb-stat">
-    <div class="psb-val psb-val--text">{lastUpdated}</div>
+    <div
+      class="psb-val psb-val--text"
+      id={`${gridId}-stat-updated`}
+      aria-label="Last updated date"
+    >—</div>
     <div class="psb-label">Last Updated</div>
   </div>
 </div>

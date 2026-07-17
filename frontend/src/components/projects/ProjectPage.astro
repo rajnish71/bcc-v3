@@ -1,18 +1,18 @@
 ---
 /**
  * ProjectPage.astro — Reusable compositor for all BCC Special Project pages.
- * V6 40 Special Projects design authority.
+ * V6 40 Special Projects design authority (Architecture Freeze).
  * Route: /projects/{slug}
  *
- * Section order (fixed per spec):
- *   01 ProjectHero          — always
- *   02 ProjectStatBand      — always
- *   03 ProjectAbout         — conditional (hidden if about is empty)
- *   04 ProjectFeaturedContributors — conditional (hidden if no contributors)
- *   05 ProjectContributorsGrid    — conditional (hidden if no contributors)
- *   06 ProjectGallery       — always
- *   07 ProjectRelated       — conditional (hidden if no related projects)
- *   08 ProjectJoinCTA       — always
+ * Section order:
+ *   01 ProjectHero             — always
+ *   02 ProjectStatBand         — always (all stats dynamic via client script)
+ *   03 ProjectAbout            — conditional (hidden if about is empty)
+ *   04 ProjectHighlights       — always (one photo per contributor, random order)
+ *   05 ProjectContributorsGrid — always (fully dynamic)
+ *   06 ProjectGallery          — always (all photos, no photographer limit)
+ *   07 ProjectRelated          — conditional (hidden if no related projects)
+ *   08 ProjectJoinCTA          — always
  *
  * All variation is data-driven. No project-specific layouts or CSS.
  */
@@ -20,7 +20,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProjectHero from './ProjectHero.astro';
 import ProjectStatBand from './ProjectStatBand.astro';
 import ProjectAbout from './ProjectAbout.astro';
-import ProjectFeaturedContributors from './ProjectFeaturedContributors.astro';
+import ProjectHighlights from './ProjectHighlights.astro';
 import ProjectContributorsGrid from './ProjectContributorsGrid.astro';
 import ProjectGallery from './ProjectGallery.astro';
 import ProjectRelated from './ProjectRelated.astro';
@@ -48,13 +48,9 @@ const related = getRelatedProjects(project.slug);
     heroImage={project.heroImage}
   />
 
-  <!-- 02 StatBand — always -->
+  <!-- 02 StatBand — always (populated by client script below) -->
   <ProjectStatBand
     gridId={project.slug}
-    contributorCount={project.contributors.length}
-    subjectLabel={project.subjectLabel}
-    subjectCount={project.subjectCount}
-    lastUpdated={project.lastUpdated}
   />
 
   <!-- 03 About — conditional -->
@@ -65,27 +61,24 @@ const related = getRelatedProjects(project.slug);
     />
   )}
 
-  <!-- 04 Featured Contributors — conditional -->
-  {project.contributors.length > 0 && (
-    <ProjectFeaturedContributors
-      projectTitle={project.title}
-      contributors={project.contributors}
-    />
-  )}
+  <!-- 04 Project Highlights — one photo per contributor, random order -->
+  <ProjectHighlights
+    gridId={project.slug}
+    projectTag={project.projectTag}
+    projectTitle={project.title}
+  />
 
-  <!-- 05 Contributors Grid — conditional -->
-  {project.contributors.length > 0 && (
-    <ProjectContributorsGrid
-      projectTitle={project.title}
-      contributors={project.contributors}
-    />
-  )}
+  <!-- 05 Contributors Grid — fully dynamic -->
+  <ProjectContributorsGrid
+    projectTag={project.projectTag}
+    projectTitle={project.title}
+  />
 
-  <!-- 06 Gallery — always -->
+  <!-- 06 Gallery — all photos, no photographer limit -->
   <ProjectGallery
     id={project.slug}
     projectTitle={project.title}
-    apiTag={project.apiTag}
+    projectTag={project.projectTag}
   />
 
   <!-- 07 Related Projects — conditional -->
@@ -98,24 +91,44 @@ const related = getRelatedProjects(project.slug);
 
 </BaseLayout>
 
-<script define:vars={{ gridId: project.slug }}>
-  /* Sync photo count stat from gallery to StatBand when grid loads */
+<script define:vars={{ gridId: project.slug, projectTag: project.projectTag }}>
   (function () {
+    /* ── Dynamic stats from /api/v1/projects/stats ── */
+    var statPhotos       = document.getElementById(gridId + '-stat-photos');
+    var statContributors = document.getElementById(gridId + '-stat-contributors');
+    var statUpdated      = document.getElementById(gridId + '-stat-updated');
+
+    if (statPhotos || statContributors || statUpdated) {
+      fetch('/api/v1/projects/stats?tag=' + encodeURIComponent(projectTag))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data) return;
+          if (statPhotos && data.photoCount > 0) {
+            statPhotos.textContent = data.photoCount.toLocaleString('en-IN');
+          }
+          if (statContributors && data.contributorCount > 0) {
+            statContributors.textContent = String(data.contributorCount);
+          }
+          if (statUpdated && data.lastUpdated) {
+            statUpdated.textContent = data.lastUpdated;
+          }
+        })
+        .catch(function () { /* silent — stats remain as "—" */ });
+    }
+
+    /* ── Gallery count label from bcc:grid-loaded ── */
     var gridEl       = document.getElementById(gridId + '-grid');
-    var statPhotos   = document.getElementById(gridId + '-stat-photos');
     var galleryLabel = document.getElementById(gridId + '-gallery-count');
 
-    if (!gridEl || !statPhotos) return;
-
-    gridEl.addEventListener('bcc:grid-loaded', function (e) {
-      var total = e.detail && e.detail.total;
-      if (typeof total === 'number' && total > 0) {
-        var fmt = total.toLocaleString('en-IN');
-        statPhotos.textContent = fmt;
-        if (galleryLabel) {
-          galleryLabel.textContent = fmt + ' photograph' + (total === 1 ? '' : 's') + ' total';
+    if (gridEl && galleryLabel) {
+      gridEl.addEventListener('bcc:grid-loaded', function (e) {
+        var total = e.detail && e.detail.total;
+        if (typeof total === 'number' && total > 0) {
+          galleryLabel.textContent =
+            total.toLocaleString('en-IN') +
+            ' photograph' + (total === 1 ? '' : 's') + ' total';
         }
-      }
-    });
+      });
+    }
   })();
 </script>

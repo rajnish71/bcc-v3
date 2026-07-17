@@ -1,18 +1,18 @@
 ---
 /**
- * ProjectContributorsGrid.astro — Compact grid of all project contributors.
- * V6 40 §07 — Contributors Grid
- * 4-col desktop / 3-col tablet / 2-col mobile.
- * Each card links to the contributor's Photographer Profile.
+ * ProjectContributorsGrid.astro — Dynamic grid of all project contributors.
+ * V6 40 §07 — Contributors Grid (Amendment 001: fully dynamic)
+ *
+ * Fetches contributors from /api/v1/projects/contributors at runtime.
+ * Random order on every page load.
+ * Each card links to the photographer's profile filtered to the project tag.
  */
-import type { ProjectContributor } from '../../data/projects';
-
 interface Props {
+  projectTag: string;
   projectTitle: string;
-  contributors: ProjectContributor[];
 }
-const { projectTitle, contributors } = Astro.props;
-if (!contributors || contributors.length === 0) return;
+const { projectTag, projectTitle } = Astro.props;
+const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
 ---
 
 <section
@@ -24,26 +24,21 @@ if (!contributors || contributors.length === 0) return;
     <h2 class="pcg-title">Contributors of our {projectTitle} Project</h2>
   </div>
 
-  <div class="pcg-grid" data-gsap="stagger">
-    {contributors.map(c => (
-      <a
-        href={`/photographers/${c.username}`}
-        class="pcg-card"
-        aria-label={`${c.name} — ${c.photoCount} photographs`}
-        style="opacity:0;transform:translateY(16px)"
-      >
-        <div class="pcg-avatar">
-          {c.avatar
-            ? <img src={c.avatar} alt={c.name} class="pcg-avatar-img" loading="lazy" decoding="async" />
-            : <span class="pcg-avatar-initials" aria-hidden="true">{c.initials}</span>
-          }
-        </div>
+  <div
+    class="pcg-grid"
+    id={containerId}
+    data-project-tag={projectTag}
+    data-gsap="stagger"
+  >
+    <!-- Skeleton cards — replaced by client script -->
+    {Array.from({ length: 4 }).map(() => (
+      <div class="pcg-card pcg-card--skel" aria-hidden="true">
+        <div class="pcg-avatar pcg-avatar--skel"></div>
         <div class="pcg-info">
-          <div class="pcg-name">{c.name}</div>
-          <div class="pcg-count">{c.photoCount} photos</div>
+          <div class="pcg-skel-line pcg-skel-name"></div>
+          <div class="pcg-skel-line pcg-skel-count"></div>
         </div>
-        <span class="pcg-arrow" aria-hidden="true">View →</span>
-      </a>
+      </div>
     ))}
   </div>
 </section>
@@ -148,6 +143,21 @@ if (!contributors || contributors.length === 0) return;
   letter-spacing: 0.04em;
 }
 
+/* Skeleton state */
+.pcg-card--skel { pointer-events: none; }
+.pcg-avatar--skel {
+  background: var(--surface-2);
+  animation: pcg-shimmer 1.6s ease-in-out infinite;
+}
+.pcg-skel-line {
+  background: var(--surface-2);
+  border-radius: 2px;
+  animation: pcg-shimmer 1.6s ease-in-out infinite;
+}
+.pcg-skel-name { height: 12px; width: 70%; margin-bottom: 6px; }
+.pcg-skel-count { height: 9px; width: 40%; }
+@keyframes pcg-shimmer { 0%,100% { opacity:.4; } 50% { opacity:.7; } }
+
 @media (max-width: 1024px) {
   .pcg-grid { grid-template-columns: repeat(3, 1fr); }
 }
@@ -156,3 +166,95 @@ if (!contributors || contributors.length === 0) return;
   .pcg-title { font-size: 20px; }
 }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.pcg-grid[data-project-tag]').forEach(gridEl => {
+    const projectTag = gridEl.dataset.projectTag ?? '';
+
+    function getInitials(name: string): string {
+      return name.split(' ').slice(0, 2).map(w => w[0] ?? '').join('').toUpperCase();
+    }
+
+    async function load() {
+      try {
+        const res = await fetch(`/api/v1/projects/contributors?tag=${encodeURIComponent(projectTag)}`);
+        if (!res.ok) throw new Error('API error');
+        const { contributors } = await res.json();
+
+        if (!contributors || contributors.length === 0) {
+          gridEl.innerHTML = '';
+          return;
+        }
+
+        gridEl.innerHTML = '';
+
+        contributors.forEach((c: any) => {
+          const card = document.createElement('a');
+          card.href = c.username
+            ? `/photographers/${c.username}?genre=${encodeURIComponent(projectTag)}`
+            : '#';
+          card.className = 'pcg-card';
+          card.setAttribute('aria-label', `${c.name} — ${c.photoCount} photographs`);
+          card.style.cssText = 'opacity:0;transform:translateY(16px)';
+
+          // Avatar
+          const avatarDiv = document.createElement('div');
+          avatarDiv.className = 'pcg-avatar';
+          if (c.avatarUrl) {
+            const img = document.createElement('img');
+            img.src = c.avatarUrl;
+            img.alt = c.name;
+            img.className = 'pcg-avatar-img';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            avatarDiv.appendChild(img);
+          } else {
+            const initials = document.createElement('span');
+            initials.className = 'pcg-avatar-initials';
+            initials.setAttribute('aria-hidden', 'true');
+            initials.textContent = getInitials(c.name);
+            avatarDiv.appendChild(initials);
+          }
+          card.appendChild(avatarDiv);
+
+          // Info
+          const info = document.createElement('div');
+          info.className = 'pcg-info';
+          const name = document.createElement('div');
+          name.className = 'pcg-name';
+          name.textContent = c.name;
+          const count = document.createElement('div');
+          count.className = 'pcg-count';
+          count.textContent = `${c.photoCount} photo${c.photoCount === 1 ? '' : 's'}`;
+          info.appendChild(name);
+          info.appendChild(count);
+          card.appendChild(info);
+
+          // Arrow
+          const arrow = document.createElement('span');
+          arrow.className = 'pcg-arrow';
+          arrow.setAttribute('aria-hidden', 'true');
+          arrow.textContent = 'View →';
+          card.appendChild(arrow);
+
+          gridEl.appendChild(card);
+        });
+
+        // Animate in
+        const cards = Array.from(gridEl.querySelectorAll<HTMLElement>('.pcg-card'));
+        cards.forEach((card, i) => {
+          setTimeout(() => {
+            card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, i * 60);
+        });
+
+      } catch {
+        // Leave skeleton on error — silent failure
+      }
+    }
+
+    load();
+  });
+</script>

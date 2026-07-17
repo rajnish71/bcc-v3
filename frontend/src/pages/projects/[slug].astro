@@ -1,0 +1,18 @@
+---
+/**
+ * /projects/[slug] — Dynamic route for all BCC Special Project pages.
+ * Generated at build time from the PROJECTS registry in data/projects.ts.
+ * Adding a new project requires only a new entry in that registry — no new
+ * Astro page file.
+ */
+import ProjectPage from '../../components/projects/ProjectPage.astro';
+import { PROJECTS, getProject } from '../../data/projects';
+
+export function getStaticPaths() {
+  return Object.keys(PROJECTS).map(slug => ({ params: { slug } }));
+}
+
+const project = getProject(Astro.params.slug)!;
+---
+
+<ProjectPage project={project} />

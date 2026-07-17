@@ -1,0 +1,1722 @@
+---
+/**
+ * hub/admin/users.astro — Users & Members Management (Production Ready Console)
+ * Route: /hub/admin/users/
+ *
+ * Requires admin role (enforced client-side and server-side).
+ * Provides a highly polished, responsive table with robust API error handling,
+ * loading skeletons, debounced searching, toast feedback, and confirmations.
+ */
+import HubLayout from '../../../layouts/HubLayout.astro';
+---
+
+<HubLayout title="Users & Members" description="Bhopal Camera Club Users & Members Console.">
+
+  <div class="admin-console">
+
+    <!-- TOAST BANNER (SUCCESS/ERROR FEEDBACK) ────────────────────────── -->
+    <div id="toast-banner" class="toast-banner" hidden></div>
+
+    <!-- HEADER ──────────────────────────────────────────────────────────── -->
+    <section class="admin-section" id="section-header">
+      <div class="section-kicker"><span class="kicker-rule"></span>Operations</div>
+      <h2 class="section-title">Users & Members</h2>
+    </section>
+
+    <!-- SEARCH & FILTERS ────────────────────────────────────────────────── -->
+    <section class="controls-section">
+      <div class="search-and-filters">
+        <form class="search-form" id="users-search-form" autocomplete="off">
+          <input
+            type="text"
+            id="users-search-input"
+            class="search-input"
+            placeholder="Search by name, username, email, membership #…"
+          />
+          <button type="submit" class="btn-search">Search</button>
+        </form>
+
+        <div class="filters-row">
+          <div class="filter-group">
+            <label for="filter-lifecycle">Lifecycle</label>
+            <select id="filter-lifecycle" class="filter-select">
+              <option value="">All States</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="ACTIVE">Active</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="EXPIRED">Expired</option>
+              <option value="TERMINATED">Terminated</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-class">Class</label>
+            <select id="filter-class" class="filter-select">
+              <option value="">All Classes</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-role">Role</label>
+            <select id="filter-role" class="filter-select">
+              <option value="">All Roles</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-status">Status</label>
+            <select id="filter-status" class="filter-select">
+              <option value="">All Statuses</option>
+              <option value="ACTIVE">Active (User)</option>
+              <option value="SUSPENDED">Suspended (User)</option>
+              <option value="DEACTIVATED">Deactivated (User)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BULK ACTIONS BAR ────────────────────────────────────────────────── -->
+    <section class="bulk-actions-section" id="bulk-bar" hidden>
+      <div class="bulk-info">
+        <span id="bulk-count">0</span> selected
+      </div>
+      <div class="bulk-buttons">
+        <button id="bulk-btn-approve" class="btn-bulk btn-bulk--approve" disabled>Approve</button>
+        <button id="bulk-btn-activate" class="btn-bulk btn-bulk--activate" disabled>Activate</button>
+        <button id="bulk-btn-suspend" class="btn-bulk btn-bulk--suspend" disabled>Suspend</button>
+        <button id="bulk-btn-terminate" class="btn-bulk btn-bulk--terminate" disabled>Terminate</button>
+        <button id="bulk-btn-export" class="btn-bulk btn-bulk--export">Export CSV</button>
+      </div>
+    </section>
+
+    <!-- MAIN WORKING TABLE ─────────────────────────────────────────────── -->
+    <section class="table-section">
+      <!-- Loading Skeleton Shimmer -->
+      <div id="table-loading" class="table-skeleton-container" hidden>
+        <table class="ops-table skeleton-table">
+          <thead>
+            <tr>
+              <th width="40"><input type="checkbox" disabled /></th>
+              <th width="50"></th>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Membership #</th>
+              <th>Class</th>
+              <th>Lifecycle</th>
+              <th>Roles</th>
+              <th>Joined</th>
+              <th>Last Login</th>
+              <th width="100" style="text-align: right;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="skeleton-row">
+              <td><div class="skeleton-cell skeleton-checkbox"></div></td>
+              <td><div class="skeleton-cell skeleton-avatar"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 110px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 100px;"></div></td>
+              <td><div class="skeleton-cell skeleton-badge"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 50px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton-cell skeleton-btn" style="float: right;"></div></td>
+            </tr>
+            <tr class="skeleton-row">
+              <td><div class="skeleton-cell skeleton-checkbox"></div></td>
+              <td><div class="skeleton-cell skeleton-avatar"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 140px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 90px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton-cell skeleton-badge"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 60px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton-cell skeleton-btn" style="float: right;"></div></td>
+            </tr>
+            <tr class="skeleton-row">
+              <td><div class="skeleton-cell skeleton-checkbox"></div></td>
+              <td><div class="skeleton-cell skeleton-avatar"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 90px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 60px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 90px;"></div></td>
+              <td><div class="skeleton-cell skeleton-badge"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 40px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton-cell skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton-cell skeleton-btn" style="float: right;"></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="table-empty" class="state-empty" hidden>No members matched the criteria.</div>
+      <div id="table-error" class="state-error" hidden>
+        <p id="table-error-text">Failed to load members.</p>
+        <button id="btn-retry-load" class="btn-search" style="margin-top: 12px;">Retry</button>
+      </div>
+
+      <div class="table-container" id="table-wrapper" hidden>
+        <table class="ops-table">
+          <thead>
+            <tr>
+              <th width="40"><input type="checkbox" id="check-all" /></th>
+              <th width="50">Avatar</th>
+              <th class="sort-header" data-sort="name">Name <span class="sort-indicator" id="sort-name-ind"></span></th>
+              <th>Username</th>
+              <th class="sort-header" data-sort="membershipNumber">Membership # <span class="sort-indicator" id="sort-membershipNumber-ind"></span></th>
+              <th>Class</th>
+              <th class="sort-header" data-sort="lifecycle">Lifecycle <span class="sort-indicator" id="sort-lifecycle-ind"></span></th>
+              <th>Roles</th>
+              <th class="sort-header" data-sort="joinDate">Joined <span class="sort-indicator" id="sort-joinDate-ind"></span></th>
+              <th class="sort-header" data-sort="lastLogin">Last Login <span class="sort-indicator" id="sort-lastLogin-ind"></span></th>
+              <th width="100" style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL: EDIT MEMBER ──────────────────────────────────────────────── -->
+  <div id="edit-modal" class="modal-overlay" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Member Details</h3>
+        <button class="modal-close" id="edit-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-member-form">
+          <input type="hidden" id="edit-user-id" />
+          <div class="form-group">
+            <label for="edit-full-name">Full Name</label>
+            <input type="text" id="edit-full-name" class="field-input" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-email">Email Address</label>
+            <input type="email" id="edit-email" class="field-input" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-user-status">User Status</label>
+            <select id="edit-user-status" class="field-input">
+              <option value="ACTIVE">Active</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="DEACTIVATED">Deactivated</option>
+            </select>
+          </div>
+          <div id="edit-feedback" class="reset-feedback" hidden></div>
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" id="edit-btn-cancel">Cancel</button>
+            <button type="submit" class="btn-save">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MANAGE ROLES ─────────────────────────────────────────────── -->
+  <div id="roles-modal" class="modal-overlay" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Manage User Roles</h3>
+        <button class="modal-close" id="roles-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="roles-user-id" />
+        <h4 class="roles-target-name" id="roles-target-name">@username</h4>
+
+        <div class="current-roles-section">
+          <h5 class="sub-section-title">Current Active Roles</h5>
+          <div id="current-roles-list" class="roles-list-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="assign-role-section">
+          <h5 class="sub-section-title">Assign New Role</h5>
+          <form id="assign-role-form" class="assign-role-form">
+            <div class="form-group">
+              <label for="new-role-select">Select Role</label>
+              <select id="new-role-select" class="field-input" required>
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="assign-reason">Reason</label>
+              <input type="text" id="assign-reason" class="field-input" placeholder="e.g. Approved by Committee" />
+            </div>
+            <button type="submit" class="btn-assign">Assign Role</button>
+          </form>
+        </div>
+
+        <div id="roles-feedback" class="reset-feedback" hidden></div>
+      </div>
+    </div>
+  </div>
+
+</HubLayout>
+
+<style>
+  /* ─── Toast Feedback Banner ──────────────────────────────────── */
+  .toast-banner {
+    position: fixed;
+    top: var(--s-3);
+    right: var(--s-3);
+    padding: 12px var(--s-3);
+    background: var(--ink-900);
+    color: var(--surface-1);
+    font-family: var(--font-body);
+    font-size: var(--text-ui);
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(20,18,16,0.15);
+    z-index: var(--z-toast);
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    border-left: 3px solid var(--gold-600);
+    animation: slideIn 0.25s ease-out;
+  }
+  @keyframes slideIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ─── Shimmer Table Loader ───────────────────────────────────── */
+  .table-skeleton-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .skeleton-table tbody tr {
+    pointer-events: none;
+  }
+  .skeleton-cell {
+    background: linear-gradient(90deg, var(--hairline-soft) 25%, var(--hairline) 50%, var(--hairline-soft) 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+    height: 12px;
+    border-radius: var(--r-1);
+  }
+  @keyframes loading-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .skeleton-checkbox { width: 16px; height: 16px; }
+  .skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; }
+  .skeleton-text { height: 12px; }
+  .skeleton-badge { width: 70px; height: 20px; border-radius: 2px; }
+  .skeleton-btn { width: 60px; height: 26px; border-radius: 2px; }
+
+  /* ─── Console Layout ────────────────────────────────────────── */
+  .admin-console {
+    padding: var(--s-4) 0 var(--s-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .admin-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+  }
+  .section-kicker {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    font-family: var(--font-body);
+    font-size: var(--text-micro);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-600);
+  }
+  .kicker-rule {
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--gold-600);
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink-900);
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  /* ─── Controls and Filters ──────────────────────────────────── */
+  .controls-section {
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    padding: 20px 24px;
+  }
+  .search-and-filters {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+  .search-form {
+    display: flex;
+    gap: var(--s-1);
+    width: 100%;
+    max-width: 600px;
+  }
+  .search-input {
+    flex: 1;
+    font-family: var(--font-body);
+    font-size: var(--text-ui);
+    padding: 10px 14px;
+    border: 1px solid var(--ink-200);
+    color: var(--ink-900);
+    background: var(--surface-0);
+    outline: none;
+    transition: border-color var(--dur-instant);
+  }
+  .search-input:focus {
+    border-color: var(--gold-600);
+  }
+  .btn-search {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    padding: 10px 24px;
+    background: var(--ink-900);
+    color: var(--surface-1);
+    border: none;
+    cursor: pointer;
+    transition: opacity var(--dur-instant);
+  }
+  .btn-search:hover {
+    opacity: 0.85;
+  }
+
+  .filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 150px;
+    flex: 1 1 0%;
+  }
+  .filter-group label {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-600);
+  }
+  .filter-select {
+    font-family: var(--font-body);
+    font-size: var(--text-ui);
+    padding: 8px 12px;
+    border: 1px solid var(--ink-200);
+    background: var(--surface-0);
+    color: var(--ink-900);
+    outline: none;
+  }
+  .filter-select:focus {
+    border-color: var(--gold-600);
+  }
+
+  /* ─── Bulk Actions Bar ───────────────────────────────────────── */
+  .bulk-actions-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--dark-100);
+    color: var(--surface-1);
+    padding: 14px 24px;
+    border-left: 3px solid var(--gold-600);
+  }
+  .bulk-info {
+    font-family: var(--font-body);
+    font-size: var(--text-ui);
+    font-weight: 500;
+  }
+  .bulk-buttons {
+    display: flex;
+    gap: var(--s-1);
+    flex-wrap: wrap;
+  }
+  .btn-bulk {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    padding: 6px 16px;
+    border: none;
+    cursor: pointer;
+    transition: background var(--dur-instant), opacity var(--dur-instant);
+  }
+  .btn-bulk--approve {
+    background: var(--forest-600);
+    color: #fff;
+  }
+  .btn-bulk--activate {
+    background: var(--gold-light);
+    color: var(--ink-900);
+  }
+  .btn-bulk--suspend {
+    background: var(--status-pending-text);
+    color: #fff;
+  }
+  .btn-bulk--terminate {
+    background: var(--status-danger-text);
+    color: #fff;
+  }
+  .btn-bulk--export {
+    background: transparent;
+    border: 1px solid var(--ink-200);
+    color: var(--surface-1);
+  }
+  .btn-bulk:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-bulk:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  /* ─── Table Styling ─────────────────────────────────────────── */
+  .table-section {
+    background: var(--surface-0);
+    border: 1px solid var(--hairline);
+    overflow: hidden;
+  }
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    max-height: 600px;
+  }
+  .ops-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-body);
+    text-align: left;
+  }
+  .ops-table th {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-700);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--hairline-strong);
+    background: var(--surface-1);
+    user-select: none;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-raised);
+  }
+  .ops-table th.sort-header {
+    cursor: pointer;
+  }
+  .ops-table th.sort-header:hover {
+    color: var(--ink-900);
+    background: var(--surface-2);
+  }
+  .sort-indicator {
+    font-family: sans-serif;
+    font-size: var(--text-micro);
+    margin-left: 4px;
+    display: inline-block;
+  }
+  .ops-table td {
+    padding: 14px 16px;
+    font-size: var(--text-ui);
+    color: var(--ink-900);
+    border-bottom: 1px solid var(--hairline-soft);
+    vertical-align: middle;
+  }
+  .ops-table tbody tr {
+    transition: background var(--dur-instant);
+  }
+  .ops-table tbody tr:hover {
+    background: var(--surface-1);
+  }
+  .ops-table tbody tr.row-selected {
+    background: #FDFBF7;
+  }
+
+  /* ─── Avatar ────────────────────────────────────────────────── */
+  .avatar-container {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-full);
+    overflow: hidden;
+    background: var(--forest-gradient);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .avatar-fallback {
+    line-height: 1;
+  }
+
+  /* ─── Badges and Tags ────────────────────────────────────────── */
+  .lifecycle-badge {
+    font-family: var(--font-mono);
+    font-size: var(--text-nano);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: var(--r-1);
+    text-transform: uppercase;
+    display: inline-block;
+    border: 1px solid transparent;
+  }
+  .badge-active {
+    background: var(--status-active-bg);
+    color: var(--status-active-text);
+  }
+  .badge-pending {
+    background: var(--status-pending-bg);
+    color: var(--status-pending-text);
+  }
+  .badge-approved {
+    background: #E0F2FE;
+    color: #0369A1;
+  }
+  .badge-suspended {
+    background: #F5F5F5;
+    color: #404040;
+    border-color: #D4D4D4;
+  }
+  .badge-expired {
+    background: #FAF8F4;
+    color: var(--ink-400);
+    border-color: var(--ink-200);
+  }
+  .badge-terminated {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+  }
+  .badge-rejected {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+
+  .roles-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-half);
+    max-width: 200px;
+  }
+  .role-tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-nano);
+    font-weight: 500;
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    color: var(--ink-700);
+    padding: 2px 6px;
+    border-radius: var(--r-1);
+    text-transform: uppercase;
+  }
+
+  /* ─── Actions Dropdown ──────────────────────────────────────── */
+  .actions-cell {
+    position: relative;
+    text-align: right;
+  }
+  .btn-actions-trigger {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    padding: 6px 12px;
+    background: var(--surface-0);
+    border: 1px solid var(--ink-200);
+    color: var(--ink-700);
+    cursor: pointer;
+    transition: all var(--dur-instant);
+  }
+  .btn-actions-trigger:hover {
+    border-color: var(--gold-600);
+    color: var(--ink-900);
+  }
+  .dropdown-menu {
+    position: absolute;
+    right: 16px;
+    top: 100%;
+    margin-top: 4px;
+    background: var(--surface-0);
+    border: 1px solid var(--ink-200);
+    box-shadow: 0 4px 16px rgba(20,18,16,0.08);
+    z-index: 100;
+    min-width: 160px;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+    text-align: left;
+  }
+  .dropdown-item {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    color: var(--ink-700);
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: background var(--dur-instant), color var(--dur-instant);
+    text-decoration: none;
+    display: block;
+    box-sizing: border-box;
+  }
+  .dropdown-item:hover:not(:disabled) {
+    background: var(--surface-1);
+    color: var(--ink-900);
+  }
+  .dropdown-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .dropdown-divider {
+    height: 1px;
+    background: var(--hairline-soft);
+    margin: 4px 0;
+  }
+
+  /* ─── State Messages ────────────────────────────────────────── */
+  .state-loading,
+  .state-empty {
+    font-family: var(--font-body);
+    font-size: var(--text-ui);
+    color: var(--ink-600);
+    padding: var(--s-4);
+    text-align: center;
+  }
+  .state-error {
+    font-family: var(--font-body);
+    font-size: var(--text-ui);
+    color: var(--status-danger-text);
+    padding: var(--s-4);
+    text-align: center;
+  }
+
+  /* ─── Modals ────────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 18, 16, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal);
+    backdrop-filter: blur(4px);
+  }
+  .modal-card {
+    background: var(--surface-0);
+    border: 1px solid var(--ink-200);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 12px 36px rgba(20,18,16,0.12);
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--hairline-soft);
+    background: var(--surface-1);
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: var(--text-body);
+    font-weight: 600;
+    color: var(--ink-900);
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--ink-600);
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+  }
+  .modal-body {
+    padding: var(--s-3);
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: var(--s-2);
+  }
+  .form-group label {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    color: var(--ink-700);
+  }
+  .field-input {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: var(--text-ui);
+    padding: 9px 12px;
+    border: 1px solid var(--ink-200);
+    background: var(--surface-0);
+    color: var(--ink-900);
+    outline: none;
+    box-sizing: border-box;
+  }
+  .field-input:focus {
+    border-color: var(--gold-600);
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--s-1);
+    margin-top: var(--s-3);
+  }
+  .btn-cancel,
+  .btn-save,
+  .btn-assign {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    padding: 9px 18px;
+    cursor: pointer;
+    border: none;
+    transition: opacity var(--dur-instant);
+  }
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--ink-200);
+    color: var(--ink-700);
+  }
+  .btn-save {
+    background: var(--ink-900);
+    color: var(--surface-1);
+  }
+  .btn-assign {
+    background: var(--gold-gradient);
+    color: #fff;
+    width: 100%;
+    margin-top: var(--s-1);
+  }
+  .btn-cancel:hover, .btn-save:hover, .btn-assign:hover {
+    opacity: 0.85;
+  }
+
+  .reset-feedback {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    padding: 8px 12px;
+    margin-top: 12px;
+    border: 1px solid transparent;
+  }
+  .reset-feedback.ok {
+    background: var(--status-active-bg);
+    color: var(--status-active-text);
+    border-color: #C2E0C6;
+  }
+  .reset-feedback.error {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+    border-color: #F8D7DA;
+  }
+
+  .roles-target-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-900);
+    margin: 0 0 var(--s-2);
+  }
+  .sub-section-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-600);
+    margin: var(--s-2) 0 var(--s-1);
+  }
+  .roles-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 120px;
+    overflow-y: auto;
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  .role-row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--text-caption);
+  }
+  .btn-revoke-role {
+    background: none;
+    border: none;
+    color: var(--status-danger-text);
+    cursor: pointer;
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .btn-revoke-role:hover {
+    text-decoration: underline;
+  }
+  .assign-role-form {
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    padding: 16px;
+    margin-top: 8px;
+  }
+</style>
+
+<script>
+  const API = '/api/v1';
+
+  /* ── Auth / Token parsing ──────────────────────────────────── */
+  function getToken(): string | null {
+    return localStorage.getItem('bcc_token');
+  }
+
+  function getRoleFromToken(token: string): string {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return 'member';
+      const payload = JSON.parse(atob(parts[1]));
+      return payload.role ?? 'member';
+    } catch {
+      return 'member';
+    }
+  }
+
+  // Client-side access guard
+  const activeToken = getToken();
+  if (activeToken) {
+    const userRole = getRoleFromToken(activeToken);
+    if (userRole !== 'admin') {
+      window.location.replace('/hub/');
+    }
+  } else {
+    window.location.replace('/auth/signin/');
+  }
+
+  function authHeaders(): Record<string, string> {
+    const t = getToken();
+    return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : {};
+  }
+
+  /* ── Element References ─────────────────────────────────────── */
+  const tableBody     = document.getElementById('users-table-body');
+  const tableLoading  = document.getElementById('table-loading');
+  const tableEmpty    = document.getElementById('table-empty');
+  const tableError    = document.getElementById('table-error');
+  const tableErrorText = document.getElementById('table-error-text');
+  const btnRetryLoad   = document.getElementById('btn-retry-load');
+  const tableWrapper  = document.getElementById('table-wrapper');
+  const checkAll      = document.getElementById('check-all') as HTMLInputElement | null;
+
+  const searchForm    = document.getElementById('users-search-form') as HTMLFormElement | null;
+  const searchInput   = document.getElementById('users-search-input') as HTMLInputElement | null;
+
+  const filterLifecycle = document.getElementById('filter-lifecycle') as HTMLSelectElement | null;
+  const filterClass     = document.getElementById('filter-class') as HTMLSelectElement | null;
+  const filterRole      = document.getElementById('filter-role') as HTMLSelectElement | null;
+  const filterStatus    = document.getElementById('filter-status') as HTMLSelectElement | null;
+
+  const bulkBar         = document.getElementById('bulk-bar');
+  const bulkCount       = document.getElementById('bulk-count');
+  const bulkApprove     = document.getElementById('bulk-btn-approve') as HTMLButtonElement | null;
+  const bulkActivate    = document.getElementById('bulk-btn-activate') as HTMLButtonElement | null;
+  const bulkSuspend     = document.getElementById('bulk-btn-suspend') as HTMLButtonElement | null;
+  const bulkTerminate   = document.getElementById('bulk-btn-terminate') as HTMLButtonElement | null;
+  const bulkExport      = document.getElementById('bulk-btn-export') as HTMLButtonElement | null;
+
+  /* ── Toast Feedback System ─────────────────────────────────── */
+  function showToast(message: string, isError = false) {
+    const toast = document.getElementById('toast-banner');
+    if (!toast) return;
+    toast.textContent = message;
+    if (isError) {
+      toast.style.borderLeftColor = 'var(--status-danger-text)';
+      toast.style.background = '#8C2B1D';
+    } else {
+      toast.style.borderLeftColor = 'var(--gold-600)';
+      toast.style.background = 'var(--ink-900)';
+    }
+    toast.hidden = false;
+    setTimeout(() => {
+      toast.hidden = true;
+    }, 4000);
+  }
+
+  /* ── State ──────────────────────────────────────────────────── */
+  let usersList: any[] = [];
+  let classesList: any[] = [];
+  let rolesList: any[] = [];
+  let selectedUserIds: number[] = [];
+
+  let currentSort = {
+    column: 'name',
+    order: 'asc'
+  };
+
+  /* ── Helpers ────────────────────────────────────────────────── */
+  function show(el: HTMLElement | null) { if (el) el.hidden = false; }
+  function hide(el: HTMLElement | null) { if (el) el.hidden = true; }
+
+  function fmtDate(val: string | null | undefined): string {
+    if (!val) return '—';
+    try {
+      return new Date(val).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return val;
+    }
+  }
+
+  function getInitials(fullName: string): string {
+    if (!fullName) return '?';
+    return fullName.trim().split(/\s+/).map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  /* ── Load Data ──────────────────────────────────────────────── */
+  async function loadUsers() {
+    if (tableLoading) show(tableLoading);
+    if (tableEmpty) hide(tableEmpty);
+    if (tableError) hide(tableError);
+    if (tableWrapper) hide(tableWrapper);
+    if (checkAll) checkAll.checked = false;
+    selectedUserIds = [];
+    updateBulkBar();
+
+    const q = searchInput?.value.trim() ?? '';
+    const lifecycle = filterLifecycle?.value ?? '';
+    const classId = filterClass?.value ?? '';
+    const roleId = filterRole?.value ?? '';
+    const status = filterStatus?.value ?? '';
+
+    const params = new URLSearchParams({
+      sortBy: currentSort.column,
+      sortOrder: currentSort.order,
+      q,
+      lifecycle,
+      classId,
+      roleId,
+      status
+    });
+
+    try {
+      const res = await fetch(`${API}/users/admin/list?${params.toString()}`, {
+        headers: authHeaders()
+      });
+      if (tableLoading) hide(tableLoading);
+
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          window.location.replace('/hub/');
+          return;
+        }
+        if (tableError) {
+          if (tableErrorText) tableErrorText.textContent = `Error ${res.status}: Failed to load members list.`;
+          show(tableError);
+        }
+        return;
+      }
+
+      const data = await res.json();
+      usersList = data.users || [];
+      classesList = data.classes || [];
+      rolesList = data.roles || [];
+
+      populateFilters();
+
+      if (usersList.length === 0) {
+        if (tableEmpty) show(tableEmpty);
+        return;
+      }
+
+      renderTable();
+      if (tableWrapper) show(tableWrapper);
+    } catch (err) {
+      if (tableLoading) hide(tableLoading);
+      if (tableError) {
+        if (tableErrorText) tableErrorText.textContent = 'Failed to fetch users list due to a network issue.';
+        show(tableError);
+      }
+    }
+  }
+
+  btnRetryLoad?.addEventListener('click', () => loadUsers());
+
+  function populateFilters() {
+    if (filterClass && filterClass.options.length <= 1) {
+      classesList.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = String(c.id);
+        opt.textContent = c.name;
+        filterClass.appendChild(opt);
+      });
+    }
+    if (filterRole && filterRole.options.length <= 1) {
+      rolesList.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = String(r.id);
+        opt.textContent = r.name;
+        filterRole.appendChild(opt);
+      });
+    }
+    const newRoleSelect = document.getElementById('new-role-select') as HTMLSelectElement | null;
+    if (newRoleSelect && newRoleSelect.options.length <= 1) {
+      newRoleSelect.innerHTML = '<option value="">-- Choose Role --</option>';
+      rolesList.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.name;
+        opt.textContent = r.name;
+        newRoleSelect.appendChild(opt);
+      });
+    }
+  }
+
+  /* ── Render ─────────────────────────────────────────────────── */
+  function renderTable() {
+    if (!tableBody) return;
+
+    tableBody.innerHTML = usersList.map(u => {
+      const initials = getInitials(u.fullName || u.username);
+      const avatarHTML = u.avatarUrl
+        ? `<img src="${u.avatarUrl}" class="avatar-img" alt="${u.fullName}" />`
+        : `<span class="avatar-fallback">${initials}</span>`;
+
+      const state = u.lifecycleState || 'UNKNOWN';
+      const badgeCls = `lifecycle-badge badge-${state.toLowerCase()}`;
+
+      const joinedStr = fmtDate(u.activatedAt || u.createdAt);
+      const loginStr = fmtDate(u.lastLoginAt);
+
+      const isChecked = selectedUserIds.includes(u.userId);
+
+      const rolesHTML = (u.roles || []).map((r: any) => `
+        <span class="role-tag">${r.roleName}</span>
+      `).join('');
+
+      const canApprove = state === 'PENDING';
+      const canActivate = state === 'APPROVED';
+      const canSuspend = state === 'ACTIVE';
+      const canReinstate = state === 'SUSPENDED';
+      const canTerminate = state !== 'TERMINATED' && state !== 'REJECTED' && u.membershipId;
+
+      return `
+        <tr class="${isChecked ? 'row-selected' : ''}" data-uid="${u.userId}" data-mid="${u.membershipId || ''}">
+          <td><input type="checkbox" class="row-check" data-uid="${u.userId}" ${isChecked ? 'checked' : ''} /></td>
+          <td>
+            <div class="avatar-container">
+              ${avatarHTML}
+            </div>
+          </td>
+          <td style="font-weight: 600;">${u.fullName || '—'}</td>
+          <td>${u.username ? `@${u.username}` : '—'}</td>
+          <td style="font-family: var(--font-mono); font-size: var(--text-caption);">${u.membershipNumber || '—'}</td>
+          <td>${u.className ? `${u.className} (${u.classCode})` : '—'}</td>
+          <td><span class="${badgeCls}">${state}</span></td>
+          <td>
+            <div class="roles-container">
+              ${rolesHTML || '<em style="color:var(--ink-400); font-size:11px;">None</em>'}
+            </div>
+          </td>
+          <td>${joinedStr}</td>
+          <td>${loginStr}</td>
+          <td class="actions-cell">
+            <button class="btn-actions-trigger" data-uid="${u.userId}" data-username="${u.username || ''}" data-name="${u.fullName || ''}">Actions ▾</button>
+            <div class="dropdown-menu" id="dropdown-${u.userId}" hidden>
+              <a href="/photographers/${u.username || ''}" target="_blank" class="dropdown-item ${!u.username ? 'disabled' : ''}">View Profile</a>
+              <button class="dropdown-item btn-row-edit" data-uid="${u.userId}" data-name="${u.fullName || ''}" data-email="${u.email || ''}" data-status="${u.status || ''}">Edit Member</button>
+              <button class="dropdown-item btn-row-roles" data-uid="${u.userId}" data-username="${u.username || ''}" data-name="${u.fullName || ''}">Manage Roles</button>
+              <button class="dropdown-item btn-row-recover" data-uid="${u.userId}" data-email="${u.email || ''}" data-name="${u.fullName || ''}">Send Recovery Link</button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item btn-row-action" data-action="approve" data-mid="${u.membershipId || ''}" data-name="${u.fullName || ''}" ${!canApprove ? 'disabled' : ''}>Approve Membership</button>
+              <button class="dropdown-item btn-row-action" data-action="activate" data-mid="${u.membershipId || ''}" data-name="${u.fullName || ''}" ${!canActivate ? 'disabled' : ''}>Activate Membership</button>
+              <button class="dropdown-item btn-row-action" data-action="suspend" data-mid="${u.membershipId || ''}" data-name="${u.fullName || ''}" ${!canSuspend ? 'disabled' : ''}>Suspend</button>
+              <button class="dropdown-item btn-row-action" data-action="reinstate" data-mid="${u.membershipId || ''}" data-name="${u.fullName || ''}" ${!canReinstate ? 'disabled' : ''}>Reinstate</button>
+              <button class="dropdown-item btn-row-action" data-action="terminate" data-mid="${u.membershipId || ''}" data-name="${u.fullName || ''}" ${!canTerminate ? 'disabled' : ''}>Terminate</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  /* ── Bulk Actions Support ───────────────────────────────────── */
+  function updateBulkBar() {
+    if (selectedUserIds.length > 0) {
+      if (bulkCount) bulkCount.textContent = String(selectedUserIds.length);
+      show(bulkBar);
+
+      const selectedUsers = usersList.filter(u => selectedUserIds.includes(u.userId));
+      
+      const anyPending = selectedUsers.some(u => u.lifecycleState === 'PENDING');
+      const anyApproved = selectedUsers.some(u => u.lifecycleState === 'APPROVED');
+      const anyActive = selectedUsers.some(u => u.lifecycleState === 'ACTIVE');
+      const anyTerminatable = selectedUsers.some(u => u.lifecycleState && u.lifecycleState !== 'TERMINATED' && u.lifecycleState !== 'REJECTED' && u.membershipId);
+
+      if (bulkApprove) bulkApprove.disabled = !anyPending;
+      if (bulkActivate) bulkActivate.disabled = !anyApproved;
+      if (bulkSuspend) bulkSuspend.disabled = !anyActive;
+      if (bulkTerminate) bulkTerminate.disabled = !anyTerminatable;
+    } else {
+      hide(bulkBar);
+    }
+  }
+
+  /* ── Event Listeners & Interaction ────────────────────────── */
+  
+  // Checkboxes
+  checkAll?.addEventListener('change', (e) => {
+    const checked = (e.target as HTMLInputElement).checked;
+    if (checked) {
+      selectedUserIds = usersList.map(u => u.userId);
+    } else {
+      selectedUserIds = [];
+    }
+    renderTable();
+    updateBulkBar();
+  });
+
+  tableBody?.addEventListener('change', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('row-check')) {
+      const uid = Number(target.getAttribute('data-uid'));
+      const isChecked = (target as HTMLInputElement).checked;
+      if (isChecked) {
+        if (!selectedUserIds.includes(uid)) selectedUserIds.push(uid);
+      } else {
+        selectedUserIds = selectedUserIds.filter(id => id !== uid);
+        if (checkAll) checkAll.checked = false;
+      }
+      renderTable();
+      updateBulkBar();
+    }
+  });
+
+  // Sorting
+  document.querySelectorAll('.sort-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const col = header.getAttribute('data-sort')!;
+      if (currentSort.column === col) {
+        currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = col;
+        currentSort.order = 'asc';
+      }
+      
+      document.querySelectorAll('.sort-indicator').forEach(ind => ind.textContent = '');
+      const currentIndicator = document.getElementById(`sort-${col}-ind`);
+      if (currentIndicator) {
+        currentIndicator.textContent = currentSort.order === 'asc' ? ' ↑' : ' ↓';
+      }
+      
+      loadUsers();
+    });
+  });
+
+  // Debounced search on input keyup
+  let searchTimeout: any = null;
+  searchInput?.addEventListener('input', () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      loadUsers();
+    }, 400);
+  });
+
+  searchForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (searchTimeout) clearTimeout(searchTimeout);
+    loadUsers();
+  });
+
+  [filterLifecycle, filterClass, filterRole, filterStatus].forEach(filter => {
+    filter?.addEventListener('change', () => {
+      loadUsers();
+    });
+  });
+
+  // Dropdown toggles
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    
+    if (!target.classList.contains('btn-actions-trigger')) {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.setAttribute('hidden', ''));
+    }
+
+    if (target.classList.contains('btn-actions-trigger')) {
+      e.stopPropagation();
+      const uid = target.getAttribute('data-uid')!;
+      const menu = document.getElementById(`dropdown-${uid}`);
+      
+      const wasHidden = menu?.hasAttribute('hidden');
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.setAttribute('hidden', ''));
+      
+      if (wasHidden) {
+        menu?.removeAttribute('hidden');
+      }
+    }
+  });
+
+  // Modals & Single Row Action Triggers
+  const editModal      = document.getElementById('edit-modal');
+  const editForm       = document.getElementById('edit-member-form') as HTMLFormElement | null;
+  const editUserId     = document.getElementById('edit-user-id') as HTMLInputElement | null;
+  const editFullName   = document.getElementById('edit-full-name') as HTMLInputElement | null;
+  const editEmail      = document.getElementById('edit-email') as HTMLInputElement | null;
+  const editUserStatus = document.getElementById('edit-user-status') as HTMLSelectElement | null;
+  const editFeedback   = document.getElementById('edit-feedback');
+
+  const rolesModal         = document.getElementById('roles-modal');
+  const rolesUserId        = document.getElementById('roles-user-id') as HTMLInputElement | null;
+  const rolesTargetName    = document.getElementById('roles-target-name');
+  const currentRolesList   = document.getElementById('current-roles-list');
+  const assignRoleForm     = document.getElementById('assign-role-form') as HTMLFormElement | null;
+  const newRoleSelect      = document.getElementById('new-role-select') as HTMLSelectElement | null;
+  const assignReason       = document.getElementById('assign-reason') as HTMLInputElement | null;
+  const rolesFeedback      = document.getElementById('roles-feedback');
+
+  tableBody?.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+
+    // Send password recovery link trigger
+    if (target.classList.contains('btn-row-recover')) {
+      const email = target.getAttribute('data-email')!;
+      const name = target.getAttribute('data-name')!;
+      if (!email) {
+        alert('This user does not have an email address configured.');
+        return;
+      }
+      if (confirm(`Send password recovery link to ${name} (${email})?`)) {
+        target.textContent = 'Sending…';
+        try {
+          const res = await fetch(`${API}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: email })
+          });
+          if (res.ok) {
+            showToast('Recovery Email Sent');
+          } else {
+            const err = await res.json().catch(() => ({}));
+            showToast(`Failed to send link: ${err.message || res.status}`, true);
+          }
+        } catch {
+          showToast('Network error. Failed to send recovery link.', true);
+        } finally {
+          target.textContent = 'Send Recovery Link';
+        }
+      }
+    }
+
+    // Edit Member modal trigger
+    if (target.classList.contains('btn-row-edit')) {
+      const uid = target.getAttribute('data-uid')!;
+      const name = target.getAttribute('data-name')!;
+      const email = target.getAttribute('data-email')!;
+      const status = target.getAttribute('data-status')!;
+      if (editUserId) editUserId.value = uid;
+      if (editFullName) editFullName.value = name;
+      if (editEmail) editEmail.value = email;
+      if (editUserStatus) editUserStatus.value = status;
+      if (editFeedback) { editFeedback.textContent = ''; editFeedback.className = 'reset-feedback'; hide(editFeedback); }
+      if (editModal) show(editModal);
+    }
+
+    // Manage Roles modal trigger
+    if (target.classList.contains('btn-row-roles')) {
+      const uid = target.getAttribute('data-uid')!;
+      const name = target.getAttribute('data-name')!;
+      const username = target.getAttribute('data-username')!;
+      if (rolesUserId) rolesUserId.value = uid;
+      if (rolesTargetName) rolesTargetName.textContent = `User: ${name} (@${username})`;
+      if (rolesFeedback) { rolesFeedback.textContent = ''; rolesFeedback.className = 'reset-feedback'; hide(rolesFeedback); }
+      if (newRoleSelect) newRoleSelect.value = '';
+      if (assignReason) assignReason.value = '';
+      if (rolesModal) show(rolesModal);
+      await loadUserRoles(Number(uid));
+    }
+
+    // Lifecycle transition single row action trigger
+    if (target.classList.contains('btn-row-action')) {
+      const mid = target.getAttribute('data-mid')!;
+      const name = target.getAttribute('data-name')!;
+      const action = target.getAttribute('data-action') as 'approve' | 'activate' | 'suspend' | 'reinstate' | 'terminate';
+      
+      let note = '';
+      if (action === 'approve' || action === 'activate' || action === 'reinstate') {
+        if (!confirm(`Are you sure you want to ${action} membership for ${name}?`)) {
+          return;
+        }
+      } else if (action === 'suspend' || action === 'terminate') {
+        const promptRes = prompt(`Enter reason to ${action} membership for ${name}:`);
+        if (promptRes === null) return;
+        note = promptRes.trim();
+        if (!note) {
+          alert('A reason is required.');
+          return;
+        }
+      }
+
+      target.textContent = 'Processing…';
+      const success = await executeLifecycleAction(mid, action, note);
+      if (success) {
+        // Humanized action state toasts
+        const capitalizedAction = action.charAt(0).toUpperCase() + action.slice(1);
+        showToast(`Membership ${capitalizedAction}d`);
+        loadUsers();
+      } else {
+        target.textContent = `${action.toUpperCase()}`;
+      }
+    }
+  });
+
+  async function loadUserRoles(userId: number) {
+    if (!currentRolesList) return;
+    currentRolesList.innerHTML = 'Loading roles…';
+    try {
+      const res = await fetch(`${API}/rbac/users/${userId}/roles`, {
+        headers: authHeaders()
+      });
+      if (!res.ok) {
+        currentRolesList.innerHTML = '<span style="color:var(--status-danger-text)">Failed to load roles.</span>';
+        return;
+      }
+      const roles = await res.json();
+      if (roles.length === 0) {
+        currentRolesList.innerHTML = '<em style="color:var(--ink-400)">No active roles.</em>';
+        return;
+      }
+      currentRolesList.innerHTML = roles.map((r: any) => `
+        <div class="role-row-item">
+          <span class="role-tag">${r.roleName}</span>
+          <button class="btn-revoke-role" data-rid="${r.userRoleId}" data-name="${r.roleName}">Revoke</button>
+        </div>
+      `).join('');
+    } catch {
+      currentRolesList.innerHTML = '<span style="color:var(--status-danger-text)">Network error.</span>';
+    }
+  }
+
+  // Revoke user role
+  currentRolesList?.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('btn-revoke-role')) {
+      const rid = target.getAttribute('data-rid')!;
+      const rname = target.getAttribute('data-name')!;
+      
+      const reason = prompt(`Enter reason to revoke role ${rname}:`);
+      if (reason === null) return;
+      const trimmedReason = reason.trim();
+      if (!trimmedReason) {
+        alert('A reason is required.');
+        return;
+      }
+      
+      target.textContent = 'Revoking…';
+      if (rolesFeedback) hide(rolesFeedback);
+
+      try {
+        const res = await fetch(`${API}/rbac/roles/${rid}?reason=${encodeURIComponent(trimmedReason)}`, {
+          method: 'DELETE',
+          headers: authHeaders()
+        });
+        if (res.ok) {
+          showToast(`Role ${rname} successfully revoked.`);
+          if (rolesFeedback) {
+            rolesFeedback.textContent = `Role ${rname} successfully revoked.`;
+            rolesFeedback.className = 'reset-feedback ok';
+            show(rolesFeedback);
+          }
+          const uid = rolesUserId?.value;
+          if (uid) loadUserRoles(Number(uid));
+          loadUsers();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          showToast(`Error: ${err.message || res.status}`, true);
+          if (rolesFeedback) {
+            rolesFeedback.textContent = `Error: ${err.message || res.status}`;
+            rolesFeedback.className = 'reset-feedback error';
+            show(rolesFeedback);
+          }
+          target.textContent = 'Revoke';
+        }
+      } catch {
+        showToast('Network error. Revocation failed.', true);
+        if (rolesFeedback) {
+          rolesFeedback.textContent = 'Network error. Revocation failed.';
+          rolesFeedback.className = 'reset-feedback error';
+          show(rolesFeedback);
+        }
+        target.textContent = 'Revoke';
+      }
+    }
+  });
+
+  // Assign user role form submit
+  assignRoleForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uid = rolesUserId?.value;
+    const rname = newRoleSelect?.value;
+    const reason = assignReason?.value ?? '';
+    if (!uid || !rname) return;
+
+    const btn = assignRoleForm.querySelector<HTMLButtonElement>('[type="submit"]');
+    if (btn) btn.disabled = true;
+    if (rolesFeedback) hide(rolesFeedback);
+
+    try {
+      const res = await fetch(`${API}/rbac/roles`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          userId: Number(uid),
+          roleName: rname,
+          reason
+        })
+      });
+      if (res.ok) {
+        showToast('Roles Updated');
+        if (rolesFeedback) {
+          rolesFeedback.textContent = `Role ${rname} successfully assigned.`;
+          rolesFeedback.className = 'reset-feedback ok';
+          show(rolesFeedback);
+        }
+        loadUserRoles(Number(uid));
+        loadUsers();
+        if (newRoleSelect) newRoleSelect.value = '';
+        if (assignReason) assignReason.value = '';
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(`Error: ${err.message || res.status}`, true);
+        if (rolesFeedback) {
+          rolesFeedback.textContent = `Error: ${err.message || res.status}`;
+          rolesFeedback.className = 'reset-feedback error';
+          show(rolesFeedback);
+        }
+      }
+    } catch {
+      showToast('Network error. Role assignment failed.', true);
+      if (rolesFeedback) {
+        rolesFeedback.textContent = 'Network error. Role assignment failed.';
+        rolesFeedback.className = 'reset-feedback error';
+        show(rolesFeedback);
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  // Modal Close buttons
+  [
+    { btn: 'edit-modal-close', modal: 'edit-modal' },
+    { btn: 'edit-btn-cancel', modal: 'edit-modal' },
+    { btn: 'roles-modal-close', modal: 'roles-modal' }
+  ].forEach(pair => {
+    document.getElementById(pair.btn)?.addEventListener('click', () => {
+      const m = document.getElementById(pair.modal);
+      if (m) hide(m);
+    });
+  });
+
+  // Save changes on Edit Member Form
+  editForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uid = editUserId?.value;
+    const fullName = editFullName?.value;
+    const email = editEmail?.value;
+    const status = editUserStatus?.value;
+    if (!uid) return;
+
+    const btn = editForm.querySelector<HTMLButtonElement>('[type="submit"]');
+    if (btn) btn.disabled = true;
+    if (editFeedback) hide(editFeedback);
+
+    try {
+      const res = await fetch(`${API}/users/admin/users/${uid}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ fullName, email, status })
+      });
+      if (res.ok) {
+        showToast('Member Updated');
+        if (editFeedback) {
+          editFeedback.textContent = 'Member updated successfully.';
+          editFeedback.className = 'reset-feedback ok';
+          show(editFeedback);
+        }
+        setTimeout(() => {
+          if (editModal) hide(editModal);
+          loadUsers();
+        }, 1000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(`Error: ${err.message || res.status}`, true);
+        if (editFeedback) {
+          editFeedback.textContent = `Error: ${err.message || res.status}`;
+          editFeedback.className = 'reset-feedback error';
+          show(editFeedback);
+        }
+      }
+    } catch {
+      showToast('Network error. Update failed.', true);
+      if (editFeedback) {
+        editFeedback.textContent = 'Network error. Update failed.';
+        editFeedback.className = 'reset-feedback error';
+        show(editFeedback);
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  /* ── Lifecycle Helper ───────────────────────────────────────── */
+  async function executeLifecycleAction(mid: string, action: string, reason = ''): Promise<boolean> {
+    try {
+      const body = reason ? JSON.stringify({ reason }) : '{}';
+      const res = await fetch(`${API}/membership/${mid}/${action}`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body
+      });
+      if (res.ok) {
+        return true;
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to ${action}: ${err.message || res.status}`);
+        return false;
+      }
+    } catch {
+      alert(`Network error: Failed to ${action}.`);
+      return false;
+    }
+  }
+
+  /* ── Bulk Action Button Handlers ────────────────────────────── */
+  async function executeBulkAction(action: 'approve' | 'activate' | 'suspend' | 'terminate') {
+    const selectedUsers = usersList.filter(u => selectedUserIds.includes(u.userId));
+    let targetMids: string[] = [];
+    let reason = '';
+
+    if (action === 'approve') {
+      targetMids = selectedUsers.filter(u => u.lifecycleState === 'PENDING').map(u => String(u.membershipId));
+    } else if (action === 'activate') {
+      targetMids = selectedUsers.filter(u => u.lifecycleState === 'APPROVED').map(u => String(u.membershipId));
+    } else if (action === 'suspend') {
+      targetMids = selectedUsers.filter(u => u.lifecycleState === 'ACTIVE').map(u => String(u.membershipId));
+      if (targetMids.length > 0) {
+        reason = prompt('Enter suspension reason for selected members:') ?? '';
+        if (!reason.trim()) { alert('Reason is required.'); return; }
+      }
+    } else if (action === 'terminate') {
+      targetMids = selectedUsers.filter(u => u.lifecycleState && u.lifecycleState !== 'TERMINATED' && u.lifecycleState !== 'REJECTED' && u.membershipId).map(u => String(u.membershipId));
+      if (targetMids.length > 0) {
+        reason = prompt('Enter termination reason for selected members:') ?? '';
+        if (!reason.trim()) { alert('Reason is required.'); return; }
+      }
+    }
+
+    if (targetMids.length === 0) {
+      alert(`No selected users are in a state that permits "${action}".`);
+      return;
+    }
+
+    const confirmMsg = `You are about to ${action} ${targetMids.length} members. Do you want to proceed?`;
+    if (!confirm(confirmMsg)) return;
+
+    // Show progress toast
+    showToast(`Processing: 0 of ${targetMids.length} completed…`);
+
+    [bulkApprove, bulkActivate, bulkSuspend, bulkTerminate].forEach(b => { if (b) b.disabled = true; });
+
+    let successCount = 0;
+    for (let i = 0; i < targetMids.length; i++) {
+      const mid = targetMids[i];
+      const ok = await executeLifecycleAction(mid, action, reason);
+      if (ok) successCount++;
+      showToast(`Processing: ${i + 1} of ${targetMids.length} completed…`);
+    }
+
+    // Capitalized feedback status
+    const capitalizedAction = action.charAt(0).toUpperCase() + action.slice(1);
+    showToast(`Bulk ${capitalizedAction} complete: ${successCount} processed.`);
+    loadUsers();
+  }
+
+  bulkApprove?.addEventListener('click', () => executeBulkAction('approve'));
+  bulkActivate?.addEventListener('click', () => executeBulkAction('activate'));
+  bulkSuspend?.addEventListener('click', () => executeBulkAction('suspend'));
+  bulkTerminate?.addEventListener('click', () => executeBulkAction('terminate'));
+
+  // CSV Export (Respects Current Filters & Selected Rows)
+  bulkExport?.addEventListener('click', () => {
+    const selectedUsers = usersList.filter(u => selectedUserIds.includes(u.userId));
+    const listToExport = selectedUsers.length > 0 ? selectedUsers : usersList;
+
+    const headers = ['Name', 'Username', 'Email', 'Membership Number', 'Class', 'Lifecycle State', 'Status', 'Roles', 'Joined', 'Last Login'];
+    const rows = listToExport.map(u => [
+      u.fullName || '',
+      u.username ? `@${u.username}` : '',
+      u.email || '',
+      u.membershipNumber || '',
+      u.className ? `${u.className} (${u.classCode})` : '',
+      u.lifecycleState || '',
+      u.status || '',
+      (u.roles || []).map((r: any) => r.roleName).join('; '),
+      fmtDate(u.activatedAt || u.createdAt),
+      fmtDate(u.lastLoginAt)
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(row => row.map(val => `"${val.replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `bcc_members_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+
+  /* ── Init ───────────────────────────────────────────────────── */
+  loadUsers();
+</script>

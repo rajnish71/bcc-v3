@@ -1,111 +1,562 @@
-/* ==========================================================================
-   BCC V3 Design Tokens — "Refined Editorial Luxury"
-   Version: 3.0  |  July 2026  |  FROZEN
-   Source of truth: design-tokens.md + BCC_V3_Design_System.md
-   DO NOT modify without a formal design-system revision.
-   ========================================================================== */
+/**
+ * V6 98 — BCC Unified Platform · Design Tokens
+ * Canonical CSS custom properties — single source of truth for all design values
+ * July 2026 · Frozen · Inherits V6 99 System Design Constitution
+ *
+ * Usage: :root custom properties on all pages via <link rel="stylesheet" href="token.css">
+ * Scope: Design tokens only. No component CSS. No utility classes. No layout rules.
+ *
+ * Sections:
+ *   1.  Colour — Surfaces
+ *   2.  Colour — Ink
+ *   3.  Colour — Accent (Gold)
+ *   4.  Colour — Accent (Forest)
+ *   5.  Colour — Hairlines
+ *   6.  Colour — Dark Surfaces (footer, overlays)
+ *   7.  Colour — Semantic Status
+ *   8.  Colour — Selection
+ *   9.  Typography — Font Families
+ *   10. Typography — Font Sizes
+ *   11. Typography — Font Weights
+ *   12. Typography — Line Heights
+ *   13. Typography — Letter Spacing
+ *   14. Spacing Scale
+ *   15. Border Radius
+ *   16. Border Widths
+ *   17. Container Widths
+ *   18. Content Widths
+ *   19. Breakpoints
+ *   20. Shadows / Elevation
+ *   21. Animation Durations
+ *   22. Animation Curves (Easing)
+ *   23. Z-Index
+ *   24. Opacity
+ *   25. Semantic Colours (component-level)
+ *   26. Component Sizing Tokens
+ *   27. Backward Compatibility Aliases & Merged Tokens (BCC V3 Platform Specific)
+ */
 
 :root {
 
-  /* ── Surfaces ── */
-  --surface-0:     #FFFFFF;          /* Cards, header, mats, label plates */
-  --surface-1:     #FAF8F4;          /* Page background, alternating sections */
-  --surface-2:     #F4F0E8;          /* Recessed plates: gallery wall, footer */
-  --surface-deep:  #141210;          /* Dark bands, filmstrips, image-grid gaps */
-  --image-backdrop:#1A1816;          /* Behind loading / letterboxed images */
+  /* ─────────────────────────────────────────────────────────────
+     1. COLOUR — SURFACES
+     Warm ivory satin surfaces. Layered depth without contrast noise.
+     All surfaces have a warm undertone — never pure cool whites.
+   ───────────────────────────────────────────────────────────── */
 
-  /* ── Ink (text) ── */
-  --ink-900:       #141210;          /* Headlines, primary text */
-  --ink-600:       #57514B;          /* Body text, secondary */
-  --ink-400:       #8B8378;          /* Captions, meta, labels */
-  --ink-inverse:   #FAF8F4;          /* Text on dark surfaces */
+  --surface-0:    #FFFFFF;   /* Pure white — cards, modals, form fields */
+  --surface-1:    #FAF8F4;   /* Satin ivory — primary elevated surface, nav rest */
+  --surface-2:    #F4F0E8;   /* Warm parchment — secondary surface, alternating rows */
+  --surface-bg:   #F2EFE9;   /* Page background — the base of everything */
 
-  /* ── Gold accent ── */
-  --gold-500:      #C9A961;          /* Hairline accents, active underlines */
-  --gold-600:      #A8843C;          /* Kickers, links, active chips */
-  --gold-gradient: linear-gradient(135deg, #C9A961 0%, #A8843C 100%);
-                                     /* THE primary CTA — one per view */
 
-  /* ── Gold CTA shadow (satin highlight) ── */
-  --cta-shadow: 0 2px 10px rgba(168,132,60,.30),
-                inset 0 1px 0 rgba(255,255,255,.25);
+  /* ─────────────────────────────────────────────────────────────
+     2. COLOUR — INK
+     Near-black through muted grey. All carry warm undertone.
+     Never pure #000000 — that reads cold against warm surfaces.
+   ───────────────────────────────────────────────────────────── */
 
-  /* ── Forest accent ── */
-  --forest-600:      #3E5A48;        /* Avatar plates, success, photowalk tags */
-  --forest-gradient: linear-gradient(135deg, #3E5A48 0%, #2A3E32 100%);
-                                     /* Initials avatar plates */
+  --ink-900:  #141210;   /* Primary text, headings, strong UI elements */
+  --ink-700:  #37322C;   /* Secondary dark text, table values */
+  --ink-600:  #57514B;   /* Body copy, navigation, secondary content */
+  --ink-400:  #8B8378;   /* Muted text, placeholders, inactive labels */
+  --ink-200:  #D8D2C6;   /* Borders, visual dividers */
+  --ink-100:  #EFE3C8;   /* Selection highlight */
 
-  /* ── Hairlines ── */
-  --hairline:        #E7E1D6;        /* All borders / dividers — 1px */
-  --hairline-soft:   #F0EBE0;        /* Inner-card dividers */
-  --hairline-strong: #D8D2C6;        /* Input borders, secondary buttons */
 
-  /* ── Activity tag colours ── */
-  --tag-photowalk-bg:   #E8EFE9;
-  --tag-photowalk-ink:  #3E5A48;
-  --tag-workshop-bg:    #F5EDD8;
-  --tag-workshop-ink:   #8C6830;
-  --tag-exhibition-bg:  #141210;
-  --tag-exhibition-ink: #FAF8F4;
+  /* ─────────────────────────────────────────────────────────────
+     3. COLOUR — ACCENT · GOLD
+     The primary accent. One gold CTA per view — maximum.
+     Gold gradient is reserved exclusively for the primary CTA button.
+   ───────────────────────────────────────────────────────────── */
 
-  /* ── Membership class badge colours (confirmed, all tiers) ── */
-  --badge-basic:      #5C5876;
-  --badge-student:    #1A9DAE;
-  --badge-individual: #3E5A48;
-  --badge-family:     #D9733A;
-  --badge-senior:     #6F8F3C;
-  --badge-honorary:   #C8327A;
-  --badge-life:       #A8843C;
-  --badge-patron:     #8A6A2E;
-  --badge-founding:   #8A6A2E;
+  --gold-light:         #C9A961;   /* Light gold — kicker text, decorative accents */
+  --gold-600:           #A8843C;   /* Medium gold — active nav, label accents, borders */
+  --gold-gradient:      linear-gradient(135deg, #C9A961, #A8843C);   /* Primary CTA only */
+  --gold-gradient-glow: 0 2px 10px rgba(168, 132, 60, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 
-  /* ── Typography families ── */
-  --font-display: 'Outfit', sans-serif;
-  --font-body:    'Inter', sans-serif;
-  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 
-  /* ── Type scale ── */
-  --text-display: clamp(56px, 7vw, 96px);   /* Outfit 700, lh 0.95, ls -0.035em */
-  --text-h1:      clamp(36px, 4vw, 52px);   /* Outfit 700, lh 1.05, ls -0.025em */
-  --text-h2:      clamp(26px, 3vw, 34px);   /* Outfit 600-700, lh 1.15, ls -0.015em */
-  --text-h3:      21px;                      /* Outfit 600, lh 1.25 */
-  --text-body:    16px;                      /* Inter 400, lh 1.75 */
-  --text-small:   14px;                      /* Inter 400, lh 1.65 */
-  --text-label:   11px;                      /* Inter 600, uppercase, ls 0.18em */
-  --text-mono:    11px;                      /* JetBrains Mono 400, ls 0.06em */
+  /* ─────────────────────────────────────────────────────────────
+     4. COLOUR — ACCENT · FOREST
+     Secondary accent. Membership, active states, positive indicators.
+   ───────────────────────────────────────────────────────────── */
 
-  /* ── Spacing (8px base grid) ── */
-  --s-1:  8px;
-  --s-2:  16px;
-  --s-3:  24px;
-  --s-4:  32px;
-  --s-6:  48px;
-  --s-8:  64px;
-  --s-12: 96px;
-  --s-16: 128px;
+  --forest-600:  #3E5A48;   /* Forest green — membership badges, active status */
+  --forest-700:  #2A3E32;   /* Deep forest — gradient partner, hover depths */
+  --forest-800:  #1E2C24;   /* Darkest forest — deep membership tones */
+  --forest-gradient: linear-gradient(135deg, #3E5A48, #2A3E32);   /* Member avatars */
 
-  /* ── Border radius ── */
-  --r-0:    0px;      /* Images, cards, mats — photography NEVER rounded */
-  --r-1:    2px;      /* Buttons, plates */
-  --r-2:    8px;      /* Inputs only */
-  --r-full: 999px;    /* Avatars, filter chips */
 
-  /* ── Elevation (3 levels max) ── */
-  --e-1: 0 1px 2px rgba(20,18,16,.04);    /* Cards, mats */
-  --e-2: 0 8px 32px rgba(20,18,16,.07);   /* Hover lift, condensed header */
-  --e-3: 0 24px 64px rgba(20,18,16,.14);  /* Hero imagery & label plates ONLY */
+  /* ─────────────────────────────────────────────────────────────
+     5. COLOUR — HAIRLINES
+     The structural skeleton of the editorial layout.
+     Always 1px. Never thicker.
+   ───────────────────────────────────────────────────────────── */
 
-  /* ── Motion ── */
-  --m-fast:    0.2s ease;
-  --m-med:     0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  --m-reveal:  0.7s;
-  --m-image:   0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
-  --m-stagger: 80ms;
+  --hairline:       #E7E1D6;   /* Standard hairline — section borders, card edges, dividers */
+  --hairline-soft:  #F0EBE0;   /* Soft hairline — table row alternation, within-card dividers */
+  --hairline-gold:  rgba(201, 169, 97, 0.35);  /* Gold hairline — hero top edge accent line */
+  --hairline-dark:  rgba(255, 255, 255, 0.05); /* Dark surface hairline — footer row separator */
 
-  /* ── Layout ── */
-  --nav-h:       96px;    /* Rest state */
-  --nav-h-min:   64px;    /* Condensed after 80px scroll */
-  --content-max: 1360px;
-  --gutter:      48px;    /* Desktop */
-  --gutter-mob:  20px;    /* Mobile */
+
+  /* ─────────────────────────────────────────────────────────────
+     6. COLOUR — DARK SURFACES
+     Footer, hero overlays, lightbox, code blocks.
+     Never used for page backgrounds outside these contexts.
+   ───────────────────────────────────────────────────────────── */
+
+  --dark-0:   #0A0908;   /* Lightbox surround — near-black, warmest */
+  --dark-100: #141210;   /* Footer Row 1, hero overlay, deepest dark */
+  --dark-200: #1A1816;   /* Footer Row 2, secondary dark surface */
+  --dark-300: #1E1C1A;   /* Gallery gap colour, dark placeholders */
+  --dark-400: #2A2420;   /* Card dark, spec blocks */
+  --dark-500: #2C2820;   /* Border on dark surfaces */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     7. COLOUR — SEMANTIC STATUS
+     Applied to badges, tags, and state indicators only.
+     Never used as background for large areas.
+   ───────────────────────────────────────────────────────────── */
+
+  --status-public-bg:     #E8EFE9;
+  --status-public-text:   #3E5A48;
+
+  --status-pending-bg:    #FBF0E8;
+  --status-pending-text:  #8C6830;
+
+  --status-active-bg:     #E8EFE9;
+  --status-active-text:   #3E5A48;
+
+  --status-member-bg:     #3E5A48;
+  --status-member-text:   #FFFFFF;
+
+  --status-danger-bg:     #FDF5F5;
+  --status-danger-text:   #A3493B;
+  --status-danger-border: #E8CACA;
+
+  --status-coming-soon-bg:   #F4F0E8;
+  --status-coming-soon-text: #57514B;
+  --status-coming-soon-opacity: 0.45;
+
+  --status-admin-bg:      #141210;
+  --status-admin-text:    #C9A961;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     8. COLOUR — SELECTION
+   ───────────────────────────────────────────────────────────── */
+
+  --selection-bg:   #EFE3C8;
+  --selection-text: inherit;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     9. TYPOGRAPHY — FONT FAMILIES
+     Three typefaces only. No others permitted.
+   ───────────────────────────────────────────────────────────── */
+
+  --font-display:  'Outfit', sans-serif;       /* Headings, display, UI accents */
+  --font-body:     'Inter', sans-serif;        /* Body copy, navigation, UI text */
+  --font-mono:     'JetBrains Mono', monospace; /* Labels, EXIF, data, kickers */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     10. TYPOGRAPHY — FONT SIZES
+     Fluid sizes use clamp(min, preferred-vw, max).
+     Fixed sizes are used for small-scale text where fluid scaling is unnecessary.
+   ───────────────────────────────────────────────────────────── */
+
+  --text-display: clamp(56px, 7vw, 96px);   /* Hero display — largest scale */
+  --text-page-title: clamp(44px, 5.5vw, 72px); /* Page-level H1 in design docs */
+  --text-h1:      clamp(36px, 4vw, 52px);   /* Primary heading */
+  --text-h2:      clamp(26px, 3vw, 34px);   /* Section heading */
+  --text-h3:      22px;                     /* Sub-section heading */
+  --text-h4:      20px;                     /* Component heading */
+  --text-h5:      17px;                     /* Small heading */
+  --text-body-lg: 18px;                     /* Large body — intro copy, lede */
+  --text-body:    16px;                     /* Standard body */
+  --text-body-sm: 14px;                     /* Small body — secondary copy */
+  --text-ui:      13px;                     /* UI elements — nav, buttons, tags */
+  --text-caption: 12px;                     /* Captions, secondary data */
+  --text-label:   11px;                     /* Exhibition labels, kickers */
+  --text-micro:   10px;                     /* Column headers, micro labels */
+  --text-nano:    9px;                      /* Badge text only */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     11. TYPOGRAPHY — FONT WEIGHTS
+   ───────────────────────────────────────────────────────────── */
+
+  --weight-light:     300;
+  --weight-regular:   400;
+  --weight-medium:    500;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+  --weight-extrabold: 800;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     12. TYPOGRAPHY — LINE HEIGHTS
+   ───────────────────────────────────────────────────────────── */
+
+  --lh-display:   0.95;   /* Display headings — tight */
+  --lh-h1:        1.05;   /* H1 headings */
+  --lh-h2:        1.15;   /* H2 headings */
+  --lh-heading:   1.25;   /* H3/H4 headings */
+  --lh-body:      1.75;   /* Body copy — generous for editorial reading */
+  --lh-body-lg:   1.70;   /* Large body */
+  --lh-ui:        1.60;   /* UI text — forms, labels */
+  --lh-caption:   1.60;   /* Captions */
+  --lh-mono:      2.00;   /* Monospaced data — vertical breathing room */
+  --lh-label:     1.40;   /* Exhibition labels */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     13. TYPOGRAPHY — LETTER SPACING
+   ───────────────────────────────────────────────────────────── */
+
+  --ls-display:   -0.030em;  /* Display — aggressive negative tracking */
+  --ls-h1:        -0.025em;  /* H1 */
+  --ls-h2:        -0.015em;  /* H2 */
+  --ls-h3:        -0.010em;  /* H3 */
+  --ls-body:       0;        /* Body — no tracking adjustment */
+  --ls-label:      0.180em;  /* Exhibition labels — wide tracking */
+  --ls-micro:      0.140em;  /* Micro labels */
+  --ls-badge:      0.100em;  /* Badge text */
+  --ls-mono:       0.040em;  /* Mono UI — slight positive */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     14. SPACING SCALE
+     8px base unit. All values are multiples of 8.
+     No arbitrary values outside this scale.
+   ───────────────────────────────────────────────────────────── */
+
+  --s-half:  4px;    /* Half-unit — badge padding, tight inline gaps */
+  --s-1:     8px;    /* 1× — inline gap, tight padding */
+  --s-2:     16px;   /* 2× — element internal padding */
+  --s-3:     24px;   /* 3× — between related elements */
+  --s-4:     32px;   /* 4× — between distinct elements, card padding */
+  --s-5:     40px;   /* 5× — section internal (used for footer padding) */
+  --s-6:     48px;   /* 6× — section internal spacing, column gap */
+  --s-7:     56px;   /* 7× — hero content padding */
+  --s-8:     64px;   /* 8× — major section gaps */
+  --s-10:    80px;   /* 10× — sub-section vertical rhythm */
+  --s-12:    96px;   /* 12× — first section top padding */
+  --s-15:   120px;   /* 15× — standard section top padding */
+  --s-16:   128px;   /* 16× — page bottom padding */
+  --s-20:   160px;   /* 20× — generous page bottom padding */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     15. BORDER RADIUS
+     Restrained system. Square frames for photography — print heritage.
+     Avatars are the only fully-rounded elements.
+   ───────────────────────────────────────────────────────────── */
+
+  --r-0:     0;       /* Images, cards, photo frames, gallery cells — never rounded */
+  --r-1:     2px;    /* Buttons, chips, status badges, CTAs */
+  --r-2:     8px;    /* Form inputs, toast notifications, search fields */
+  --r-full:  999px;  /* Avatars — circular */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     16. BORDER WIDTHS
+   ───────────────────────────────────────────────────────────── */
+
+  --border-hairline:  1px;   /* Standard — all borders in the system */
+  --border-active:    2px;   /* Active nav underline, focus rings */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     17. CONTAINER WIDTHS
+   ───────────────────────────────────────────────────────────── */
+
+  --container-content:  1140px;  /* Public page content max-width */
+  --container-shell:    1280px;  /* Header / footer max-width */
+  --container-hub:      1360px;  /* Member Hub layout max-width */
+  --container-text:      680px;  /* Editorial body copy max-width */
+  --container-narrow:    560px;  /* Narrow copy, legal text */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     18. CONTENT WIDTHS (component-level)
+   ───────────────────────────────────────────────────────────── */
+
+  --hub-rail:       240px;   /* HubSidebar width at ≥1200px */
+  --profile-rail:   260px;   /* Photographer profile left rail */
+  --avatar-lg:      120px;   /* Profile avatar */
+  --avatar-md:       48px;   /* Card avatar */
+  --avatar-sm:       36px;   /* Header avatar — desktop */
+  --avatar-xs:       34px;   /* Header avatar — standard */
+  --avatar-mob:      30px;   /* Mobile header avatar */
+
+  --gallery-row-showcase:  240px;  /* Justified row target height — Showcase */
+  --gallery-row-portfolio: 220px;  /* Justified row target height — Portfolio */
+  --gallery-gap:             2px;  /* Gap between photographs */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     19. BREAKPOINTS
+   ───────────────────────────────────────────────────────────── */
+
+  --bp-mobile:        480px;
+  --bp-tablet:        768px;
+  --bp-desktop-sm:    900px;
+  --bp-desktop:      1280px;
+  --bp-hub-rail:     1200px;
+  --bp-hub-tabs:      640px;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     20. SHADOWS / ELEVATION
+     Three levels maximum. e-3 reserved for hero imagery only.
+     Never stack multiple shadows on a single element.
+   ───────────────────────────────────────────────────────────── */
+
+  --e-1:  0 1px 2px rgba(20, 18, 16, 0.04);                                /* Level 1 — default card, subtle lift */
+  --e-2:  0 8px 32px rgba(20, 18, 16, 0.07);                               /* Level 2 — card hover, panels */
+  --e-3:  0 24px 64px rgba(20, 18, 16, 0.14);                              /* Level 3 — hero imagery, modals only */
+  --e-glass: 0 8px 32px rgba(20, 18, 16, 0.22);                            /* Dark glass header, condensed state */
+  --e-cta:   0 2px 10px rgba(168, 132, 60, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.25); /* Gold CTA */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     21. ANIMATION DURATIONS
+   ───────────────────────────────────────────────────────────── */
+
+  --dur-instant:    0.15s;   /* Hover colour transitions */
+  --dur-fast:       0.20s;   /* Button state transitions */
+  --dur-standard:   0.35s;   /* Header condense, panel open/close */
+  --dur-reveal:     0.60s;   /* Stagger children */
+  --dur-entrance:   0.70s;   /* Scroll reveal — elements */
+  --dur-image:      1.10s;   /* Image reveal — clip-path wipe */
+  --dur-counter:    1.40s;   /* Stat counter animation */
+  --dur-slow:      40.00s;   /* Aperture decorative spin */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     22. ANIMATION CURVES (EASING)
+   ───────────────────────────────────────────────────────────── */
+
+  --ease-standard:  cubic-bezier(0.4, 0, 0.2, 1);   /* Header condense, general transitions */
+  --ease-out:       cubic-bezier(0, 0, 0.2, 1);     /* Elements entering (power2.out equivalent) */
+  --ease-in:        cubic-bezier(0.4, 0, 1, 1);     /* Elements leaving */
+  --ease-expo-out:  cubic-bezier(0.16, 1, 0.3, 1);  /* Image reveal (expo.out equivalent) */
+  --ease-linear:    linear;                          /* Parallax, decorative spin */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     23. Z-INDEX
+   ───────────────────────────────────────────────────────────── */
+
+  --z-base:       0;     /* Normal document flow */
+  --z-raised:     10;    /* Sticky elements, cards on hover */
+  --z-dropdown:   50;    /* Nav dropdowns, select menus */
+  --z-sticky:     80;    /* Sticky sidebars, rails */
+  --z-header:    100;    /* SiteHeader — always above content */
+  --z-overlay:   200;    /* Photo lightbox overlay, modal backdrop */
+  --z-modal:     300;    /* Modal dialogs */
+  --z-toast:     400;    /* Toast notifications */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     24. OPACITY
+   ───────────────────────────────────────────────────────────── */
+
+  --opacity-disabled:     0.40;   /* Disabled interactive elements */
+  --opacity-coming-soon:  0.45;   /* Coming Soon nav items */
+  --opacity-muted:        0.60;   /* Secondary icon opacity */
+  --opacity-logo-footer:  0.85;   /* Logo on dark footer surface */
+  --opacity-placeholder:  0.12;   /* Monogram logo on placeholder plates */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     25. SEMANTIC COLOURS — Component-level aliases
+   ───────────────────────────────────────────────────────────── */
+
+  /* Navigation */
+  --nav-text:         var(--ink-600);
+  --nav-text-active:  var(--ink-900);
+  --nav-active-line:  var(--gold-600);
+  --nav-bg-rest:      rgba(255, 255, 255, 0.97);
+  --nav-bg-glass:     rgba(20, 18, 16, 0.92);
+  --nav-text-glass:   #C8C0B8;
+  --nav-text-glass-active: #FFFFFF;
+
+  /* Buttons */
+  --btn-primary-bg:     var(--gold-gradient);
+  --btn-primary-text:   #FFFFFF;
+  --btn-primary-shadow: var(--e-cta);
+  --btn-outline-border: var(--gold-600);
+  --btn-outline-bg:     rgba(201, 169, 97, 0.08);
+  --btn-outline-text:   var(--ink-900);
+  --btn-ghost-border:   var(--hairline);
+  --btn-ghost-text:     var(--ink-600);
+
+  /* Cards */
+  --card-bg:      var(--surface-0);
+  --card-border:  var(--hairline);
+  --card-padding: var(--s-4);  /* 32px default; 24-28px compact */
+  --card-shadow:  var(--e-1);
+  --card-shadow-hover: var(--e-2);
+
+  /* Forms */
+  --input-bg:           var(--surface-0);
+  --input-border:       var(--hairline);
+  --input-border-focus: var(--gold-600);
+  --input-text:         var(--ink-900);
+  --input-placeholder:  var(--ink-400);
+  --input-radius:       var(--r-2);  /* 8px */
+
+  /* Avatar */
+  --avatar-member-bg:    var(--forest-gradient);
+  --avatar-member-text:  #FFFFFF;
+  --avatar-user-bg:      var(--ink-400);
+  --avatar-user-text:    #FFFFFF;
+  --avatar-admin-bg:     var(--dark-100);
+  --avatar-admin-text:   var(--gold-light);
+  --avatar-ring:         var(--surface-0);
+  --avatar-ring-outline: var(--hairline);
+
+  /* Lightbox */
+  --lightbox-bg: var(--dark-0);
+
+  /* Gallery */
+  --gallery-bg:  var(--dark-300);
+
+  /* Footer */
+  --footer-row1-bg:  var(--dark-100);
+  --footer-row2-bg:  var(--dark-200);
+  --footer-row3-bg:  var(--dark-100);
+  --footer-text:     #C4BDB3;
+  --footer-text-hover: #FFFFFF;
+  --footer-text-muted: #8B8378;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     26. COMPONENT SIZING TOKENS
+   ───────────────────────────────────────────────────────────── */
+
+  /* SiteHeader */
+  --header-height-rest:       96px;
+  --header-height-condensed:  64px;
+  --header-height-mobile:     60px;
+  --header-logo-rest:         56px;
+  --header-logo-condensed:    44px;
+  --header-logo-mobile:       34px;
+  --header-scroll-trigger:    60px;   /* px scroll before condense fires */
+  --header-z:                 var(--z-header);
+
+  /* HubSidebar */
+  --hub-sidebar-width:        240px;
+  --hub-sidebar-gap:           48px;
+
+  /* Photographer Profile Rail */
+  --profile-rail-width:       260px;
+
+  /* Photo Card (in Hub recent work) */
+  --photo-card-padding:         8px;
+
+  /* Stat Band */
+  --statband-padding-v:        56px;
+  --statband-padding-h:        48px;
+
+  /* Section opener */
+  --section-mono-size:         13px;
+
+  /* Cover Banner (Photographer Profile — UI element, not photograph) */
+  --cover-banner-height:       400px;
+
+  /* Navigation font */
+  --nav-font-size:             13px;
+  --nav-font-weight:           500;
+  --nav-gap:                   24px;
+
+  /* Footer column grid */
+  --footer-col1-flex:          1.5fr;
+  --footer-col-flex:           1fr;
+  --footer-padding-desktop:    40px;
+  --footer-padding-mobile:     20px;
+
+  /* Status badge */
+  --badge-padding:            3px 10px;
+  --badge-radius:             var(--r-1);
+  --badge-font-size:          9px;
+  --badge-font-weight:        700;
+  --badge-letter-spacing:     0.14em;
+
+  /* Attention dot (Hub) */
+  --attention-dot-size:       7px;
+
+  /* Section label kicker line */
+  --kicker-line-width:        28px;
+  --kicker-line-height:        1px;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     27. BACKWARD COMPATIBILITY ALIASES & MERGED TOKENS
+
+     ==========================================================
+     BACKWARD COMPATIBILITY ALIASES
+
+     Temporary compatibility layer.
+
+     These aliases exist only to support legacy V3 components
+     while they are gradually migrated to the canonical V6
+     Design System.
+
+     Do not add new code using these aliases.
+
+     All new development must use canonical V6 tokens only.
+
+     These aliases will be removed after the repository-wide
+     migration is complete.
+     ==========================================================
+   ───────────────────────────────────────────────────────────── */
+
+  /* Direct Color Aliases (No chains) */
+  --surface-deep:        var(--dark-100);
+  --image-backdrop:      var(--dark-200);
+  --ink-inverse:         var(--surface-1);
+  --gold-500:            var(--gold-light);
+  --hairline-strong:     var(--ink-200);
+
+  /* Layout, Spacing & Container Widths */
+  --nav-h:               var(--header-height-rest);
+  --nav-h-min:           var(--header-height-condensed);
+  --content-max:         var(--container-hub);
+  --gutter:              var(--s-6);
+  --gutter-mob:          var(--footer-padding-mobile);
+
+  /* Typography */
+  --text-small:          var(--text-body-sm);
+
+  /* Motion & Transitions (Combined primitives) */
+  --m-fast:              var(--dur-fast) var(--ease-standard);
+  --m-med:               var(--dur-standard) var(--ease-standard);
+  --m-reveal:            var(--dur-reveal);
+  --m-image:             var(--dur-image) var(--ease-expo-out);
+  --m-stagger:           80ms;
+
+  /* Merged Platform-Specific Activity Tag Colours */
+  --tag-photowalk-bg:    var(--status-active-bg);
+  --tag-photowalk-ink:   var(--status-active-text);
+  --tag-workshop-bg:     var(--status-pending-bg);
+  --tag-workshop-ink:    var(--status-pending-text);
+  --tag-exhibition-bg:   var(--status-admin-bg);
+  --tag-exhibition-ink:  var(--status-admin-text);
+
+  /* Merged Platform-Specific Membership Tier Badge Colours */
+  --badge-basic:         #5C5876;
+  --badge-student:       #1A9DAE;
+  --badge-individual:    var(--forest-600);
+  --badge-family:        #D9733A;
+  --badge-senior:        #6F8F3C;
+  --badge-honorary:      #C8327A;
+  --badge-life:          var(--gold-600);
+  --badge-patron:        #8A6A2E;
+  --badge-founding:      #8A6A2E;
+
 }

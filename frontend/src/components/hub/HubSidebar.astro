@@ -847,6 +847,7 @@ const ELEVATED_CONFIG: Record<string, {
     label: 'ADMINISTRATION',
     items: [
       { name: 'Admin Console',      href: '/hub/admin/' },
+      { name: 'Users & Members',    href: '/hub/admin/users/' },
       { name: 'Moderation Queue',   href: '/hub/moderation/' },
       { name: 'Journal CMS',        href: '/hub/cms/' },
     ],
@@ -883,7 +884,7 @@ function applyElevation(role: string) {
   if (dropdownEl) {
     dropdownEl.innerHTML =
       `<div class="hub-tabs-dropdown__divider" role="separator"></div>` +
-      `<div style="padding:4px 20px 2px;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#8B8378;">${cfg.label}</div>` +
+      `<div style="padding:4px 20px 2px;font-size:var(--text-micro);font-weight:600;letter-spacing:var(--ls-micro);text-transform:uppercase;color:var(--ink-400);">${cfg.label}</div>` +
       cfg.items.map(item =>
         `<a href="${item.href}" class="hub-tabs-dropdown__item">${item.name}</a>`
       ).join('');

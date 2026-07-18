@@ -27,10 +27,52 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       <div id="pending-list" class="pending-list" hidden></div>
     </section>
 
-    <!-- ② MEMBER SEARCH + PASSWORD RESET ──────────────────────────────── -->
+    <!-- ② SPOTLIGHT MANAGEMENT ─────────────────────────────────────────── -->
+    <section class="admin-section" id="section-spotlight">
+      <div class="section-kicker"><span class="kicker-rule"></span>Homepage</div>
+      <h2 class="section-title">Spotlight Photo</h2>
+
+      <!-- Current spotlight preview -->
+      <div id="spotlight-current" class="spotlight-current" hidden>
+        <div class="spotlight-label">Current spotlight</div>
+        <div class="spotlight-preview-row">
+          <img id="spotlight-preview-img" class="spotlight-preview-img" src="" alt="" />
+          <div class="spotlight-preview-info">
+            <div class="spotlight-preview-title" id="spotlight-preview-title"></div>
+            <div class="spotlight-preview-credit" id="spotlight-preview-credit"></div>
+          </div>
+        </div>
+      </div>
+      <div id="spotlight-none" class="state-empty" hidden>No spotlight set — homepage falls back to latest gallery photo.</div>
+
+      <!-- Photo search -->
+      <form class="search-form" id="spotlight-search-form" autocomplete="off">
+        <input
+          type="text"
+          id="spotlight-search-input"
+          class="search-input"
+          placeholder="Search public photos by title or photographer…"
+          minlength="2"
+          required
+        />
+        <button type="submit" class="btn-search">Search</button>
+      </form>
+
+      <div id="spotlight-search-loading" class="state-loading" hidden>Searching…</div>
+      <div id="spotlight-search-empty"   class="state-empty"   hidden>No photos found.</div>
+      <div id="spotlight-search-error"   class="state-error"   hidden></div>
+
+      <!-- Photo results grid -->
+      <div id="spotlight-results" class="spotlight-results" hidden></div>
+
+      <!-- Set confirmation -->
+      <div id="spotlight-set-feedback" class="reset-feedback" hidden></div>
+    </section>
+
+    <!-- ③ USER IDENTITY & MEMBERSHIP ──────────────────────────────── -->
     <section class="admin-section" id="section-members">
-      <div class="section-kicker"><span class="kicker-rule"></span>Member Management</div>
-      <h2 class="section-title">Password Reset</h2>
+      <div class="section-kicker"><span class="kicker-rule"></span>User Identity & Membership</div>
+      <h2 class="section-title">Identity Status / Password Reset</h2>
 
       <form class="search-form" id="search-form" autocomplete="off">
         <input
@@ -81,51 +123,10 @@ import HubLayout from '../../../layouts/HubLayout.astro';
           <button id="btn-send-link"     type="button" class="btn-identity-action">Send Completion Link</button>
           <button id="btn-send-priority" type="button" class="btn-identity-action btn-identity-action--priority">Send Priority Link</button>
           <button id="btn-resend-welcome" type="button" class="btn-identity-action btn-identity-action--secondary">Resend Welcome Email</button>
+          <button id="btn-send-invitation" type="button" class="btn-identity-action">Send Membership Invitation</button>
         </div>
         <div id="identity-feedback" class="reset-feedback" hidden></div>
       </div>
-    </section>
-
-    <!-- ③ SPOTLIGHT MANAGEMENT ─────────────────────────────────────────── -->
-    <section class="admin-section" id="section-spotlight">
-      <div class="section-kicker"><span class="kicker-rule"></span>Homepage</div>
-      <h2 class="section-title">Spotlight Photo</h2>
-
-      <!-- Current spotlight preview -->
-      <div id="spotlight-current" class="spotlight-current" hidden>
-        <div class="spotlight-label">Current spotlight</div>
-        <div class="spotlight-preview-row">
-          <img id="spotlight-preview-img" class="spotlight-preview-img" src="" alt="" />
-          <div class="spotlight-preview-info">
-            <div class="spotlight-preview-title" id="spotlight-preview-title"></div>
-            <div class="spotlight-preview-credit" id="spotlight-preview-credit"></div>
-          </div>
-        </div>
-      </div>
-      <div id="spotlight-none" class="state-empty" hidden>No spotlight set — homepage falls back to latest gallery photo.</div>
-
-      <!-- Photo search -->
-      <form class="search-form" id="spotlight-search-form" autocomplete="off">
-        <input
-          type="text"
-          id="spotlight-search-input"
-          class="search-input"
-          placeholder="Search public photos by title or photographer…"
-          minlength="2"
-          required
-        />
-        <button type="submit" class="btn-search">Search</button>
-      </form>
-
-      <div id="spotlight-search-loading" class="state-loading" hidden>Searching…</div>
-      <div id="spotlight-search-empty"   class="state-empty"   hidden>No photos found.</div>
-      <div id="spotlight-search-error"   class="state-error"   hidden></div>
-
-      <!-- Photo results grid -->
-      <div id="spotlight-results" class="spotlight-results" hidden></div>
-
-      <!-- Set confirmation -->
-      <div id="spotlight-set-feedback" class="reset-feedback" hidden></div>
     </section>
 
   </div>
@@ -1010,14 +1011,14 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     show(el);
   }
 
-  async function identityAction(endpoint: string, uid: string): Promise<void> {
+  async function identityAction(endpoint: string, uid: string, successMsg: string = 'Email dispatched.'): Promise<void> {
     const res = await fetch(`${API}/identity/${endpoint}/${uid}`, {
       method: 'POST',
       headers: authHeaders(),
       body: '{}',
     });
     if (res.ok) {
-      identityFeedbackMsg('Email dispatched.', 'ok');
+      identityFeedbackMsg(successMsg, 'ok');
     } else {
       const err = await res.json().catch(() => ({})) as { message?: string };
       identityFeedbackMsg(`Error: ${err.message ?? res.status}`, 'error');
@@ -1051,6 +1052,15 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     const btn = document.getElementById('btn-resend-welcome') as HTMLButtonElement;
     btn.disabled = true;
     try { await identityAction('admin/resend-welcome', uid); }
+    catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
+    finally { btn.disabled = false; }
+  });
+
+  document.getElementById('btn-send-invitation')?.addEventListener('click', async () => {
+    const uid = getIdentityUid(); if (!uid) return;
+    const btn = document.getElementById('btn-send-invitation') as HTMLButtonElement;
+    btn.disabled = true;
+    try { await identityAction('admin/send-membership-invitation', uid, 'Membership invitation email sent successfully.'); }
     catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
     finally { btn.disabled = false; }
   });

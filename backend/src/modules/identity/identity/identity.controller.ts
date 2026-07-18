@@ -99,4 +99,16 @@ export class IdentityController {
     await this.identityService.resendWelcomeEmail(actor.sub, userId);
     return { message: 'Welcome email dispatched.' };
   }
+
+  @Post('admin/send-membership-invitation/:userId')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.record.view')
+  async sendMembershipInvitation(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    await this.identityService.sendMembershipInvitation(actor.sub, userId);
+    return { message: 'Membership invitation email sent successfully.' };
+  }
 }

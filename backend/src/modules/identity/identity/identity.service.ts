@@ -283,6 +283,72 @@ export class IdentityService {
     void adminId;
   }
 
+  async sendMembershipInvitation(
+    adminId: number,
+    targetUserId: number,
+  ): Promise<void> {
+    const user = await this.requireUser(targetUserId);
+    if (!user.email) throw new BadRequestException('User has no email address on file.');
+
+    const baseUrl = process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info';
+    const appPath = '/hub/membership/apply/';
+    const membershipApplicationUrl = `${baseUrl}${appPath}`;
+    const displayName = user.full_name || user.username || 'Member';
+
+    const emailBody = `
+      <p>Dear ${displayName},</p>
+      <p>Welcome to the Bhopal Camera Club!</p>
+      <p>We are pleased to inform you that your BCC Portal User ID has been created successfully. You can now sign in to the BCC Portal using your registered email address and password.</p>
+      
+      <p><strong>IMPORTANT: User ID vs. Membership</strong></p>
+      <p>Please note that creating a User ID <strong>does not</strong> automatically make you an official member of the Bhopal Camera Club. A User ID provides portal access, but membership requires a separate application process. To help clarify, here is the difference:</p>
+      
+      <div style="margin: 16px 0; padding: 12px 16px; background: #FAF8F4; border-left: 4px solid #C9A961;">
+        <p style="margin: 0 0 8px 0; font-weight: bold; color: #141210;">✔ User ID</p>
+        <ul style="margin: 0 0 16px 0; padding-left: 20px;">
+          <li>Allows you to sign in to the portal</li>
+          <li>Maintain and update your profile</li>
+          <li>Participate in public portal activities</li>
+        </ul>
+        
+        <p style="margin: 0 0 8px 0; font-weight: bold; color: #141210;">✔ Membership</p>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li>Makes you an official Bhopal Camera Club Member</li>
+          <li>Unlocks members-only privileges and events</li>
+          <li>Requires submission of a membership application</li>
+        </ul>
+      </div>
+      
+      <p><strong>Apply for Membership</strong></p>
+      <p>You may apply for any membership category currently available. Please note that our <strong>Basic Membership</strong> is currently free, and only requires an annual renewal to keep your profile and club records up to date.</p>
+      
+      <p>To begin your membership application immediately, please click the link below:</p>
+      <p style="margin: 24px 0;">
+        <a href="${membershipApplicationUrl}" style="display:inline-block;background:#C9A961;color:#141210;padding:12px 28px;text-decoration:none;font-weight:bold;border-radius:2px;">Apply for Membership</a>
+      </p>
+      <p style="color:#666;font-size:13px;">If the button above does not work, please copy and paste this URL into your browser:<br/>
+      ${membershipApplicationUrl}</p>
+      
+      <p>or</p>
+      <p>Log in to your account and click:<br/>
+      <strong>Membership &rarr; Apply for Membership</strong></p>
+      
+      <p>We look forward to welcoming you as an official member of the Bhopal Camera Club community.</p>
+      
+      <p>Warm regards,</p>
+      <p><strong>BCC Membership Team</strong><br/>
+      Bhopal Camera Club</p>
+    `;
+
+    await this.emailService.send(
+      user.email,
+      'Your BCC User ID is Ready — Apply for Membership',
+      this.communicationService.wrapEmail(emailBody),
+    );
+
+    void adminId;
+  }
+
   // ─── Private helpers ──────────────────────────────────────────────────────
 
   private async requireUser(userId: number) {

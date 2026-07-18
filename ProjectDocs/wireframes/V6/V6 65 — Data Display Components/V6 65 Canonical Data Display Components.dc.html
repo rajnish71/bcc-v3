@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./V6 98 token.css">
+  <style>
+    body { background: var(--surface-bg); color: var(--ink-900); font-family: var(--font-body); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    a { color: inherit; text-decoration: none; }
+  </style>
+</helmet>
+
+<!-- ─── PAGE HEADER ─────────────────────────────────────────── -->
+<div style="background: var(--dark-100); padding: 64px 48px 56px;">
+  <div style="max-width: 1140px; margin: 0 auto;">
+    <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 20px;">V6 65 · BCC Unified Platform · Design System</div>
+    <h1 style="font-family: var(--font-display); font-size: clamp(40px, 5vw, 64px); font-weight: 700; color: #FFFFFF; letter-spacing: -0.025em; line-height: 1.0; margin-bottom: 20px;">Canonical Data Display<br>Components</h1>
+    <p style="font-family: var(--font-body); font-size: 16px; font-weight: 300; color: #C4BDB3; line-height: 1.75; max-width: 620px;">Every reusable data presentation component in the platform. This document defines how information is structured, labelled, and shown — from EXIF metadata to membership tiers to financial summaries.</p>
+    <div style="display: flex; gap: 32px; margin-top: 40px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.07);">
+      <div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;">Status</div><div style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">Canonical · July 2026</div></div>
+      <div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;">Sections</div><div style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">16 component families</div></div>
+      <div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;">Authority</div><div style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">V6 98 token.css · V6 99 Constitution</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── NAV ──────────────────────────────────────────────────── -->
+<div style="background: var(--surface-1); border-bottom: 1px solid var(--hairline); position: sticky; top: 0; z-index: 80;">
+  <div style="max-width: 1140px; margin: 0 auto; padding: 0 48px; display: flex; gap: 0; overflow-x: auto;">
+    <a href="#kv" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">KV Pairs</a>
+    <a href="#metadata" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Metadata</a>
+    <a href="#stats" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Stats</a>
+    <a href="#status" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Status</a>
+    <a href="#progress" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Progress</a>
+    <a href="#timeline" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Timeline</a>
+    <a href="#membership" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Membership</a>
+    <a href="#pricing" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Pricing</a>
+    <a href="#tags" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Tags</a>
+    <a href="#tables" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Tables</a>
+    <a href="#lists" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Lists</a>
+    <a href="#empty" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Empty States</a>
+    <a href="#accordion" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Accordion</a>
+    <a href="#spec" style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 16px 13px; border-bottom: 2px solid transparent; white-space: nowrap;">Spec Blocks</a>
+  </div>
+</div>
+
+<div style="max-width: 1140px; margin: 0 auto; padding: 80px 48px 160px;">
+
+  <!-- ══════════════════════════════════════════════════════════
+       01 · KEY-VALUE PAIRS
+  ══════════════════════════════════════════════════════════ -->
+  <div id="kv" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">01</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Key-Value Pairs</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">The atomic unit of data display. Used for field labels and values throughout the platform — profiles, settings, EXIF data, account details.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+
+      <!-- KV: Stacked / vertical -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 32px; padding-bottom: 12px; border-bottom: 1px solid var(--hairline-soft);">Stacked · Vertical</div>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;">Full Name</div>
+            <div style="font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--ink-900);">Eleanor Whitfield</div>
+          </div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;">Member Since</div>
+            <div style="font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--ink-900);">March 2021</div>
+          </div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;">Specialisation</div>
+            <div style="font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--ink-900);">Street · Documentary</div>
+          </div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;">Location</div>
+            <div style="font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--ink-900);">London, UK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KV: Inline / horizontal -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 32px; padding-bottom: 12px; border-bottom: 1px solid var(--hairline-soft);">Inline · Horizontal</div>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Camera</span>
+            <span style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">Leica M11</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Lens</span>
+            <span style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">Summicron 35mm f/2</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Aperture</span>
+            <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--ink-700);">f/5.6</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Shutter</span>
+            <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--ink-700);">1/250s</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0;">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">ISO</span>
+            <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--ink-700);">400</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KV: Gold-accent emphasis -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 32px; padding-bottom: 12px; border-bottom: 1px solid var(--hairline-soft);">Gold-Accented · Large Value</div>
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Portfolio Views</div>
+            <div style="font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0;">14,382</div>
+            <div style="font-family: var(--font-body); font-size: 12px; color: var(--gold-600); margin-top: 4px;">↑ 12% this month</div>
+          </div>
+          <div style="height: 1px; background: var(--hairline-soft);"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Photos Published</div>
+            <div style="font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0;">247</div>
+            <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin-top: 4px;">Across 18 albums</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- KV: Multi-column grid -->
+    <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 32px; margin-top: 24px;">
+      <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--hairline-soft);">Multi-Column Grid · Account Overview</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;">
+        <div style="padding: 16px 24px 16px 0; border-right: 1px solid var(--hairline-soft);">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Account Type</div>
+          <div style="font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--ink-900);">Full Member</div>
+          <div style="font-family: var(--font-body); font-size: 12px; color: var(--forest-600); margin-top: 2px;">Active</div>
+        </div>
+        <div style="padding: 16px 24px; border-right: 1px solid var(--hairline-soft);">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Renewal Date</div>
+          <div style="font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--ink-900);">1 April 2026</div>
+          <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin-top: 2px;">Annual cycle</div>
+        </div>
+        <div style="padding: 16px 24px; border-right: 1px solid var(--hairline-soft);">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Member No.</div>
+          <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--ink-700);">BCC-0847</div>
+          <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin-top: 2px;">Since 2021</div>
+        </div>
+        <div style="padding: 16px 0 16px 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Payment</div>
+          <div style="font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--ink-900);">Bank Transfer</div>
+          <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin-top: 2px;">Paid · £65.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       02 · METADATA PANELS
+  ══════════════════════════════════════════════════════════ -->
+  <div id="metadata" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">02</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Metadata Panels</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Structured data groupings — EXIF technical data, event details, profile summaries. Always monospaced labels, hairline separators.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+      <!-- EXIF Panel -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline);">
+        <div style="padding: 20px 24px; border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ink-900); letter-spacing: 0.10em; text-transform: uppercase;">EXIF · Technical Data</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.08em; text-transform: uppercase;">RAW · ARW</div>
+        </div>
+        <div style="padding: 0 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Make / Model</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">Sony α7 IV</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Focal Length</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">85 mm</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Aperture</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">f / 1.8</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Shutter Speed</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">1 / 1000 s</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">ISO</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">800</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Exposure Comp.</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">−0.7 EV</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">White Balance</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">Auto</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Dimensions</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">7008 × 4672 px</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Date Taken</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700); letter-spacing: 0.03em;">14 Jun 2025 · 07:42</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Metadata Panel -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="background: var(--surface-0); border: 1px solid var(--hairline);">
+          <div style="padding: 20px 24px; border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ink-900); letter-spacing: 0.10em; text-transform: uppercase;">Event Details</div>
+            <div style="background: var(--status-active-bg); color: var(--status-active-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Open</div>
+          </div>
+          <div style="padding: 0 24px;">
+            <div style="display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+              <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Date</span>
+              <span style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">Saturday 19 July 2025</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+              <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Time</span>
+              <span style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">10:00 – 13:00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+              <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Location</span>
+              <span style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">Barbican Centre, EC2Y</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--hairline-soft);">
+              <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Capacity</span>
+              <span style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">20 members</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 11px 0;">
+              <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Registered</span>
+              <span style="font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--forest-600);">14 / 20</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compact metadata strip -->
+        <div style="background: var(--surface-2); border: 1px solid var(--hairline); padding: 20px 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 14px;">Compact Inline Strip · Photo Caption Context</div>
+          <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+            <div>
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.10em; text-transform: uppercase;">Camera — </span>
+              <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ink-700);">Leica M11</span>
+            </div>
+            <div>
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.10em; text-transform: uppercase;">Lens — </span>
+              <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ink-700);">50mm Summilux</span>
+            </div>
+            <div>
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.10em; text-transform: uppercase;">f/ — </span>
+              <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ink-700);">1.4</span>
+            </div>
+            <div>
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.10em; text-transform: uppercase;">Shutter — </span>
+              <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ink-700);">1/500s</span>
+            </div>
+            <div>
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.10em; text-transform: uppercase;">ISO — </span>
+              <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ink-700);">200</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       03 · STATISTICS
+  ══════════════════════════════════════════════════════════ -->
+  <div id="stats" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">03</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Statistics</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Numerical displays for platform metrics, member activity, and engagement data. Three scale variants.</p>
+    </div>
+
+    <!-- StatBand — light surface -->
+    <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 48px; margin-bottom: 24px;">
+      <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 36px; padding-bottom: 14px; border-bottom: 1px solid var(--hairline-soft);">StatBand · Light Surface · Used: Home, About, Profile</div>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;">
+        <div style="text-align: center; padding: 0 24px; border-right: 1px solid var(--hairline-soft);">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">847</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Members</div>
+        </div>
+        <div style="text-align: center; padding: 0 24px; border-right: 1px solid var(--hairline-soft);">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">42k+</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Photographs</div>
+        </div>
+        <div style="text-align: center; padding: 0 24px; border-right: 1px solid var(--hairline-soft);">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">1972</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Founded</div>
+        </div>
+        <div style="text-align: center; padding: 0 24px; border-right: 1px solid var(--hairline-soft);">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">200+</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Events / Year</div>
+        </div>
+        <div style="text-align: center; padding: 0 24px;">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">14</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Awards Won</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- StatBand — dark surface -->
+    <div style="background: var(--dark-100); padding: 48px; margin-bottom: 24px;">
+      <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.3); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 36px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.07);">StatBand · Dark Surface</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;">
+        <div style="text-align: center; padding: 0 24px; border-right: 1px solid rgba(255,255,255,0.07);">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">3.2k</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase;">Portfolio Views</div>
+        </div>
+        <div style="text-align: center; padding: 0 24px; border-right: 1px solid rgba(255,255,255,0.07);">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">247</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase;">Photos</div>
+        </div>
+        <div style="text-align: center; padding: 0 24px; border-right: 1px solid rgba(255,255,255,0.07);">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">62</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase;">Events Attended</div>
+        </div>
+        <div style="text-align: center; padding: 0 24px;">
+          <div style="font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px;">4</div>
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase;">Years Member</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini stats strip -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 24px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;">This Month</div>
+        <div style="font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0; margin-bottom: 4px;">12</div>
+        <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-600);">Photos uploaded</div>
+      </div>
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 24px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;">Avg. Engagement</div>
+        <div style="font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0; margin-bottom: 4px;">4.8<span style="font-size: 16px; font-weight: 500; color: var(--ink-400);">/5</span></div>
+        <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-600);">Member rating</div>
+      </div>
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 24px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;">Events Booked</div>
+        <div style="font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0; margin-bottom: 4px;">3</div>
+        <div style="font-family: var(--font-body); font-size: 12px; color: var(--forest-600);">2 upcoming</div>
+      </div>
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 24px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;">Profile Views</div>
+        <div style="font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0; margin-bottom: 4px;">841</div>
+        <div style="font-family: var(--font-body); font-size: 12px; color: var(--gold-600);">↑ 18% vs last month</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       04 · STATUS BADGES & INDICATORS
+  ══════════════════════════════════════════════════════════ -->
+  <div id="status" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">04</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Status Badges &amp; Indicators</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">All semantic states. Badges are never larger than 9px text, 2px radius. Indicators supplement — never replace — textual state.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+      <!-- All badge variants -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 24px;">Badge States — All Variants</div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="background: var(--status-active-bg); color: var(--status-active-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Active</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Member is active in the current cycle</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="background: var(--status-pending-bg); color: var(--status-pending-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Pending</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Payment or approval awaited</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="background: var(--status-member-bg); color: var(--status-member-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Member</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Full paid membership tier</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Lapsed</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Membership expired, renewal needed</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="background: var(--status-admin-bg); color: var(--status-admin-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Admin</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Committee / administrator role</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="background: var(--status-coming-soon-bg); color: var(--status-coming-soon-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Coming Soon</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Feature not yet released</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <span style="background: var(--surface-2); color: var(--ink-600); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Public</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Portfolio / photo visible to all</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0;">
+            <span style="background: transparent; color: var(--ink-400); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Draft</span>
+            <span style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Not yet submitted for review</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status dots + inline indicators -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px;">Status Dots · Inline</div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 7px; height: 7px; border-radius: 50%; background: var(--forest-600); flex-shrink: 0;"></div>
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Active — membership confirmed</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 7px; height: 7px; border-radius: 50%; background: #C9A961; flex-shrink: 0;"></div>
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Pending — payment processing</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 7px; height: 7px; border-radius: 50%; background: var(--status-danger-text); flex-shrink: 0;"></div>
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Lapsed — renewal required</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 7px; height: 7px; border-radius: 50%; background: var(--ink-200); flex-shrink: 0;"></div>
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Inactive — not renewed</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px;">Role Hierarchy Display</div>
+          <div style="display: flex; flex-direction: column; gap: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Eleanor Whitfield</span>
+              <span style="background: var(--status-admin-bg); color: var(--status-admin-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Admin</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">James Hartley</span>
+              <span style="background: var(--surface-2); color: var(--forest-700); border: 1px solid rgba(62,90,72,0.2); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Editor</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Priya Chandran</span>
+              <span style="background: var(--status-member-bg); color: var(--status-member-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Member</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Thomas Reid</span>
+              <span style="background: transparent; color: var(--ink-400); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Guest</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       05 · PROGRESS INDICATORS
+  ══════════════════════════════════════════════════════════ -->
+  <div id="progress" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">05</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Progress Indicators</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Progress bars, step indicators, and completion trackers. Always 2px height. Never animated gratuitously.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 28px;">Progress Bars</div>
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Portfolio completeness</span>
+              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700);">82%</span>
+            </div>
+            <div style="height: 2px; background: var(--hairline); border-radius: 1px; overflow: hidden;">
+              <div style="height: 100%; width: 82%; background: var(--forest-600);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Event capacity</span>
+              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700);">14 / 20</span>
+            </div>
+            <div style="height: 2px; background: var(--hairline); border-radius: 1px; overflow: hidden;">
+              <div style="height: 100%; width: 70%; background: var(--gold-600);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Upload processing</span>
+              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--ink-700);">38%</span>
+            </div>
+            <div style="height: 2px; background: var(--hairline); border-radius: 1px; overflow: hidden;">
+              <div style="height: 100%; width: 38%; background: var(--ink-400);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-family: var(--font-body); font-size: 13px; color: var(--status-danger-text);">Storage limit</span>
+              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--status-danger-text);">94%</span>
+            </div>
+            <div style="height: 2px; background: var(--status-danger-bg); border-radius: 1px; overflow: hidden;">
+              <div style="height: 100%; width: 94%; background: var(--status-danger-text);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step indicator -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 28px;">Step Indicator · Multi-Stage Process</div>
+        <div style="display: flex; align-items: center; gap: 0; margin-bottom: 32px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--forest-600); display: flex; align-items: center; justify-content: center;">
+              <div style="width: 8px; height: 5px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px);"></div>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 9px; color: var(--forest-600); letter-spacing: 0.10em; text-transform: uppercase; text-align: center;">Account</span>
+          </div>
+          <div style="height: 1px; flex: 1; background: var(--forest-600); margin-bottom: 24px;"></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--forest-600); display: flex; align-items: center; justify-content: center;">
+              <div style="width: 8px; height: 5px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px);"></div>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 9px; color: var(--forest-600); letter-spacing: 0.10em; text-transform: uppercase; text-align: center;">Profile</span>
+          </div>
+          <div style="height: 1px; flex: 1; background: var(--gold-600); margin-bottom: 24px;"></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--gold-600); background: var(--surface-0); display: flex; align-items: center; justify-content: center;">
+              <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--gold-600);">3</span>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 9px; color: var(--gold-600); font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; text-align: center;">Payment</span>
+          </div>
+          <div style="height: 1px; flex: 1; background: var(--hairline); margin-bottom: 24px;"></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface-2); display: flex; align-items: center; justify-content: center;">
+              <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400);">4</span>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 9px; color: var(--ink-400); letter-spacing: 0.10em; text-transform: uppercase; text-align: center;">Confirm</span>
+          </div>
+        </div>
+        <div style="background: var(--surface-2); padding: 16px 20px; border-left: 2px solid var(--gold-600);">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;">Current Step</div>
+          <div style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Complete your membership payment to proceed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       06 · TIMELINE
+  ══════════════════════════════════════════════════════════ -->
+  <div id="timeline" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">06</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Timeline &amp; Activity Feed</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Chronological event and activity display. Used in member hub activity feed, membership history, and payment records.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+      <!-- Activity timeline -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 24px;">Activity Feed</div>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+
+          <div style="display: flex; gap: 16px; padding-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0; flex-shrink: 0;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--forest-600); margin-top: 4px; flex-shrink: 0;"></div>
+              <div style="width: 1px; flex: 1; background: var(--hairline-soft); margin-top: 6px;"></div>
+            </div>
+            <div style="padding-bottom: 0;">
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Uploaded 3 photographs</div>
+              <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Southwark Riverfront series</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em; margin-top: 4px;">Today · 14:22</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px; padding-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0; flex-shrink: 0;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--gold-600); margin-top: 4px; flex-shrink: 0;"></div>
+              <div style="width: 1px; flex: 1; background: var(--hairline-soft); margin-top: 6px;"></div>
+            </div>
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Registered for event</div>
+              <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Barbican Photo Walk · 19 July</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em; margin-top: 4px;">Yesterday · 09:11</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px; padding-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0; flex-shrink: 0;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--ink-200); margin-top: 4px; flex-shrink: 0;"></div>
+              <div style="width: 1px; flex: 1; background: var(--hairline-soft); margin-top: 6px;"></div>
+            </div>
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Profile updated</div>
+              <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Bio and equipment updated</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em; margin-top: 4px;">12 Jul · 16:45</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px; padding-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0; flex-shrink: 0;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--forest-600); margin-top: 4px; flex-shrink: 0;"></div>
+              <div style="width: 1px; flex: 1; background: var(--hairline-soft); margin-top: 6px;"></div>
+            </div>
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Membership renewed</div>
+              <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Full Member · £65.00 paid</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em; margin-top: 4px;">1 Apr · 10:03</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px;">
+            <div style="display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--ink-200); margin-top: 4px; flex-shrink: 0;"></div>
+            </div>
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Account created</div>
+              <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400);">Welcome to BCC</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em; margin-top: 4px;">Mar 2021</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Payment history -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 24px;">Payment History</div>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Annual Membership</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em;">1 Apr 2025 · Bank Transfer</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--ink-900);">£65.00</div>
+              <div style="background: var(--status-active-bg); color: var(--status-active-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; margin-top: 4px; display: inline-block;">Paid</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Annual Membership</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em;">1 Apr 2024 · Bank Transfer</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--ink-900);">£60.00</div>
+              <div style="background: var(--status-active-bg); color: var(--status-active-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; margin-top: 4px; display: inline-block;">Paid</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--hairline-soft);">
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900); margin-bottom: 2px;">Annual Membership</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em;">1 Apr 2023 · Bank Transfer</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--ink-900);">£55.00</div>
+              <div style="background: var(--status-active-bg); color: var(--status-active-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; margin-top: 4px; display: inline-block;">Paid</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 13px 0;">
+            <div>
+              <div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-400); margin-bottom: 2px;">Annual Membership</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.06em;">1 Apr 2022 · Bank Transfer</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--ink-400);">£50.00</div>
+              <div style="background: var(--surface-2); color: var(--ink-400); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; margin-top: 4px; display: inline-block;">Archived</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       07 · MEMBERSHIP DISPLAY
+  ══════════════════════════════════════════════════════════ -->
+  <div id="membership" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">07</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Membership Display</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Membership tier, status, and validity information. Used in profile rails, account settings, and the Hub home.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+
+      <!-- Active membership block -->
+      <div style="background: var(--dark-100); border: 1px solid var(--dark-500); padding: 28px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">BCC Membership</div>
+            <div style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: #FFFFFF; letter-spacing: -0.01em;">Full Member</div>
+          </div>
+          <div style="background: var(--status-active-bg); color: var(--status-active-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Active</div>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.07); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.12em; text-transform: uppercase;">Member No.</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: #C4BDB3;">BCC-0847</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.12em; text-transform: uppercase;">Valid Until</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: #C4BDB3;">31 Mar 2026</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.12em; text-transform: uppercase;">Member Since</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: #C4BDB3;">Mar 2021</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Renewal pending -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">BCC Membership</div>
+            <div style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em;">Full Member</div>
+          </div>
+          <div style="background: var(--status-pending-bg); color: var(--status-pending-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Renewal Due</div>
+        </div>
+        <div style="background: var(--status-pending-bg); border-left: 2px solid var(--status-pending-text); padding: 12px 16px; margin-bottom: 20px;">
+          <div style="font-family: var(--font-body); font-size: 12px; color: var(--status-pending-text);">Your membership expires in <strong>14 days</strong>. Renew to keep access to all member features.</div>
+        </div>
+        <div style="border-top: 1px solid var(--hairline-soft); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Renewal Fee</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--ink-900);">£65.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Expires</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: var(--status-pending-text);">31 Mar 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lapsed -->
+      <div style="background: var(--surface-0); border: 1px solid var(--status-danger-border); padding: 28px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">BCC Membership</div>
+            <div style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--ink-400); letter-spacing: -0.01em;">Full Member</div>
+          </div>
+          <div style="background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px;">Lapsed</div>
+        </div>
+        <div style="background: var(--status-danger-bg); border-left: 2px solid var(--status-danger-text); padding: 12px 16px; margin-bottom: 20px;">
+          <div style="font-family: var(--font-body); font-size: 12px; color: var(--status-danger-text);">Membership expired 12 April 2025. Portfolio and member features are restricted.</div>
+        </div>
+        <div style="border-top: 1px solid var(--hairline-soft); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase;">Last Active</span>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-400);">Mar 2024 – Mar 2025</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       08 · PRICING TABLES
+  ══════════════════════════════════════════════════════════ -->
+  <div id="pricing" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">08</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Pricing &amp; Tier Comparison</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Membership tier cards and feature comparison table. One tier is always highlighted as recommended.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--hairline);">
+
+      <!-- Associate -->
+      <div style="background: var(--surface-0); padding: 36px; border-right: 1px solid var(--hairline);">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px;">Associate</div>
+        <div style="font-family: var(--font-display); font-size: 40px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0; margin-bottom: 4px;">£35</div>
+        <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin-bottom: 28px;">per year</div>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--hairline); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid var(--ink-600); border-bottom: 1px solid var(--ink-600); transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Platform access</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--hairline); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid var(--ink-600); border-bottom: 1px solid var(--ink-600); transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Portfolio (25 photos)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--hairline); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid var(--ink-600); border-bottom: 1px solid var(--ink-600); transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Monthly newsletter</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; opacity: 0.35;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--hairline); flex-shrink: 0;"></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Showcase gallery</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; opacity: 0.35;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--hairline); flex-shrink: 0;"></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Event priority booking</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Member — recommended -->
+      <div style="background: var(--dark-100); padding: 36px; border-right: 1px solid var(--dark-500); position: relative;">
+        <div style="position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: var(--gold-gradient); color: white; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 4px 16px; border-radius: 0 0 4px 4px;">Recommended</div>
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px;">Full Member</div>
+        <div style="font-family: var(--font-display); font-size: 40px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.02em; line-height: 1.0; margin-bottom: 4px;">£65</div>
+        <div style="font-family: var(--font-body); font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 28px;">per year</div>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">Platform access</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">Unlimited portfolio</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">Monthly newsletter</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">Showcase gallery</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: #C4BDB3;">Event priority booking</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Founding -->
+      <div style="background: var(--surface-0); padding: 36px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px;">Founding Member</div>
+        <div style="font-family: var(--font-display); font-size: 40px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.02em; line-height: 1.0; margin-bottom: 4px;">£95</div>
+        <div style="font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin-bottom: 28px;">per year · limited places</div>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--gold-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Everything in Full Member</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--gold-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Gold Founding badge</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--gold-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Committee access</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--gold-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 5px; height: 3px; border-left: 1px solid white; border-bottom: 1px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Annual print gift</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       09 · TAGS & CHIPS
+  ══════════════════════════════════════════════════════════ -->
+  <div id="tags" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">09</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Tags &amp; Chips</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Category labels, filter chips, and topic tags. Never rounded fully. Maximum 2px radius on filter chips, 0 on category tags.</p>
+    </div>
+
+    <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 32px; display: flex; flex-direction: column; gap: 28px;">
+
+      <div>
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 16px;">Category Tags · Sharp · No radius</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span style="background: var(--ink-900); color: #FFFFFF; font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px;">Street</span>
+          <span style="background: var(--ink-900); color: #FFFFFF; font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px;">Documentary</span>
+          <span style="background: var(--surface-2); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px;">Portrait</span>
+          <span style="background: var(--surface-2); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px;">Landscape</span>
+          <span style="background: var(--surface-2); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px;">Architecture</span>
+          <span style="background: var(--surface-2); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px;">Abstract</span>
+          <span style="background: var(--surface-2); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px;">Wildlife</span>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--hairline-soft); padding-top: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 16px;">Filter Chips · 2px radius · Toggleable</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span style="background: var(--forest-600); color: #FFFFFF; font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 2px; cursor: pointer;">All Members</span>
+          <span style="background: var(--surface-0); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 2px; cursor: pointer;">Full Member</span>
+          <span style="background: var(--surface-0); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 2px; cursor: pointer;">Associate</span>
+          <span style="background: var(--surface-0); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 2px; cursor: pointer;">Founding</span>
+          <span style="background: var(--surface-0); color: var(--ink-700); border: 1px solid var(--hairline); font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 2px; cursor: pointer;">Admin</span>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--hairline-soft); padding-top: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 16px;">Photo Tags · Inline with remove · Hub Upload</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span style="background: var(--surface-2); color: var(--ink-900); border: 1px solid var(--hairline); font-family: var(--font-body); font-size: 12px; padding: 4px 10px 4px 12px; border-radius: 2px; display: flex; align-items: center; gap: 8px;">london <span style="color: var(--ink-400); font-size: 14px; line-height: 1; cursor: pointer;">×</span></span>
+          <span style="background: var(--surface-2); color: var(--ink-900); border: 1px solid var(--hairline); font-family: var(--font-body); font-size: 12px; padding: 4px 10px 4px 12px; border-radius: 2px; display: flex; align-items: center; gap: 8px;">street photography <span style="color: var(--ink-400); font-size: 14px; line-height: 1; cursor: pointer;">×</span></span>
+          <span style="background: var(--surface-2); color: var(--ink-900); border: 1px solid var(--hairline); font-family: var(--font-body); font-size: 12px; padding: 4px 10px 4px 12px; border-radius: 2px; display: flex; align-items: center; gap: 8px;">night <span style="color: var(--ink-400); font-size: 14px; line-height: 1; cursor: pointer;">×</span></span>
+          <span style="border: 1px dashed var(--hairline); color: var(--ink-400); font-family: var(--font-body); font-size: 12px; padding: 4px 12px; border-radius: 2px; cursor: pointer;">+ Add tag</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       10 · DATA TABLES
+  ══════════════════════════════════════════════════════════ -->
+  <div id="tables" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">10</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Data Tables</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Member lists, event registers, submission logs. Alternating warm parchment rows, never zebra stripes on white.</p>
+    </div>
+
+    <div style="background: var(--surface-0); border: 1px solid var(--hairline); overflow: hidden;">
+      <!-- Table header -->
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr; gap: 0; background: var(--surface-2); border-bottom: 1px solid var(--hairline);">
+        <div style="padding: 12px 20px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Member</div>
+        <div style="padding: 12px 20px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Tier</div>
+        <div style="padding: 12px 20px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Joined</div>
+        <div style="padding: 12px 20px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Photos</div>
+        <div style="padding: 12px 20px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase;">Status</div>
+      </div>
+
+      <!-- Rows -->
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr; border-bottom: 1px solid var(--hairline-soft);">
+        <div style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--forest-gradient); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-family: var(--font-display); font-size: 12px; font-weight: 600; color: white;">EW</span></div>
+          <div><div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">Eleanor Whitfield</div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">BCC-0847</div></div>
+        </div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><span style="background: var(--status-member-bg); color: var(--status-member-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px;">Full</span></div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Mar 2021</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--ink-700);">247</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><div style="width: 7px; height: 7px; border-radius: 50%; background: var(--forest-600);"></div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr; background: var(--surface-2); border-bottom: 1px solid var(--hairline-soft);">
+        <div style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--forest-gradient); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-family: var(--font-display); font-size: 12px; font-weight: 600; color: white;">JH</span></div>
+          <div><div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">James Hartley</div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">BCC-0312</div></div>
+        </div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><span style="background: var(--status-admin-bg); color: var(--status-admin-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px;">Admin</span></div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Sep 2019</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--ink-700);">418</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><div style="width: 7px; height: 7px; border-radius: 50%; background: var(--forest-600);"></div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr; border-bottom: 1px solid var(--hairline-soft);">
+        <div style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--forest-gradient); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-family: var(--font-display); font-size: 12px; font-weight: 600; color: white;">PC</span></div>
+          <div><div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">Priya Chandran</div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">BCC-1204</div></div>
+        </div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><span style="background: var(--status-member-bg); color: var(--status-member-text); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px;">Full</span></div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-body); font-size: 13px; color: var(--ink-700);">Jan 2023</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--ink-700);">89</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><div style="width: 7px; height: 7px; border-radius: 50%; background: var(--forest-600);"></div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr; background: var(--surface-2); border-bottom: 1px solid var(--hairline-soft);">
+        <div style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--ink-400); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-family: var(--font-display); font-size: 12px; font-weight: 600; color: white;">TR</span></div>
+          <div><div style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-400);">Thomas Reid</div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">BCC-0991</div></div>
+        </div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><span style="background: var(--surface-0); color: var(--ink-400); border: 1px solid var(--hairline); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px;">Associate</span></div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Jun 2022</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--ink-400);">12</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><div style="width: 7px; height: 7px; border-radius: 50%; background: var(--status-pending-text);"></div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr;">
+        <div style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--ink-200); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-family: var(--font-display); font-size: 12px; font-weight: 600; color: white;">SM</span></div>
+          <div><div style="font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--ink-400); text-decoration: line-through; text-decoration-color: var(--ink-200);">Sarah Mitchell</div><div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-200);">BCC-0643</div></div>
+        </div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><span style="background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px;">Lapsed</span></div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Feb 2020</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--ink-200);">156</div>
+        <div style="padding: 14px 20px; display: flex; align-items: center;"><div style="width: 7px; height: 7px; border-radius: 50%; background: var(--ink-200);"></div></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       11 · LISTS
+  ══════════════════════════════════════════════════════════ -->
+  <div id="lists" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">11</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Lists</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Ordered, unordered, feature check-lists, and interactive selection lists. Typographic bullets — never icon libraries.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px;">Unordered · Em dash bullet</div>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <div style="display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="color: var(--gold-600); font-family: var(--font-display); font-weight: 300; flex-shrink: 0; line-height: 1.7;">—</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Darkroom printing workshops</span></div>
+          <div style="display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="color: var(--gold-600); font-family: var(--font-display); font-weight: 300; flex-shrink: 0; line-height: 1.7;">—</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Guest speaker evenings</span></div>
+          <div style="display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="color: var(--gold-600); font-family: var(--font-display); font-weight: 300; flex-shrink: 0; line-height: 1.7;">—</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Monthly photo walks</span></div>
+          <div style="display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="color: var(--gold-600); font-family: var(--font-display); font-weight: 300; flex-shrink: 0; line-height: 1.7;">—</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Annual print exhibition</span></div>
+          <div style="display: flex; gap: 10px; padding: 9px 0;"><span style="color: var(--gold-600); font-family: var(--font-display); font-weight: 300; flex-shrink: 0; line-height: 1.7;">—</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Critique sessions</span></div>
+        </div>
+      </div>
+
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px;">Ordered · Mono numbering</div>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <div style="display: flex; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft); align-items: flex-start;"><span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); min-width: 18px; flex-shrink: 0; padding-top: 2px;">01</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Complete your member profile</span></div>
+          <div style="display: flex; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft); align-items: flex-start;"><span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); min-width: 18px; flex-shrink: 0; padding-top: 2px;">02</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Upload your first photograph</span></div>
+          <div style="display: flex; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft); align-items: flex-start;"><span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); min-width: 18px; flex-shrink: 0; padding-top: 2px;">03</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Register for an activity</span></div>
+          <div style="display: flex; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft); align-items: flex-start;"><span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); min-width: 18px; flex-shrink: 0; padding-top: 2px;">04</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Set your equipment details</span></div>
+          <div style="display: flex; gap: 14px; padding: 9px 0; align-items: flex-start;"><span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); min-width: 18px; flex-shrink: 0; padding-top: 2px;">05</span><span style="font-family: var(--font-body); font-size: 14px; color: var(--ink-700); line-height: 1.7;">Follow three other members</span></div>
+        </div>
+      </div>
+
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px;">Checklist · With state</div>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft); align-items: center;">
+            <div style="width: 16px; height: 16px; border-radius: 2px; background: var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 6px; height: 4px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400); text-decoration: line-through; text-decoration-color: var(--ink-200);">Account created</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft); align-items: center;">
+            <div style="width: 16px; height: 16px; border-radius: 2px; background: var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 6px; height: 4px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400); text-decoration: line-through; text-decoration-color: var(--ink-200);">Profile completed</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft); align-items: center;">
+            <div style="width: 16px; height: 16px; border-radius: 2px; background: var(--gold-600); border: 2px solid var(--gold-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><div style="width: 6px; height: 4px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px);"></div></div>
+            <span style="font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-900);">Upload first photo</span>
+            <span style="font-family: var(--font-mono); font-size: 9px; font-weight: 700; color: var(--gold-600); letter-spacing: 0.10em; text-transform: uppercase; margin-left: auto;">Now</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-soft); align-items: center;">
+            <div style="width: 16px; height: 16px; border-radius: 2px; border: 1px solid var(--hairline); background: var(--surface-2); flex-shrink: 0;"></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Join an activity</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 10px 0; align-items: center;">
+            <div style="width: 16px; height: 16px; border-radius: 2px; border: 1px solid var(--hairline); background: var(--surface-2); flex-shrink: 0;"></div>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400);">Renew membership</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       12 · EMPTY STATES
+  ══════════════════════════════════════════════════════════ -->
+  <div id="empty" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">12</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Empty States</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Dignified, inviting — never apologetic. Empty states are opportunities, not failures. No cartoon illustrations.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+
+      <!-- Empty portfolio -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 52px 36px; text-align: center;">
+        <div style="width: 56px; height: 56px; border: 1px solid var(--hairline); margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; background: var(--surface-2);">
+          <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="0.5" width="21" height="17" rx="0" stroke="#D8D2C6"/><circle cx="7" cy="7" r="2" stroke="#D8D2C6"/><path d="M0.5 12l5-4 4 4 4-5 8 7" stroke="#D8D2C6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em; margin-bottom: 8px;">No photographs yet</div>
+        <p style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400); line-height: 1.7; margin-bottom: 24px; max-width: 220px; margin-left: auto; margin-right: auto;">Your portfolio is waiting. Upload your first photograph to begin.</p>
+        <div style="background: var(--ink-900); color: #FFFFFF; font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 10px 20px; border-radius: 2px; display: inline-block; cursor: pointer;">Upload a photograph</div>
+      </div>
+
+      <!-- No events -->
+      <div style="background: var(--surface-2); border: 1px solid var(--hairline); padding: 52px 36px; text-align: center;">
+        <div style="font-family: var(--font-mono); font-size: 36px; font-weight: 400; color: var(--ink-200); margin-bottom: 20px; line-height: 1;">○</div>
+        <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em; margin-bottom: 8px;">No upcoming events</div>
+        <p style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400); line-height: 1.7; margin-bottom: 24px; max-width: 220px; margin-left: auto; margin-right: auto;">New activities are posted weekly. Check back or browse all activities.</p>
+        <div style="color: var(--gold-600); font-family: var(--font-body); font-size: 12px; font-weight: 500; cursor: pointer;">Browse activities →</div>
+      </div>
+
+      <!-- Admin: no submissions -->
+      <div style="background: var(--dark-100); border: 1px solid var(--dark-500); padding: 52px 36px; text-align: center;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px;">Admin View</div>
+        <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600; color: #FFFFFF; letter-spacing: -0.01em; margin-bottom: 8px;">No pending submissions</div>
+        <p style="font-family: var(--font-body); font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.7; max-width: 220px; margin: 0 auto;">All submissions have been reviewed. The queue is clear.</p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       13 · ACCORDION
+  ══════════════════════════════════════════════════════════ -->
+  <div id="accordion" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">13</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Accordion</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Expandable sections for FAQs, detailed descriptions, and settings groups. Typographic expand indicator — never an icon.</p>
+    </div>
+
+    <div style="background: var(--surface-0); border: 1px solid var(--hairline);">
+      <!-- Open state -->
+      <div style="border-bottom: 1px solid var(--hairline);">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer;">
+          <div>
+            <div style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em;">What equipment do I need to join?</div>
+          </div>
+          <div style="font-family: var(--font-body); font-size: 18px; color: var(--gold-600); flex-shrink: 0; line-height: 1; font-weight: 300;">−</div>
+        </div>
+        <div style="padding: 0 24px 24px;">
+          <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-600); line-height: 1.75; max-width: 640px;">There are no equipment requirements for BCC membership. Members shoot with cameras of all kinds — from 35mm film to full-frame digital. What matters is the photograph, not the camera.</p>
+        </div>
+      </div>
+
+      <!-- Closed states -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer; border-bottom: 1px solid var(--hairline);">
+        <div style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em;">How does the showcase gallery work?</div>
+        <div style="font-family: var(--font-body); font-size: 18px; color: var(--ink-400); flex-shrink: 0; line-height: 1; font-weight: 300;">+</div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer; border-bottom: 1px solid var(--hairline);">
+        <div style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em;">Can I upgrade from Associate to Full Member?</div>
+        <div style="font-family: var(--font-body); font-size: 18px; color: var(--ink-400); flex-shrink: 0; line-height: 1; font-weight: 300;">+</div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer;">
+        <div style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em;">Are events open to non-members?</div>
+        <div style="font-family: var(--font-body); font-size: 18px; color: var(--ink-400); flex-shrink: 0; line-height: 1; font-weight: 300;">+</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       14 · CONTACT & LOCATION
+  ══════════════════════════════════════════════════════════ -->
+  <div style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">14</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Contact &amp; Location Display</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Member contact details, event locations, and venue information.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 24px;">Member Contact Block</div>
+        <div style="display: flex; gap: 16px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--hairline-soft);">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--forest-gradient); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-family: var(--font-display); font-size: 18px; font-weight: 600; color: white;">EW</span></div>
+          <div>
+            <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em;">Eleanor Whitfield</div>
+            <div style="font-family: var(--font-body); font-size: 13px; color: var(--ink-400); margin-top: 2px;">Full Member · BCC-0847</div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; min-width: 64px;">Email</span>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">e.whitfield@email.com</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; min-width: 64px;">Location</span>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Hackney, London</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; min-width: 64px;">Website</span>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--gold-600); cursor: pointer;">eleanorwhitfield.co.uk</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 28px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 24px;">Venue / Event Location Block</div>
+        <div style="background: var(--surface-2); padding: 20px; margin-bottom: 20px;">
+          <div style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.01em; margin-bottom: 4px;">Barbican Centre</div>
+          <div style="font-family: var(--font-body); font-size: 13px; color: var(--ink-600); line-height: 1.6;">Silk St, Barbican, London<br>EC2Y 8DS</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; min-width: 56px;">Nearest</span>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Barbican · Circle / Metropolitan / Hammersmith &amp; City</span>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; min-width: 56px;">Access</span>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Step-free access · Lift available</span>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; min-width: 56px;">Parking</span>
+            <span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-900);">Barbican Estate Car Park · £6/hr</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       15 · INLINE NOTICES & BANNERS
+  ══════════════════════════════════════════════════════════ -->
+  <div style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">15</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Inline Notices</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Contextual notices embedded within data forms and data panels. Soft, editorial — never alarming.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; background: var(--status-active-bg); border-left: 2px solid var(--forest-600);">
+        <div style="flex: 1;"><span style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--forest-600); letter-spacing: 0.12em; text-transform: uppercase; margin-right: 10px;">Confirmed</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--forest-700);">Your registration for the Barbican Photo Walk has been confirmed. You will receive details by email.</span></div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; background: var(--status-pending-bg); border-left: 2px solid var(--status-pending-text);">
+        <div style="flex: 1;"><span style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--status-pending-text); letter-spacing: 0.12em; text-transform: uppercase; margin-right: 10px;">Pending</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--status-pending-text);">Your membership renewal payment is awaiting confirmation. This typically takes 1–2 business days.</span></div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; background: var(--status-danger-bg); border-left: 2px solid var(--status-danger-text);">
+        <div style="flex: 1;"><span style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--status-danger-text); letter-spacing: 0.12em; text-transform: uppercase; margin-right: 10px;">Action Required</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--status-danger-text);">Your membership lapsed on 12 April 2025. Portfolio submissions are paused until renewed.</span></div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; background: var(--surface-2); border-left: 2px solid var(--hairline); border: 1px solid var(--hairline);">
+        <div style="flex: 1;"><span style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-right: 10px;">Note</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-600);">Changes to your profile will be visible immediately. Your public portfolio URL will not change.</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       16 · SPEC REFERENCE BLOCK
+  ══════════════════════════════════════════════════════════ -->
+  <div id="spec" style="margin-bottom: 96px;">
+    <div style="margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase;">16</div>
+        <div style="height: 1px; width: 28px; background: var(--gold-600);"></div>
+      </div>
+      <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--ink-900); letter-spacing: -0.015em; margin-bottom: 8px;">Spec &amp; Token Reference Blocks</h2>
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--ink-400); line-height: 1.7; max-width: 560px;">Used in design documentation pages to display token values and component specifications.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+      <!-- Token block -->
+      <div style="background: var(--dark-400); border: 1px solid var(--dark-500); padding: 24px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.3); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">Token Reference · Colour</div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 28px; height: 28px; background: #FAF8F4; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+            <div>
+              <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.06em;">--surface-1</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 1px;">#FAF8F4 · Satin ivory</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 28px; height: 28px; background: #C9A961; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.06em;">--gold-light</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 1px;">#C9A961 · Light gold</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 28px; height: 28px; background: #3E5A48; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.06em;">--forest-600</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 1px;">#3E5A48 · Forest green</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 28px; height: 28px; background: #141210; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+            <div>
+              <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.06em;">--ink-900</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 1px;">#141210 · Primary text</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spec anatomy block -->
+      <div style="background: var(--surface-0); border: 1px solid var(--hairline); padding: 24px;">
+        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--hairline-soft);">Component Spec · Badge</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+          <div style="padding: 10px 0; border-bottom: 1px solid var(--hairline-soft); border-right: 1px solid var(--hairline-soft); padding-right: 16px; padding-left: 0;">
+            <div style="font-family: var(--font-mono); font-size: 9px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;">Font</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-900);">JetBrains Mono</div>
+          </div>
+          <div style="padding: 10px 0 10px 16px; border-bottom: 1px solid var(--hairline-soft);">
+            <div style="font-family: var(--font-mono); font-size: 9px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;">Size</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-900);">9px</div>
+          </div>
+          <div style="padding: 10px 0; border-bottom: 1px solid var(--hairline-soft); border-right: 1px solid var(--hairline-soft); padding-right: 16px;">
+            <div style="font-family: var(--font-mono); font-size: 9px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;">Weight</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-900);">700</div>
+          </div>
+          <div style="padding: 10px 0 10px 16px; border-bottom: 1px solid var(--hairline-soft);">
+            <div style="font-family: var(--font-mono); font-size: 9px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;">Tracking</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-900);">0.14em</div>
+          </div>
+          <div style="padding: 10px 0; border-right: 1px solid var(--hairline-soft); padding-right: 16px;">
+            <div style="font-family: var(--font-mono); font-size: 9px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;">Padding</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-900);">3px 10px</div>
+          </div>
+          <div style="padding: 10px 0 10px 16px;">
+            <div style="font-family: var(--font-mono); font-size: 9px; color: var(--ink-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;">Radius</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-900);">2px (--r-1)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ─── INDEX ─────────────────────────────────────────────── -->
+  <div style="border-top: 1px solid var(--hairline); padding-top: 56px;">
+    <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--gold-600); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 24px;">Component Index</div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;">
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">01</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Key-Value Pairs</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">02</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Metadata Panels</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">03</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Statistics</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">04</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Status Badges</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">05</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Progress Indicators</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">06</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Timeline &amp; Activity</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">07</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Membership Display</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">08</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Pricing &amp; Tiers</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">09</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Tags &amp; Chips</span></div>
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--hairline-soft);"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">10</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Data Tables</span></div>
+      <div style="padding: 12px 0;"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">11</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Lists</span></div>
+      <div style="padding: 12px 0;"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">12</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Empty States</span></div>
+      <div style="padding: 12px 0;"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">13</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Accordion</span></div>
+      <div style="padding: 12px 0;"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">14</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Contact &amp; Location</span></div>
+      <div style="padding: 12px 0;"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">15</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Inline Notices</span></div>
+      <div style="padding: 12px 0;"><span style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);">16</span><span style="font-family: var(--font-body); font-size: 13px; color: var(--ink-700); margin-left: 12px;">Spec Reference</span></div>
+    </div>
+    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--hairline-soft); display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.08em;">V6 65 · BCC Unified Platform · Canonical Data Display Components · July 2026</div>
+      <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.08em;">Authority: V6 98 token.css · V6 99 Constitution</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

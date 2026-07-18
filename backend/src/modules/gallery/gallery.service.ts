@@ -1191,8 +1191,10 @@ export class GalleryService {
       shuffle(selectedRows);
     }
 
+    const pagedSelectedRows = selectedRows.slice(offset, offset + paginatedLimit);
+
     return {
-      photos: selectedRows.map(r => formatPhoto(r as Record<string, unknown>)),
+      photos: pagedSelectedRows.map(r => formatPhoto(r as Record<string, unknown>)),
       total:  userIds.length,
     };
   }

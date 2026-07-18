@@ -27,29 +27,17 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
     </div>
   </div>
 
-  <!-- Gallery Wall: filter strip + justified grid in unified container -->
+  <!-- Gallery Wall: justified grid in unified container -->
   <div class="container">
-
-    <!-- Filter strip -->
-    <div class="filter-strip" id="filter-strip">
-      <span class="filter-label">Filter</span>
-      <div class="filter-chips" id="filter-chips" role="group" aria-label="Filter by category">
-        <!-- "All" is static; category chips are injected from the GENRE taxonomy (item 71). -->
-        <button class="filter-chip active" data-filter="all" aria-pressed="true">All</button>
-      </div>
-    </div>
 
     <!-- Justified grid -->
     <div class="gallery-wrap">
       <JustifiedPhotoGrid
         id="showcase"
         ariaLabel="Photo showcase grid"
-        emptyText="No photographs match this filter."
-        onePerPhotographer={false}
-        pageSize={24}
-      >
-        <button slot="empty-actions" class="btn btn-outline btn-md" id="clear-filter-btn">Clear filter</button>
-      </JustifiedPhotoGrid>
+        onePerPhotographer={true}
+        pageSize={20}
+      />
     </div>
 
   </div>
@@ -413,54 +401,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
-  /* ── Filter chips — load the GENRE taxonomy, then delegate clicks ── */
-  async function loadFilterChips() {
-    try {
-      // Only genres that actually have PUBLIC photos (item 76).
-      const res = await fetch('/api/v1/gallery/genres');
-      if (!res.ok) return;
-      const tags = await res.json() as Array<{ tag_key: string; display_name: string }>;
-      const chips = document.getElementById('filter-chips');
-      if (!chips) return;
-      tags
-        .sort((a, b) => a.display_name.localeCompare(b.display_name))
-        .forEach(t => {
-          const btn = document.createElement('button');
-          btn.className = 'filter-chip';
-          btn.dataset.filter = t.tag_key;
-          btn.setAttribute('aria-pressed', 'false');
-          btn.textContent = t.display_name;
-          chips.appendChild(btn);
-        });
-    } catch { /* non-critical — "All" still works */ }
-  }
 
-  function dispatchFilter(tag: string) {
-    document.getElementById('showcase-grid')?.dispatchEvent(
-      new CustomEvent('bcc:set-filter', { detail: { tag } })
-    );
-  }
-
-  document.getElementById('filter-chips')?.addEventListener('click', e => {
-    const btn = (e.target as Element).closest<HTMLButtonElement>('.filter-chip');
-    if (!btn) return;
-    document.querySelectorAll('.filter-chip').forEach(b => {
-      b.classList.remove('active');
-      b.setAttribute('aria-pressed', 'false');
-    });
-    btn.classList.add('active');
-    btn.setAttribute('aria-pressed', 'true');
-    dispatchFilter(btn.dataset.filter ?? 'all');
-  });
-
-  /* ── Clear filter ── */
-  document.getElementById('clear-filter-btn')?.addEventListener('click', () => {
-    document.querySelectorAll('.filter-chip').forEach(b => {
-      b.classList.toggle('active', b.dataset.filter === 'all');
-      b.setAttribute('aria-pressed', b.dataset.filter === 'all' ? 'true' : 'false');
-    });
-    dispatchFilter('all');
-  });
 
   /* ── Photographer card helpers (mirrors /photographers/ page) ── */
   const CLASS_LABELS: Record<string, string> = {
@@ -570,7 +511,6 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   }
 
   /* ── Initial load ── */
-  loadFilterChips();
   loadPhotographers();
 
   /* ── GSAP entrance ── */

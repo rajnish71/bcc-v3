@@ -96,6 +96,32 @@ u. V6 20
 
 v. V6 21
 
+
+
+Reusable components
+
+V6 60	Gallery Grid
+
+V6 61	Profile Card System
+
+V6 62	Content Card System (Project, Event, Contest, Activity, Journal, News variants)
+
+V6 63	Photo Card System
+
+V6 64	Statistics Band
+
+V6 65	Form System
+
+V6 66	Data Table System
+
+V6 67	Hero \& Section Header System
+
+V6 68	Search \& Filter System
+
+
+
+
+
 w. "V6 99 systemdesign.md "
 
 x. "V6 98 token.css"
@@ -771,6 +797,7 @@ V6 component tree stub (expand this into full wireframe):
 6\. LeadershipGrid {committee\[]} - Leadership - The Minds Behind the Club Passionate photographers who volunteer their time to keep BCC thriving. Coordinators - inherit all text and links from current live site -  Rajnish, Kshitij, Rahil, Bablu, Yogesh, Vikas
 
 Mentors - Dr Anil Bhati, Sauvik Acharyya , Kshitij Patle - inherit all text and information from current live site
+
 
 
 
@@ -1549,6 +1576,50 @@ B. Public Pages
 
 
 
+\### Public Pages
+
+
+
+\- V6 02 — About  🚧
+
+\- V6 06 — Activities 🚧
+
+\- V6 07 — Journal
+
+\- V6 08 — Journal Article
+
+
+
+\### Authentication (Visual Reconciliation)
+
+
+
+Existing functionality remains.
+
+
+
+V6 visual refresh only.
+
+
+
+\- Sign In
+
+\- Register
+
+\- Forgot Password
+
+\- Reset Password
+
+\- Verify Email
+
+
+
+\---
+
+
+
+
+
 \### Membership Card
 
 
@@ -1581,11 +1652,41 @@ B. Public Pages
 
 \### System Deliverables
 
+\- ⬜V6 97 Design Pattern Library ✅
+
+\- ⬜ V6 98 — token.css  ✅
+
+\- ⬜ V6 99 — systemdesign.md  ✅
 
 
-\- ⬜ V6 98 — token.css
 
-\- ⬜ V6 99 — systemdesign.md
+
+
+Reusable components
+
+Frozen not implemented 
+
+✅ V6 67 — Page Opening \& Section Header (Done)
+
+✅ V6 60 — Gallery Grid System
+
+🎯 V6 63 — Canonical Photo Card
+
+🎯 V6 61 — Canonical Person/Profile Card
+
+🎯 V6 62 — Editorial Content Card
+
+🎯 V6 64 — CTA \& Banner Components
+
+🎯 V6 65 — Data Display Components
+
+🎯 V6 66 — Form \& Input Components
+
+
+
+V6 68	Search \& Filter System
+
+
 
 
 
@@ -1622,10 +1723,6 @@ Phase E2C – Optimize for 1366×768, tablet, and mobile.   ✅
 Phase E2D – Polish spacing, sticky save behavior, keyboard navigation, and accessibility.
 
 Phase E2E – Conduct a final visual reconciliation to ensure the refreshed editor still respects the BCC design language.
-
-
-
-
 
 
 
@@ -1692,46 +1789,6 @@ TAXONOMY\_ARCHITECTURE\_FREEZE\_v1.0.md
 \## PHASE I — Remaining Public Pages
 
 
-
-\### Public Pages
-
-
-
-\- V6 02 — About
-
-\- V6 06 — Activities
-
-\- V6 07 — Journal
-
-\- V6 08 — Journal Article
-
-
-
-\### Authentication (Visual Reconciliation)
-
-
-
-Existing functionality remains.
-
-
-
-V6 visual refresh only.
-
-
-
-\- Sign In
-
-\- Register
-
-\- Forgot Password
-
-\- Reset Password
-
-\- Verify Email
-
-
-
-\---
 
 
 

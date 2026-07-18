@@ -669,7 +669,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     background: var(--surface-0);
     border: 1px solid var(--ink-200);
     box-shadow: 0 4px 16px rgba(20,18,16,0.08);
-    z-index: 100;
+    z-index: var(--z-dropdown);
     min-width: 160px;
     display: flex;
     flex-direction: column;
@@ -733,6 +733,9 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     z-index: var(--z-modal);
     backdrop-filter: blur(4px);
   }
+  .modal-overlay[hidden] {
+    display: none !important;
+  }
   .modal-card {
     background: var(--surface-0);
     border: 1px solid var(--ink-200);
@@ -762,7 +765,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     color: var(--ink-600);
     cursor: pointer;
     line-height: 1;
-    padding: 4px;
+    padding: var(--s-half);
   }
   .modal-body {
     padding: var(--s-3);
@@ -894,8 +897,8 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   .assign-role-form {
     background: var(--surface-1);
     border: 1px solid var(--hairline);
-    padding: 16px;
-    margin-top: 8px;
+    padding: var(--s-2);
+    margin-top: var(--s-1);
   }
 </style>
 

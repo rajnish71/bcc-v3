@@ -1,0 +1,17 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+<p class:list={['f-hint', className]}><slot /></p>
+
+<style>
+.f-hint {
+  font-size: 11px;
+  color: var(--ink-400);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  margin: 0;
+}
+</style>

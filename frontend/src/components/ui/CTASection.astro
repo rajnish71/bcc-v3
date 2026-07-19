@@ -1,0 +1,86 @@
+---
+/**
+ * CTASection.astro — V6 64 Canonical Dark CTA Band
+ *
+ * Full-width dark band with optional gold accent line, eyebrow, heading,
+ * body copy, and a slot for CTA buttons. One gold CTA per view maximum.
+ *
+ * Generalises the ProjectJoinCTA band pattern for reuse across pages.
+ */
+interface Props {
+  eyebrow?: string;
+  heading: string;
+  body?: string;
+  goldLine?: boolean;
+  headingId?: string;
+  bodyId?: string;
+  ariaLabel?: string;
+}
+const { eyebrow, heading, body, goldLine = true, headingId, bodyId, ariaLabel } = Astro.props;
+---
+
+<section class="cta-section container" {...ariaLabel ? { 'aria-label': ariaLabel } : {}}>
+  <div class="cta-band">
+    {goldLine && <div class="cta-band__gold-line" aria-hidden="true"></div>}
+    {eyebrow && <div class="cta-band__eyebrow">{eyebrow}</div>}
+    <h2 class="cta-band__heading" {...headingId ? { id: headingId } : {}}>{heading}</h2>
+    {body && <p class="cta-band__body" {...bodyId ? { id: bodyId } : {}}>{body}</p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+.cta-section {
+  padding-top: var(--s-8);
+  padding-bottom: var(--s-12);
+}
+.cta-band {
+  background: var(--surface-deep);
+  padding: var(--s-10) var(--s-12);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-band__gold-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-500), transparent);
+  pointer-events: none;
+}
+.cta-band__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--gold-500);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--s-3);
+}
+.cta-band__heading {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--ls-h1);
+  color: var(--ink-inverse);
+  margin-bottom: var(--s-3);
+  line-height: var(--lh-h1);
+}
+.cta-band__body {
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  color: rgba(250, 248, 244, 0.62);
+  max-width: 540px;
+  margin: 0 auto var(--s-5);
+  font-weight: var(--weight-light);
+}
+
+@media (max-width: 768px) {
+  .cta-band { padding: var(--s-7) var(--s-5); }
+}
+@media (max-width: 480px) {
+  .cta-band { padding: var(--s-6) var(--gutter-mob); }
+}
+</style>

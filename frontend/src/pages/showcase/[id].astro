@@ -270,21 +270,21 @@ const { id } = Astro.params;
 <style>
 /* ── CSS Variables (mapping to design tokens) ── */
 :root {
-  --ink-dark:    #141210;
-  --ink-mid:     #57514B;
-  --ink-light:   #8B8378;
-  --gold:        #C9A961;
-  --gold-dark:   #A8843C;
+  --ink-dark:    var(--ink-900);
+  --ink-mid:     var(--ink-600);
+  --ink-light:   var(--ink-400);
+  --gold:        var(--gold-light);
+  --gold-dark:   var(--gold-600);
   --warm-bg:     #F2EFE9;
-  --warm-card:   #FAF8F4;
-  --warm-rule:   #E7E1D6;
+  --warm-card:   var(--surface-1);
+  --warm-rule:   var(--hairline);
   --dark-zone:   #0A0908;
   --radius:      2px;
 }
 
 /* ── Viewing Context Bar ── */
 .vcbar {
-  background: #fff;
+  background: var(--surface-0);
   border-bottom: 1px solid var(--warm-rule);
   padding: 0 32px;
   /* Offset the fixed site header (96px) so the breadcrumb isn't hidden behind it */
@@ -317,7 +317,7 @@ const { id } = Astro.params;
   text-overflow: ellipsis;
 }
 :global(.crumb-sep) {
-  color: #D8D2C6;
+  color: var(--ink-200);
   padding: 0 8px;
   font-size: 10px;
   flex-shrink: 0;
@@ -478,7 +478,7 @@ const { id } = Astro.params;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3E5A48, #2A3E32);
+  background: var(--forest-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -543,7 +543,7 @@ const { id } = Astro.params;
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: #fff;
+  background: var(--surface-0);
   border: 1px solid var(--warm-rule);
 }
 :global(.container-item-info) { display: flex; flex-direction: column; gap: 2px; }
@@ -560,13 +560,13 @@ const { id } = Astro.params;
 :global(.container-empty) { font-size: 13px; color: var(--ink-light); font-style: italic; }
 
 /* EXIF */
-.exif-table { background: #fff; border: 1px solid var(--warm-rule); }
+.exif-table { background: var(--surface-0); border: 1px solid var(--warm-rule); }
 :global(.exif-loading) { padding: 16px; font-size: 12px; color: var(--ink-light); }
 :global(.exif-row) {
   display: grid;
   grid-template-columns: 160px 1fr;
   padding: 10px 18px;
-  border-bottom: 1px solid #F0EBE0;
+  border-bottom: 1px solid var(--hairline-soft);
   gap: 12px;
   align-items: baseline;
 }
@@ -576,13 +576,13 @@ const { id } = Astro.params;
 
 /* Tags */
 .tags-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-:global(.tag-item) { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: #fff; border: 1px solid var(--warm-rule); color: var(--ink-mid); padding: 6px 12px; }
+:global(.tag-item) { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--surface-0); border: 1px solid var(--warm-rule); color: var(--ink-mid); padding: 6px 12px; }
 .geo-coords { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mid); line-height: 1.7; }
 
 /* ── Interaction Panel ── */
 .interaction-panel {
   padding: 32px 28px;
-  background: #fff;
+  background: var(--surface-0);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -672,7 +672,7 @@ const { id } = Astro.params;
   width: 100%;
   padding: 11px 16px;
   border: 1px solid var(--warm-rule);
-  background: #fff;
+  background: var(--surface-0);
   color: var(--ink-mid);
   font-size: 12px;
   font-weight: 600;
@@ -697,7 +697,7 @@ const { id } = Astro.params;
   font-size: 12px;
   font-weight: 600;
   border: 1px solid var(--warm-rule);
-  background: #fff;
+  background: var(--surface-0);
   color: var(--ink-mid);
   text-decoration: none;
   cursor: pointer;
@@ -710,10 +710,10 @@ const { id } = Astro.params;
 .share-btn--x:hover             { background: #000; border-color: #000; color: #fff; }
 .share-btn--li:hover            { background: #0077B5; border-color: #0077B5; color: #fff; }
 .share-btn--wa:hover            { background: #25D366; border-color: #25D366; color: #fff; }
-.share-btn--copy.copied         { color: #3E5A48; border-color: #3E5A48; }
+.share-btn--copy.copied         { color: var(--forest-600); border-color: var(--forest-600); }
 
 .report-link { text-align: center; padding-top: 4px; }
-.report-text { font-size: 11px; color: var(--ink-light); cursor: pointer; border-bottom: 1px solid #D8D2C6; }
+.report-text { font-size: 11px; color: var(--ink-light); cursor: pointer; border-bottom: 1px solid var(--ink-200); }
 
 /* Admin panel */
 .admin-panel {
@@ -728,7 +728,7 @@ const { id } = Astro.params;
 .btn-admin-action {
   padding: 9px 14px;
   border: 1px solid rgba(163,73,59,0.4);
-  background: #fff;
+  background: var(--surface-0);
   color: #A3493B;
   font-size: 11px;
   font-weight: 600;
@@ -757,7 +757,7 @@ const { id } = Astro.params;
 
 /* ── Comments ── */
 .comments-section {
-  background: #fff;
+  background: var(--surface-0);
   border-top: 1px solid var(--warm-rule);
   padding: 40px 36px;
   max-width: 1360px;
@@ -775,7 +775,7 @@ const { id } = Astro.params;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3E5A48, #2A3E32);
+  background: var(--forest-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -788,7 +788,7 @@ const { id } = Astro.params;
 .comment-input-area { flex: 1; }
 .comment-textarea {
   width: 100%;
-  border: 1px solid #D8D2C6;
+  border: 1px solid var(--ink-200);
   background: var(--warm-card);
   padding: 12px 16px;
   font-size: 13px;
@@ -863,10 +863,10 @@ const { id } = Astro.params;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  border: 1px solid #D8D2C6;
+  border: 1px solid var(--ink-200);
   color: var(--ink-mid);
   padding: 12px 32px;
-  background: #fff;
+  background: var(--surface-0);
   cursor: pointer;
 }
 .btn-load-more:hover { border-color: var(--ink-dark); color: var(--ink-dark); }

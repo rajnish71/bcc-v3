@@ -1,0 +1,184 @@
+---
+/**
+ * EmptyState.astro — V6 65 §12 canonical empty state.
+ *
+ * Three surface variants matching the design spec:
+ *   light  — surface-0 bg, square icon frame, dark title + CTA button
+ *   subtle — surface-2 bg, typographic glyph (○), gold link CTA
+ *   dark   — dark-100 bg, gold kicker, white title
+ *
+ * The icon slot accepts a small SVG (24×24 recommended) or an emoji
+ * character. Leave it empty to show the default glyph for the surface.
+ *
+ * Empty states are opportunities, not failures — title and description
+ * should be inviting, never apologetic.
+ */
+
+interface Props {
+  surface?: 'light' | 'subtle' | 'dark';
+  title: string;
+  description?: string;
+  /** Admin/context label above the title — shown only on dark surface. */
+  kicker?: string;
+  /** Primary action button label. */
+  ctaLabel?: string;
+  /** Primary action href. If omitted the CTA is not rendered. */
+  ctaHref?: string;
+  /** Secondary link text (shown below CTA on light; used as CTA on subtle). */
+  linkLabel?: string;
+  linkHref?: string;
+}
+
+const {
+  surface = 'light',
+  title,
+  description,
+  kicker,
+  ctaLabel,
+  ctaHref,
+  linkLabel,
+  linkHref,
+} = Astro.props;
+---
+
+<div class:list={['es', `es--${surface}`]}>
+  <!-- Icon / glyph area -->
+  <div class="es-icon" aria-hidden="true">
+    <slot name="icon">
+      {surface === 'subtle' && <span class="es-glyph">○</span>}
+      {surface === 'light' && (
+        <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0.5" y="0.5" width="21" height="17" stroke="currentColor"/>
+          <circle cx="7" cy="7" r="2" stroke="currentColor"/>
+          <path d="M0.5 12l5-4 4 4 4-5 8 7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      )}
+    </slot>
+  </div>
+
+  {kicker && <div class="es-kicker">{kicker}</div>}
+  <div class="es-title">{title}</div>
+  {description && <p class="es-desc">{description}</p>}
+
+  {/* CTA — button on light, gold link on subtle, nothing on dark by default */}
+  {ctaHref && ctaLabel && surface === 'light' && (
+    <a href={ctaHref} class="es-btn">{ctaLabel}</a>
+  )}
+  {ctaHref && ctaLabel && surface === 'subtle' && (
+    <a href={ctaHref} class="es-link">{ctaLabel} →</a>
+  )}
+
+  {linkHref && linkLabel && (
+    <a href={linkHref} class="es-link">{linkLabel} →</a>
+  )}
+
+  <slot />
+</div>
+
+<style>
+.es {
+  text-align: center;
+  padding: 52px 36px;
+}
+
+/* ── Surface variants ── */
+.es--light {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+}
+
+.es--subtle {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+}
+
+.es--dark {
+  background: var(--dark-100);
+  border: 1px solid var(--dark-500);
+}
+
+/* ── Icon container ── */
+.es-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.es--light .es-icon {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--hairline-soft);
+}
+
+.es-glyph {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 400;
+  color: var(--ink-200);
+  line-height: 1;
+}
+
+/* ── Kicker — dark surface only ── */
+.es-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gold-600);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* ── Title ── */
+.es-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.es--light .es-title,
+.es--subtle .es-title { color: var(--ink-900); }
+.es--dark .es-title   { color: #FFFFFF; }
+
+/* ── Description ── */
+.es-desc {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 240px;
+  margin: 0 auto 24px;
+}
+
+.es--light .es-desc,
+.es--subtle .es-desc { color: var(--ink-400); }
+.es--dark .es-desc   { color: rgba(255,255,255,0.4); }
+
+/* ── Buttons & links ── */
+.es-btn {
+  display: inline-block;
+  background: var(--ink-900);
+  color: #FFFFFF;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 2px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.es-link {
+  display: inline-block;
+  color: var(--gold-600);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.es-link:hover { text-decoration: underline; }
+</style>

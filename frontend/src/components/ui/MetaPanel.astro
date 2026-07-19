@@ -1,0 +1,127 @@
+---
+/**
+ * MetaPanel.astro — V6 65 §02 canonical KV table panel.
+ *
+ * Used for structured data groups: EXIF technical data, event details,
+ * profile summaries. Always mono labels (uppercase, tracked),
+ * hairline-soft dividers between rows.
+ *
+ * `mono` makes all values display in JetBrains Mono (use for EXIF/technical);
+ * default renders values in Inter body font (use for event/profile data).
+ *
+ * The `titleRight` prop accepts a short string — shown right-aligned in the
+ * header (e.g. a file-format label like "RAW · ARW" or a StatusBadge).
+ */
+
+interface Row {
+  label: string;
+  value: string;
+  /** Emphasize this value (e.g. "14 / 20" enrolled count) */
+  emphasis?: boolean;
+}
+
+interface Props {
+  title: string;
+  titleRight?: string;
+  rows: Row[];
+  /** Mono font for all values — best for EXIF / technical data. */
+  mono?: boolean;
+}
+
+const { title, titleRight, rows, mono = false } = Astro.props;
+---
+
+<div class="mp">
+  <div class="mp-header">
+    <div class="mp-title">{title}</div>
+    {titleRight && <div class="mp-title-right">{titleRight}</div>}
+  </div>
+  <div class="mp-body">
+    {rows.map((row, i) => (
+      <div class:list={['mp-row', i < rows.length - 1 && 'mp-row--divided']}>
+        <span class="mp-label">{row.label}</span>
+        <span class:list={['mp-value', mono && 'mp-value--mono', row.emphasis && 'mp-value--emphasis']}>
+          {row.value}
+        </span>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+.mp {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+}
+
+/* ── Header ── */
+.mp-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mp-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-900);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.mp-title-right {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Rows ── */
+.mp-body {
+  padding: 0 24px;
+}
+
+.mp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.mp-row--divided {
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.mp-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-400);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mp-value {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-900);
+}
+
+.mp-value--mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-700);
+  letter-spacing: 0.03em;
+}
+
+.mp-value--emphasis {
+  color: var(--forest-600);
+  font-weight: 600;
+}
+</style>

@@ -16,6 +16,7 @@
  * - Legacy: https://bcc.bhopal.info/contact → V3: /contact/
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/ui/PageHero.astro';
 ---
 
 <BaseLayout
@@ -23,17 +24,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   description="Collaborate with Central India's most active photography society. Reach a niche creative community and build high-quality visual assets."
 >
 
-  <!-- Page Hero -->
-  <div class="page-hero surface-white">
-    <div class="container">
-      <span class="eyebrow">Partnerships</span>
-      <h1 class="policy-title">Partner with Us &amp; Sponsorships</h1>
-      <p class="policy-meta">
-        Collaborate with Central India's most active photography society. Reach a niche creative community and build high-quality visual assets.
-      </p>
-    </div>
-    <div class="hairline"></div>
-  </div>
+  <PageHero
+    eyebrow="Partnerships"
+    title="Partner with Us & Sponsorships"
+    subtitle="Collaborate with Central India's most active photography society. Reach a niche creative community and build high-quality visual assets."
+  />
 
   <!-- Body -->
   <section class="policy-section" aria-label="Partner with Us & Sponsorships">
@@ -75,28 +70,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <style>
-/* ── Page Hero ── */
-.page-hero {
-  padding-top: calc(var(--nav-h) + var(--s-6));
-  padding-bottom: var(--s-4);
-}
-.policy-title {
-  font-family: var(--font-display);
-  font-size: var(--text-h1);
-  font-weight: 700;
-  color: var(--ink-900);
-  letter-spacing: -0.025em;
-  line-height: 1.05;
-  margin-top: var(--s-1);
-  margin-bottom: var(--s-2);
-}
-.policy-meta {
-  font-family: var(--font-body);
-  font-size: var(--text-small);
-  color: var(--ink-600);
-  line-height: 1.65;
-}
-
 /* ── Policy Section ── */
 .policy-section {
   background: var(--surface-1);

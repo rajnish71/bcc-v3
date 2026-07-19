@@ -1,8 +1,14 @@
 ---
 /**
- * SectionHeader.astro — Eyebrow + title + optional subtitle.
- * Light editorial system: dark ink on light surfaces.
+ * SectionHeader.astro — V6 67 Canonical Section Header.
+ * Variant A: left-aligned · Variant B: centered.
+ * Eyebrow · H2 · optional intro · optional single CTA.
  */
+interface Cta {
+  label: string;
+  href: string;
+}
+
 interface Props {
   eyebrow?: string;
   title: string;
@@ -10,6 +16,7 @@ interface Props {
   as?: 'h1' | 'h2' | 'h3';
   align?: 'left' | 'center';
   spacing?: 'sm' | 'md' | 'lg';
+  cta?: Cta;
   'data-gsap'?: string;
   class?: string;
 }
@@ -21,6 +28,7 @@ const {
   as: Tag = 'h2',
   align = 'left',
   spacing = 'md',
+  cta,
   'data-gsap': dataGsap,
   class: cls = '',
 } = Astro.props;
@@ -30,24 +38,65 @@ const {
   class:list={['sec-header', `sec-header--${align}`, `sec-header--${spacing}`, cls]}
   data-gsap={dataGsap}
 >
-  {eyebrow && <div class="eyebrow">{eyebrow}</div>}
-  <Tag class="sec-header__title">{title}</Tag>
-  {subtitle && <p class="sec-header__sub">{subtitle}</p>}
+  {align === 'left' && cta ? (
+    <div class="sec-header__row">
+      <div class="sec-header__text">
+        {eyebrow && <div class="sec-header__eyebrow">{eyebrow}</div>}
+        <Tag class="sec-header__title">{title}</Tag>
+        {subtitle && <p class="sec-header__sub">{subtitle}</p>}
+      </div>
+      <div class="sec-header__cta-wrap">
+        <a href={cta.href} class="sec-header__cta">{cta.label} <span class="sec-header__arrow">→</span></a>
+      </div>
+    </div>
+  ) : (
+    <>
+      {eyebrow && <div class="sec-header__eyebrow">{eyebrow}</div>}
+      <Tag class="sec-header__title">{title}</Tag>
+      {subtitle && <p class="sec-header__sub">{subtitle}</p>}
+      {cta && (
+        <a href={cta.href} class="sec-header__cta sec-header__cta--centered">{cta.label} <span class="sec-header__arrow">→</span></a>
+      )}
+    </>
+  )}
 </div>
 
 <style>
-.sec-header { max-width: 600px; }
-.sec-header--center { margin: 0 auto; text-align: center; }
+.sec-header { max-width: 720px; }
+.sec-header--center { margin: 0 auto; text-align: center; max-width: 640px; }
 .sec-header--left    { text-align: left; }
 
 .sec-header--sm  { margin-bottom: var(--s-4); }
 .sec-header--md  { margin-bottom: var(--s-6); }
 .sec-header--lg  { margin-bottom: var(--s-8); }
 
+/* Row layout for left+CTA variant */
+.sec-header__row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+.sec-header__text { max-width: 720px; }
+
+/* Eyebrow — V6 67: JetBrains Mono · 11px · gold · +0.22em · uppercase · 500 */
+.sec-header__eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: 12px;
+}
+
+/* Title — V6 67: Outfit · clamp(26–34px) · 600 · ink-900 · -0.015em · lh 1.15 */
 .sec-header__title {
   font-family: var(--font-display);
   font-size: var(--text-h2);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.015em;
   line-height: 1.15;
   color: var(--ink-900);
@@ -57,12 +106,49 @@ const {
   letter-spacing: -0.025em;
   line-height: 1.05;
 }
+
+/* Intro — V6 67: Inter · 18px · 300 · ink-600 · lh 1.70 · max 680px */
 .sec-header__sub {
   margin-top: var(--s-2);
-  font-size: var(--text-body);
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 300;
   color: var(--ink-600);
-  line-height: 1.75;
-  max-width: 520px;
+  line-height: 1.70;
+  max-width: 680px;
+  text-wrap: pretty;
 }
-.sec-header--center .sec-header__sub { margin-left: auto; margin-right: auto; }
+.sec-header--center .sec-header__sub {
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* CTA — V6 67: ghost button · 1px hairline · 2px radius · ink-900 · gold arrow */
+.sec-header__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-family: var(--font-body);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink-900);
+  border: var(--border-hairline) solid var(--hairline);
+  padding: 11px 22px;
+  border-radius: var(--r-1);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: border-color var(--dur-instant) var(--ease-standard), color var(--dur-instant) var(--ease-standard);
+  flex-shrink: 0;
+}
+.sec-header__cta:hover {
+  border-color: var(--ink-200);
+  color: var(--ink-900);
+}
+.sec-header__arrow { color: var(--gold-600); }
+
+.sec-header__cta--centered {
+  margin-top: 28px;
+  padding: 11px 28px;
+}
 </style>

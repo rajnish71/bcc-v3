@@ -7,6 +7,12 @@
  * Connects to NestJS backend at POST /api/v1/contact.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import Banner from '../../components/ui/Banner.astro';
+import FormField from '../../components/forms/FormField.astro';
+import TextInput from '../../components/forms/TextInput.astro';
+import TextArea from '../../components/forms/TextArea.astro';
+import ValidationMessage from '../../components/forms/ValidationMessage.astro';
 ---
 
 <BaseLayout
@@ -14,17 +20,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   description="Get in touch with the Bhopal Camera Club. Send us a message or find our correspondence address."
 >
 
-  <!-- Page Hero -->
-  <div class="page-hero surface-white">
-    <div class="container">
-      <span class="eyebrow">Connect</span>
-      <h1 class="policy-title">Contact Us</h1>
-      <p class="policy-meta">
-        Get in touch with the Bhopal Camera Club. Whether you have questions about membership, events, or partnerships, we are here to help.
-      </p>
-    </div>
-    <div class="hairline"></div>
-  </div>
+  <PageHero
+    eyebrow="Connect"
+    title="Contact Us"
+    subtitle="Get in touch with the Bhopal Camera Club. Whether you have questions about membership, events, or partnerships, we are here to help."
+  />
 
   <!-- Contact Grid Section -->
   <section class="contact-section" aria-label="Contact information and form">
@@ -101,7 +101,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <form id="contact-form" class="contact-card form-card" novalidate>
             <h2 class="form-heading">Send a Message</h2>
             
-            <div id="contact-error" class="auth-banner auth-banner--error" style="display: none;" role="alert"></div>
+            <Banner id="contact-error" variant="error" />
 
             <!-- Honeypot spam protection -->
             <div style="display: none !important;">
@@ -109,73 +109,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <input id="website" type="text" name="website" autocomplete="off" tabindex="-1" />
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="name">Name <span class="required" aria-hidden="true">*</span></label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                class="field"
-                placeholder="Your full name"
-                required
-                aria-required="true"
-              />
-              <span class="field-error" id="error-name" style="display: none;"></span>
-            </div>
+            <FormField id="name" label="Name" required>
+              <TextInput id="name" name="name" placeholder="Your full name" required />
+              <ValidationMessage id="error-name" />
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label" for="email">Email Address <span class="required" aria-hidden="true">*</span></label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                class="field"
-                placeholder="you@example.com"
-                required
-                aria-required="true"
-              />
-              <span class="field-error" id="error-email" style="display: none;"></span>
-            </div>
+            <FormField id="email" label="Email Address" required>
+              <TextInput id="email" type="email" name="email" placeholder="you@example.com" required />
+              <ValidationMessage id="error-email" />
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label" for="phone">Phone Number <span class="optional">(Optional)</span></label>
-              <input
-                id="phone"
-                type="tel"
-                name="phone"
-                class="field"
-                placeholder="+91 XXXXX XXXXX"
-              />
-              <span class="field-error" id="error-phone" style="display: none;"></span>
-            </div>
+            <FormField id="phone" label="Phone Number" optional>
+              <TextInput id="phone" type="tel" name="phone" placeholder="+91 XXXXX XXXXX" />
+              <ValidationMessage id="error-phone" />
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label" for="subject">Subject <span class="required" aria-hidden="true">*</span></label>
-              <input
-                id="subject"
-                type="text"
-                name="subject"
-                class="field"
-                placeholder="What is this regarding?"
-                required
-                aria-required="true"
-              />
-              <span class="field-error" id="error-subject" style="display: none;"></span>
-            </div>
+            <FormField id="subject" label="Subject" required>
+              <TextInput id="subject" name="subject" placeholder="What is this regarding?" required />
+              <ValidationMessage id="error-subject" />
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label" for="message">Message <span class="required" aria-hidden="true">*</span></label>
-              <textarea
-                id="message"
-                name="message"
-                class="field"
-                rows="5"
-                placeholder="Write your message here..."
-                required
-                aria-required="true"
-              ></textarea>
-              <span class="field-error" id="error-message" style="display: none;"></span>
-            </div>
+            <FormField id="message" label="Message" required>
+              <TextArea id="message" name="message" rows={5} placeholder="Write your message here..." required />
+              <ValidationMessage id="error-message" />
+            </FormField>
 
             <button id="submit-btn" type="submit" class="btn btn-dark btn-lg submit-btn">
               Send Message
@@ -195,28 +152,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <style>
-/* ── Page Hero ── */
-.page-hero {
-  padding-top: calc(var(--nav-h) + var(--s-6));
-  padding-bottom: var(--s-4);
-}
-.policy-title {
-  font-family: var(--font-display);
-  font-size: var(--text-h1);
-  font-weight: 700;
-  color: var(--ink-900);
-  letter-spacing: -0.025em;
-  line-height: 1.05;
-  margin-top: var(--s-1);
-  margin-bottom: var(--s-2);
-}
-.policy-meta {
-  font-family: var(--font-body);
-  font-size: var(--text-small);
-  color: var(--ink-600);
-  line-height: 1.65;
-}
-
 /* ── Section Layout ── */
 .contact-section {
   background: var(--surface-1);
@@ -340,36 +275,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 }
 
 /* ── Form Controls ── */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: var(--s-3);
-}
-
-.form-label {
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-600);
-}
-
-.required {
-  color: #B91C1C;
-}
-
-.optional {
-  color: var(--ink-400);
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.field-error {
-  color: #B91C1C;
-  font-size: 12px;
-  margin-top: 4px;
-  font-family: var(--font-body);
-}
+:global(.f-field) { margin-bottom: var(--s-3); }
 
 .submit-btn {
   width: 100%;
@@ -422,19 +328,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   width: auto;
 }
 
-/* ── Error Banner ── */
-.auth-banner {
-  padding: 10px 14px;
-  border-radius: var(--r-2);
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: var(--s-3);
-}
-.auth-banner--error {
-  background: #FEF2F2;
-  border: 1px solid #FCA5A5;
-  color: #B91C1C;
-}
+:global(#contact-error) { margin-bottom: var(--s-3); }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
@@ -469,35 +363,31 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   const websiteInput = document.getElementById('website') as HTMLInputElement;
 
   function clearErrors() {
-    errorBanner.style.display = 'none';
+    errorBanner.hidden = true;
     errorBanner.textContent = '';
-    
-    // Clear individual field errors
-    const errorSpans = document.querySelectorAll('.field-error');
-    errorSpans.forEach(span => {
-      (span as HTMLElement).style.display = 'none';
-      (span as HTMLElement).textContent = '';
+
+    document.querySelectorAll<HTMLElement>('.f-msg').forEach(el => {
+      el.hidden = true;
+      el.textContent = '';
     });
-    
-    const inputs = document.querySelectorAll('.field');
-    inputs.forEach(input => {
-      (input as HTMLElement).style.borderColor = '';
+    document.querySelectorAll<HTMLElement>('.f-input').forEach(el => {
+      el.classList.remove('is-error');
     });
   }
 
   function showGeneralError(msg: string) {
     errorBanner.textContent = msg;
-    errorBanner.style.display = 'block';
+    errorBanner.hidden = false;
     errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function showFieldError(fieldId: string, msg: string) {
-    const errorSpan = document.getElementById(`error-${fieldId}`) as HTMLElement;
+    const errorEl = document.getElementById(`error-${fieldId}`) as HTMLElement;
     const inputEl = document.getElementById(fieldId) as HTMLElement;
-    if (errorSpan && inputEl) {
-      errorSpan.textContent = msg;
-      errorSpan.style.display = 'block';
-      inputEl.style.borderColor = '#B91C1C';
+    if (errorEl && inputEl) {
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+      inputEl.classList.add('is-error');
     }
   }
 

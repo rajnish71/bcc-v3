@@ -1,0 +1,207 @@
+---
+/**
+ * PersonCard.astro — V6 61 Canonical Person / Profile Card
+ *
+ * Renders a person tile used across About (leadership, mentors) and any
+ * future context requiring an identified person with portrait, role, and bio.
+ *
+ * layout="vertical"   — avatar above identity block (committee default)
+ * layout="horizontal" — avatar beside identity block (mentor default)
+ *
+ * The default slot renders between bio and the profile link — use it for
+ * section-specific extras (e.g. the mentor contribution block).
+ */
+interface Props {
+  name: string;
+  eyebrow?: string;
+  subtitle?: string;
+  bio?: string;
+  avatar?: string;
+  profileHref?: string;
+  avatarSize?: number;
+  layout?: 'vertical' | 'horizontal';
+  placeholderVariant?: 'forest' | 'gold';
+}
+const {
+  name,
+  eyebrow,
+  subtitle,
+  bio,
+  avatar,
+  profileHref,
+  avatarSize = 88,
+  layout = 'vertical',
+  placeholderVariant = 'forest',
+} = Astro.props;
+
+const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2);
+---
+
+<div class={`person-card person-card--${layout}`}>
+  {layout === 'horizontal' ? (
+    <div class="person-card__header">
+      <div
+        class="person-card__portrait-wrap"
+        aria-hidden="true"
+        style={`--pc-size: ${avatarSize}px`}
+      >
+        {avatar ? (
+          <img
+            src={avatar}
+            alt={`Portrait of ${name}`}
+            class="person-card__portrait"
+            loading="lazy"
+            width={avatarSize}
+            height={avatarSize}
+          />
+        ) : (
+          <div class={`person-card__placeholder person-card__placeholder--${placeholderVariant}`}>
+            <span class="person-card__initials">{initials}</span>
+          </div>
+        )}
+      </div>
+      <div class="person-card__identity">
+        {eyebrow && <div class="person-card__eyebrow">{eyebrow}</div>}
+        <h4 class="person-card__name">{name}</h4>
+        {subtitle && <div class="person-card__subtitle">{subtitle}</div>}
+      </div>
+    </div>
+  ) : (
+    <>
+      <div
+        class="person-card__portrait-wrap"
+        aria-hidden="true"
+        style={`--pc-size: ${avatarSize}px`}
+      >
+        {avatar ? (
+          <img
+            src={avatar}
+            alt={`Portrait of ${name}`}
+            class="person-card__portrait"
+            loading="lazy"
+            width={avatarSize}
+            height={avatarSize}
+          />
+        ) : (
+          <div class={`person-card__placeholder person-card__placeholder--${placeholderVariant}`}>
+            <span class="person-card__initials">{initials}</span>
+          </div>
+        )}
+      </div>
+      {eyebrow && <div class="person-card__eyebrow">{eyebrow}</div>}
+      <h4 class="person-card__name">{name}</h4>
+      {subtitle && <div class="person-card__subtitle">{subtitle}</div>}
+    </>
+  )}
+
+  {bio && <p class="person-card__bio">{bio}</p>}
+  <slot />
+  {profileHref && (
+    <a href={profileHref} class="person-card__profile-link">
+      View Profile <span aria-hidden="true">→</span>
+    </a>
+  )}
+</div>
+
+<style>
+/* Portrait */
+.person-card__portrait-wrap {
+  width: var(--pc-size, 88px);
+  height: var(--pc-size, 88px);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.person-card__portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.person-card__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.person-card__placeholder--forest {
+  background: var(--forest-gradient);
+}
+.person-card__placeholder--gold {
+  background: linear-gradient(135deg, var(--gold-600), #7A5E28);
+}
+.person-card__initials {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: var(--weight-bold);
+  color: #ffffff;
+}
+
+/* Vertical layout */
+.person-card--vertical .person-card__portrait-wrap {
+  margin-bottom: var(--s-3);
+}
+
+/* Horizontal layout */
+.person-card--horizontal .person-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+.person-card--horizontal .person-card__identity {
+  padding-top: var(--s-1);
+}
+
+/* Content */
+.person-card__eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--s-1);
+}
+.person-card__name {
+  font-family: var(--font-display);
+  font-size: var(--text-h4);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  color: var(--ink-900);
+}
+.person-card__subtitle {
+  font-size: var(--text-caption);
+  color: var(--ink-400);
+  font-family: var(--font-body);
+}
+
+/* Bio — separate margin from subtitle in vertical layout */
+.person-card--vertical .person-card__name { margin-bottom: 6px; }
+.person-card--vertical .person-card__subtitle { margin-bottom: var(--s-2); }
+
+.person-card__bio {
+  font-size: var(--text-ui);
+  line-height: 1.85;
+  color: var(--ink-600);
+  margin-bottom: 20px;
+}
+
+/* Profile link */
+.person-card__profile-link {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--gold-600);
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: color var(--m-fast);
+}
+.person-card__profile-link:hover {
+  color: var(--gold-500);
+}
+</style>

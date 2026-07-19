@@ -564,7 +564,7 @@ const { variant } = Astro.props;
 /* ── Review table ── */
 .maf-review-table { background: var(--surface-0); border: 1px solid var(--hairline); border-radius: var(--r-2); overflow: hidden; margin-bottom: var(--s-3); }
 .maf-review-table__header { padding: 14px 20px; background: var(--surface-1); border-bottom: 1px solid var(--hairline); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-400); font-weight: 600; }
-.maf-review-row { display: flex; align-items: baseline; gap: 16px; padding: 12px 20px; border-bottom: 1px solid #F4F0E8; }
+.maf-review-row { display: flex; align-items: baseline; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--surface-2); }
 .maf-review-row:last-child { border-bottom: none; }
 .maf-review-row--readonly { background: #FDFBF7; }
 .maf-review-row__key { font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.06em; min-width: 160px; flex-shrink: 0; }
@@ -576,15 +576,15 @@ const { variant } = Astro.props;
 .maf-membership-badge__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-400); font-weight: 600; margin-bottom: 8px; }
 .maf-membership-badge__name { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink-900); margin-bottom: 4px; }
 .maf-membership-badge__term { font-size: 12px; color: var(--ink-400); }
-.maf-membership-badge__tag { background: rgba(201,169,97,0.1); border: 1px solid #C9A961; padding: 8px 18px; border-radius: var(--r-1); font-size: 12px; font-weight: 600; color: var(--gold-700); white-space: nowrap; }
+.maf-membership-badge__tag { background: rgba(201,169,97,0.1); border: 1px solid var(--gold-light); padding: 8px 18px; border-radius: var(--r-1); font-size: 12px; font-weight: 600; color: var(--gold-700); white-space: nowrap; }
 
 /* ── Renewal meta ── */
 .maf-renewal-meta { background: #F0F5F2; border: 1px solid #C4D8CB; border-radius: var(--r-2); padding: 18px 20px; margin-bottom: var(--s-3); }
-.maf-renewal-meta__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: #3E5A48; font-weight: 600; margin-bottom: 12px; }
+.maf-renewal-meta__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--forest-600); font-weight: 600; margin-bottom: 12px; }
 .maf-renewal-meta__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .maf-renewal-meta__key { font-size: 11px; color: var(--ink-400); margin-bottom: 4px; }
 .maf-renewal-meta__val--expiry { color: #C0392B; font-weight: 600; }
-.maf-renewal-meta__val--projected { color: #3E5A48; font-weight: 600; }
+.maf-renewal-meta__val--projected { color: var(--forest-600); font-weight: 600; }
 
 /* ── Review note ── */
 .maf-review-note { font-size: 13px; line-height: 1.7; color: var(--ink-400); font-style: italic; margin-bottom: var(--s-3); }
@@ -615,9 +615,9 @@ const { variant } = Astro.props;
 
 /* ── Prefill banner ── */
 .maf-prefill-banner { display: flex; align-items: flex-start; gap: 12px; background: #F0F5F2; border: 1px solid #C4D8CB; border-radius: var(--r-2); padding: 14px 18px; margin-bottom: var(--s-4); }
-.maf-prefill-banner__icon { font-size: 16px; color: #3E5A48; flex-shrink: 0; margin-top: 1px; }
-.maf-prefill-banner__title { font-size: 13px; font-weight: 600; color: #2A3E32; margin-bottom: 3px; }
-.maf-prefill-banner__body { font-size: 12px; color: #3E5A48; line-height: 1.6; }
+.maf-prefill-banner__icon { font-size: 16px; color: var(--forest-600); flex-shrink: 0; margin-top: 1px; }
+.maf-prefill-banner__title { font-size: 13px; font-weight: 600; color: var(--forest-700); margin-bottom: 3px; }
+.maf-prefill-banner__body { font-size: 12px; color: var(--forest-600); line-height: 1.6; }
 
 /* ── Success screen ── */
 .maf-success { text-align: center; padding: 60px 40px; }

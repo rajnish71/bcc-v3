@@ -171,19 +171,18 @@ const containerId = `pcg-cards-${projectTag.replace(/[^a-z0-9]/gi, '-')}`;
 .pcg-card--skel { pointer-events: none; }
 .pcg-portrait-wrap--skel {
   background: var(--surface-2);
-  animation: pcg-shimmer 1.6s ease-in-out infinite;
+  animation: skelShimmer 1.6s ease-in-out infinite;
 }
 .pcg-skel {
   background: var(--surface-2);
   border-radius: 2px;
-  animation: pcg-shimmer 1.6s ease-in-out infinite;
+  animation: skelShimmer 1.6s ease-in-out infinite;
   margin-bottom: 10px;
 }
 .pcg-skel--label { height: 9px;  width: 55%; }
 .pcg-skel--name  { height: 14px; width: 72%; margin-bottom: 8px; }
 .pcg-skel--count { height: 10px; width: 45%; margin-bottom: 20px; }
 .pcg-skel--link  { height: 11px; width: 38%; }
-@keyframes pcg-shimmer { 0%,100% { opacity:.4; } 50% { opacity:.7; } }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {

@@ -73,7 +73,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   padding-bottom: var(--s-8);
 }
 .showcase-hero-inner {
-  background: #FFFFFF;
+  background: var(--surface-0);
   border: 1px solid var(--hairline);
   border-top: 3px solid var(--gold-600);
   overflow: hidden;
@@ -125,7 +125,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
 
 /* ── Filter strip (inline, not sticky) ── */
 .filter-strip {
-  background: #FFFFFF;
+  background: var(--surface-0);
   border: 1px solid var(--hairline);
   border-bottom: none;
   padding: 18px 32px;
@@ -157,7 +157,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--ink-600);
-  background: #FFFFFF;
+  background: var(--surface-0);
   border: 1px solid var(--hairline-strong);
   border-radius: 0;
   cursor: pointer;
@@ -168,8 +168,8 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   color: var(--ink-900);
 }
 .filter-chip.active {
-  background: linear-gradient(135deg, #C9A961, #A8843C);
-  border-color: #A8843C;
+  background: var(--gold-gradient);
+  border-color: var(--gold-600);
   color: #FFFFFF;
 }
 
@@ -195,7 +195,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   flex-direction: column;
 }
 .photographers-header {
-  background: #FFFFFF;
+  background: var(--surface-0);
   border: 1px solid var(--hairline);
   border-bottom: none;
   padding: 22px 32px 18px;
@@ -237,7 +237,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
 .photographers-footer {
   border: 1px solid var(--hairline);
   border-top: none;
-  background: #FFFFFF;
+  background: var(--surface-0);
   padding: 16px 32px;
   display: flex;
   justify-content: flex-end;
@@ -259,8 +259,8 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
 
 /* ── ph-card (mirrors /photographers/ global styles) ── */
 :global(.ph-card) {
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   cursor: pointer;
   position: relative;
   display: flex;
@@ -311,17 +311,17 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   font-family: 'Outfit', sans-serif;
   font-size: 17px;
   font-weight: 700;
-  color: #141210;
+  color: var(--ink-900);
   margin-bottom: 4px;
   line-height: 1.25;
   word-break: break-word;
   transition: color 0.2s ease;
 }
-:global(.ph-card:hover .ph-card-name) { color: #A8843C; }
+:global(.ph-card:hover .ph-card-name) { color: var(--gold-600); }
 :global(.ph-card-username) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: #A8843C;
+  color: var(--gold-600);
   margin-bottom: 10px;
 }
 :global(.ph-card-class-badge) {
@@ -339,14 +339,14 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
 :global(.ph-card-divider) {
   width: 100%;
   height: 1px;
-  background: #F0EBE0;
+  background: var(--hairline-soft);
   margin: 8px 0;
   flex-shrink: 0;
 }
 :global(.ph-card-tagline) {
   font-size: 13px;
   line-height: 1.5;
-  color: #57514B;
+  color: var(--ink-600);
   margin-bottom: 8px;
   text-align: center;
   overflow: hidden;
@@ -366,12 +366,12 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
 }
 :global(.ph-card-city) {
   font-size: 12px;
-  color: #8B8378;
+  color: var(--ink-400);
 }
 :global(.ph-card-photo-count) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-top: auto;
 }
 :global(.ph-card-arrow) {
@@ -380,7 +380,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   right: 12px;
   opacity: 0;
   transition: opacity 0.2s ease;
-  color: #A8843C;
+  color: var(--gold-600);
 }
 :global(.ph-card:hover .ph-card-arrow) { opacity: 1; }
 

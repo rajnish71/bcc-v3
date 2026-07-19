@@ -1,0 +1,129 @@
+---
+/**
+ * StatusBadge.astro — V6 65 §04 canonical semantic-state badge.
+ *
+ * Covers all lifecycle and role states: active, pending, member, lapsed,
+ * admin, coming-soon, public, draft. Matches the badge token palette in
+ * tokens.css exactly.
+ *
+ * `dot` renders a 7px circle instead of a text badge — use for compact
+ * list or table status columns where space is tight.
+ */
+
+type State =
+  | 'active'
+  | 'pending'
+  | 'member'
+  | 'lapsed'
+  | 'admin'
+  | 'coming-soon'
+  | 'public'
+  | 'draft';
+
+interface Props {
+  state: State;
+  /** Override the display label (defaults to the capitalised state name). */
+  label?: string;
+  /** Render as a 7px dot instead of a text badge. */
+  dot?: boolean;
+}
+
+const { state, label, dot = false } = Astro.props;
+
+const defaultLabels: Record<State, string> = {
+  'active':      'Active',
+  'pending':     'Pending',
+  'member':      'Member',
+  'lapsed':      'Lapsed',
+  'admin':       'Admin',
+  'coming-soon': 'Coming Soon',
+  'public':      'Public',
+  'draft':       'Draft',
+};
+
+const displayLabel = label ?? defaultLabels[state];
+---
+
+{dot ? (
+  <span class:list={['status-dot', `status-dot--${state}`]} aria-label={displayLabel}></span>
+) : (
+  <span class:list={['status-badge', `status-badge--${state}`]}>{displayLabel}</span>
+)}
+
+<style>
+/* ── Text badge ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 2px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.status-badge--active {
+  background: var(--status-active-bg);
+  color: var(--status-active-text);
+}
+
+.status-badge--pending {
+  background: var(--status-pending-bg);
+  color: var(--status-pending-text);
+}
+
+.status-badge--member {
+  background: var(--status-member-bg);
+  color: var(--status-member-text);
+}
+
+.status-badge--lapsed {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-border);
+}
+
+.status-badge--admin {
+  background: var(--status-admin-bg);
+  color: var(--status-admin-text);
+}
+
+.status-badge--coming-soon {
+  background: var(--status-coming-soon-bg);
+  color: var(--status-coming-soon-text);
+}
+
+.status-badge--public {
+  background: var(--surface-2);
+  color: var(--ink-600);
+  border: 1px solid var(--hairline);
+}
+
+.status-badge--draft {
+  background: transparent;
+  color: var(--ink-400);
+  border: 1px solid var(--hairline);
+}
+
+/* ── Dot variant ── */
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot--active  { background: var(--forest-600); }
+.status-dot--pending { background: var(--gold-600); }
+.status-dot--member  { background: var(--forest-600); }
+.status-dot--lapsed  { background: var(--status-danger-text); }
+.status-dot--admin   { background: var(--gold-600); }
+.status-dot--coming-soon { background: var(--ink-200); }
+.status-dot--public  { background: var(--forest-600); }
+.status-dot--draft   { background: var(--ink-200); }
+</style>

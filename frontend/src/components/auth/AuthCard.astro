@@ -1,0 +1,167 @@
+---
+/**
+ * AuthCard — shared shell for all authentication pages.
+ * Provides the centred card layout, logo, and shared auth styles.
+ * Pages supply their content via the default slot.
+ */
+interface Props {
+  label: string;
+}
+const { label } = Astro.props;
+---
+<section class="auth-section">
+  <div class="auth-card" role="main" aria-label={label}>
+    <a href="/" class="auth-logo" aria-label="Bhopal Camera Club home">
+      <img src="/images/bcc-logo-default.png" alt="Bhopal Camera Club" width="160" height="44" loading="eager" />
+    </a>
+    <slot />
+  </div>
+</section>
+
+<style>
+/* Page background applied via bodyClass="auth-page" */
+:global(.auth-page) { background: var(--surface-1); }
+
+.auth-section {
+  min-height: calc(100vh - 96px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-8) var(--s-3);
+}
+
+.auth-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  box-shadow: var(--e-2);
+  padding: var(--s-8) var(--s-6);
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.auth-logo {
+  display: block;
+  margin: 0 auto var(--s-1);
+  width: fit-content;
+}
+
+/* Shared typography used inside the card */
+:global(.auth-heading) {
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--ink-900);
+  text-align: center;
+  margin: 0;
+}
+
+:global(.auth-sub) {
+  font-size: var(--text-small);
+  color: var(--ink-400);
+  text-align: center;
+  margin: calc(-1 * var(--s-1)) 0 0;
+  line-height: 1.6;
+}
+
+/* Full-width submit button */
+:global(.auth-btn) {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--s-1);
+}
+
+/* Divider between form and social */
+:global(.auth-divider) {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-1) 0;
+}
+:global(.auth-divider__line) {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+:global(.auth-divider__text) {
+  font-size: 11px;
+  color: var(--ink-400);
+  white-space: nowrap;
+  font-family: var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Social login buttons */
+:global(.auth-social) { display: flex; flex-direction: column; gap: var(--s-1); }
+
+:global(.auth-social-btn) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 44px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--r-2);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background var(--m-fast), border-color var(--m-fast);
+  width: 100%;
+}
+:global(.auth-social-btn:hover) {
+  background: var(--surface-1);
+  border-color: var(--ink-400);
+}
+:global(.auth-social-btn:focus-visible) {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 3px;
+}
+
+/* Footer link row */
+:global(.auth-footer-text) {
+  font-size: 13px;
+  color: var(--ink-400);
+  text-align: center;
+  margin: 0;
+}
+:global(.auth-link) {
+  color: var(--gold-600);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+:global(.auth-link--small) { font-size: 12px; font-weight: 400; }
+
+/* Identity-only notice (MEM-006) */
+:global(.auth-notice) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  font-size: 12px;
+  color: var(--ink-600);
+  line-height: 1.55;
+}
+:global(.auth-notice svg) { flex-shrink: 0; margin-top: 1px; color: var(--gold-600); }
+
+/* Success icon used on forgot-password and reset-password */
+:global(.auth-success-icon) {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--s-1);
+}
+
+@media (max-width: 480px) {
+  .auth-card { padding: var(--s-6) var(--s-3); border: none; box-shadow: none; }
+  .auth-section { padding: var(--s-4) var(--s-2); align-items: flex-start; }
+}
+</style>

@@ -1,0 +1,76 @@
+---
+interface Props {
+  id: string;
+  type?: string;
+  name?: string;
+  placeholder?: string;
+  value?: string;
+  required?: boolean;
+  autocomplete?: string;
+  inputmode?: string;
+  minlength?: number;
+  maxlength?: number;
+  spellcheck?: boolean | 'false';
+  'aria-label'?: string;
+  'aria-describedby'?: string;
+  class?: string;
+}
+const {
+  id,
+  type = 'text',
+  name,
+  placeholder,
+  value,
+  required = false,
+  autocomplete,
+  inputmode,
+  minlength,
+  maxlength,
+  spellcheck,
+  'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedby,
+  class: className = '',
+} = Astro.props;
+---
+<input
+  id={id}
+  type={type}
+  name={name}
+  placeholder={placeholder}
+  value={value}
+  required={required || undefined}
+  autocomplete={autocomplete}
+  inputmode={inputmode}
+  minlength={minlength}
+  maxlength={maxlength}
+  spellcheck={spellcheck}
+  aria-label={ariaLabel}
+  aria-describedby={ariaDescribedby}
+  class:list={['f-input', className]}
+/>
+
+<style>
+.f-input {
+  height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: border-color var(--m-fast), box-shadow var(--m-fast);
+  width: 100%;
+  box-sizing: border-box;
+}
+.f-input:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px rgba(168, 132, 60, 0.12);
+}
+.f-input::placeholder { color: var(--input-placeholder); }
+.f-input.is-error {
+  border-color: var(--input-error);
+}
+.f-input.is-valid { border-color: #16A34A; }
+</style>

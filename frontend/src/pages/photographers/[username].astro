@@ -331,8 +331,8 @@ const { username } = Astro.params;
 
 /* ── Profile Hero ────────────────────────────────────────────────────────── */
 .profile-hero {
-  background: #FFFFFF;
-  border-bottom: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline);
 }
 .ph-inner {
   max-width: 1140px;
@@ -350,8 +350,8 @@ const { username } = Astro.params;
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3E5A48, #2A3E32);
-  border: 4px solid #FFFFFF;
+  background: var(--forest-gradient);
+  border: 4px solid var(--surface-0);
   box-shadow: 0 4px 20px rgba(20,18,16,0.2);
   display: flex;
   align-items: center;
@@ -373,19 +373,19 @@ const { username } = Astro.params;
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #141210;
+  color: var(--ink-900);
   line-height: 1.1;
   margin-bottom: 4px;
 }
 .ph-username {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
-  color: #A8843C;
+  color: var(--gold-600);
   margin-bottom: 6px;
 }
 .ph-tagline {
   font-size: 15px;
-  color: #57514B;
+  color: var(--ink-600);
   line-height: 1.5;
   margin-bottom: 6px;
 }
@@ -394,7 +394,7 @@ const { username } = Astro.params;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-bottom: 10px;
 }
 .ph-dot {
@@ -402,14 +402,14 @@ const { username } = Astro.params;
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: #D8D2C6;
+  background: var(--ink-200);
 }
 .ph-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ph-class-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #3E5A48;
+  background: var(--forest-600);
   color: #FFFFFF;
   font-size: 10px;
   font-weight: 700;
@@ -424,7 +424,7 @@ const { username } = Astro.params;
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #C9A961;
+  background: var(--gold-light);
 }
 .ph-class-badge--basic { display: none; }
 .ph-founding-badge {
@@ -432,9 +432,9 @@ const { username } = Astro.params;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #C9A961;
-  background: #141210;
-  border: 1px solid #C9A961;
+  color: var(--gold-light);
+  background: var(--dark-100);
+  border: 1px solid var(--gold-light);
   padding: 4px 12px;
 }
 .ph-recognition-badge {
@@ -445,9 +445,9 @@ const { username } = Astro.params;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #A8843C;
-  background: #F4F0E8;
-  border: 1px solid #C9A961;
+  color: var(--gold-600);
+  background: var(--surface-2);
+  border: 1px solid var(--gold-light);
   padding: 4px 10px;
 }
 
@@ -458,7 +458,7 @@ const { username } = Astro.params;
   font-family: 'Outfit', sans-serif;
   font-size: 32px;
   font-weight: 700;
-  color: #141210;
+  color: var(--ink-900);
   line-height: 1;
 }
 .ph-stat-label {
@@ -466,13 +466,13 @@ const { username } = Astro.params;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-top: 4px;
 }
 
 /* Tab Navigation */
 .tab-nav {
-  border-top: 1px solid #F0EBE0;
+  border-top: 1px solid var(--hairline-soft);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -488,7 +488,7 @@ const { username } = Astro.params;
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 500;
-  color: #8B8378;
+  color: var(--ink-400);
   background: none;
   border: none;
   padding: 12px 18px;
@@ -498,8 +498,8 @@ const { username } = Astro.params;
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
 }
-.tab-btn:hover { color: #141210; }
-.tab-btn--active { color: #141210; font-weight: 700; border-bottom-color: #C9A961; }
+.tab-btn:hover { color: var(--ink-900); }
+.tab-btn--active { color: var(--ink-900); font-weight: 700; border-bottom-color: var(--gold-light); }
 
 /* ── Tab Content Area ────────────────────────────────────────────────────── */
 .tab-content-area {
@@ -523,8 +523,8 @@ const { username } = Astro.params;
 .left-rail {
   width: 260px;
   flex-shrink: 0;
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   position: sticky;
   top: calc(var(--nav-h, 64px) + 16px);
   max-height: calc(100vh - var(--nav-h, 64px) - 48px);
@@ -536,14 +536,14 @@ const { username } = Astro.params;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #A8843C;
+  color: var(--gold-600);
   padding: 14px 18px;
-  border-bottom: 1px solid #F0EBE0;
-  background: #FAF8F4;
+  border-bottom: 1px solid var(--hairline-soft);
+  background: var(--surface-1);
 }
 .rail-row {
   padding: 12px 18px;
-  border-bottom: 1px solid #F0EBE0;
+  border-bottom: 1px solid var(--hairline-soft);
 }
 .rail-row:last-child { border-bottom: none; }
 .rail-label {
@@ -551,19 +551,19 @@ const { username } = Astro.params;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-bottom: 5px;
 }
 .rail-val {
   font-size: 14px;
   font-weight: 600;
-  color: #141210;
+  color: var(--ink-900);
 }
 .rail-badge-wrap .rail-class-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #3E5A48;
+  background: var(--forest-600);
   color: #FFFFFF;
   font-size: 10px;
   font-weight: 700;
@@ -575,9 +575,9 @@ const { username } = Astro.params;
 .rail-genres { display: flex; flex-wrap: wrap; gap: 5px; }
 .rail-genre-tag {
   font-size: 11px;
-  color: #57514B;
-  background: #F4F0E8;
-  border: 1px solid #E7E1D6;
+  color: var(--ink-600);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
   padding: 3px 8px;
 }
 .rail-contact-links {
@@ -588,7 +588,7 @@ const { username } = Astro.params;
 :global(.rail-contact-website) {
   font-size: 13px;
   font-weight: 600;
-  color: var(--gold-600, #A8843C);
+  color: var(--gold-600);
   text-decoration: none;
   word-break: break-all;
 }
@@ -605,29 +605,29 @@ const { username } = Astro.params;
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: #F4F0E8;
-  border: 1px solid #E7E1D6;
-  color: #57514B;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  color: var(--ink-600);
   text-decoration: none;
   transition: border-color 0.15s, color 0.15s;
 }
-:global(.rail-social-link:hover) { border-color: #C9A961; color: #A8843C; }
+:global(.rail-social-link:hover) { border-color: var(--gold-light); color: var(--gold-600); }
 :global(.rail-social-link svg) { display: block; }
-.rail-note { font-size: 11px; color: #8B8378; margin-top: 2px; }
-.rail-distinctions { font-size: 12px; line-height: 1.8; color: #57514B; }
+.rail-note { font-size: 11px; color: var(--ink-400); margin-top: 2px; }
+.rail-distinctions { font-size: 12px; line-height: 1.8; color: var(--ink-600); }
 .rail-distinctions :is(ul, ol) { padding-left: 16px; margin: 0; }
 .rail-distinctions li { margin-bottom: 2px; }
 .rail-distinctions p { margin: 0 0 6px; }
 .rail-gear-group { margin-bottom: 10px; }
 .rail-gear-group:last-child { margin-bottom: 0; }
-.rail-gear-label { font-size: 11px; font-weight: 600; color: #57514B; margin-bottom: 3px; }
-.rail-gear-items { font-size: 12px; line-height: 1.8; color: #57514B; }
+.rail-gear-label { font-size: 11px; font-weight: 600; color: var(--ink-600); margin-bottom: 3px; }
+.rail-gear-items { font-size: 12px; line-height: 1.8; color: var(--ink-600); }
 
 /* Portfolio Main */
 .portfolio-main { flex: 1; min-width: 0; }
 .bio-snippet {
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   padding: 20px 24px;
   margin-bottom: 20px;
 }
@@ -643,7 +643,7 @@ const { username } = Astro.params;
 }
 .bio-more-link {
   font-size: 12px;
-  color: #A8843C;
+  color: var(--gold-600);
   cursor: pointer;
   text-decoration: none;
   font-family: 'Inter', sans-serif;
@@ -657,7 +657,7 @@ const { username } = Astro.params;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #A8843C;
+  color: var(--gold-600);
   margin-bottom: 12px;
 }
 .stories-row {
@@ -670,15 +670,15 @@ const { username } = Astro.params;
 .story-card {
   flex: 0 0 auto;
   width: 200px;
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   text-decoration: none;
   cursor: pointer;
   padding: 0;
   text-align: left;
   transition: border-color 0.15s, transform 0.15s;
 }
-.story-card:hover { border-color: #C9A961; transform: translateY(-2px); }
+.story-card:hover { border-color: var(--gold-light); transform: translateY(-2px); }
 .story-cover {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -693,9 +693,9 @@ const { username } = Astro.params;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #A8843C;
-  background: #F4F0E8;
-  border: 1px solid #E7E1D6;
+  color: var(--gold-600);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
   padding: 2px 7px;
   margin-bottom: 6px;
 }
@@ -703,13 +703,13 @@ const { username } = Astro.params;
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 600;
-  color: #141210;
+  color: var(--ink-900);
   line-height: 1.3;
   margin-bottom: 4px;
 }
 .story-count {
   font-size: 11px;
-  color: #8B8378;
+  color: var(--ink-400);
   font-family: 'JetBrains Mono', monospace;
 }
 
@@ -719,7 +719,7 @@ const { username } = Astro.params;
   display: flex;
   gap: 12px;
   text-decoration: none;
-  border-bottom: 1px solid #F0EBE0;
+  border-bottom: 1px solid var(--hairline-soft);
   padding-bottom: 12px;
 }
 .about-journal-item:last-child { border-bottom: none; padding-bottom: 0; }
@@ -728,20 +728,20 @@ const { username } = Astro.params;
   width: 64px;
   height: 48px;
   object-fit: cover;
-  background: #F4F0E8;
+  background: var(--surface-2);
 }
 .about-journal-meta { min-width: 0; }
 .about-journal-title {
   font-size: 13px;
   font-weight: 600;
-  color: #141210;
+  color: var(--ink-900);
   line-height: 1.4;
   margin-bottom: 3px;
 }
-.about-journal-item:hover .about-journal-title { color: #A8843C; }
+.about-journal-item:hover .about-journal-title { color: var(--gold-600); }
 .about-journal-date {
   font-size: 11px;
-  color: #8B8378;
+  color: var(--ink-400);
   font-family: 'JetBrains Mono', monospace;
 }
 
@@ -756,25 +756,25 @@ const { username } = Astro.params;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8B8378;
+  color: var(--ink-400);
 }
 
 /* Category filter strip (item 71) */
 .profile-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .profile-filter-chip {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #57514B;
-  background: #FFFFFF; border: 1px solid #D8D2C6; padding: 6px 14px; cursor: pointer;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--ink-600);
+  background: var(--surface-0); border: 1px solid var(--ink-200); padding: 6px 14px; cursor: pointer;
   font-family: 'Inter', sans-serif; transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.profile-filter-chip:hover { border-color: #C9A961; color: #141210; }
-.profile-filter-chip.is-on { background: linear-gradient(135deg, #C9A961, #A8843C); border-color: #A8843C; color: #FFFFFF; }
+.profile-filter-chip:hover { border-color: var(--gold-light); color: var(--ink-900); }
+.profile-filter-chip.is-on { background: var(--gold-gradient); border-color: var(--gold-600); color: #FFFFFF; }
 
 /* Justified gallery — inherits the /showcase justified grid (item 70).
    Rows are created at runtime by JS, so they never receive Astro's scoping
    attribute — the row rule MUST be :global() or it won't apply (CLAUDE.md §4.4,
    same as /showcase's :global(.grid-row)). */
 .profile-justified-grid { display: flex; flex-direction: column; gap: 0; }
-:global(.profile-jrow) { display: flex; gap: 8px; margin-bottom: 8px; }
+:global(.profile-jrow) { display: flex; gap: var(--gallery-gap); margin-bottom: var(--gallery-gap); }
 :global(.profile-jrow:last-child) { margin-bottom: 0; }
 
 /* ── Masonry layout — CSS columns, natural image heights ─────────────────── */
@@ -850,23 +850,23 @@ const { username } = Astro.params;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #A8843C;
+  color: var(--gold-600);
   border: 1px solid rgba(168, 132, 60, 0.5);
   padding: 12px 40px;
-  background: #FFFFFF;
+  background: var(--surface-0);
   cursor: pointer;
   transition: border-color 0.2s, background-color 0.2s, color 0.2s;
 }
-.profile-load-more-btn:hover { border-color: #A8843C; background: #A8843C; color: #FFFFFF; }
+.profile-load-more-btn:hover { border-color: var(--gold-600); background: #A8843C; color: #FFFFFF; }
 .profile-load-more-btn[disabled] { opacity: 0.5; cursor: default; }
 
 .grid-empty {
   text-align: center;
   padding: 60px 24px;
   font-size: 14px;
-  color: #8B8378;
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  color: var(--ink-400);
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
 }
 
 /* Photo card hover treatment is inherited from the global .photo-card /
@@ -886,8 +886,8 @@ const { username } = Astro.params;
 .about-rail { flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 .about-card {
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   padding: 24px;
   margin-bottom: 20px;
 }
@@ -897,7 +897,7 @@ const { username } = Astro.params;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #A8843C;
+  color: var(--gold-600);
   margin-bottom: 14px;
 }
 .about-bio {
@@ -906,12 +906,12 @@ const { username } = Astro.params;
   color: #37322C;
   margin-bottom: 14px;
 }
-.about-no-bio { font-size: 13px; color: #8B8378; font-style: italic; }
+.about-no-bio { font-size: 13px; color: var(--ink-400); font-style: italic; }
 .about-bio-meta {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-top: 1px solid #F0EBE0;
+  border-top: 1px solid var(--hairline-soft);
   padding-top: 14px;
   margin-bottom: 14px;
   flex-wrap: wrap;
@@ -920,7 +920,7 @@ const { username } = Astro.params;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #3E5A48;
+  background: var(--forest-600);
   color: #FFFFFF;
   font-size: 10px;
   font-weight: 700;
@@ -929,7 +929,7 @@ const { username } = Astro.params;
   padding: 4px 10px;
   border-radius: 999px;
 }
-.about-since { font-size: 13px; color: #8B8378; }
+.about-since { font-size: 13px; color: var(--ink-400); }
 
 .about-social-links {
   display: flex;
@@ -943,18 +943,18 @@ const { username } = Astro.params;
   justify-content: center;
   width: 34px;
   height: 34px;
-  background: #F4F0E8;
-  border: 1px solid #E7E1D6;
-  color: #57514B;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  color: var(--ink-600);
   text-decoration: none;
   transition: border-color 0.15s, color 0.15s;
 }
-.about-social-icon:hover { border-color: #C9A961; color: #A8843C; }
+.about-social-icon:hover { border-color: var(--gold-light); color: var(--gold-600); }
 .about-social-icon svg { display: block; }
 .about-website-link {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  color: #A8843C;
+  color: var(--gold-600);
   text-decoration: none;
 }
 .about-website-link:hover { text-decoration: underline; }
@@ -966,17 +966,17 @@ const { username } = Astro.params;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-bottom: 4px;
 }
 .gear-items {
   font-size: 13px;
   line-height: 1.9;
-  color: #57514B;
+  color: var(--ink-600);
 }
 .about-gear-note {
   font-size: 11px;
-  color: #8B8378;
+  color: var(--ink-400);
   font-style: italic;
   margin-top: 10px;
 }
@@ -985,37 +985,37 @@ const { username } = Astro.params;
 .about-genres { display: flex; flex-wrap: wrap; gap: 6px; }
 .about-genre-tag {
   font-size: 12px;
-  color: #57514B;
-  background: #F4F0E8;
-  border: 1px solid #E7E1D6;
+  color: var(--ink-600);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
   padding: 4px 10px;
 }
 
 /* Awards */
 .about-awards { display: flex; flex-direction: column; gap: 14px; }
-.about-award-item { border-bottom: 1px solid #F0EBE0; padding-bottom: 12px; }
+.about-award-item { border-bottom: 1px solid var(--hairline-soft); padding-bottom: 12px; }
 .about-award-item:last-child { border-bottom: none; padding-bottom: 0; }
 .about-award-name {
   font-size: 13px;
   font-weight: 600;
-  color: #141210;
+  color: var(--ink-900);
   margin-bottom: 2px;
 }
 .about-award-body {
   font-size: 11px;
-  color: #A8843C;
+  color: var(--gold-600);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 3px;
 }
-.about-award-year { font-size: 11px; color: #8B8378; }
-.about-award-desc { font-size: 12px; color: #57514B; line-height: 1.6; margin-top: 4px; }
+.about-award-year { font-size: 11px; color: var(--ink-400); }
+.about-award-desc { font-size: 12px; color: var(--ink-600); line-height: 1.6; margin-top: 4px; }
 .about-awards-html { font-size: 13px; line-height: 1.8; color: #37322C; }
 .about-awards-html :is(ul, ol) { padding-left: 18px; margin: 0; }
 .about-awards-html li { margin-bottom: 4px; }
 .about-awards-html p { margin: 0 0 8px; }
-.about-awards-html strong { color: #141210; }
+.about-awards-html strong { color: var(--ink-900); }
 
 /* Photo titles */
 .about-titles { display: flex; flex-direction: column; gap: 8px; }
@@ -1024,11 +1024,11 @@ const { username } = Astro.params;
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   font-weight: 700;
-  color: #C9A961;
+  color: var(--gold-light);
 }
 .about-title-body {
   font-size: 11px;
-  color: #8B8378;
+  color: var(--ink-400);
 }
 
 /* ── PLACEHOLDER PANELS ──────────────────────────────────────────────────── */
@@ -1040,8 +1040,8 @@ const { username } = Astro.params;
   justify-content: center;
 }
 .placeholder-inner {
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   padding: 60px 48px;
   text-align: center;
   max-width: 480px;
@@ -1052,13 +1052,13 @@ const { username } = Astro.params;
   font-family: 'Outfit', sans-serif;
   font-size: 20px;
   font-weight: 700;
-  color: #141210;
+  color: var(--ink-900);
   margin-bottom: 12px;
 }
 .placeholder-desc {
   font-size: 14px;
   line-height: 1.7;
-  color: #8B8378;
+  color: var(--ink-400);
 }
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
@@ -1078,7 +1078,6 @@ const { username } = Astro.params;
 
   .portfolio-layout { flex-direction: column; padding: 16px 16px 60px; }
   .left-rail { width: 100%; position: relative; top: auto; max-height: none; }
-  .profile-jrow { gap: 6px; margin-bottom: 6px; }
   .profile-masonry-grid { column-count: 2; }
   .profile-metro-grid { grid-template-columns: repeat(2, 1fr); }
   .profile-modular-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
@@ -1121,38 +1120,8 @@ let profileDisplayName = '';
 let currentGalleryLayout = 'justified';
 const seenPhotoIds = new Set<string | number>();
 
-// ── Justified grid layout — inherited verbatim from /showcase (item 70) ────
-// Rows fill to the container width; the trailing partial row is kept as
-// `leftovers` so the next load-more page can complete it (identical to
-// Showcase). flushLeftovers() renders any remainder once no more pages exist.
-function buildJustifiedLayout(
-  photos: Array<{ aspect: number } & Record<string, any>>,
-  containerWidth: number,
-  targetHeight = 240,
-  gap = 8
-) {
-  const rows: Array<{ height: number; photos: typeof photos }> = [];
-  let row: typeof photos = [];
-  let rowWidth = 0;
-
-  const flush = () => {
-    if (!row.length) return;
-    const totalGap = gap * (row.length - 1);
-    const scale = (containerWidth - totalGap) / rowWidth;
-    const height = targetHeight * scale;
-    rows.push({ height, photos: row.map(p => ({ ...p, width: p.aspect * height })) });
-    row = [];
-    rowWidth = 0;
-  };
-
-  for (const photo of photos) {
-    row.push(photo);
-    rowWidth += photo.aspect * targetHeight;
-    if (rowWidth + gap * (row.length - 1) >= containerWidth * 0.88) flush();
-  }
-
-  return { rows, leftovers: row };
-}
+// ── Justified grid layout — shared engine from V6 60 Gallery Grid System ────
+import { buildJustifiedLayout } from '../../lib/justifiedLayout';
 
 // ── Justified paging state (mirrors /showcase) ─────────────────────────────
 const PROFILE_PAGE_SIZE = 40;              // 40 initial, +40 per load-more
@@ -1535,8 +1504,10 @@ async function loadProfile() {
     if (el) el.innerHTML = expertise.map(g => `<span class="about-genre-tag">${esc(g)}</span>`).join('');
   }
 
-  // Gallery layout — apply before photos load so the grid is ready
+  // Gallery layout — apply before photos load so the grid is ready.
+  // Magazine is deprecated per V6 60; auto-migrate to Editorial.
   currentGalleryLayout = profile.galleryLayout ?? 'justified';
+  if (currentGalleryLayout === 'magazine') currentGalleryLayout = 'editorial';
   const portfolioGrid = document.getElementById('portfolio-grid');
   if (portfolioGrid && currentGalleryLayout !== 'justified') {
     portfolioGrid.classList.remove('profile-justified-grid');
@@ -1806,7 +1777,7 @@ function renderProfileGrid(newPhotos: any[], flushRemainder: boolean) {
 
   const candidates = [...profileBuffer, ...newPhotos];
   const containerWidth = grid.clientWidth || 700;
-  const { rows, leftovers } = buildJustifiedLayout(candidates, containerWidth, 240, 8);
+  const { rows, leftovers } = buildJustifiedLayout(candidates, containerWidth, 220, 2);
   profileBuffer = leftovers;
 
   const fragment = document.createDocumentFragment();
@@ -1823,11 +1794,11 @@ function renderProfileGrid(newPhotos: any[], flushRemainder: boolean) {
   // On the final page, render any trailing partial row at natural height so
   // every photo is shown (Showcase leaves leftovers buffered indefinitely).
   if (flushRemainder && profileBuffer.length) {
-    const gap = 8;
+    const gap = 2;
     const totalGap = gap * (profileBuffer.length - 1);
-    const rowWidth = profileBuffer.reduce((s, p) => s + p.aspect * 240, 0);
+    const rowWidth = profileBuffer.reduce((s, p) => s + p.aspect * 220, 0);
     const scale = Math.min(1, (containerWidth - totalGap) / rowWidth);
-    const height = 240 * scale;
+    const height = 220 * scale;
     const rowEl = document.createElement('div');
     rowEl.className = 'profile-jrow';
     profileBuffer.forEach((p: any) => {

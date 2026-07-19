@@ -1,0 +1,81 @@
+---
+/**
+ * EditorialCard.astro — V6 62 Canonical Editorial Content Card
+ *
+ * Two variants:
+ *   'card'     — vertical stack (default): image top 16:10 + body below
+ *   'featured' — horizontal split: image left 60% + body right 40%
+ *
+ * Used for: Journal index, journal grid on Home, activity previews,
+ * and any editorial teaser context.
+ *
+ * Styles use is:global so they also cover JS-rendered cards that share
+ * the same class names in index.astro and journal/index.astro.
+ */
+
+interface Props {
+  href: string;
+  title: string;
+  excerpt?: string;
+  image?: string;
+  imageAlt?: string;
+  category?: string;
+  /** Pre-formatted display date, e.g. "23 June 2026" */
+  date?: string;
+  /** Reading time label, e.g. "4 min" — component adds " read" */
+  readingTime?: string;
+  author?: string;
+  variant?: 'card' | 'featured';
+  headingLevel?: 'h2' | 'h3';
+}
+
+const {
+  href,
+  title,
+  excerpt,
+  image,
+  imageAlt = '',
+  category,
+  date,
+  readingTime,
+  author,
+  variant = 'card',
+  headingLevel = 'h3',
+} = Astro.props;
+
+const metaParts: string[] = [
+  date,
+  readingTime ? `${readingTime} read` : undefined,
+  author,
+].filter(Boolean) as string[];
+
+const Heading = headingLevel;
+---
+
+<a href={href} class={`editorial-card editorial-card--${variant}`}>
+  <!-- Image -->
+  <div class="editorial-card__img-wrap">
+    {image
+      ? <img src={image} alt={imageAlt} class="editorial-card__img" loading="lazy" decoding="async" />
+      : <div class="editorial-card__img-placeholder" aria-hidden="true"></div>
+    }
+  </div>
+
+  <!-- Body -->
+  <div class="editorial-card__body">
+    {category && <span class="editorial-card__category">{category}</span>}
+    <Heading class="editorial-card__title">{title}</Heading>
+    {excerpt && <p class="editorial-card__excerpt">{excerpt}</p>}
+    {metaParts.length > 0 && (
+      <div class="editorial-card__meta">
+        {metaParts.map((part, i) => (
+          i === 0
+            ? <span>{part}</span>
+            : <><span class="editorial-card__sep" aria-hidden="true">·</span><span>{part}</span></>
+        ))}
+      </div>
+    )}
+  </div>
+</a>
+
+<!-- Styles live in global.css (editorial-card section) — available on all pages. -->

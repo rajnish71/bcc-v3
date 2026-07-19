@@ -48,12 +48,12 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-0, #FAF8F4);
+  background: var(--surface-1);
   padding-bottom: 80px;
 }
 .verify-card {
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   padding: 48px 40px;
   max-width: 480px;
   width: 100%;
@@ -63,7 +63,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
   display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 16px;
 }
 .verify-dot {
-  width: 8px; height: 8px; background: #D8D2C6; border-radius: 999px;
+  width: 8px; height: 8px; background: var(--ink-200); border-radius: 999px;
   animation: vdot 1.2s ease-in-out infinite both;
 }
 .verify-dot:nth-child(2) { animation-delay: .2s; }
@@ -72,7 +72,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
   0%,80%,100% { transform:scale(.6); opacity:.4; }
   40%          { transform:scale(1);  opacity:1; }
 }
-.verify-msg { font-size: 14px; color: #8B8378; margin: 0; }
+.verify-msg { font-size: 14px; color: var(--ink-400); margin: 0; }
 .verify-icon {
   font-size: 40px;
   font-weight: 700;
@@ -85,15 +85,15 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
   font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: 22px;
   font-weight: 700;
-  color: #141210;
+  color: var(--ink-900);
   margin: 0 0 12px;
 }
-.verify-body { font-size: 14px; color: #8B8378; margin: 0 0 28px; line-height: 1.6; }
+.verify-body { font-size: 14px; color: var(--ink-400); margin: 0 0 28px; line-height: 1.6; }
 .verify-btn {
   display: inline-flex;
   align-items: center;
   padding: 11px 28px;
-  background: linear-gradient(135deg, #C9A961, #A8843C);
+  background: var(--gold-gradient);
   color: #FFFFFF;
   font-size: 13px;
   font-weight: 700;

@@ -1,0 +1,83 @@
+---
+/**
+ * SearchEmptyState — canonical no-results state for search and filter contexts.
+ *
+ * Hidden by default. Show via JS: `el.hidden = false`.
+ * The clearBtn emits `bcc:clear-filters` CustomEvent on click (bubbles).
+ *
+ * Usage:
+ *   <SearchEmptyState id="no-results" message="No photographs match this filter." />
+ *   <script>
+ *     document.getElementById('no-results').addEventListener('bcc:clear-filters', () => { ... });
+ *   </script>
+ */
+interface Props {
+  id?: string;
+  message?: string;
+  clearLabel?: string;
+  class?: string;
+}
+const {
+  id,
+  message = 'No results match your search.',
+  clearLabel = 'Clear filters',
+  class: className = '',
+} = Astro.props;
+---
+<div id={id} class:list={['ses', className]} hidden role="status" aria-live="polite">
+  <svg class="ses-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <circle cx="14" cy="14" r="9" stroke="currentColor" stroke-width="1.5"/>
+    <line x1="21" y1="21" x2="29" y2="29" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="11" y1="14" x2="17" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+  <p class="ses-message">{message}</p>
+  <button type="button" class="ses-clear" data-ses-clear>{clearLabel}</button>
+</div>
+
+<style>
+.ses {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-8) var(--s-4);
+  text-align: center;
+}
+.ses:not([hidden]) { display: flex; }
+
+.ses-icon {
+  color: var(--ink-400);
+  opacity: 0.5;
+}
+
+.ses-message {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-600);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.ses-clear {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gold-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ses-clear:hover { color: var(--gold-600); opacity: 0.8; }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-ses-clear]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const container = btn.closest('[hidden]') ?? btn.parentElement;
+      container?.dispatchEvent(new CustomEvent('bcc:clear-filters', { bubbles: true }));
+    });
+  });
+</script>

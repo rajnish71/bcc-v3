@@ -1,1908 +1,2028 @@
-Objective :
+#### Objective :
 
-I. We have to create SiteHeader and SiteFooter, just copy the standard site header used in this project as a independent file, same for site footer.
+#### I. We have to create SiteHeader and SiteFooter, just copy the standard site header used in this project as a independent file, same for site footer.
 
-II. We have to create fresh Design System file for V3 BCC - Systemdesign.md, token.css and make changes in wireframes and create new separate Low - fi files of following pages :
+#### II. We have to create fresh Design System file for V3 BCC - Systemdesign.md, token.css and make changes in wireframes and create new separate Low - fi files of following pages :
 
+#### 
 
+#### 1.Home /
 
-1.Home /
+#### 2\. Showcase Page /showcase
 
-2\. Showcase Page /showcase
+#### 3\. Photographers Directory /photographers
 
-3\. Photographers Directory /photographers
+#### 4\. Photographer Profile Page  /photographers/\[username]  ( changing to /photographers/\[username] instead of gallery/photographer/\[username]. Multiple tabs
 
-4\. Photographer Profile Page  /photographers/\[username]  ( changing to /photographers/\[username] instead of gallery/photographer/\[username]. Multiple tabs
+#### &#x09;i. .A. Profile Page — Portfolio Tab (default active state) Desktop 1280px · left  |  Mobile 390px · right
 
-&#x09;i. .A. Profile Page — Portfolio Tab (default active state) Desktop 1280px · left  |  Mobile 390px · right
+#### &#x09;ii. B. About Tab — shown when \[About] tab is active Desktop layout only · two-column · mobile collapses to single column
 
-&#x09;ii. B. About Tab — shown when \[About] tab is active Desktop layout only · two-column · mobile collapses to single column
+#### &#x09;iii. C. Contests Tab
 
-&#x09;iii. C. Contests Tab
+#### &#x09;iv. D. Activity Tab (annotation only — no wireframe rendered): Chronological history of events attended (photowalk / workshop / exhibition / seminar), exhibitions participated in as submitting photographer, and volunteer slots 	completed. Each row: activity type badge + activity name + date + role. Same EventRow list pattern. Filterable by activity type and year.
 
-&#x09;iv. D. Activity Tab (annotation only — no wireframe rendered): Chronological history of events attended (photowalk / workshop / exhibition / seminar), exhibitions participated in as submitting photographer, and volunteer slots 	completed. Each row: activity type badge + activity name + date + role. Same EventRow list pattern. Filterable by activity type and year.
+#### 5\. About /about
 
-5\. About /about
+#### 6\. Activities /activities
 
-6\. Activities /activities
+#### 7\. Join  /join
 
-7\. Join  /join
+#### 8\. Journal /journal
 
-8\. Journal /journal
+#### 9\. Journal Detail /journal/\[slug]
 
-9\. Journal Detail /journal/\[slug]
+#### 10\. Members hub - entire ecosystem
 
-10\. Members hub - entire ecosystem
+#### 
 
+#### 
 
+#### Please remember most of wireframes are already present we have to just make few changes , new wireframe structure can be found in this text document. But overall Design Style of project has to be followed unless mentioned otherwise.
 
+#### In Claude design we have a project named - "V5  BCC Unified Platform Design System". In this project the main reference file is - "01 BCC Design Principles". We have to make certain changes in the reference file before we start editing wireframes.
 
+#### After initial edit, BCC Design Principle updated file will become ultimate truth and reference point for rest of this project.
 
-Please remember most of wireframes are already present we have to just make few changes , new wireframe structure can be found in this text document. But overall Design Style of project has to be followed unless mentioned otherwise.
+#### Majority of wireframes are in a file called - "02 V5 Clubbed Wireframes" ( Home, About, Activities, Join, Journal). Now while we have to follow same design principle but we need to create seperate Lo-fi wireframe files for each wireframes.
 
-In Claude design we have a project named - "V5  BCC Unified Platform Design System". In this project the main reference file is - "01 BCC Design Principles". We have to make certain changes in the reference file before we start editing wireframes.
+#### These files will have placeholders for standard site header and footer but attaching site header and footer is not required.
 
-After initial edit, BCC Design Principle updated file will become ultimate truth and reference point for rest of this project.
+#### following files are already independent - "03 BCC Showcase", "04 BCC Hub Visual Master"
 
-Majority of wireframes are in a file called - "02 V5 Clubbed Wireframes" ( Home, About, Activities, Join, Journal). Now while we have to follow same design principle but we need to create seperate Lo-fi wireframe files for each wireframes.
+#### New new created files has to be renamed as :
 
-These files will have placeholders for standard site header and footer but attaching site header and footer is not required.
+#### a. "V6 00 BCC Design Principles"
 
-following files are already independent - "03 BCC Showcase", "04 BCC Hub Visual Master"
+#### b. "V6 01 Home"
 
-New new created files has to be renamed as :
+#### c. "V6 02 About"
 
-a. "V6 00 BCC Design Principles"
+#### d. "V6 03 Showcase"
 
-b. "V6 01 Home"
+#### e. "V6 04 Photographers Directory"
 
-c. "V6 02 About"
+#### f. "V6 05 Photographers Profile Page"
 
-d. "V6 03 Showcase"
+#### g. "V6 06 Activities"
 
-e. "V6 04 Photographers Directory"
+#### h. "V6 07 Journal Main Page"
 
-f. "V6 05 Photographers Profile Page"
+#### i. "V6 08 Journal Article Page"
 
-g. "V6 06 Activities"
+#### j. "V6 09 Members Hub Main Home"
 
-h. "V6 07 Journal Main Page"
+#### k. "V6 10 Members Hub Portfolio"
 
-i. "V6 08 Journal Article Page"
+#### l. "V6 11 Members Hub Upload"
 
-j. "V6 09 Members Hub Main Home"
+#### m. "V6 12 Members Hub Batch Upload" ( edit 10 July - retiring this idea and we using 12 for Member Hub Naviagtion)
 
-k. "V6 10 Members Hub Portfolio"
+#### n. "V6 13 Members Hub Profile"
 
-l. "V6 11 Members Hub Upload"
+#### o. V6 14
 
-m. "V6 12 Members Hub Batch Upload" ( edit 10 July - retiring this idea and we using 12 for Member Hub Naviagtion)
+#### p. V6 15
 
-n. "V6 13 Members Hub Profile"
+#### q. V6 16
 
-o. V6 14
+#### r. V6 17
 
-p. V6 15
+#### s. V6 18
 
-q. V6 16
+#### t. V6 19
 
-r. V6 17
+#### u. V6 20
 
-s. V6 18
+#### v. V6 21
 
-t. V6 19
+#### 
 
-u. V6 20
+#### Reusable components
 
-v. V6 21
+#### V6 60	Gallery Grid
 
+#### V6 61	Profile Card System
 
+#### V6 62	Content Card System (Project, Event, Contest, Activity, Journal, News variants)
 
-Reusable components
+#### V6 63	Photo Card System
 
-V6 60	Gallery Grid
+#### V6 64	Statistics Band
 
-V6 61	Profile Card System
+#### V6 65	Form System
 
-V6 62	Content Card System (Project, Event, Contest, Activity, Journal, News variants)
+#### V6 66	Data Table System
 
-V6 63	Photo Card System
+#### V6 67	Hero \& Section Header System
 
-V6 64	Statistics Band
+#### V6 68	Search \& Filter System
 
-V6 65	Form System
+#### 
 
-V6 66	Data Table System
+#### 
 
-V6 67	Hero \& Section Header System
+#### w. "V6 99 systemdesign.md "
 
-V6 68	Search \& Filter System
+#### x. "V6 98 token.css"
 
+#### y. "V6 91 SiteHeader"
 
+#### z. "V6 92 SiteFooter"
 
+#### 
 
+#### The wireframe has to be compatible with our V3 architecture so if any audit is required please as Antigravity to do the audit. similarly as we will be creating these wireframes using Claude Design which itself is very memory intensive, the implementation of this new design system has to be done using Antigravity 2.0 hence we have to ensure there is no scope for ambiguity and transition is as smooth as possible. Once the new wireframes are designed we will delete old files so new set has to be complete in itself. To make it easier for Claude design, we should do it one step at a time and evrytime in a fresh chat under project so that context memory is utilised minimum.  We will start with BCC Design Principles followed by SiteHeader and Site Footer and then you decide the rest of workflow.
 
-w. "V6 99 systemdesign.md "
+#### 
 
-x. "V6 98 token.css"
+#### Please remember our tech stack is :
 
-y. "V6 91 SiteHeader"
+#### FINAL\_TECHNOLOGY\_STACK\_FREEZE
 
-z. "V6 92 SiteFooter"
+#### Status: FROZEN / AUTHORITATIVE
 
+#### Authority: MISSION-007A
 
+#### Frontend:  Astro (TypeScript, SSG/SSR hybrid, Vanilla CSS, Design Tokens, GSAP)
 
-The wireframe has to be compatible with our V3 architecture so if any audit is required please as Antigravity to do the audit. similarly as we will be creating these wireframes using Claude Design which itself is very memory intensive, the implementation of this new design system has to be done using Antigravity 2.0 hence we have to ensure there is no scope for ambiguity and transition is as smooth as possible. Once the new wireframes are designed we will delete old files so new set has to be complete in itself. To make it easier for Claude design, we should do it one step at a time and evrytime in a fresh chat under project so that context memory is utilised minimum.  We will start with BCC Design Principles followed by SiteHeader and Site Footer and then you decide the rest of workflow.
+#### Backend:   NestJS + Fastify (TypeScript, Modular Monolith)
 
+#### Database:  MySQL + Kysely (no ORM, database-first schema, SQL migrations)
 
+#### API:       REST / JSON / /api/v1 / OpenAPI 3.x / Swagger / Typed Client Required
 
-Please remember our tech stack is :
+#### Auth:      DEFERRED (Session+JWT Hybrid OR JWT+Refresh Token)
 
-FINAL\_TECHNOLOGY\_STACK\_FREEZE
+#### Storage:   Cloudflare R2
 
-Status: FROZEN / AUTHORITATIVE
+#### CDN:       ImageKit.io
 
-Authority: MISSION-007A
+#### Infra:     Docker + Nginx + Linux (AWS compatible)
 
-Frontend:  Astro (TypeScript, SSG/SSR hybrid, Vanilla CSS, Design Tokens, GSAP)
+#### CI/CD:     Git + GitHub + GitHub Actions
 
-Backend:   NestJS + Fastify (TypeScript, Modular Monolith)
+#### FORBIDDEN:
 
-Database:  MySQL + Kysely (no ORM, database-first schema, SQL migrations)
+#### 
 
-API:       REST / JSON / /api/v1 / OpenAPI 3.x / Swagger / Typed Client Required
+#### Microservices
 
-Auth:      DEFERRED (Session+JWT Hybrid OR JWT+Refresh Token)
+#### Polyrepo Architecture
 
-Storage:   Cloudflare R2
+#### Heavy ORM Dependency
 
-CDN:       ImageKit.io
+#### GraphQL as Primary API
 
-Infra:     Docker + Nginx + Linux (AWS compatible)
+#### Multiple Frontend Frameworks
 
-CI/CD:     Git + GitHub + GitHub Actions
+#### Dedicated Mobile Backend
 
-FORBIDDEN:
+#### Kubernetes (current stage)
 
+#### 
 
+#### also refer Bootstrap.md file and Phase\_Roadmap.md
 
-Microservices
+#### Remember not to Drift, not to hallucinate. We are halting every thing else till we migrate these new design files.
 
-Polyrepo Architecture
+#### 
 
-Heavy ORM Dependency
+#### 
 
-GraphQL as Primary API
+#### 
 
-Multiple Frontend Frameworks
+#### 
 
-Dedicated Mobile Backend
+#### Changes to be made to file name - "01 BCC Design Principles" under project "V5  BCC Unified Platform Design System" in Claude Design
 
-Kubernetes (current stage)
+#### 
 
+#### Premium Editorial ×
 
+#### Contemporary Luxury
 
-also refer Bootstrap.md file and Phase\_Roadmap.md
+#### 
 
-Remember not to Drift, not to hallucinate. We are halting every thing else till we migrate these new design files.
+#### 01\. Visual Direction - Hybrid: "Refined Editorial Luxury"
 
+#### 
 
+#### 02\. Header : Header as a State Machine
 
+#### The header is a single Astro component (SiteHeader.astro) that renders one of six states ( Guest / User / Member / Content Editor / Moderator / Admin ) from session.role. Logo height 56px at rest, 44px when condensed on scroll.
 
+#### Scroll behaviour (GSAP ScrollTrigger): At page top, nav background is fully transparent. After 60px scroll: backdrop-filter blur + dark semi-transparent fill (glassmorphic dark). Wireframe below shows the scrolled/opaque state. Active page link highlighted via Astro's built-in pathname detection.
 
+#### 
 
+#### Nav ITems - Home, About, Showcase. Activities ( Drop Down ). Learn ( Drop Down ), Membership, Journal
 
+#### 
 
+#### 
 
-Changes to be made to file name - "01 BCC Design Principles" under project "V5  BCC Unified Platform Design System" in Claude Design
+#### Admin Console — full administration, content and moderation. Never visible to lower roles.
 
+#### Moderator Console - selected user roles like coordinator, author, editor, anyone with member + priviledges. Only those tabs visible for which their user role have permission. appears in nav (event, activity, gallery, content management). Member Hub + avatar persist.
 
+#### Content Editor - Member + Journal Writer / editor role
 
-Premium Editorial ×
+#### Member - Logged in member privileges. Member Hub replaces all acquisition CTAs. Avatar opens profile menu (profile, my gallery, renewals, sign out). Join CTA removed. Member Hub button (satin gold outline) + avatar chip added. Nav unchanged.
 
-Contemporary Luxury
+#### User - User is not equals to Member , allowed to registeer as participate in contest, events in which non members are allowed
 
+#### Guest - logged out state for public. Become a Member — the single gold CTA. Sign In stays quiet text. Goal: membership growth without clutter. Default public state. Nav shows discovery routes only. No role-gated items rendered server-side.
 
+#### 
 
-01\. Visual Direction - Hybrid: "Refined Editorial Luxury"
+#### 04\. Real-World Photography Handling
 
+#### 
 
+#### Instead of "The system never depends on curated ratios: grids enforce frame ratios via object-fit: cover with focal-point override; panoramas and full portraits get dedicated display modes."
 
-02\. Header : Header as a State Machine
+#### Each photo retains its original aspect ratio. No object-fit cropping.
 
-The header is a single Astro component (SiteHeader.astro) that renders one of six states ( Guest / User / Member / Content Editor / Moderator / Admin ) from session.role. Logo height 56px at rest, 44px when condensed on scroll.
+#### 
 
-Scroll behaviour (GSAP ScrollTrigger): At page top, nav background is fully transparent. After 60px scroll: backdrop-filter blur + dark semi-transparent fill (glassmorphic dark). Wireframe below shows the scrolled/opaque state. Active page link highlighted via Astro's built-in pathname detection.
+#### 07\. Page Blueprints — Astro Component Trees
 
+#### 
 
+#### as per following wireframe plan :
 
-Nav ITems - Home, About, Showcase. Activities ( Drop Down ). Learn ( Drop Down ), Membership, Journal
+#### 
 
+#### 
 
+#### 
 
+#### 
 
+#### \### Wireframe Nav
 
-Admin Console — full administration, content and moderation. Never visible to lower roles.
+#### 1\.  Nav auth buttons: "Register" → account creation flow (identity only, not membership). "Sign In" → returning-user login. When logged in, both are replaced by: avatar circle + "Member Hub" link. These are three separate states of the nav right-rail.
 
-Moderator Console - selected user roles like coordinator, author, editor, anyone with member + priviledges. Only those tabs visible for which their user role have permission. appears in nav (event, activity, gallery, content management). Member Hub + avatar persist.
+#### 2\. Grouped nav is phase-scalable. Activities dropdown gains Contests + Exhibitions when those modules go live. Learn dropdown activates when Photography School launches.
 
-Content Editor - Member + Journal Writer / editor role
+#### 3\. BCC Logo , About, Showcase, Activities, Journal, Learn  ( Showcase and Activities will have Dropdown. Greyed/non-interactive items: Learn (entire item + dropdown) is greyed until Photography School. Activities › Contests and Exhibitions greyed with COMING SOON pill until Phase 2b. )
 
-Member - Logged in member privileges. Member Hub replaces all acquisition CTAs. Avatar opens profile menu (profile, my gallery, renewals, sign out). Join CTA removed. Member Hub button (satin gold outline) + avatar chip added. Nav unchanged.
+#### 
 
-User - User is not equals to Member , allowed to registeer as participate in contest, events in which non members are allowed
+#### 
 
-Guest - logged out state for public. Become a Member — the single gold CTA. Sign In stays quiet text. Goal: membership growth without clutter. Default public state. Nav shows discovery routes only. No role-gated items rendered server-side.
+#### 
 
+#### \### Wireframe Footer
 
+#### Rendered identically on every page. 3 row - center row 4-column grid,
 
-04\. Real-World Photography Handling
+#### Top row - FIP trust badge, social strip,
 
+#### Middle Row 4 columns - . No page-specific footer variation. Column one (wider )- BCC Logo and brief description. column 2 - Navigate Column 3 - Explore Column 4 - Guidelines
 
+#### Bottom Row - copyright bar and FIP details - Corporate Member of Federation of Indian Photography (CM 1098)
 
-Instead of "The system never depends on curated ratios: grids enforce frame ratios via object-fit: cover with focal-point override; panoramas and full portraits get dedicated display modes."
+#### 
 
-Each photo retains its original aspect ratio. No object-fit cropping.
+#### 
 
+#### \### Wireframe Home /
 
+#### 
 
-07\. Page Blueprints — Astro Component Trees
+#### \# Desktop
 
+#### 
 
+#### 1\. SiteHeader {session}
 
-as per following wireframe plan :
+#### 
 
+#### 2\. Hero - BCC Spotlight : Hero Spotlight: Admin-curated, one photo at a time, toggled from admin dashboard "Spotlight" panel. Falls back to most-recent gallery upload if no spotlight is set. Photo metadata (title, photographer, activity origin) is pulled from the gallery record.
 
+#### 
 
+#### 3\. Club Stat - Live Stat Band : Stats bar — live API: All four numbers are fetched from the NestJS backend at page load (not hardcoded). GSAP counter animation triggers on scroll entry (ScrollTrigger, once:true). Amber top-border line is a design token, not wireframe styling.
 
+#### 
 
+#### 4\. Our Members on the WAll - Justified grid — each photo retains its original aspect ratio. Each row is proportionally scaled so all photos fill the full 1200px content width with 8px gaps. Row height varies by content (shorter for wide landscapes, taller for portraits). Flickr justified-layout algorithm in Astro frontend. No object-fit cropping. Featured photos From Featured Photographers, rotating · max 1 per member · card → /photographer/\[slug]. hover: vf corners + overlay
 
+#### 
 
+#### 5\. THE CLUB : One community. Four ways to participate. - 	"What We Do" cards: Link to Photowalks, Contests, Exhibitions, and Photography School module pages. All 4 nav links are present from launch; module pages go live progressively per phase roadmap. Cards show amber border on hover (GSAP or CSS).
 
+#### &#x09;						Photowalks Explore Photowalks →
 
-\### Wireframe Nav
+#### &#x09;						Photo Contests View Contests →
 
-1\.  Nav auth buttons: "Register" → account creation flow (identity only, not membership). "Sign In" → returning-user login. When logged in, both are replaced by: avatar circle + "Member Hub" link. These are three separate states of the nav right-rail.
+#### &#x09;						Exhibitions See Exhibitions →
 
-2\. Grouped nav is phase-scalable. Activities dropdown gains Contests + Exhibitions when those modules go live. Learn dropdown activates when Photography School launches.
+#### &#x09;						Photography School
 
-3\. BCC Logo , About, Showcase, Activities, Journal, Learn  ( Showcase and Activities will have Dropdown. Greyed/non-interactive items: Learn (entire item + dropdown) is greyed until Photography School. Activities › Contests and Exhibitions greyed with COMING SOON pill until Phase 2b. )
+#### &#x09;						hover: amber border
 
+#### 
 
+#### 6 Full-bleed featured activity image — 60vh - Featured Activity — admin-toggled: When toggle is OFF, this full-bleed section is absent entirely from the DOM — page flows directly from "What We Do" to "Upcoming Contest". When ON, admin selects which specific event to feature. Provision a dedicated toggle + event selector in the Admin Dashboard wireframe (separate deliverable).
 
+#### 
 
+#### 
 
+#### 7\. UPCOMING : What's happening : Events list — API-driven: Pulls next 3 upcoming events from the Events module API, ordered by date ascending. "ALL ACTIVITIES →" links to /events. Each \[REGISTER →] CTA links to the individual event registration page. "Members only" sub-note appears only when event eligibility is restricted to ACTIVE members — enforced at registration, not at list display. Section is always visible when at least one upcoming event exists. EXAMPLE CONTENT — upcomingEvents\[] · EventRow variant
 
+#### 
 
-\### Wireframe Footer
+#### 8\. Photo Series : The city is our muse. : Lakes, forts, mosques and markets — our members document the extraordinary visual richness of Bhopal and beyond. EXAMPLE — featureBand.image · parallax-soft
 
-Rendered identically on every page. 3 row - center row 4-column grid,
+#### 
 
-Top row - FIP trust badge, social strip,
+#### 9.Membership : 3-step flow diagram: Communicates that Registration (creating a platform identity) and Membership Application are two separate, sequential steps — directly enforcing the constitutional separation between identity and membership. Critical UX education for new visitors. Do not collapse into a single CTA. 3 public membership classes only: Basic Member, Student Member, Individual Member are the only classes shown on any public-facing page. Constitutional classes (Full, Life, Patron, Founding) are NOT surfaced here. The upgrade pathway for those is handled entirely inside the Member Hub after a user has already joined. EXAMPLE CONTENT — membershipPlans\[] · tier names/prices from CMS
 
-Middle Row 4 columns - . No page-specific footer variation. Column one (wider )- BCC Logo and brief description. column 2 - Navigate Column 3 - Explore Column 4 - Guidelines
+#### 
 
-Bottom Row - copyright bar and FIP details - Corporate Member of Federation of Indian Photography (CM 1098)
+#### 10.Open Contest : Submit your best work : Contest strip — conditional render: Entire section only appears when at least one contest is in an active submission window (per the Contest module API). Hidden entirely otherwise — no empty state, no placeholder shown on the public page. Backend returns a flag; Astro SSR conditionally renders the section.
 
+#### 
 
+#### 11\. Journals and Guides : Latest from the Journal : EXAMPLE CONTENT — recentPosts\[] · JournalCard standard variant
 
+#### 
 
+#### 12\. Footer
 
-\### Wireframe Home /
+#### 
 
+#### 
 
+#### \# Mobile :
 
-\# Desktop
+#### 
 
+#### 1\. Header - Drawer: Nav links + \[Sign In] + \[Register] stacked at bottom
 
+#### 
 
-1\. SiteHeader {session}
+#### 2\. Hero - BCC Spotlight
 
+#### 
 
+#### 3\. Club Stat - Live Stat Band
 
-2\. Hero - BCC Spotlight : Hero Spotlight: Admin-curated, one photo at a time, toggled from admin dashboard "Spotlight" panel. Falls back to most-recent gallery upload if no spotlight is set. Photo metadata (title, photographer, activity origin) is pulled from the gallery record.
+#### 
 
+#### 4\. ON THE WALL - Our members, on the wall - 2-column grid (justified layout requires wider viewport)
 
+#### 
 
-3\. Club Stat - Live Stat Band : Stats bar — live API: All four numbers are fetched from the NestJS backend at page load (not hardcoded). GSAP counter animation triggers on scroll entry (ScrollTrigger, once:true). Amber top-border line is a design token, not wireframe styling.
+#### 5\. THE CLUB - One community. Four ways to participate.
 
+#### 
 
+#### 6\. \[ Activity image ]⚙ ADMIN-TOGGLED  UPCOMING ACTIVITY
 
-4\. Our Members on the WAll - Justified grid — each photo retains its original aspect ratio. Each row is proportionally scaled so all photos fill the full 1200px content width with 8px gaps. Row height varies by content (shorter for wide landscapes, taller for portraits). Flickr justified-layout algorithm in Astro frontend. No object-fit cropping. Featured photos From Featured Photographers, rotating · max 1 per member · card → /photographer/\[slug]. hover: vf corners + overlay
+#### 
 
+#### 7\. UPCOMING : What's happening
 
+#### 
 
-5\. THE CLUB : One community. Four ways to participate. - 	"What We Do" cards: Link to Photowalks, Contests, Exhibitions, and Photography School module pages. All 4 nav links are present from launch; module pages go live progressively per phase roadmap. Cards show amber border on hover (GSAP or CSS).
+#### 8\. Heritage Series :
 
-&#x09;						Photowalks Explore Photowalks →
+#### 
 
-&#x09;						Photo Contests View Contests →
+#### 9\. MEMBERSHIP
 
-&#x09;						Exhibitions See Exhibitions →
+#### 
 
-&#x09;						Photography School
+#### 10 open Contest
 
-&#x09;						hover: amber border
+#### 
 
+#### 11\.  Journals and Guides
 
+#### 
 
-6 Full-bleed featured activity image — 60vh - Featured Activity — admin-toggled: When toggle is OFF, this full-bleed section is absent entirely from the DOM — page flows directly from "What We Do" to "Upcoming Contest". When ON, admin selects which specific event to feature. Provision a dedicated toggle + event selector in the Admin Dashboard wireframe (separate deliverable).
+#### 12\. Footer
 
+#### 
 
+#### 
 
+#### 
 
+#### 
 
-7\. UPCOMING : What's happening : Events list — API-driven: Pulls next 3 upcoming events from the Events module API, ordered by date ascending. "ALL ACTIVITIES →" links to /events. Each \[REGISTER →] CTA links to the individual event registration page. "Members only" sub-note appears only when event eligibility is restricted to ACTIVE members — enforced at registration, not at list display. Section is always visible when at least one upcoming event exists. EXAMPLE CONTENT — upcomingEvents\[] · EventRow variant
+#### 
 
+#### BaseLayout
 
+#### &#x20; SiteHeader {session}
 
-8\. Photo Series : The city is our muse. : Lakes, forts, mosques and markets — our members document the extraordinary visual richness of Bhopal and beyond. EXAMPLE — featureBand.image · parallax-soft
+#### &#x20; HeroShowcase {featuredPhotos\[]}
 
+#### &#x20; StatBand {clubStats\[]}
 
+#### &#x20; GalleryGrid {recentPhotos\[], cols:4}
 
-9.Membership : 3-step flow diagram: Communicates that Registration (creating a platform identity) and Membership Application are two separate, sequential steps — directly enforcing the constitutional separation between identity and membership. Critical UX education for new visitors. Do not collapse into a single CTA. 3 public membership classes only: Basic Member, Student Member, Individual Member are the only classes shown on any public-facing page. Constitutional classes (Full, Life, Patron, Founding) are NOT surfaced here. The upgrade pathway for those is handled entirely inside the Member Hub after a user has already joined. EXAMPLE CONTENT — membershipPlans\[] · tier names/prices from CMS
+#### &#x20; The Club
 
+#### &#x20; Featured Activity
 
+#### &#x20; EventRow x3 {upcomingEvents\[]}
 
-10.Open Contest : Submit your best work : Contest strip — conditional render: Entire section only appears when at least one contest is in an active submission window (per the Contest module API). Hidden entirely otherwise — no empty state, no placeholder shown on the public page. Backend returns a flag; Astro SSR conditionally renders the section.
+#### &#x20; Story Series
 
+#### &#x20; MembershipTiers {plans\[]}
 
+#### &#x20; Open Contest
 
-11\. Journals and Guides : Latest from the Journal : EXAMPLE CONTENT — recentPosts\[] · JournalCard standard variant
+#### &#x20; JournalCard x3 {recentPosts\[]}
 
+#### &#x20; SiteFooter {nav, social\[]}
 
+#### 
 
-12\. Footer
+#### 
 
+#### 
 
+#### 
 
+#### 
 
+#### 
 
-\# Mobile :
+#### 
 
+#### \### Wireframe Showcase Page /showcase
 
+#### 
 
-1\. Header - Drawer: Nav links + \[Sign In] + \[Register] stacked at bottom
+#### \#Desktop
 
+#### 
 
+#### 1\. SiteHeader {session} -
 
-2\. Hero - BCC Spotlight
+#### 
 
+#### 2\. PageHero {title, intro} : Showcase Hub : Explore award-winning portfolios, photography genres, and connect with local photographers. Member Portfolio Photographs by BCC members. Every image displayed at its original aspect ratio — as the photographer intended. Stats \[xxx photographs from yyy active BCC photographers]
 
+#### 
 
-3\. Club Stat - Live Stat Band
+#### 3\.  FeaturedWork {featuredPhotos\[]}  Featured Work rotates with BCC Spotlight cadence
 
+#### 
 
+#### 4\. GenrePlates {categories\[]} :  categories\[] · counts computed from photos collection. Filter bar sticks below the 68px nav on scroll so the grid is always accessible with filters in view. Genre pills scroll horizontally when they exceed viewport. All filters (genre, event, sort) are combinable — API query string builds from the active state of each control. Grid/List toggle switches the layout mode.
 
-4\. ON THE WALL - Our members, on the wall - 2-column grid (justified layout requires wider viewport)
+#### 
 
+#### 5\. Browse by Genre : Browse by genre, Selecting a genre filters the directory below .
 
+#### 
 
-5\. THE CLUB - One community. Four ways to participate.
+#### 5\. PhotographerDirectory :
 
+#### &#x20;   DirectoryToolbar {query, genre, sort}
 
+#### &#x20;   PhotographerCard grid - photographers\[] · paginated 24/page in production · names are placeholder. Justified grid — each photo retains its original aspect ratio. Each row is proportionally scaled so all photos fill the full 1200px content width with 8px gaps. Row height varies by row content. Algorithm: Flickr justified-layout (or equivalent). No CSS object-fit cropping applied. 5 rows shown (22 photos). Load More triggers paginated API fetch — not infinite scroll, to keep footer accessible. Hover State - \[Very Small Avatar] \[Photographer Name] \[Photo Title] \[Genre] \[Likes] \[Views]
 
-6\. \[ Activity image ]⚙ ADMIN-TOGGLED  UPCOMING ACTIVITY
+#### &#x20;   EmptyState | Pagination
 
+#### 
 
+#### 6\. BEHIND THE LENS : Featured photographers this month - Meet the members whose work fills this showcase. Badge colours applied in hi-fi per confirmed token set. In this wireframe badges are outline pills with the class label only. No application link or joining CTA is attached to any badge regardless of membership class — including constitutional classes (Full, Life, Patron, Founding). Badges are identification labels only. \[avatar] \[Member Class] \[Photographer Name] \[Genre (max photo)] \[XX] photos in showcase Member since \[YYYY] View Profile →
 
-7\. UPCOMING : What's happening
+#### 
 
+#### 7\. ShowcaseBands {exhibitions\[]- ( From the exhibition halls Work shown at Bharat Bhavan, IGNCA and beyond → exhibitions\[] ), collections\[] - ( Curated series \& walks Monsoon Lakes, Heritage Walks, Birding mornings → collections\[]} )
 
+#### 
 
-8\. Heritage Series :
+#### 8\. Footer
 
+#### 
 
+#### /showcase
 
-9\. MEMBERSHIP
+#### BaseLayout
 
+#### &#x20; SiteHeader {session} -
 
+#### &#x20; PageHero {title, intro}
 
-10 open Contest
+#### &#x20; FeaturedWork {featuredPhotos\[]}
 
+#### &#x20; GenrePlates {categories\[]} -
 
+#### &#x20; Browse by Genre
 
-11\.  Journals and Guides
+#### &#x20; PhotographerDirectory
 
+#### &#x20;   DirectoryToolbar {query, genre, sort}
 
+#### &#x20;   PhotographerCard grid
 
-12\. Footer
+#### &#x20;   EmptyState | Pagination
 
+#### &#x20; Featured Photographers
 
+#### &#x20; ShowcaseBands {exhibitions\[], collections\[]}
 
+#### &#x20; SiteFooter
 
+#### 
 
+#### \## Photographer Profile Page  /photographers/\[username]  ( changing to /photographers/\[username] instead of gallery/photographer/\[username]
 
+#### 
 
+#### 
 
+#### \~ A. Profile Page — Portfolio Tab (default active state) Desktop 1280px · left  |  Mobile 390px · right
 
+#### 
 
+#### 1\. SiteHeader {session}
 
-BaseLayout
+#### 
 
-&#x20; SiteHeader {session}
+#### 2\. PortfolioHero {photographer} - cover photo · full viewport width · 260px tall · -  Manually selected / uploaded by the photographer.Falls back System Default ( We have to select one system default in advance and store) if none is set. \[Profile Header — same structure as above: cover strip + identity block + stats]
 
-&#x20; HeroShowcase {featuredPhotos\[]}
+#### 
 
-&#x20; StatBand {clubStats\[]}
+#### Identity Block - Avatar - Display Name - Class + Recognition Badges: Class badge = identification label only — no CTA, no joining pathway, no application link. Recognition badge = separate secondary pill with muted styling. Both shown simultaneously per MEM-006 single-active-recognition rule. Member holds ONE class badge + at most ONE active recognition badge.
 
-&#x20; GalleryGrid {recentPhotos\[], cols:4}
+#### specialties · location · since · counts
 
-&#x20; The Club
+#### 
 
-&#x20; Featured Activity
+#### Stats are live API values: "Photos in Showcase" = approved portfolio photos with public visibility only. "Contest Awards" = Gold + Silver + Bronze wins only, not participations. "Events Attended" = total events attended. "Platform Points" = cumulative lifetime total per Module 12.
 
-&#x20; EventRow x3 {upcomingEvents\[]}
+#### 
 
-&#x20; Story Series
+#### followed by Page Specific Navigation for different tabs - Portfolio, About, Contests, Activity
 
-&#x20; MembershipTiers {plans\[]}
+#### 
 
-&#x20; Open Contest
+#### 
 
-&#x20; JournalCard x3 {recentPosts\[]}
+#### Everything below this will be 2 column layout. 1. Narrower Left corner approx. 1/4 th space ( Left Rail ) and Right Main Column with 3/4th space ( Main Content Area )
 
-&#x20; SiteFooter {nav, social\[]}
+#### 
 
+#### I. Right Main column ( Main Content Area )
 
+#### 
 
+#### 3\. Bio - Intro 2 paragraphs - About Me Button that takes to B About Tab. lowest Row - Social Media and web links
 
+#### 
 
+#### 4\. Signature / Featured Photo: Manually selected by the photographer from their uploaded portfolio via Member Hub dashboard. Photographer can update selection at any time. Falls back to most-recent approved upload if none is set.  Viewfinder crop-mark corners at all 4 corners. No viewfinder on cover strip (different context).
 
+#### 
 
+#### 5\. photographer-created thematic collections · horizontal scroll strip · links to filtered showcase view.
 
+#### 
 
+#### 6\.   GalleryGrid {photos\[], byPhotographer}     genre filter tabs   : All Portfolio Photos Portfolio  photographer's full upload library — Per-photo visibility: public / members-only / private. Private photos never shown on public profile regardless of visitor login state. Justified grid: original aspect ratios preserved, no cropping, 8px gaps, row height varies naturally. Desktop: proportional rows. Mobile: 2-column grid. Click on any photo will open lightbox, that will have 2 columns, left large column will show photo , right narrow column will have Caption, Description, EXIF details ( auto extracted at the time of uploading, otherwise option to manually add / edit exif). lightbox: contain, never crop
 
+#### 
 
+#### II. Left Narrow Column ( Left Rail )
 
+#### 
 
+#### 7\. Profile Detail
 
+#### &#x09;i.	Member Since
 
-\### Wireframe Showcase Page /showcase
+#### &#x09;ii.	Membership Class
 
+#### &#x09;iii.	Primary Genre
 
+#### &#x09;iv.	Expertise
 
-\#Desktop
+#### &#x09;v.	Fav Subject
 
+#### &#x09;vi.	Preferred Camera
 
+#### &#x09;vii.	Distincions, Awards and Honors -  ( RTF Editor )
 
-1\. SiteHeader {session} -
+#### &#x09;viii.	Equipment Bag - a. Camera ('s) b. Lenses c. Other equipments
 
+#### &#x09;
 
+#### after above 2 columns back to single column
 
-2\. PageHero {title, intro} : Showcase Hub : Explore award-winning portfolios, photography genres, and connect with local photographers. Member Portfolio Photographs by BCC members. Every image displayed at its original aspect ratio — as the photographer intended. Stats \[xxx photographs from yyy active BCC photographers]
+#### 
 
+#### 8\. RelatedPhotographers {sameGenres\[]}
 
+#### 
 
-3\.  FeaturedWork {featuredPhotos\[]}  Featured Work rotates with BCC Spotlight cadence
+#### 9\. SiteFooter
 
+#### 
 
+#### \~ B. About Tab — shown when \[About] tab is active Desktop layout only · two-column · mobile collapses to single column
 
-4\. GenrePlates {categories\[]} :  categories\[] · counts computed from photos collection. Filter bar sticks below the 68px nav on scroll so the grid is always accessible with filters in view. Genre pills scroll horizontally when they exceed viewport. All filters (genre, event, sort) are combinable — API query string builds from the active state of each control. Grid/List toggle switches the layout mode.
+#### 
 
+#### 1\. SiteHeader {session}
 
+#### 
 
-5\. Browse by Genre : Browse by genre, Selecting a genre filters the directory below .
+#### 2.\[Profile Header — same structure as above: cover strip + identity block + stats] followed by Page Specific Navigation for different tabs - Portfolio, About, Contests, Activity
 
+#### 
 
+#### Everything below this will be 2 column layout. 1. Main Left corner approx. 2/3rd space and Right Narrow Column with 1/3rd space
 
-5\. PhotographerDirectory :
+#### 
 
-&#x20;   DirectoryToolbar {query, genre, sort}
+#### I. Left Main column ( Main Content Area )
 
-&#x20;   PhotographerCard grid - photographers\[] · paginated 24/page in production · names are placeholder. Justified grid — each photo retains its original aspect ratio. Each row is proportionally scaled so all photos fill the full 1200px content width with 8px gaps. Row height varies by row content. Algorithm: Flickr justified-layout (or equivalent). No CSS object-fit cropping applied. 5 rows shown (22 photos). Load More triggers paginated API fetch — not infinite scroll, to keep footer accessible. Hover State - \[Very Small Avatar] \[Photographer Name] \[Photo Title] \[Genre] \[Likes] \[Views]
+#### 
 
-&#x20;   EmptyState | Pagination
+#### 3\. About - Full Bio. In the end Member Class and Member Since
 
+#### 
 
+#### 4\. Last Row - All Web and Social Links
 
-6\. BEHIND THE LENS : Featured photographers this month - Meet the members whose work fills this showcase. Badge colours applied in hi-fi per confirmed token set. In this wireframe badges are outline pills with the class label only. No application link or joining CTA is attached to any badge regardless of membership class — including constitutional classes (Full, Life, Patron, Founding). Badges are identification labels only. \[avatar] \[Member Class] \[Photographer Name] \[Genre (max photo)] \[XX] photos in showcase Member since \[YYYY] View Profile →
+#### 
 
+#### II. Right Narrow Column ( Right Rail )
 
+#### 
 
-7\. ShowcaseBands {exhibitions\[]- ( From the exhibition halls Work shown at Bharat Bhavan, IGNCA and beyond → exhibitions\[] ), collections\[] - ( Curated series \& walks Monsoon Lakes, Heritage Walks, Birding mornings → collections\[]} )
+#### 5\. Camera Gears - Bodies - Lenses - Other Equipments. Camera Gear (self-declared): Entered by photographer in profile settings in Member Hub. No verification of ownership or accuracy. Shown publicly as-is. If photographer leaves it empty, the gear section is not rendered on the public profile.
 
+#### 
 
+#### 6\. Achievements - First Upload, Contest Winner, X Events, Senior Member, X Photowalks, X Portfolio Series \[X] total badges earned · \[X] points this year
 
-8\. Footer
+#### 
 
+#### After this end 2 columns
 
+#### 
 
-/showcase
+#### 7\. footer
 
-BaseLayout
+#### 
 
-&#x20; SiteHeader {session} -
+#### \~ C. Contests Tab (annotation only — no wireframe rendered): Chronological list of all contest participations. Each row: photographer's submitted photo thumbnail (left) + contest name + theme + submission date + result badge (Gold / Silver / Bronze / Special Mention / Participated / Shortlisted). Filterable by year and result type. Follows EventRow list pattern established on the Home page "What's Happening" section.
 
-&#x20; PageHero {title, intro}
+#### 
 
-&#x20; FeaturedWork {featuredPhotos\[]}
+#### \~ D. Activity Tab (annotation only — no wireframe rendered): Chronological history of events attended (photowalk / workshop / exhibition / seminar), exhibitions participated in as submitting photographer, and volunteer slots completed. Each row: activity type badge + activity name + date + role. Same EventRow list pattern. Filterable by activity type and year.
 
-&#x20; GenrePlates {categories\[]} -
+#### 
 
-&#x20; Browse by Genre
+#### 
 
-&#x20; PhotographerDirectory
+#### 
 
-&#x20;   DirectoryToolbar {query, genre, sort}
+#### \### Wireframe Photographers Directory /photographers
 
-&#x20;   PhotographerCard grid
+#### 
 
-&#x20;   EmptyState | Pagination
+#### 1\. SiteHeader {session}
 
-&#x20; Featured Photographers
+#### 
 
-&#x20; ShowcaseBands {exhibitions\[], collections\[]}
+#### 2\. PageHero {title, intro} - Stats
 
-&#x20; SiteFooter
+#### 
 
+#### 3\. FilterTabs {categories\[]}: Class filter lists all membership classes (Basic → Founding) for directory lookup purposes — not a membership promotion. Options: All Classes / Basic / Student / Individual / Full / Life / Patron / Founding Member. No joining CTA or application pathway is associated with any filter option or its results.
 
+#### 
 
-\## Photographer Profile Page  /photographers/\[username]  ( changing to /photographers/\[username] instead of gallery/photographer/\[username]
+#### 4\. Photographers Grid - Photographers Cards Grid - Initially Randomly Sorted.
 
+#### Each card links to /photographers/\[username] — the individual Photographer Profile page. Profile page shows full portfolio, bio, gear list, contest history, and activity history.
 
+#### 
 
+#### HAS RECOGNITION BADGE. Class badge colour tokens (applied in hi-fi): Basic #5C5876 · Student #1A9DAE · Individual #3E5A48 · Full #F5A82A · Life #A8843C · Patron #8A6A2E · Founding #8A6A2E. In this wireframe all badges are outline pills only. No joining CTA or application link attached to any badge.
 
+#### 
 
-\~ A. Profile Page — Portfolio Tab (default active state) Desktop 1280px · left  |  Mobile 390px · right
+#### Recognition badges (Senior Member, Honorary Senior Member, Honorary Member, Honorary Mentor, Honorary Grandmaster) are separate from membership class badges. A member holds one class badge AND at most one active recognition badge. Both shown simultaneously on the card (class badge + smaller muted recognition pill below). Recognition does not affect or replace the class badge.
 
+#### 
 
+#### 
 
-1\. SiteHeader {session}
+#### Empty state (not rendered — zero filter results): Card grid area replaced with: muted camera icon placeholder (grey) · "No photographers found matching your filters" · \[Clear Filters] amber ghost button. Header, search input, filter dropdowns, and results count bar all remain visible.
 
+#### 
 
+#### 5\. Footer
 
-2\. PortfolioHero {photographer} - cover photo · full viewport width · 260px tall · -  Manually selected / uploaded by the photographer.Falls back System Default ( We have to select one system default in advance and store) if none is set. \[Profile Header — same structure as above: cover strip + identity block + stats]
+#### 
 
+#### 
 
+#### V6 component tree stub (expand this into full wireframe):
 
-Identity Block - Avatar - Display Name - Class + Recognition Badges: Class badge = identification label only — no CTA, no joining pathway, no application link. Recognition badge = separate secondary pill with muted styling. Both shown simultaneously per MEM-006 single-active-recognition rule. Member holds ONE class badge + at most ONE active recognition badge.
+#### &#x20; BaseLayout
 
-specialties · location · since · counts
+#### &#x20;   SiteHeader {session}
 
+#### &#x20;   PageHero {title, intro}
 
+#### &#x20;   SearchFilter {genres\[], city}    ← confirm or redesign
 
-Stats are live API values: "Photos in Showcase" = approved portfolio photos with public visibility only. "Contest Awards" = Gold + Silver + Bronze wins only, not participations. "Events Attended" = total events attended. "Platform Points" = cumulative lifetime total per Module 12.
+#### &#x20;   PhotographerCard grid            ← 4-col desktop, 3-col tablet, 2-col mobile
 
+#### &#x20;   Pagination                       ← confirm if needed
 
+#### &#x20;   SiteFooter
 
-followed by Page Specific Navigation for different tabs - Portfolio, About, Contests, Activity
+#### 
 
+#### 
 
+#### \### About /about
 
+#### 
 
+#### 1\. SiteHeader {session}
 
-Everything below this will be 2 column layout. 1. Narrower Left corner approx. 1/4 th space ( Left Rail ) and Right Main Column with 3/4th space ( Main Content Area )
+#### 
 
+#### 2\. PageHero {title, intro} - Stats
 
+#### 
 
-I. Right Main column ( Main Content Area )
+#### 3\. Pillar Grid {pillars\[]} - 3 pillars -
 
+#### &#x09;01 Community - Photography is most powerful when shared. Our club is a space where beginners find mentors and masters find inspiration.
 
+#### &#x09;02 Craft - From technical excellence to artistic vision — structured programmes across genres, from street photography to astrophotography.
 
-3\. Bio - Intro 2 paragraphs - About Me Button that takes to B About Tab. lowest Row - Social Media and web links
+#### &#x09;03 City - Bhopal is our muse — its lakes, heritage, wildlife, and people. We document and celebrate this city's extraordinary visual richness.
 
+#### 
 
+#### 4\. Timeline {milestones\[]} - Our Story - Legacy of Light -
 
-4\. Signature / Featured Photo: Manually selected by the photographer from their uploaded portfolio via Member Hub dashboard. Photographer can update selection at any time. Falls back to most-recent approved upload if none is set.  Viewfinder crop-mark corners at all 4 corners. No viewfinder on cover strip (different context).
+#### &#x09;May 2015 - First informal grouping - A group of local photography enthusiasts began meeting informally in Bhopal to share critiques and capture the lakes together.
 
+#### &#x09;Apr 2016 - First Organized Photowalk - Held on Heritage Day, our first structured walk took place at the historic Taj-ul-Masajid, establishing our core focus on documentation.
 
+#### &#x09;Jun 2016 - Facebook Group Created - On June 8th, 2016, our official Facebook group was created, serving as the digital foundation for our growing community.
 
-5\. photographer-created thematic collections · horizontal scroll strip · links to filtered showcase view.
+#### &#x09;Oct 2019 - Formal Society Registration - Bhopal Camera Club was formally registered as an official society under the MP Society Registrikaran Adhiniyam 1973.
 
+#### &#x09;Jun 2026 - New Platform Launch - We launched the bcc.bhopal.info portal, expanding our school curriculum and preparing for our 10th anniversary next year.
 
+#### 
 
-6\.   GalleryGrid {photos\[], byPhotographer}     genre filter tabs   : All Portfolio Photos Portfolio  photographer's full upload library — Per-photo visibility: public / members-only / private. Private photos never shown on public profile regardless of visitor login state. Justified grid: original aspect ratios preserved, no cropping, 8px gaps, row height varies naturally. Desktop: proportional rows. Mobile: 2-column grid. Click on any photo will open lightbox, that will have 2 columns, left large column will show photo , right narrow column will have Caption, Description, EXIF details ( auto extracted at the time of uploading, otherwise option to manually add / edit exif). lightbox: contain, never crop
+#### 5\. AffiliationBand {registrations\[]}
 
+#### 
 
+#### 6\. LeadershipGrid {committee\[]} - Leadership - The Minds Behind the Club Passionate photographers who volunteer their time to keep BCC thriving. Coordinators - inherit all text and links from current live site -  Rajnish, Kshitij, Rahil, Bablu, Yogesh, Vikas
 
-II. Left Narrow Column ( Left Rail )
+#### Mentors - Dr Anil Bhati, Sauvik Acharyya , Kshitij Patle - inherit all text and information from current live site
 
+#### 
 
+#### 
 
-7\. Profile Detail
+#### 7\.  SiteFooter
 
-&#x09;i.	Member Since
+#### 
 
-&#x09;ii.	Membership Class
+#### 
 
-&#x09;iii.	Primary Genre
+#### BaseLayout
 
-&#x09;iv.	Expertise
+#### &#x20; SiteHeader
 
-&#x09;v.	Fav Subject
+#### &#x20; PageHero {missionStatement}
 
-&#x09;vi.	Preferred Camera
+#### &#x20; PillarGrid {pillars\[]}
 
-&#x09;vii.	Distincions, Awards and Honors -  ( RTF Editor )
+#### &#x20; Timeline {milestones\[]}
 
-&#x09;viii.	Equipment Bag - a. Camera ('s) b. Lenses c. Other equipments
+#### &#x20; AffiliationBand {registrations\[]}
 
-&#x09;
+#### &#x20; LeadershipGrid {committee\[]}
 
-after above 2 columns back to single column
+#### &#x20; SiteFooter
 
+#### 
 
+#### \### Activities /activities
 
-8\. RelatedPhotographers {sameGenres\[]}
+#### 
 
+#### 1\. SiteHeader {session}
 
+#### 
 
-9\. SiteFooter
+#### 2\. PageHero {title, intro} - Stats
 
+#### 
 
+#### 3\. FilterTabs {categories\[]}: Sticky below PageHero once scrolled past page header. Type pills scroll horizontally on overflow. All filters (search, type, eligibility) are combinable API query params. Eligibility filter narrows the list — it does NOT hide events from public view. Every event stays visible to all visitors regardless of login state.
 
-\~ B. About Tab — shown when \[About] tab is active Desktop layout only · two-column · mobile collapses to single column
+#### 
 
+#### 4\. Featured Event — admin-toggled: Same dashboard mechanism as the Featured Activity section on the Home page. When OFF, this section is absent entirely — page flows from filter bar directly to Upcoming Events. When ON, admin selects which specific event to feature.
 
+#### 
 
-1\. SiteHeader {session}
+#### 5\. EventCard grid {events\[]} : UPCOMING - What's happening
 
+#### 
 
+#### List View : EventRow list: Same pattern as Home page "What's Happening." Events always shown publicly. Eligibility badge is informational — enforcement happens at registration, not at list display. "Membership required" note is a courtesy label only; the Register button is still shown. \[Join Waitlist →] appears when capacity is full. ₹ (INR) is the only currency used platform-wide.
 
-2.\[Profile Header — same structure as above: cover strip + identity block + stats] followed by Page Specific Navigation for different tabs - Portfolio, About, Contests, Activity
+#### 
 
+#### Grid View : alternate display mode: Toggled by the \[⊞ Grid] button in the filter bar. Same underlying event data as List view, different visual density — grid favors browsing many events, list favors quick date scanning. Not a separate page or filter.
 
+#### 
 
-Everything below this will be 2 column layout. 1. Main Left corner approx. 2/3rd space and Right Narrow Column with 1/3rd space
+#### 6\. Past Events strip: Links to an archive view (same /events page with a "Past" tab/filter applied). \[View Gallery →] links into /showcase filtered by that event — a Gallery module page, not part of Events. Attendance and photo-submission stats are live values from the Events module database. ARCHIVE - Past events - Browse BCC's complete activity history
 
+#### 
 
+#### 7\.  SiteFooter
 
-I. Left Main column ( Main Content Area )
+#### 
 
+#### 
 
+#### 
 
-3\. About - Full Bio. In the end Member Class and Member Since
+#### BaseLayout
 
+#### &#x20; SiteHeader
 
+#### &#x20; PageHero {title}
 
-4\. Last Row - All Web and Social Links
+#### &#x20; FilterTabs {categories\[]}
 
+#### &#x20; Featured Event
 
+#### &#x20; EventCard grid {events\[]}
 
-II. Right Narrow Column ( Right Rail )
+#### &#x20; Past Event
 
+#### &#x20; SiteFooter
 
+#### 
 
-5\. Camera Gears - Bodies - Lenses - Other Equipments. Camera Gear (self-declared): Entered by photographer in profile settings in Member Hub. No verification of ownership or accuracy. Shown publicly as-is. If photographer leaves it empty, the gear section is not rendered on the public profile.
+#### 
 
+#### \### Join  /join
 
+#### 
 
-6\. Achievements - First Upload, Contest Winner, X Events, Senior Member, X Photowalks, X Portfolio Series \[X] total badges earned · \[X] points this year
+#### 1\. SiteHeader {session}
 
+#### 
 
+#### 2\. PageHero {title, intro}
 
-After this end 2 columns
+#### 
 
+#### 3\. Application Workflow - Two-step flow diagram is the primary visual mechanism communicating MEM-006 P1 — identity and membership are separate, sequential steps, never a single "Join Now" button. Step 1 links to /register. Step 2 anchors down to the class cards (use Apply for appropriate Membership Category ) on this same page. Step 3 is aspirational/informational only — no link.
 
+#### followed by CTA - Create your own account - already signed in - sign in link
 
-7\. footer
+#### 
 
+#### 4\. Membership Tiers - Only 3 operational classes exist on this page. Constitutional/voting classes (Full, Life, Patron, Founding) never appear here — no card, footnote, greyed placeholder, or mention. This is a hard governance rule (MEM-006), not a content decision.
 
+#### 
 
-\~ C. Contests Tab (annotation only — no wireframe rendered): Chronological list of all contest participations. Each row: photographer's submitted photo thumbnail (left) + contest name + theme + submission date + result badge (Gold / Silver / Bronze / Special Mention / Participated / Shortlisted). Filterable by year and result type. Follows EventRow list pattern established on the Home page "What's Happening" section.
+#### "Recommended" label is admin-configurable from the dashboard — any of the 3 classes could carry this label depending on club strategy. Not hardcoded to Individual Member. It is the only card with a filled amber primary CTA; the other two use ghost/outline buttons.
 
+#### 
 
+#### Mobile card reordering: the featured/recommended class card is shown first on mobile for visibility. Desktop order follows class hierarchy (Basic → Student → Individual); mobile order follows recommendation priority instead.
 
-\~ D. Activity Tab (annotation only — no wireframe rendered): Chronological history of events attended (photowalk / workshop / exhibition / seminar), exhibitions participated in as submitting photographer, and volunteer slots completed. Each row: activity type badge + activity name + date + role. Same EventRow list pattern. Filterable by activity type and year.
+#### 
 
+#### 5\. Comparison table : Values are illustrative placeholders. Actual entitlement values come from the class\_entitlements table (Module 02.10) — configurable per class from the admin panel, not hardcoded in the frontend. Mobile converts the table to 3 stacked per-class mini-cards with the same 8 rows, no horizontal scroll.
 
+#### 
 
+#### 6\. ApplicationForm {formSchema} :     StepIndicator ,    FormStep x3 ,     SuccessState
 
+#### 
 
+#### 7\. FAQ
 
+#### 
 
-\### Wireframe Photographers Directory /photographers
+#### 8\. SiteFooter
 
+#### 
 
+#### BaseLayout
 
-1\. SiteHeader {session}
+#### &#x20; SiteHeader
 
+#### &#x20; PageHero {title, intro}
 
+#### &#x20; Application Workflow
 
-2\. PageHero {title, intro} - Stats
+#### &#x20; MembershipTiers {plans\[]}
 
+#### &#x20; Compare Table
 
+#### &#x20; ApplicationForm {formSchema}
 
-3\. FilterTabs {categories\[]}: Class filter lists all membership classes (Basic → Founding) for directory lookup purposes — not a membership promotion. Options: All Classes / Basic / Student / Individual / Full / Life / Patron / Founding Member. No joining CTA or application pathway is associated with any filter option or its results.
+#### &#x20;   StepIndicator
 
+#### &#x20;   FormStep x3
 
+#### &#x20;   SuccessState
 
-4\. Photographers Grid - Photographers Cards Grid - Initially Randomly Sorted.
+#### &#x20; FAQ
 
-Each card links to /photographers/\[username] — the individual Photographer Profile page. Profile page shows full portfolio, bio, gear list, contest history, and activity history.
+#### &#x20; SiteFooter
 
+#### 
 
+#### \### Journal /journal
 
-HAS RECOGNITION BADGE. Class badge colour tokens (applied in hi-fi): Basic #5C5876 · Student #1A9DAE · Individual #3E5A48 · Full #F5A82A · Life #A8843C · Patron #8A6A2E · Founding #8A6A2E. In this wireframe all badges are outline pills only. No joining CTA or application link attached to any badge.
+#### 
 
+#### 1\. SiteHeader {session}
 
+#### 
 
-Recognition badges (Senior Member, Honorary Senior Member, Honorary Member, Honorary Mentor, Honorary Grandmaster) are separate from membership class badges. A member holds one class badge AND at most one active recognition badge. Both shown simultaneously on the card (class badge + smaller muted recognition pill below). Recognition does not affect or replace the class badge.
+#### 2\. PageHero {title, intro}
 
+#### 
 
+#### 3\. Featured Article :   JournalCard featured {featuredPost}
 
+#### 
 
+#### 4\. Article Grid : JournalCard grid {posts\[]}
 
-Empty state (not rendered — zero filter results): Card grid area replaced with: muted camera icon placeholder (grey) · "No photographers found matching your filters" · \[Clear Filters] amber ghost button. Header, search input, filter dropdowns, and results count bar all remain visible.
+#### 
 
+#### 5\.   Pagination
 
+#### 
 
-5\. Footer
+#### 6\. SiteFooter
 
+#### 
 
+#### 
 
+#### BaseLayout
 
+#### &#x20; SiteHeader
 
-V6 component tree stub (expand this into full wireframe):
+#### &#x20; PageHero {title}
 
-&#x20; BaseLayout
+#### &#x20; JournalCard featured {featuredPost}
 
-&#x20;   SiteHeader {session}
+#### &#x20; JournalCard grid {posts\[]}
 
-&#x20;   PageHero {title, intro}
+#### &#x20; Pagination
 
-&#x20;   SearchFilter {genres\[], city}    ← confirm or redesign
+#### &#x20; SiteFooter
 
-&#x20;   PhotographerCard grid            ← 4-col desktop, 3-col tablet, 2-col mobile
+#### 
 
-&#x20;   Pagination                       ← confirm if needed
+#### 
 
-&#x20;   SiteFooter
+#### 
 
+#### \### Journal Detail /journal/\[slug]
 
+#### 
 
+#### 1\. SiteHeader {session}
 
+#### 
 
-\### About /about
+#### 2\.   ArticleHeader {post.meta}
 
+#### 
 
+#### 3\. ArticleHero {post.heroImage}
 
-1\. SiteHeader {session}
+#### 
 
+#### 4\.  ArticleBody {post.content}
 
+#### &#x09;PullQuote, InlineFigure
 
-2\. PageHero {title, intro} - Stats
+#### 
 
+#### 5\.  AuthorCard {post.author}
 
+#### 
 
-3\. Pillar Grid {pillars\[]} - 3 pillars -
+#### 6\.  RelatedPosts {related\[]}
 
-&#x09;01 Community - Photography is most powerful when shared. Our club is a space where beginners find mentors and masters find inspiration.
+#### 
 
-&#x09;02 Craft - From technical excellence to artistic vision — structured programmes across genres, from street photography to astrophotography.
+#### 7\.   SiteFooter
 
-&#x09;03 City - Bhopal is our muse — its lakes, heritage, wildlife, and people. We document and celebrate this city's extraordinary visual richness.
+#### 
 
+#### 
 
+#### 
 
-4\. Timeline {milestones\[]} - Our Story - Legacy of Light -
+#### BaseLayout
 
-&#x09;May 2015 - First informal grouping - A group of local photography enthusiasts began meeting informally in Bhopal to share critiques and capture the lakes together.
+#### &#x20; SiteHeader
 
-&#x09;Apr 2016 - First Organized Photowalk - Held on Heritage Day, our first structured walk took place at the historic Taj-ul-Masajid, establishing our core focus on documentation.
+#### &#x20; ArticleHeader {post.meta}
 
-&#x09;Jun 2016 - Facebook Group Created - On June 8th, 2016, our official Facebook group was created, serving as the digital foundation for our growing community.
+#### &#x20; ArticleHero {post.heroImage}
 
-&#x09;Oct 2019 - Formal Society Registration - Bhopal Camera Club was formally registered as an official society under the MP Society Registrikaran Adhiniyam 1973.
+#### &#x20; ArticleBody {post.content}
 
-&#x09;Jun 2026 - New Platform Launch - We launched the bcc.bhopal.info portal, expanding our school curriculum and preparing for our 10th anniversary next year.
+#### &#x20;   PullQuote, InlineFigure
 
+#### &#x20; AuthorCard {post.author}
 
+#### &#x20; RelatedPosts {related\[]}
 
-5\. AffiliationBand {registrations\[]}
+#### &#x20; SiteFooter
 
+#### 
 
+#### \#### File name "BCC Hub Visual Validation" in project "V5  BCC Unified Platform Design System" - As of now accept this as it is, we will change later
 
-6\. LeadershipGrid {committee\[]} - Leadership - The Minds Behind the Club Passionate photographers who volunteer their time to keep BCC thriving. Coordinators - inherit all text and links from current live site -  Rajnish, Kshitij, Rahil, Bablu, Yogesh, Vikas
+#### 
 
-Mentors - Dr Anil Bhati, Sauvik Acharyya , Kshitij Patle - inherit all text and information from current live site
+#### 
 
+#### \### Member Hub /hub
 
+#### 
 
+#### Hub Shell :
 
+#### fixed 240px rail at ≥1200px
 
-7\.  SiteFooter
+#### 240px holds all nine labels at full 15px with the gold-dot active state and keeps the 48px gutter rhythm intact; the content column lands at exactly 1024px — four clean portfolio columns. B saves width nothing uses and puts two labels at truncation risk. C trades permanent legibility for occasional width and requires an icon language Theme 2 doesn't have. Collapse behavior stays where Phase 9 put it: breakpoint-driven (rail → HubTabs <1200px → HubMobileBar ≤640px), never user-toggled.
 
+#### 
 
+#### \## Member Nav
 
+#### 
 
+#### 4 Tabs on left rail -
 
-BaseLayout
+#### 1\. Studio - ( 4 sub nav )
 
-&#x20; SiteHeader
+#### &#x09;i. Home
 
-&#x20; PageHero {missionStatement}
+#### &#x09;ii. Portfolio
 
-&#x20; PillarGrid {pillars\[]}
+#### &#x09;iii. Upload
 
-&#x20; Timeline {milestones\[]}
+#### &#x09;iv. Batch Upload
 
-&#x20; AffiliationBand {registrations\[]}
+#### 
 
-&#x20; LeadershipGrid {committee\[]}
+#### 2\. Grow - ( 2 sub nav )
 
-&#x20; SiteFooter
+#### &#x09;i. Academy / Learn
 
+#### &#x09;ii. Contest
 
+#### 
 
-\### Activities /activities
+#### 3\. Club Activities
 
+#### &#x09;i. Tours
 
+#### &#x09;ii. Workshops
 
-1\. SiteHeader {session}
+#### &#x09;iii. Photo Walks
 
+#### &#x09;iv. Meetups
 
+#### 
 
-2\. PageHero {title, intro} - Stats
+#### 4\. Account
 
+#### &#x09;i. My Profile ( Edit )
 
+#### &#x09;ii. Membership and Billing
 
-3\. FilterTabs {categories\[]}: Sticky below PageHero once scrolled past page header. Type pills scroll horizontally on overflow. All filters (search, type, eligibility) are combinable API query params. Eligibility filter narrows the list — it does NOT hide events from public view. Every event stays visible to all visitors regardless of login state.
+#### 
 
+#### 
 
+#### AuthLayout (role >= member)
 
-4\. Featured Event — admin-toggled: Same dashboard mechanism as the Featured Activity section on the Home page. When OFF, this section is absent entirely — page flows from filter bar directly to Upcoming Events. When ON, admin selects which specific event to feature.
+#### &#x20; SiteHeader {session}
 
+#### &#x20; HubSidebar {hubNav\[]}
 
+#### &#x20; HubOverview {member, stats, events}
 
-5\. EventCard grid {events\[]} : UPCOMING - What's happening
+#### &#x20; MyGallery {memberPhotos\[]}
 
+#### &#x20; ProfileSettings {member}
 
+#### 
 
-List View : EventRow list: Same pattern as Home page "What's Happening." Events always shown publicly. Eligibility badge is informational — enforcement happens at registration, not at list display. "Membership required" note is a courtesy label only; the Register button is still shown. \[Join Waitlist →] appears when capacity is full. ₹ (INR) is the only currency used platform-wide.
+#### 
 
+#### \## Hub Home / hub
 
+#### 
 
-Grid View : alternate display mode: Toggled by the \[⊞ Grid] button in the filter bar. Same underlying event data as List view, different visual density — grid favors browsing many events, list favors quick date scanning. Not a separate page or filter.
+#### VISUAL HIERARCHY
 
+#### 1\. Site Header
 
+#### 
 
-6\. Past Events strip: Links to an archive view (same /events page with a "Past" tab/filter applied). \[View Gallery →] links into /showcase filtered by that event — a Gallery module page, not part of Events. Attendance and photo-submission stats are live values from the Events module database. ARCHIVE - Past events - Browse BCC's complete activity history
+#### Left Rail
 
+#### 2\. Member Nav
 
+#### 
 
-7\.  SiteFooter
+#### Main Content Area
 
+#### 3\.  Greeting (Outfit 46px) — belonging - WelcomeBand — time-aware greeting (computed), tier line, public-portfolio link ↗, the view's one gold CTA.. Gold Upload — the verb
 
+#### 4\. AttentionRow — deadlines ≤3 computed urgencies, gold dots, mono dues; absent when empty (no "all caught up" filler).  ex Monsoon Frames closes in 3 days → Membership renews 1 Jul →
 
+#### 5\. Your photographs — the work - RecentWork — 5 newest as public-wall mats + dashed UploadTile; PENDING chips ride the mat label.
 
+#### 6\. Noticeboard - Happening at the Club - upcoming events in which participant has registered Club happenings — community
 
+#### 7\. Journey numbers — quietest voice - Learning Acacemy
 
+#### 8\. Personal rail — 	AcademyContinue (ProgressHairline),
 
-BaseLayout
+#### &#x09;		MembershipCardDark compact,
 
-&#x20; SiteHeader
+#### &#x09;		Membership Card Thumbnail and link to Membership Card Management / Print
 
-&#x20; PageHero {title}
+#### &#x09;		Member Stats below Membership Card - JourneyStrip (zero-value milestones dropped).
 
-&#x20; FilterTabs {categories\[]}
+#### 
 
-&#x20; Featured Event
+#### HubShell
 
-&#x20; EventCard grid {events\[]}
+#### ├ WelcomeBand {member}
 
-&#x20; Past Event
+#### ├ AttentionRow {items≤3}
 
-&#x20; SiteFooter
+#### ├ RecentWork {photos≤5}+UploadTile
 
+#### ├ . I
 
+#### ≥1200 two-col · <1200 rail stacks below · ≤640 feed order per mobile spec; gold CTA migrates to HubMobileBar. Loading: shimmer blocks matching layout. Section fetch failure: per-section retry note, page never blanks.
 
+#### 
 
+#### One gold on the view (Upload). Attention row renders ≤3 computed items or disappears entirely. Mats reuse the public Gallery Wall plate; the dark membership card is one of only three sanctioned dark plates in the hub.
 
-\### Join  /join
+#### 
 
+#### Photography ≈ 55% of content-column pixels in the populated state; statistics < 5%.
 
+#### 
 
-1\. SiteHeader {session}
+#### \##  Portfolio Manager — the curation room  /hub/portfolio
 
+#### 
 
+#### VISUAL HIERARCHY
 
-2\. PageHero {title, intro}
+#### 1\. The photographs (mats)
 
+#### 2\. Selection state (gold rings)
 
+#### 3\. Page title + counts
 
-3\. Application Workflow - Two-step flow diagram is the primary visual mechanism communicating MEM-006 P1 — identity and membership are separate, sequential steps, never a single "Join Now" button. Step 1 links to /register. Step 2 anchors down to the class cards (use Apply for appropriate Membership Category ) on this same page. Step 3 is aspirational/informational only — no link.
+#### 4\. Toolbar (quiet, hairline)
 
-followed by CTA - Create your own account - already signed in - sign in link
+#### 5\. Status chips (smallest voice)
 
+#### 
 
+#### COMPOSITION + RESPONSIVE
 
-4\. Membership Tiers - Only 3 operational classes exist on this page. Constitutional/voting classes (Full, Life, Patron, Founding) never appear here — no card, footnote, greyed placeholder, or mention. This is a hard governance rule (MEM-006), not a content decision.
+#### PortfolioManager
 
+#### ├ Toolbar {genres, status, sort}
 
+#### ├ Wall｜List {photos\[]}
 
-"Recommended" label is admin-configurable from the dashboard — any of the 3 classes could carry this label depending on club strategy. Not hardcoded to Individual Member. It is the only card with a filled amber primary CTA; the other two use ghost/outline buttons.
+#### ├ SelectionBar {selection}
 
+#### └ InspectorPanel {photo, prev/next}
 
+#### ≥1200: 4-col, side inspector · 641–1199: 3-col, inspector = overlay sheet · ≤640: 2-col, long-press select, full-screen inspector sheet. Filtered-to-zero gets the public "no match + Clear filters" frame; loading = 8 shimmer mats.
 
-Mobile card reordering: the featured/recommended class card is shown first on mobile for visibility. Desktop order follows class hierarchy (Basic → Student → Individual); mobile order follows recommendation priority instead.
+#### 
 
+#### \# Wireframe :
 
+#### 
 
-5\. Comparison table : Values are illustrative placeholders. Actual entitlement values come from the class\_entitlements table (Module 02.10) — configurable per class from the admin panel, not hardcoded in the frontend. Mobile converts the table to 3 stacked per-class mini-cards with the same 8 rows, no horizontal scroll.
+#### 1\. Site Header
 
+#### 
 
+#### Left Rail
 
-6\. ApplicationForm {formSchema} :     StepIndicator ,    FormStep x3 ,     SuccessState
+#### 2\. Member Nav
 
+#### 
 
+#### Main Content Area
 
-7\. FAQ
+#### 
 
+#### 3\. Toolbar — DirectoryToolbar vocabulary: search, member's-genres-only chips, quiet Status/Sort selects, ▦/≣ view toggle.
 
+#### 
 
-8\. SiteFooter
+#### 4\. Wall｜List {photos\[]} : The photographs (mats) :  public MattedThumb 4-col; FEATURED gold flag; status chips ride the label; hover reveals ✎/☐ on the mat.
 
+#### 
 
+#### 5\.   SelectionBar {selection} : Selection state (gold rings). Selected mats carry a 2px gold inset ring + filled check; the SelectionBar slides over the wall (shown at board scale for legibility — real height 56px). Delete is the only error-colored action and is text-weight only.  slides up on first selection; batch ops on existing APIs; Delete confirms.
 
-BaseLayout
+#### 
 
-&#x20; SiteHeader
+#### 6\. InspectorPanel — 420px side panel, ←/→ walk, contain preview, exhibition-label fields, EXIF mono chips, focal-point picker.
 
-&#x20; PageHero {title, intro}
+#### 
 
-&#x20; Application Workflow
+#### 7\. SiteFooter
 
-&#x20; MembershipTiers {plans\[]}
+#### 
 
-&#x20; Compare Table
+#### 
 
-&#x20; ApplicationForm {formSchema}
+#### \## Single Upload — the submission desk /hub/upload
 
-&#x20;   StepIndicator
+#### 
 
-&#x20;   FormStep x3
+#### VISUAL HIERARCHY
 
-&#x20;   SuccessState
+#### 1\. The photograph (≈60% of view)
 
-&#x20; FAQ
+#### 2\. Title field — first ask
 
-&#x20; SiteFooter
+#### 3\. Wall preview — consequence
 
+#### 4\. Gold submit — the verb
 
+#### 5\. Progress — quiet mono
 
-\### Journal /journal
+#### 
 
+#### COMPOSITION + RESPONSIVE
 
+#### SingleUpload
 
-1\. SiteHeader {session}
+#### ├ UploadDropzone {limits}
 
+#### ├ Stage {file, progress}
 
+#### ├ MetadataPanel {photo} (shared)
 
-2\. PageHero {title, intro}
+#### └ WallPreview {label, focal}
 
+#### ≥900: side-by-side stage+label · <900: stacked, stage first · ≤640: native picker first, single vertical screen. Validation per frozen form spec (#A3493B border + message). Metadata survives upload failure.
 
+#### 
 
-3\. Featured Article :   JournalCard featured {featuredPost}
+#### 
 
+#### \# Wireframe
 
+#### 
 
-4\. Article Grid : JournalCard grid {posts\[]}
+#### 1\. Site Header
 
+#### 
 
+#### Left Rail
 
-5\.   Pagination
+#### 2\. Member Nav
 
+#### 
 
+#### Main Content Area
 
-6\. SiteFooter
+#### 
 
+#### 3a. UploadDropzone  : dashed editorial frame; whole frame is target; limits from engine config; batch escape hatch in mono.. The invite is the page's empty state — an editorial frame, not a control. Drag-over: border turns gold, satin tint. Limits are rendered from engine config.
 
+#### 
 
+#### after the photo is uploaded or drag and dropped
 
+#### 
 
-BaseLayout
+#### 3b. Upload runs in the background (gold hairline + mono %); the label is editable immediately. The wall preview is the signature moment — consequence, not summary. Submit disabled until required fields are valid.
 
-&#x20; SiteHeader
+#### &#x09;Left - Stage — contain on image backdrop, never cropped while editing; 3px gold progress hairline + mono %; failure keeps preview at 40% + retry.
 
-&#x20; PageHero {title}
+#### &#x09;Right - Label + wall preview — required title/genre; EXIF auto mono chips; live MattedThumb shows public consequence; one gold submit.
 
-&#x20; JournalCard featured {featuredPost}
+#### 
 
-&#x20; JournalCard grid {posts\[]}
+#### 4\. SiteFooter
 
-&#x20; Pagination
+#### 
 
-&#x20; SiteFooter
+#### 
 
+#### \## Batch Upload — the contact sheet /hub/upload/batch
 
+#### 
 
+#### VISUAL HIERARCHY
 
+#### 1\. The frames (sheet ≈70%)
 
+#### 2\. Per-frame status corners
 
+#### 3\. Gold submit + ready count
 
-\### Journal Detail /journal/\[slug]
+#### 4\. Apply-to-all bar
 
+#### 5\. Untitled gold dots
 
+#### 
 
-1\. SiteHeader {session}
+#### Errors are per-item and never modal. The sheet is the single source of truth — no wizard steps on desktop; uploading and labeling are concurrent.
 
+#### 
 
+#### COMPOSITION + RESPONSIVE
 
-2\.   ArticleHeader {post.meta}
+#### BatchUpload
 
+#### ├ ApplyToAllBar {genres, events}
 
+#### ├ ContactSheet {items\[], status}
 
-3\. ArticleHero {post.heroImage}
+#### ├ InspectorPanel {item, walk}
 
+#### └ ReviewBar {counts, submit}
 
+#### ≥1200: 8-col + side inspector · 641–1199: 6-col, inspector sheet · ≤640: sequenced flow (select → apply → swipe-label → review), 4-col sheet for triage. Resume-after-refresh restores uploaded items + metadata (engine-permitting; risk R2).
 
-4\.  ArticleBody {post.content}
+#### 
 
-&#x09;PullQuote, InlineFigure
+#### 
 
+#### ANNOTATIONS
 
+#### ① Apply-to-all — genre/location/event for the whole batch; per-photo values always win; "From event" feeds the public originating-activity credit.
 
-5\.  AuthorCard {post.author}
+#### ② ContactSheet — 8-col square thumbs, drop order preserved, status corner per frame, inline editable titles, trailing + tile.
 
+#### ③ ReviewBar — live math (total/ready/untitled/failed); counts filter the sheet on click; partial submit allowed; one gold.
 
+#### 
 
-6\.  RelatedPosts {related\[]}
+#### 
 
+#### $ Design other tabs in hub in accordance with above
 
+#### 
 
-7\.   SiteFooter
+#### 
 
+#### 
 
+#### 
 
+#### \### Photography School and Photo Contest to be created later once we develop those engines
 
+#### 
 
+#### 
 
+#### 
 
-BaseLayout
+#### 
 
-&#x20; SiteHeader
+#### 
 
-&#x20; ArticleHeader {post.meta}
+#### 
 
-&#x20; ArticleHero {post.heroImage}
+#### 
 
-&#x20; ArticleBody {post.content}
+#### 
 
-&#x20;   PullQuote, InlineFigure
+#### **# BCC Unified Platform V3 — Master Roadmap**
 
-&#x20; AuthorCard {post.author}
+#### **## Status as of July 18**
 
-&#x20; RelatedPosts {related\[]}
+#### 
 
-&#x20; SiteFooter
+#### **Legend**
 
+#### **✅ Completed**
 
+#### **🚧 Current / In Progress**
 
-\#### File name "BCC Hub Visual Validation" in project "V5  BCC Unified Platform Design System" - As of now accept this as it is, we will change later
+#### **🎯 Next Target**
 
+#### **📋 Future**
 
+#### **💡 Rule**
 
+#### 
 
+#### **═══════════════════════════════════════════════════════════════**
 
-\### Member Hub /hub
+#### **STAGE 1 — CORE PLATFORM FOUNDATION ✅ COMPLETE**
 
+#### **═══════════════════════════════════════════════════════════════**
 
+#### 
 
-Hub Shell :
+#### **Platform Shell**
 
-fixed 240px rail at ≥1200px
+#### **──────────────**
 
-240px holds all nine labels at full 15px with the gold-dot active state and keeps the 48px gutter rhythm intact; the content column lands at exactly 1024px — four clean portfolio columns. B saves width nothing uses and puts two labels at truncation risk. C trades permanent legibility for occasional width and requires an icon language Theme 2 doesn't have. Collapse behavior stays where Phase 9 put it: breakpoint-driven (rail → HubTabs <1200px → HubMobileBar ≤640px), never user-toggled.
+#### **✅ V6 91 Site Header**
 
+#### **✅ V6 92 Site Footer**
 
+#### 
 
-\## Member Nav
+#### **Public Pages**
 
+#### **────────────**
 
+#### **✅ V6 01 Home**
 
-4 Tabs on left rail -
+#### **✅ V6 03 Showcase**
 
-1\. Studio - ( 4 sub nav )
+#### 
 
-&#x09;i. Home
+#### **Member Hub**
 
-&#x09;ii. Portfolio
+#### **──────────**
 
-&#x09;iii. Upload
+#### **✅ V6 09 Hub Home**
 
-&#x09;iv. Batch Upload
+#### **✅ V6 10 Portfolio**
 
+#### **✅ V6 11 Upload Studio**
 
+#### **✅ V6 13 Member Profile**
 
-2\. Grow - ( 2 sub nav )
+#### **✅ V6 19 Membership \& Consent**
 
-&#x09;i. Academy / Learn
+#### **✅ V6 20 Account Settings**
 
-&#x09;ii. Contest
+#### 
 
+#### **Public Experience**
 
+#### **─────────────────**
 
-3\. Club Activities
+#### **✅ V6 04 Photographer Directory**
 
-&#x09;i. Tours
+#### **✅ V6 05 Photographer Profile**
 
-&#x09;ii. Workshops
+#### **✅ V6 21 Canonical Photo Page**
 
-&#x09;iii. Photo Walks
+#### 
 
-&#x09;iv. Meetups
+#### **Architecture**
 
+#### **────────────**
 
+#### **✅ Identity Architecture**
 
-4\. Account
+#### **✅ Hub Architecture**
 
-&#x09;i. My Profile ( Edit )
+#### **✅ Admin Architecture**
 
-&#x09;ii. Membership and Billing
+#### **✅ Photo Architecture**
 
+#### **✅ Storage Architecture**
 
+#### 
 
+#### **Special Projects**
 
+#### **────────────────**
 
-AuthLayout (role >= member)
+#### **✅ V6 40 Special Projects Framework**
 
-&#x20; SiteHeader {session}
+#### 
 
-&#x20; HubSidebar {hubNav\[]}
+#### **Design System**
 
-&#x20; HubOverview {member, stats, events}
+#### **─────────────**
 
-&#x20; MyGallery {memberPhotos\[]}
+#### **✅ V6 97 Design Pattern Library**
 
-&#x20; ProfileSettings {member}
+#### **✅ V6 98 Design Tokens**
 
+#### **✅ V6 99 System Design Constitution**
 
+#### **✅ V6 100 Design Authority Constitution**
 
+#### 
 
+#### **Component Library (Frozen)**
 
-\## Hub Home / hub
+#### **──────────────────────────**
 
+#### **✅ V6 60 Gallery Grid**
 
+#### **✅ V6 61 Canonical Person Card**
 
-VISUAL HIERARCHY
+#### **✅ V6 62 Editorial Content Card**
 
-1\. Site Header
+#### **✅ V6 63 Canonical Photo Card**
 
+#### **✅ V6 64 CTA \& Banner Components**
 
+#### **✅ V6 65 Data Display Components**
 
-Left Rail
+#### **✅ V6 66 Forms \& Input Components**
 
-2\. Member Nav
+#### **✅ V6 67 Page Opening \& Section Header**
 
+#### **✅ V6 68 Search \& Filter System**
 
+#### 
 
-Main Content Area
+#### **═══════════════════════════════════════════════════════════════**
 
-3\.  Greeting (Outfit 46px) — belonging - WelcomeBand — time-aware greeting (computed), tier line, public-portfolio link ↗, the view's one gold CTA.. Gold Upload — the verb
+#### **STAGE 2 — COMPONENT FRAMEWORK IMPLEMENTATION 🚧 CURRENT**
 
-4\. AttentionRow — deadlines ≤3 computed urgencies, gold dots, mono dues; absent when empty (no "all caught up" filler).  ex Monsoon Frames closes in 3 days → Membership renews 1 Jul →
+#### **═══════════════════════════════════════════════════════════════**
 
-5\. Your photographs — the work - RecentWork — 5 newest as public-wall mats + dashed UploadTile; PENDING chips ride the mat label.
+#### 
 
-6\. Noticeboard - Happening at the Club - upcoming events in which participant has registered Club happenings — community
+#### **Objective**
 
-7\. Journey numbers — quietest voice - Learning Acacemy
+#### 
 
-8\. Personal rail — 	AcademyContinue (ProgressHairline),
+#### **Build the canonical reusable component library once.**
 
-&#x09;		MembershipCardDark compact,
+#### 
 
-&#x09;		Membership Card Thumbnail and link to Membership Card Management / Print
+#### **Every remaining page must be migrated to these components.**
 
-&#x09;		Member Stats below Membership Card - JourneyStrip (zero-value milestones dropped).
+#### 
 
+#### **No page-specific UI unless absolutely necessary.**
 
+#### 
 
-HubShell
+#### **───────────────────────────────────────────────────────────────**
 
-├ WelcomeBand {member}
+#### 
 
-├ AttentionRow {items≤3}
+#### **🎯 CF-01 Foundation**
 
-├ RecentWork {photos≤5}+UploadTile
+#### **• Implement V6 97 / V6 98 / V6 99 into production**
 
-├ . I
+#### **• Establish shared layout primitives**
 
-≥1200 two-col · <1200 rail stacks below · ≤640 feed order per mobile spec; gold CTA migrates to HubMobileBar. Loading: shimmer blocks matching layout. Section fetch failure: per-section retry note, page never blanks.
+#### **• Shared typography**
 
+#### **• Shared spacing**
 
+#### **• Shared utility classes**
 
-One gold on the view (Upload). Attention row renders ≤3 computed items or disappears entirely. Mats reuse the public Gallery Wall plate; the dark membership card is one of only three sanctioned dark plates in the hub.
+#### 
 
+#### **───────────────────────────────────────────────────────────────**
 
+#### 
 
-Photography ≈ 55% of content-column pixels in the populated state; statistics < 5%.
+#### **🎯 CF-02 Component Library**
 
+#### 
 
+#### **Implement canonical Astro components**
 
-\##  Portfolio Manager — the curation room  /hub/portfolio
+#### 
 
+#### **• Gallery Grid**
 
+#### **• Person Card**
 
-VISUAL HIERARCHY
+#### **• Editorial Card**
 
-1\. The photographs (mats)
+#### **• Canonical Photo Card**
 
-2\. Selection state (gold rings)
+#### **• CTA Components**
 
-3\. Page title + counts
+#### **• Data Display**
 
-4\. Toolbar (quiet, hairline)
+#### **• Forms**
 
-5\. Status chips (smallest voice)
+#### **• Search \& Filter**
 
+#### 
 
+#### **Outcome**
 
-COMPOSITION + RESPONSIVE
+#### 
 
-PortfolioManager
+#### **One reusable component framework.**
 
-├ Toolbar {genres, status, sort}
+#### 
 
-├ Wall｜List {photos\[]}
+#### 
 
-├ SelectionBar {selection}
+#### 
 
-└ InspectorPanel {photo, prev/next}
+#### 
 
-≥1200: 4-col, side inspector · 641–1199: 3-col, inspector = overlay sheet · ≤640: 2-col, long-press select, full-screen inspector sheet. Filtered-to-zero gets the public "no match + Clear filters" frame; loading = 8 shimmer mats.
+#### **══════════════════════════════**
 
+#### 
 
+#### **CF-02 Complete**
 
-\# Wireframe :
+#### 
 
+#### **↓**
 
+#### 
 
-1\. Site Header
+#### **PLATFORM-ARCH-001**
 
+#### **Platform Governance Freeze**
 
+#### 
 
-Left Rail
+#### **↓**
 
-2\. Member Nav
+#### 
 
+#### **CF-03**
 
+#### **Global Framework Migration**
 
-Main Content Area
+#### 
 
+#### **══════════════════════════════**
 
+#### 
 
-3\. Toolbar — DirectoryToolbar vocabulary: search, member's-genres-only chips, quiet Status/Sort selects, ▦/≣ view toggle.
+#### 
 
+#### 
 
+#### **───────────────────────────────────────────────────────────────**
 
-4\. Wall｜List {photos\[]} : The photographs (mats) :  public MattedThumb 4-col; FEATURED gold flag; status chips ride the label; hover reveals ✎/☐ on the mat.
+#### 
 
+#### **🎯 CF-03 Global Framework Migration**
 
+#### 
 
-5\.   SelectionBar {selection} : Selection state (gold rings). Selected mats carry a 2px gold inset ring + filled check; the SelectionBar slides over the wall (shown at board scale for legibility — real height 56px). Delete is the only error-colored action and is text-weight only.  slides up on first selection; batch ops on existing APIs; Delete confirms.
+#### **Migrate**
 
+#### 
 
+#### **• Header**
 
-6\. InspectorPanel — 420px side panel, ←/→ walk, contain preview, exhibition-label fields, EXIF mono chips, focal-point picker.
+#### **• Footer**
 
+#### **• Navigation**
 
+#### **• Global Layout**
 
-7\. SiteFooter
+#### **• Shared Page Shells**
 
+#### 
 
+#### **───────────────────────────────────────────────────────────────**
 
+#### 
 
+#### **🎯 CF-04 Existing Page Migration**
 
-\## Single Upload — the submission desk /hub/upload
+#### 
 
+#### **Rebuild existing pages using ONLY canonical components**
 
+#### 
 
-VISUAL HIERARCHY
+#### **Priority**
 
-1\. The photograph (≈60% of view)
+#### 
 
-2\. Title field — first ask
+#### **1. Home**
 
-3\. Wall preview — consequence
+#### **2. About**
 
-4\. Gold submit — the verb
+#### **3. Activities**
 
-5\. Progress — quiet mono
+#### **4. Showcase**
 
+#### **5. Special Projects**
 
+#### **6. Member Hub**
 
-COMPOSITION + RESPONSIVE
+#### **7. Photographer Pages**
 
-SingleUpload
+#### **8. Canonical Photo**
 
-├ UploadDropzone {limits}
+#### 
 
-├ Stage {file, progress}
+#### **Goal**
 
-├ MetadataPanel {photo} (shared)
+#### 
 
-└ WallPreview {label, focal}
+#### **Zero duplicate UI implementations.**
 
-≥900: side-by-side stage+label · <900: stacked, stage first · ≤640: native picker first, single vertical screen. Validation per frozen form spec (#A3493B border + message). Metadata survives upload failure.
+#### 
 
+#### **───────────────────────────────────────────────────────────────**
 
+#### 
 
+#### **🎯 CF-05 Design Authority Reconciliation**
 
+#### 
 
-\# Wireframe
+#### **• Membership Card widget**
 
+#### **• Responsive Membership Card**
 
+#### **• Remove independent dark card**
 
-1\. Site Header
+#### **• General Design Authority reconciliation**
 
+#### **• Bug\_Fixes.md**
 
+#### 
 
-Left Rail
+#### **═══════════════════════════════════════════════════════════════**
 
-2\. Member Nav
+#### **STAGE 3 — PUBLIC EXPERIENCE COMPLETION**
 
+#### **═══════════════════════════════════════════════════════════════**
 
+#### 
 
-Main Content Area
+#### **🚧 V6 02 About**
 
+#### 
 
+#### **🚧 V6 06 Activities**
 
-3a. UploadDropzone  : dashed editorial frame; whole frame is target; limits from engine config; batch escape hatch in mono.. The invite is the page's empty state — an editorial frame, not a control. Drag-over: border turns gold, satin tint. Limits are rendered from engine config.
+#### 
 
+#### **📋 V6 07 Journal**
 
+#### 
 
-after the photo is uploaded or drag and dropped
+#### **📋 V6 08 Journal Article**
 
+#### 
 
+#### **═══════════════════════════════════════════════════════════════**
 
-3b. Upload runs in the background (gold hairline + mono %); the label is editable immediately. The wall preview is the signature moment — consequence, not summary. Submit disabled until required fields are valid.
+#### **STAGE 4 — ADMINISTRATION**
 
-&#x09;Left - Stage — contain on image backdrop, never cropped while editing; 3px gold progress hairline + mono %; failure keeps preview at 40% + retry.
+#### **═══════════════════════════════════════════════════════════════**
 
-&#x09;Right - Label + wall preview — required title/genre; EXIF auto mono chips; live MattedThumb shows public consequence; one gold submit.
+#### 
 
+#### **📋 V6 51 Admin Console Shell**
 
+#### 
 
-4\. SiteFooter
+#### **📋 V6 52 Dashboard**
 
+#### 
 
+#### **📋 V6 53 Member Management**
 
+#### 
 
+#### **📋 V6 54 Event Management**
 
-\## Batch Upload — the contact sheet /hub/upload/batch
+#### 
 
+#### **📋 V6 55 Gallery Management**
 
+#### 
 
-VISUAL HIERARCHY
+#### **📋 V6 56 Journal Management**
 
-1\. The frames (sheet ≈70%)
+#### 
 
-2\. Per-frame status corners
+#### **📋 V6 57 Communications**
 
-3\. Gold submit + ready count
+#### 
 
-4\. Apply-to-all bar
+#### **📋 V6 58 Reports**
 
-5\. Untitled gold dots
+#### 
 
+#### **📋 V6 59 Settings**
 
+#### 
 
-Errors are per-item and never modal. The sheet is the single source of truth — no wizard steps on desktop; uploading and labeling are concurrent.
+#### **(All implemented using the Component Framework.)**
 
+#### 
 
+#### **═══════════════════════════════════════════════════════════════**
 
-COMPOSITION + RESPONSIVE
+#### **STAGE 5 — MEMBER EXPERIENCE COMPLETION**
 
-BatchUpload
+#### **═══════════════════════════════════════════════════════════════**
 
-├ ApplyToAllBar {genres, events}
+#### 
 
-├ ContactSheet {items\[], status}
+#### **📋 V6 14 Membership \& Billing**
 
-├ InspectorPanel {item, walk}
+#### 
 
-└ ReviewBar {counts, submit}
+#### **📋 V6 15 Future Workspace**
 
-≥1200: 8-col + side inspector · 641–1199: 6-col, inspector sheet · ≤640: sequenced flow (select → apply → swipe-label → review), 4-col sheet for triage. Resume-after-refresh restores uploaded items + metadata (engine-permitting; risk R2).
+#### 
 
+#### **📋 V6 16 Collections \& Series**
 
+#### 
 
+#### **📋 V6 17 Membership Card**
 
+#### 
 
-ANNOTATIONS
+#### **📋 V6 18 Notifications**
 
-① Apply-to-all — genre/location/event for the whole batch; per-photo values always win; "From event" feeds the public originating-activity credit.
+#### 
 
-② ContactSheet — 8-col square thumbs, drop order preserved, status corner per frame, inline editable titles, trailing + tile.
+#### **═══════════════════════════════════════════════════════════════**
 
-③ ReviewBar — live math (total/ready/untitled/failed); counts filter the sheet on click; partial submit allowed; one gold.
+#### **STAGE 6 — PLATFORM EXPANSION**
 
+#### **═══════════════════════════════════════════════════════════════**
 
+#### 
 
+#### **📋 Taxonomy Architecture**
 
+#### 
 
-$ Design other tabs in hub in accordance with above
+#### **📋 Contest Management Engine**
 
+#### 
 
+#### **📋 Certificates \& Badges**
 
+#### 
 
+#### **📋 Financial Core**
 
+#### 
 
+#### **═══════════════════════════════════════════════════════════════**
 
+#### **STAGE 7 — GROWTH**
 
+#### **═══════════════════════════════════════════════════════════════**
 
-\### Photography School and Photo Contest to be created later once we develop those engines
+#### 
 
+#### **📋 Community \& Social Engagement**
 
+#### 
 
+#### **📋 Volunteer Management**
 
+#### 
 
+#### **📋 Exhibition Management**
 
+#### 
 
+#### **📋 Digital Archive**
 
+#### 
 
+#### **📋 Mobile PWA**
 
+#### 
 
+#### **📋 Legacy System Retirement**
 
+#### 
 
+#### **═══════════════════════════════════════════════════════════════**
 
+#### **STAGE 8 — INTELLIGENCE**
 
-### 
+#### **═══════════════════════════════════════════════════════════════**
 
-##### **July 10th status after  Proposed Roadmap from here**
+#### 
 
+#### **📋 Photography School**
 
+#### 
 
-**Stage 1**                   ✅
+#### **📋 AI Ecosystem**
 
+#### 
 
+#### **📋 Governance Enhancements**
 
-V6 91  Site Header                  ✅
+#### 
 
-V6 92  Site Footer                  ✅
+#### **📋 Native Mobile Apps**
 
+#### 
 
+#### **═══════════════════════════════════════════════════════════════**
 
-Public Pages
+#### **STAGE 9 — SCALE**
 
-────────────
+#### **═══════════════════════════════════════════════════════════════**
 
-V6 01  Home                         ✅
+#### 
 
-V6 03  Showcase                       ✅ (existing)
+#### **📋 Multi-tenancy**
 
+#### 
 
+#### **📋 AI Phase 2**
 
+#### 
 
+#### **📋 Interest Groups**
 
-Member Hub
+#### 
 
-────────────
+#### **📋 Video Platform**
 
-V6 09  Hub Home                     ✅
+#### 
 
-V6 10  Portfolio                    ✅
+#### **═══════════════════════════════════════════════════════════════**
 
+#### **💡 DEVELOPMENT RULES (Effective Immediately)**
 
+#### **═══════════════════════════════════════════════════════════════**
 
-**Short-Term Roadmap (Stage 2)**
+#### 
 
-────────────
+#### **1. Build components first, pages second.**
 
-PHASE A — Complete the Member Hub Foundation
+#### 
 
-A1. Freeze Hub Architecture ✅
+#### **2. Every new page must use the canonical Component Framework.**
 
-A2. Navigation Authority - V6 12 — Members Hub Navigation ✅
+#### 
 
-A3. Reconcile Hub Home V6 09 — Members Hub Home ✅
+#### **3. Prefer extending an existing component over creating a new one.**
 
-A4. Reconcile Portfolio V6 10 — Portfolio ✅
+#### 
 
-A5. Reconcile Upload Studio V6 11 — Upload Studio ✅
+#### **4. Documentation is considered complete.**
 
-A6. Implement Hub ✅
+#### &#x20;  **Create new documents only when implementation reveals a genuine**
 
-Claude Code implementation order
+#### &#x20;  **architectural gap.**
 
-HubLayout ✅
+#### 
 
-&#x20;       ↓
+#### **5. Primary focus:**
 
-HubSidebar ✅
-
-&#x20;       ↓
-
-HubPageHeader ✅
-
-&#x20;       ↓
-
-HubSection ✅
-
-&#x20;       ↓
-
-Navigation ✅
-
-&#x20;       ↓
-
-Hub Home ✅
-
-&#x20;       ↓
-
-Portfolio ✅
-
-&#x20;       ↓
-
-Upload Studio  ✅
-
-
-
-A7. Validation --> Deploy --> Test --> Fix --> Git Commit --> Production-ready Hub  ✅
-
-
-
-PHASE B — Legacy Profile Migration Audit ✅
-
-
-
-PHASE C — Legacy Data Reconciliation ✅
-
-
-
-PHASE D — Member Profile  ✅
-
-
-
-V6 13 — Member Profile ✅
-
-V6 19 - Membership / Consent form ✅
-
-V6 20 - Account Setting ✅
-
-
-
-\## PHASE E — Soft Pre-Launch \& Platform Stabilization
-
-A. Move : v3bcc.bhopal.info --> bcc.bhopal.info ✅
-
-
-
-B. Public Pages
-
-
-
-\- V6 04 — Photographers Directory (Reconciliation)  ✅
-
-\- V6 05 — Photographer Profile  ✅
-
-\- V6 21 — Canonical Photo Page (Governed by PHOTO-ARCH-001)  ✅
-
-
-
-\---
-
-
-
-\### Public Pages
-
-
-
-\- V6 02 — About  🚧
-
-\- V6 06 — Activities 🚧
-
-\- V6 07 — Journal
-
-\- V6 08 — Journal Article
-
-
-
-\### Authentication (Visual Reconciliation)
-
-
-
-Existing functionality remains.
-
-
-
-V6 visual refresh only.
-
-
-
-\- Sign In
-
-\- Register
-
-\- Forgot Password
-
-\- Reset Password
-
-\- Verify Email
-
-
-
-\---
-
-
-
-
-
-\### Membership Card
-
-
-
-\- ⬜ V6 31 — Membership Card Design System
-
-
-
-\---
-
-
-
-\### Design Authority Reconciliation
-
-
-
-\- ⬜ Membership Card widget reconciliation
-
-\- ⬜ Responsive canonical Membership Card rendering
-
-\- ⬜ Remove independent dark card implementation
-
-\- ⬜ General Design Authority reconciliation
-
-
-
-\---
-
-
-
-\### System Deliverables
-
-\- ⬜V6 97 Design Pattern Library ✅
-
-\- ⬜ V6 98 — token.css  ✅
-
-\- ⬜ V6 99 — systemdesign.md  ✅
-
-
-
-
-
-Reusable components
-
-Frozen not implemented 
-
-✅ V6 67 — Page Opening \& Section Header (Done)
-
-✅ V6 60 — Gallery Grid System
-
-🎯 V6 63 — Canonical Photo Card
-
-🎯 V6 61 — Canonical Person/Profile Card
-
-🎯 V6 62 — Editorial Content Card
-
-🎯 V6 64 — CTA \& Banner Components
-
-🎯 V6 65 — Data Display Components
-
-🎯 V6 66 — Form \& Input Components
-
-
-
-V6 68	Search \& Filter System
-
-
-
-
-
-\---
-
-
-
-\# PHASE E1 — Administration Architecture
-
-✅ ADMIN-ARCH-001 — Administration Console Architecture Freeze v1.0
-
-
-
-\---
-
-
-
-
-
-Phase E2 — Member Hub UX Architecture Refresh
-
-
-
-Transform the Profile page from a presentation-oriented layout into a dedicated editing workspace while preserving the underlying data architecture, business rules, and V6 visual language.
-
-
-
-Phase E2A – Create the new Profile Editor shell (compact workspace layout).   ✅
-
-Phase E2B – Move existing forms into the new shell without changing functionality.   ✅
-
-Phase E2C – Optimize for 1366×768, tablet, and mobile.   ✅
-
-Phase E2D – Polish spacing, sticky save behavior, keyboard navigation, and accessibility.
-
-Phase E2E – Conduct a final visual reconciliation to ensure the refreshed editor still respects the BCC design language.
-
-
-
-
-
-
-
-C.
-
-\### Design Authority Reconciliation : Stage 7 - Bug Fixes to be done along with this bugfixes.md
-
-
-
-\- Membership Card widget reconciliation
-
-\- Responsive canonical Membership Card rendering
-
-\- Remove independent dark card implementation
-
-\- General Design Authority reconciliation
-
-
-
-\---
-
-
-
-**Stage 3 — Platform Completion**
-
-
-
-PHASE F — Membership \& Billing
-
-
-
-V6 14 — Membership \& Billing
-
-V6 15 — V6 15 Future Modules Workspace
-
-
-
-PHASE G — Collections \& Series
-
-
-
-V6 16 — Collections \& Series
-
-V6 17 Membership Card
-
-V6 18 Notifications
-
-
-
-PHASE H — Taxonomy Architecture
-
-
-
-TAXONOMY\_ARCHITECTURE\_FREEZE\_v1.0.md
-
-
-
-
-
-\## PHASE I — Remaining Public Pages
-
-
-
-
-
-**After this continuation of original roadmap plan :**
-
-
-
-NEXT — Contest Engine \& Certificates
-
-
-
-These are the only remaining Phase 2 modules. Nothing else blocks them.
-
-
-
-\### Module 03 — Contest Management Engine
-
-\- 15+ contest formats (monthly, open, invitational, portfolio, live, etc.)
-
-\- Submission management with eligibility enforcement (MEM-006)
-
-\- Full judging engine: blind/double-blind, multi-round, multi-criteria scoring
-
-\- Results, awards, staged release
-
-\- Entry fees → Module 11; communication triggers → Module 17
-
-
-
-\### Module 12 — Certificates \& Badges
-
-\- Template builder, all certificate types (participation, achievement, membership)
-
-\- Badge library, points system, verification URLs
-
-\- \*\*Dependency:\*\* Membership card (Module 02 revisit, open item #1) should be
-
-&#x20; resolved before or during this module — they share PDF generation logic.
-
-
-
-\### Module 11 — Financial Core (expand in Phase 2b)
-
-\- Membership fee collection already wired from Phase 1
-
-\- Expand: event fee collection, contest entry fees, expense recording, event P\&L,
-
-&#x20; full INR ledger, Razorpay webhook handling, receipt generation
-
-
-
-\---
-
-
-
-\## PHASE 3 — Growth (after Phase 2b complete)
-
-\- Module 09 — Community \& Social Engagement
-
-\- Module 10 — Volunteer Management
-
-\- Module 07 — Exhibition Management
-
-\- Module 14 — Digital Archive (historical records import)
-
-\- Module 16 — Mobile PWA (service worker, offline, push, QR scanner, install manifest)
-
-\- Migration Track D — DNS cutover, legacy site decommission
-
-
-
-\---
-
-
-
-\## PHASE 4 — Intelligence
-
-\- Module 08 — Photography School (full LMS, mentor system, assignments, certs)
-
-\- Module 13 — Governance \& Admin advanced features
-
-\- Module 15 — AI Ecosystem Phase 1 (auto-tagging, semantic search)
-
-\- Native mobile: Capacitor wrapping Astro PWA → iOS + Android
-
-
-
-\---
-
-
-
-\## PHASE 5 — Scale (Year 3+)
-
-\- Multi-tenancy groundwork
-
-\- AI Phase 2: visual search, educational feedback, renewal prediction
-
-\- Sub-groups / interest groups
-
-\- Video contests, Open Badges, Lightroom plugin
-
-
-
-\---
-
-
-
-\## CONVERSATION-SPLITTING PLAN
-
-\- This roadmap is updated at the end of every session — paste back the summary.
-
-\- Each major build step gets its own fresh conversation pointed at this file.
-
-\- \*\*Next session:\*\* Phase 2b — start with Module 03 (Contest Engine) or Module 12
-
-&#x20; (Certificates \& Badges) — confirm which first.
+#### &#x20;  **Minimum Documentation • Maximum Implementation**
 

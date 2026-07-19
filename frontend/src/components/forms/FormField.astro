@@ -1,0 +1,67 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  required?: boolean;
+  optional?: boolean;
+  hint?: string;
+  class?: string;
+}
+const { id, label, required = false, optional = false, hint, class: className = '' } = Astro.props;
+const hasLabelExtra = Astro.slots.has('label-extra');
+---
+<div class:list={['f-field', className]}>
+  {hasLabelExtra ? (
+    <div class="f-label-row">
+      <label class="f-label" for={id}>
+        {label}{required && <span class="f-req" aria-hidden="true">*</span>}{optional && <span class="f-opt">(optional)</span>}
+      </label>
+      <slot name="label-extra" />
+    </div>
+  ) : (
+    <label class="f-label" for={id}>
+      {label}{required && <span class="f-req" aria-hidden="true">*</span>}{optional && <span class="f-opt">(optional)</span>}
+    </label>
+  )}
+  <slot />
+  {hint && <p class="f-hint">{hint}</p>}
+</div>
+
+<style>
+.f-field { display: flex; flex-direction: column; gap: 6px; }
+
+.f-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.f-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-600);
+  font-family: var(--font-body);
+  line-height: 1.3;
+}
+
+.f-req {
+  color: var(--gold-600);
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+.f-opt {
+  color: var(--ink-400);
+  font-size: 11px;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.f-hint {
+  font-size: 11px;
+  color: var(--ink-400);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  margin: 0;
+}
+</style>

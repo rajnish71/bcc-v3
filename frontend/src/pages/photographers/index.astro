@@ -18,6 +18,7 @@
  *   4. Basic Member badge shown on cards (permitted here, not on profile page).
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import FilterChips from '../../components/search/FilterChips.astro';
 ---
 
 <BaseLayout
@@ -48,15 +49,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 <!-- ── FILTER TABS ────────────────────────────────────────────────────────── -->
 <div class="filter-area">
   <div class="filter-area-inner">
-    <div class="filter-tabs-row">
-      <div class="filter-tabs" id="filter-tabs" role="tablist" aria-label="Filter photographers by membership class">
-        <button class="filter-tab filter-tab--active" data-class="all" role="tab" aria-selected="true">All</button>
-        <button class="filter-tab" data-class="basic"      role="tab" aria-selected="false">Basic</button>
-        <button class="filter-tab" data-class="student"    role="tab" aria-selected="false">Student</button>
-        <button class="filter-tab" data-class="individual" role="tab" aria-selected="false">Individual</button>
-        <button class="filter-tab" data-class="life"       role="tab" aria-selected="false">Life</button>
-      </div>
-    </div>
+    <FilterChips
+      id="filter-tabs"
+      label="Filter photographers by membership class"
+      options={[
+        { value: 'all',        label: 'All' },
+        { value: 'basic',      label: 'Basic' },
+        { value: 'student',    label: 'Student' },
+        { value: 'individual', label: 'Individual' },
+        { value: 'life',       label: 'Life' },
+      ]}
+      value="all"
+    />
   </div>
 </div>
 
@@ -114,9 +118,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 /* ── PAGE HERO ───────────────────────────────────────────────────────────── */
 .page-hero {
   margin-top: var(--nav-h, 64px);
-  background: #FFFFFF;
-  border-top: 3px solid #A8843C;
-  border-bottom: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border-top: 3px solid var(--gold-600);
+  border-bottom: 1px solid var(--hairline);
 }
 .hero-inner {
   max-width: 1280px;
@@ -124,26 +128,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   padding: 72px 40px 56px;
 }
 .hero-breadcrumb {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-bottom: 24px;
 }
 .hero-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(44px, 5.5vw, 72px);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.0;
-  color: #141210;
+  color: var(--ink-900);
   margin-bottom: 20px;
 }
 .hero-intro {
   font-size: 18px;
   line-height: 1.7;
-  color: #57514B;
+  color: var(--ink-600);
   max-width: 580px;
   font-weight: 300;
   margin-bottom: 48px;
@@ -152,30 +156,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   display: flex;
   align-items: flex-start;
   gap: 0;
-  border-top: 1px solid #E7E1D6;
+  border-top: 1px solid var(--hairline);
   padding-top: 32px;
   flex-wrap: wrap;
 }
 .hero-stat { padding-right: 48px; }
 .hero-stat-val {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 44px;
   font-weight: 700;
   letter-spacing: -0.025em;
-  color: #141210;
+  color: var(--ink-900);
   line-height: 1;
 }
 .hero-stat-label {
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #8B8378;
+  color: var(--ink-400);
   font-weight: 600;
   margin-top: 6px;
 }
 .hero-stat-sep {
   width: 1px;
-  background: #E7E1D6;
+  background: var(--hairline);
   height: 56px;
   margin-right: 48px;
   flex-shrink: 0;
@@ -185,55 +189,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 /* ── FILTER TABS ─────────────────────────────────────────────────────────── */
 .filter-area {
-  background: #FAF8F4;
-  border-bottom: 1px solid #E7E1D6;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--hairline);
 }
 .filter-area-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 24px 40px 0;
-}
-.filter-tabs-row {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.filter-tabs-row::-webkit-scrollbar { display: none; }
-.filter-tabs {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-.filter-tab {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 10px 18px;
-  border: 1px solid #E7E1D6;
-  background: #FFFFFF;
-  color: #57514B;
-  cursor: pointer;
-  border-radius: 2px;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  font-family: inherit;
-}
-.filter-tab:hover:not(.filter-tab--active) {
-  border-color: #C9A961;
-  color: #A8843C;
-}
-.filter-tab--active {
-  background: #141210;
-  color: #FAF8F4;
-  border-color: #141210;
+  padding: 20px 40px;
 }
 /* ── RESULTS BAR ─────────────────────────────────────────────────────────── */
 .results-bar {
-  background: #FFFFFF;
-  border-bottom: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline);
 }
 .results-bar-inner {
   max-width: 1280px;
@@ -246,22 +213,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   flex-wrap: wrap;
 }
 .results-count {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
-  color: #57514B;
+  color: var(--ink-600);
   font-weight: 500;
 }
-#results-num { color: #141210; }
+#results-num { color: var(--ink-900); }
 .results-sort-note {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
-  color: #8B8378;
+  color: var(--ink-400);
   letter-spacing: 0.06em;
 }
 
 /* ── GRID AREA ───────────────────────────────────────────────────────────── */
 .grid-area {
-  background: #F2EFE9;
+  background: var(--surface-bg);
   min-height: 50vh;
   padding: 32px 0 80px;
 }
@@ -280,8 +247,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 /* ── PHOTOGRAPHER CARD ───────────────────────────────────────────────────── */
 :global(.ph-card) {
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   cursor: pointer;
   position: relative;
   display: flex;
@@ -291,7 +258,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 :global(.ph-card:hover) {
-  border-color: #C9A961;
+  border-color: var(--gold-500);
   box-shadow: 0 8px 32px rgba(20,18,16,0.09);
 }
 :global(.ph-card-avatar-wrap) {
@@ -306,10 +273,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--surface-0);
   flex-shrink: 0;
   letter-spacing: -0.02em;
   overflow: hidden;
@@ -329,20 +296,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   align-items: center;
 }
 :global(.ph-card-name) {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 17px;
   font-weight: 700;
-  color: #141210;
+  color: var(--ink-900);
   margin-bottom: 4px;
   line-height: 1.25;
   word-break: break-word;
   transition: color 0.2s ease;
 }
-:global(.ph-card:hover .ph-card-name) { color: #A8843C; }
+:global(.ph-card:hover .ph-card-name) { color: var(--gold-600); }
 :global(.ph-card-username) {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: #A8843C;
+  color: var(--gold-600);
   margin-bottom: 10px;
 }
 :global(.ph-card-class-badge) {
@@ -360,8 +327,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 :global(.ph-card-recognition) {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #E7E1D6;
-  color: #8B8378;
+  border: 1px solid var(--hairline);
+  color: var(--ink-400);
   font-size: 10px;
   font-weight: 500;
   padding: 2px 10px;
@@ -373,14 +340,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 :global(.ph-card-divider) {
   width: 100%;
   height: 1px;
-  background: #F0EBE0;
+  background: var(--hairline);
   margin: 8px 0;
   flex-shrink: 0;
 }
 :global(.ph-card-tagline) {
   font-size: 13px;
   line-height: 1.5;
-  color: #57514B;
+  color: var(--ink-600);
   margin-bottom: 8px;
   text-align: center;
   overflow: hidden;
@@ -400,20 +367,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 }
 :global(.ph-card-city) {
   font-size: 12px;
-  color: #8B8378;
+  color: var(--ink-400);
 }
 :global(.ph-card-genre) {
   font-size: 11px;
-  background: #F4F0E8;
-  color: #57514B;
+  background: var(--surface-2);
+  color: var(--ink-600);
   padding: 2px 10px;
-  border-radius: 2px;
+  border-radius: var(--r-1);
   font-weight: 500;
 }
 :global(.ph-card-photo-count) {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-top: auto;
 }
 :global(.ph-card-arrow) {
@@ -422,14 +389,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   right: 12px;
   opacity: 0;
   transition: opacity 0.2s ease;
-  color: #A8843C;
+  color: var(--gold-600);
 }
 :global(.ph-card:hover .ph-card-arrow) { opacity: 1; }
 
 /* ── SKELETON ────────────────────────────────────────────────────────────── */
 .ph-card-skel {
-  background: #FFFFFF;
-  border: 1px solid #E7E1D6;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -455,18 +422,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 .skel-divider {
   width: 100%;
   height: 1px;
-  background: #F0EBE0;
+  background: var(--hairline-soft);
   margin: 12px 0;
 }
 .skel {
-  background: linear-gradient(90deg, #F0EBE0 25%, #FAF8F4 50%, #F0EBE0 75%);
+  background: linear-gradient(90deg, var(--hairline-soft) 25%, var(--surface-1) 50%, var(--hairline-soft) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
+  animation: bg-shimmer 1.4s infinite;
   border-radius: 2px;
-}
-@keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
 
 /* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
@@ -479,17 +442,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   text-align: center;
   gap: 24px;
 }
-.ph-empty-icon { color: #C8C0B8; }
+.ph-empty-icon { color: var(--ink-200); }
 .ph-empty-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 600;
-  color: #8B8378;
+  color: var(--ink-400);
   margin-bottom: 8px;
 }
 .ph-empty-desc {
   font-size: 14px;
-  color: #B8B0A8;
+  color: var(--ink-400);
   margin-bottom: 4px;
 }
 .btn-clear-filters {
@@ -497,15 +460,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   font-weight: 600;
   letter-spacing: 0.05em;
   padding: 12px 28px;
-  border: 1.5px solid #A8843C;
+  border: 1.5px solid var(--gold-600);
   background: transparent;
-  color: #A8843C;
-  border-radius: 2px;
+  color: var(--gold-600);
+  border-radius: var(--r-1);
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--m-fast), color var(--m-fast);
 }
-.btn-clear-filters:hover { background: #A8843C; color: #FFFFFF; }
+.btn-clear-filters:hover { background: var(--gold-600); color: var(--surface-0); }
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
@@ -705,30 +668,16 @@ function render() {
   });
 }
 
-// ── Filter tabs ───────────────────────────────────────────────────────────
-document.querySelectorAll<HTMLButtonElement>('.filter-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    activeClass = btn.dataset.class ?? 'all';
-
-    document.querySelectorAll<HTMLButtonElement>('.filter-tab').forEach(b => {
-      const isActive = b.dataset.class === activeClass;
-      b.classList.toggle('filter-tab--active', isActive);
-      b.setAttribute('aria-selected', String(isActive));
-    });
-
-    render();
-  });
+// ── Filter chips ──────────────────────────────────────────────────────────
+document.getElementById('filter-tabs')?.addEventListener('bcc:filter', e => {
+  activeClass = (e as CustomEvent<{ value: string }>).detail.value ?? 'all';
+  render();
 });
 
 // ── Clear filters ─────────────────────────────────────────────────────────
 document.getElementById('ph-clear')?.addEventListener('click', () => {
-  activeClass = 'all';
-  document.querySelectorAll<HTMLButtonElement>('.filter-tab').forEach(b => {
-    const isActive = b.dataset.class === 'all';
-    b.classList.toggle('filter-tab--active', isActive);
-    b.setAttribute('aria-selected', String(isActive));
-  });
-  render();
+  // Programmatically click the 'all' chip so FilterChips updates its own state
+  document.querySelector<HTMLButtonElement>('#filter-tabs [data-value="all"]')?.click();
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────

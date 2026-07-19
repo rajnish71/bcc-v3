@@ -1,0 +1,125 @@
+---
+/**
+ * FilterChips — horizontal scrollable row of filter toggle buttons.
+ *
+ * Emits a `bcc:filter` CustomEvent on the element with `{ detail: { value: string } }`
+ * when the active chip changes. Single-select by default.
+ *
+ * Usage:
+ *   <FilterChips
+ *     id="type-filter"
+ *     label="Filter by type"
+ *     options={[{value:'all',label:'All'},{value:'photowalk',label:'Photowalks'}]}
+ *     value="all"
+ *   />
+ *   <script>
+ *     document.getElementById('type-filter').addEventListener('bcc:filter', e => {
+ *       currentFilter = e.detail.value;
+ *       render();
+ *     });
+ *   </script>
+ */
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  id?: string;
+  label?: string;
+  options: FilterOption[];
+  value?: string;
+  role?: 'tablist' | 'group';
+  class?: string;
+}
+
+const {
+  id,
+  label,
+  options,
+  value: initialValue = 'all',
+  role = 'group',
+  class: className = '',
+} = Astro.props;
+---
+<div
+  id={id}
+  class:list={['fc', className]}
+  role={role}
+  aria-label={label}
+  data-fc
+>
+  {options.map(opt => (
+    <button
+      type="button"
+      class:list={['fc-chip', opt.value === initialValue && 'fc-chip--active']}
+      data-value={opt.value}
+      aria-pressed={opt.value === initialValue ? 'true' : 'false'}
+    >
+      {opt.label}
+    </button>
+  ))}
+</div>
+
+<style>
+.fc {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.fc::-webkit-scrollbar { display: none; }
+
+.fc-chip {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 6px 16px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+  color: var(--ink-600);
+  cursor: pointer;
+  border-radius: var(--r-1);
+  white-space: nowrap;
+  transition: background var(--m-fast), color var(--m-fast), border-color var(--m-fast);
+  line-height: 1;
+}
+.fc-chip:hover:not(.fc-chip--active) {
+  border-color: var(--gold-600);
+  color: var(--gold-600);
+}
+.fc-chip--active {
+  background: var(--ink-900);
+  color: var(--surface-1);
+  border-color: var(--ink-900);
+}
+.fc-chip:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 2px;
+}
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-fc]').forEach(container => {
+    container.addEventListener('click', e => {
+      const btn = (e.target as Element).closest<HTMLButtonElement>('.fc-chip');
+      if (!btn) return;
+
+      const value = btn.dataset.value ?? '';
+
+      container.querySelectorAll<HTMLButtonElement>('.fc-chip').forEach(b => {
+        const active = b.dataset.value === value;
+        b.classList.toggle('fc-chip--active', active);
+        b.setAttribute('aria-pressed', String(active));
+      });
+
+      container.dispatchEvent(new CustomEvent('bcc:filter', {
+        bubbles: true,
+        detail: { value },
+      }));
+    });
+  });
+</script>

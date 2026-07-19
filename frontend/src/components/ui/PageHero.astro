@@ -1,0 +1,60 @@
+---
+/**
+ * PageHero.astro — Shared page hero for editorial/policy/info pages.
+ * Eyebrow · H1 · Subtitle · optional "Last updated" date · bottom hairline.
+ * Used by: terms, conduct, privacy, membership-rules, copyright, contact, partner-with-us.
+ */
+interface Props {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  /** Optional date string — "Last updated: June 12, 2026" */
+  meta?: string;
+}
+
+const { eyebrow, title, subtitle, meta } = Astro.props;
+---
+
+<div class="page-hero surface-white">
+  <div class="container">
+    <span class="eyebrow">{eyebrow}</span>
+    <h1 class="page-hero__title">{title}</h1>
+    <p class="page-hero__meta">
+      {subtitle}
+      {meta && <><br /><span class="page-hero__date">{meta}</span></>}
+    </p>
+  </div>
+  <div class="hairline"></div>
+</div>
+
+<style>
+.page-hero {
+  padding-top: calc(var(--nav-h) + var(--s-6));
+  padding-bottom: var(--s-4);
+}
+
+.page-hero__title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: var(--ls-h1);
+  line-height: var(--lh-h1);
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+
+.page-hero__meta {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--ink-600);
+  line-height: 1.65;
+}
+
+.page-hero__date {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  color: var(--ink-400);
+  letter-spacing: var(--ls-mono);
+}
+</style>

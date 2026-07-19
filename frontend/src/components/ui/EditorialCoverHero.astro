@@ -1,0 +1,160 @@
+---
+/**
+ * EditorialCoverHero.astro — V6 67 Type A Editorial Cover Hero.
+ * 16:9 · administrator-curated photograph · lower-left text overlay.
+ * Eyebrow · H1 · optional introduction. No other elements.
+ * Applies to: Home · About · Activities · Projects · Membership · Static Pages.
+ */
+interface Props {
+  /** Optional category label — JetBrains Mono · gold */
+  eyebrow?: string;
+  /** Page title rendered as semantic H1 · max 2 lines */
+  title: string;
+  /** Optional introduction · max 3 lines */
+  intro?: string;
+  /** Hero image URL (administrator-curated). Falls back to dark placeholder. */
+  imageSrc?: string;
+  imageAlt?: string;
+}
+
+const { eyebrow, title, intro, imageSrc, imageAlt = '' } = Astro.props;
+---
+
+<div class="cover-hero">
+  <div class="cover-hero__frame">
+    {imageSrc
+      ? <img class="cover-hero__img" src={imageSrc} alt={imageAlt} loading="eager" />
+      : <div class="cover-hero__placeholder" aria-hidden="true"></div>
+    }
+
+    <!-- Readability gradient — never full overlay -->
+    <div class="cover-hero__gradient" aria-hidden="true"></div>
+
+    <!-- Text block — lower-left, fixed position -->
+    <div class="cover-hero__text">
+      <div class="cover-hero__inner">
+        {eyebrow && <div class="cover-hero__eyebrow">{eyebrow}</div>}
+        <h1 class="cover-hero__title">{title}</h1>
+        {intro && <p class="cover-hero__intro">{intro}</p>}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.cover-hero {
+  width: 100%;
+  max-width: var(--container-content);
+  margin: 0 auto;
+  padding: 0 var(--s-6);
+}
+
+/* 16:9 aspect ratio frame */
+.cover-hero__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--dark-100);
+}
+
+/* Hero photograph — object-fit:cover · square radius (never rounded) */
+.cover-hero__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+/* Placeholder — crosshatch dark surface when no image */
+.cover-hero__placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--dark-200) 0px, var(--dark-200) 32px,
+    var(--dark-100) 32px, var(--dark-100) 64px
+  );
+}
+
+/* Gradient — readability only · covers 0–68% from bottom */
+.cover-hero__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(10, 9, 8, 0.88) 0%,
+    rgba(10, 9, 8, 0.65) 22%,
+    rgba(10, 9, 8, 0.30) 45%,
+    transparent 68%
+  );
+  pointer-events: none;
+}
+
+/* Text block — lower-left */
+.cover-hero__text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 var(--s-6) 44px;
+}
+
+.cover-hero__inner { max-width: 720px; }
+
+/* Eyebrow — JetBrains Mono · 11px · gold · +0.22em · uppercase · 500 */
+.cover-hero__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gold-light);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  margin-bottom: 14px;
+}
+
+/* Title H1 — Outfit · clamp(36–52px) · 700 · white · -0.025em · lh 1.05 */
+.cover-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: #FFFFFF;
+  margin-bottom: 18px;
+  text-wrap: pretty;
+}
+
+/* Introduction — Inter · 18px · 300 · rgba(255,255,255,0.78) · lh 1.70 · max 580px */
+.cover-hero__intro {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1.70;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 580px;
+  text-wrap: pretty;
+}
+
+/* ── Tablet 481–900px ── */
+@media (max-width: 900px) {
+  .cover-hero { padding: 0 var(--s-4); }
+  .cover-hero__text { padding: 0 var(--s-4) 32px; }
+  .cover-hero__intro { font-size: 16px; }
+}
+
+/* ── Mobile ≤480px ── */
+@media (max-width: 480px) {
+  .cover-hero { padding: 0 var(--s-3); }
+  .cover-hero__text { padding: 0 var(--s-3) 24px; }
+  .cover-hero__title { font-size: 36px; }
+  .cover-hero__intro {
+    font-size: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+</style>

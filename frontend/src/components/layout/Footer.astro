@@ -256,13 +256,13 @@ const currentYear = new Date().getFullYear();
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #C4BDB3;
+  color: var(--footer-text);
   transition: all 0.2s ease;
 }
 .social-link:hover {
   border-color: rgba(201, 169, 97, 0.45);
   background: rgba(201, 169, 97, 0.07);
-  color: #FFFFFF;
+  color: var(--footer-text-hover);
 }
 
 /* Editorial Separator Line */
@@ -290,7 +290,7 @@ const currentYear = new Date().getFullYear();
 /* Col 1: Brand block */
 .footer-col-brand {
   padding-right: 48px;
-  border-right: 1px solid #2C2820;
+  border-right: 1px solid var(--dark-500);
 }
 .footer-logo-link {
   display: inline-block;
@@ -362,22 +362,22 @@ const currentYear = new Date().getFullYear();
 .footer-link {
   font-family: var(--font-body);
   font-size: 13px;
-  color: #C4BDB3;
+  color: var(--footer-text);
   transition: color var(--m-fast);
   text-decoration: none;
 }
 .footer-link:hover {
-  color: #FFFFFF;
+  color: var(--footer-text-hover);
 }
 
 /* Specific columns paddings & borders */
 .footer-col-navigate {
   padding: 0 32px;
-  border-right: 1px solid #2C2820;
+  border-right: 1px solid var(--dark-500);
 }
 .footer-col-explore {
   padding: 0 32px;
-  border-right: 1px solid #2C2820;
+  border-right: 1px solid var(--dark-500);
 }
 .footer-col-guidelines {
   padding: 0 0 0 32px;
@@ -398,8 +398,8 @@ const currentYear = new Date().getFullYear();
 .soon-badge {
   font-family: var(--font-mono);
   font-size: 9px;
-  background: #1E1C1A;
-  border: 1px solid #2C2820;
+  background: var(--dark-300);
+  border: 1px solid var(--dark-500);
   color: var(--ink-600);
   padding: 2px 7px;
   letter-spacing: 0.08em;
@@ -409,7 +409,7 @@ const currentYear = new Date().getFullYear();
 /* ── Row 3: Copyright Bar ── */
 .footer-row-3 {
   background: var(--surface-deep);
-  border-top: 1px solid #2C2820;
+  border-top: 1px solid var(--dark-500);
 }
 .footer-row-3-inner {
   max-width: 1280px;
@@ -438,7 +438,7 @@ const currentYear = new Date().getFullYear();
 .copyright-separator {
   width: 1px;
   height: 12px;
-  background: #2C2820;
+  background: var(--dark-500);
   flex-shrink: 0;
 }
 .fip-member-row {
@@ -523,7 +523,7 @@ const currentYear = new Date().getFullYear();
     height: 40px;
   }
   .fip-trust-badge {
-    border-color: rgba(201, 169, 97, 0.35);
+    border-color: var(--hairline-gold);
     padding: 10px 14px;
     gap: 10px;
   }
@@ -554,7 +554,7 @@ const currentYear = new Date().getFullYear();
     grid-column: 1 / -1;
     border-right: none;
     padding-right: 0;
-    border-bottom: 1px solid #2C2820;
+    border-bottom: 1px solid var(--dark-500);
     padding-bottom: 28px;
     margin-bottom: 32px;
   }
@@ -573,7 +573,7 @@ const currentYear = new Date().getFullYear();
   }
   .footer-col-guidelines {
     grid-column: 1 / -1;
-    border-top: 1px solid #2C2820;
+    border-top: 1px solid var(--dark-500);
     margin-top: 28px;
     padding: 24px 0 0;
   }

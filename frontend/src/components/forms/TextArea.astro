@@ -1,0 +1,59 @@
+---
+interface Props {
+  id: string;
+  name?: string;
+  rows?: number;
+  placeholder?: string;
+  required?: boolean;
+  maxlength?: number;
+  'aria-describedby'?: string;
+  class?: string;
+}
+const {
+  id,
+  name,
+  rows = 4,
+  placeholder,
+  required = false,
+  maxlength,
+  'aria-describedby': ariaDescribedby,
+  class: className = '',
+} = Astro.props;
+---
+<textarea
+  id={id}
+  name={name}
+  rows={rows}
+  placeholder={placeholder}
+  required={required || undefined}
+  maxlength={maxlength}
+  aria-describedby={ariaDescribedby}
+  class:list={['f-input f-textarea', className]}
+></textarea>
+
+<style>
+.f-input {
+  padding: 10px 12px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: border-color var(--m-fast), box-shadow var(--m-fast);
+  width: 100%;
+  box-sizing: border-box;
+}
+.f-input:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px rgba(168, 132, 60, 0.12);
+}
+.f-input::placeholder { color: var(--input-placeholder); }
+.f-textarea {
+  height: auto;
+  resize: vertical;
+  min-height: 96px;
+}
+.f-input.is-error { border-color: var(--input-error); }
+</style>

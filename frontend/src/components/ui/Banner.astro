@@ -1,0 +1,60 @@
+---
+/**
+ * Banner.astro — V6 64 Canonical Inline Status Banner
+ *
+ * Compact status banner for form-level error, success, and info messages.
+ * Content is set at runtime via element.textContent; visibility toggled via
+ * the `hidden` attribute (element.hidden = false/true).
+ *
+ * Usage:
+ *   <Banner id="auth-error" variant="error" />
+ *
+ *   // JS runtime:
+ *   const el = document.getElementById('auth-error');
+ *   el.textContent = 'Something went wrong.';
+ *   el.hidden = false;
+ */
+interface Props {
+  id?: string;
+  variant?: 'error' | 'success' | 'info';
+  role?: string;
+}
+const { id, variant = 'error', role = 'alert' } = Astro.props;
+---
+
+<div
+  {...id ? { id } : {}}
+  class={`banner banner--${variant}`}
+  hidden
+  role={role}
+><slot /></div>
+
+<style>
+.banner {
+  padding: 10px 14px;
+  border-radius: var(--r-2);
+  font-size: var(--text-ui);
+  font-weight: var(--weight-medium);
+}
+.banner--error {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+}
+.banner--error a {
+  color: #B91C1C;
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.banner--success {
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  color: #15803D;
+}
+.banner--info {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-700);
+}
+</style>

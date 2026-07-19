@@ -262,6 +262,93 @@ svg { display: block; flex-shrink: 0; }
 .tag-workshop   { background: var(--tag-workshop-bg);   color: var(--tag-workshop-ink);   }
 .tag-exhibition { background: var(--tag-exhibition-bg); color: var(--tag-exhibition-ink); }
 
+/* ── V6 65 · Category tags (no radius, mono, uppercase) ── */
+.cat-tag {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 0;
+  white-space: nowrap;
+}
+.cat-tag--filled { background: var(--ink-900); color: #FFFFFF; }
+.cat-tag--outline {
+  background: var(--surface-2);
+  color: var(--ink-700);
+  border: 1px solid var(--hairline);
+}
+
+/* ── V6 65 · Filter chips (2px radius, toggleable) ── */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 2px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: border-color var(--m-fast), background var(--m-fast), color var(--m-fast);
+  user-select: none;
+  white-space: nowrap;
+}
+.filter-chip:hover { border-color: var(--hairline-strong); color: var(--ink-900); }
+.filter-chip[aria-pressed="true"],
+.filter-chip.is-active {
+  background: var(--forest-600);
+  border-color: var(--forest-600);
+  color: #FFFFFF;
+}
+
+/* ── V6 65 · Photo tags with optional remove button ── */
+.photo-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  padding: 4px 10px 4px 12px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  color: var(--ink-900);
+  border: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+.photo-tag__remove {
+  color: var(--ink-400);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.photo-tag__remove:hover { color: var(--ink-900); }
+
+/* ── V6 65 · Progress bar (2px height) ── */
+.progress-track {
+  height: 2px;
+  background: var(--hairline);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+.progress-fill--green  { background: var(--forest-600); }
+.progress-fill--gold   { background: var(--gold-600); }
+.progress-fill--muted  { background: var(--ink-400); }
+.progress-fill--danger { background: var(--status-danger-text); }
+
 /* ── Form inputs ── */
 .field {
   width: 100%;
@@ -324,6 +411,180 @@ svg { display: block; flex-shrink: 0; }
 }
 .avatar-forest { background: var(--forest-gradient); }
 
+/* ──────────────────────────────────────
+   EDITORIAL CARD — V6 62
+   Canonical editorial content card.
+   Two variants: --card (vertical) · --featured (horizontal)
+   Styles are global so JS-rendered cards on any page receive them.
+   ────────────────────────────────────── */
+
+.editorial-card {
+  display: flex;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition:
+    transform var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+.editorial-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--e-2);
+}
+.editorial-card:hover .editorial-card__title {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Image wrapper */
+.editorial-card__img-wrap {
+  position: relative;
+  background: var(--dark-300);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.editorial-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--dur-standard) var(--ease-standard);
+}
+.editorial-card:hover .editorial-card__img { transform: scale(1.03); }
+.editorial-card__img-placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--dark-300) 0px, var(--dark-300) 14px,
+    var(--dark-400) 14px, var(--dark-400) 28px
+  );
+}
+
+/* Body */
+.editorial-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.editorial-card__category {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-label);
+  color: var(--gold-600);
+}
+.editorial-card__title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-900);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-h3);
+  margin: 0;
+}
+.editorial-card__excerpt {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: var(--weight-light);
+  line-height: var(--lh-ui);
+  color: var(--ink-600);
+  margin: 0;
+}
+.editorial-card__meta {
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+  color: var(--ink-400);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: auto;
+}
+.editorial-card__sep {
+  margin: 0 var(--s-1);
+  color: var(--hairline-strong);
+}
+
+/* Variant: card (vertical, default) */
+.editorial-card--card {
+  flex-direction: column;
+}
+.editorial-card--card .editorial-card__img-wrap {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  border-bottom: 1px solid var(--hairline);
+}
+.editorial-card--card .editorial-card__body {
+  padding: var(--s-3) var(--s-3) var(--s-4);
+  gap: var(--s-1);
+  flex: 1;
+}
+.editorial-card--card .editorial-card__title {
+  font-size: var(--text-h5);
+}
+.editorial-card--card .editorial-card__excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* Variant: featured (horizontal split) */
+.editorial-card--featured {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+}
+.editorial-card--featured .editorial-card__img-wrap {
+  aspect-ratio: 16 / 10;
+  border-right: 1px solid var(--hairline);
+}
+.editorial-card--featured .editorial-card__body {
+  padding: var(--s-6);
+  justify-content: center;
+  gap: var(--s-2);
+}
+.editorial-card--featured .editorial-card__title {
+  font-size: var(--text-h2);
+  font-weight: var(--weight-bold);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
+  margin: var(--s-1) 0;
+}
+.editorial-card--featured .editorial-card__excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .editorial-card--featured {
+    grid-template-columns: 1fr;
+  }
+  .editorial-card--featured .editorial-card__img-wrap {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .editorial-card--featured .editorial-card__title {
+    font-size: var(--text-h3);
+  }
+}
+
+@media (max-width: 480px) {
+  .editorial-card--card .editorial-card__title {
+    font-size: 16px;
+  }
+  .editorial-card--card .editorial-card__body {
+    padding: var(--s-2) var(--s-2) var(--s-3);
+  }
+}
+
 /* ── Skeleton shimmer ── */
 .skel {
   background: var(--surface-2);
@@ -333,6 +594,33 @@ svg { display: block; flex-shrink: 0; }
 @keyframes skelShimmer {
   0%,100% { opacity: .5; }
   50% { opacity: .8; }
+}
+
+/* ── Gradient shimmer (moving background-position) ── */
+@keyframes bg-shimmer {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Hub section kicker (used in hub/index, hub/portfolio, hub/upload) ── */
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  margin-bottom: 14px;
+  font-family: var(--font-body);
+}
+.kicker-rule {
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--gold-light);
+  flex-shrink: 0;
 }
 
 /* ── GSAP reveal utilities (set initial state; GSAP handles animation) ── */
@@ -397,10 +685,24 @@ svg { display: block; flex-shrink: 0; }
   z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  background: #FAF8F4;
+  object-fit: cover;
   display: block;
   transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+/* Blur-up placeholder — fills while main image loads */
+.photo-card__blur {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(12px);
+  transform: scale(1.05);
+  z-index: 0;
+  transition: opacity 0.4s;
+}
+.photo-card:has(.photo-card__img.loaded) .photo-card__blur {
+  opacity: 0;
 }
 .photo-card:hover .photo-card__img {
   transform: scale(1.04);

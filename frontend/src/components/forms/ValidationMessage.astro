@@ -1,0 +1,29 @@
+---
+interface Props {
+  id?: string;
+  variant?: 'error' | 'success' | 'info';
+  class?: string;
+}
+const { id, variant = 'error', class: className = '' } = Astro.props;
+---
+<p
+  id={id}
+  role="alert"
+  hidden
+  class:list={['f-msg', `f-msg--${variant}`, className]}
+>
+  <slot />
+</p>
+
+<style>
+.f-msg {
+  font-size: 12px;
+  font-family: var(--font-body);
+  line-height: 1.4;
+  margin: 0;
+}
+.f-msg:not([hidden]) { display: flex; align-items: flex-start; gap: 4px; }
+.f-msg--error   { color: var(--input-error); }
+.f-msg--success { color: #16A34A; }
+.f-msg--info    { color: var(--ink-600); }
+</style>

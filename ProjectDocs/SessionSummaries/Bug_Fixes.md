@@ -302,49 +302,49 @@ Stage 6
 
 
 
-Stage 7 — Pending Tasks \& Bug Fixes
+~~Stage 7 — Pending Tasks \& Bug Fixes~~
 
-A. Critical Profile \& Membership (Highest Priority)
-
-
-
-45\. Complete Photographer Profile Data Migration (Top Priority)
+~~A. Critical Profile \& Membership (Highest Priority)~~
 
 
 
-Complete the migration of all profile data into both the Member Hub Profile and Public Photographer Profile.
+~~45. Complete Photographer Profile Data Migration (Top Priority)~~
 
 
 
-This includes:
+~~Complete the migration of all profile data into both the Member Hub Profile and Public Photographer Profile.~~
 
 
 
-Camera gear
-
-Biography
-
-Awards \& Recognition
-
-Photography Society Distinctions
-
-Photo Titles
-
-Display photograph
-
-All remaining migrated legacy fields
+~~This includes:~~
 
 
 
-Private fields (Address, Blood Group, Emergency Contact, etc.) must remain visible only inside the Member Hub and never on public profile pages.
+~~Camera gear~~
+
+~~Biography~~
+
+~~Awards \& Recognition~~
+
+~~Photography Society Distinctions~~
+
+~~Photo Titles~~
+
+~~Display photograph~~
+
+~~All remaining migrated legacy fields~~
 
 
 
-Migration should follow the field-by-field audit documented in:
+~~Private fields (Address, Blood Group, Emergency Contact, etc.) must remain visible only inside the Member Hub and never on public profile pages.~~
 
 
 
-ProjectDocs/SessionSummaries/2026-07-12 - Photographer Profile Data Audit.md
+~~Migration should follow the field-by-field audit documented in:~~
+
+
+
+~~ProjectDocs/SessionSummaries/2026-07-12 - Photographer Profile Data Audit.md~~
 
 
 
@@ -990,7 +990,7 @@ Treat this as urgent
 
 
 
-97\. change hero image to 16:9 and container width instead of full bleed. after this in admin section design a tool that will identify all 16:9 images and let admin choose multiple images that can be rotated as hero image. 
+97\. change hero image to 16:9 and container width instead of full bleed. after this in admin section design a tool that will identify all 16:9 images and let admin choose multiple images that can be rotated as hero image.
 
 
 
@@ -1046,145 +1046,47 @@ The Service Layer (`src/lib/services/`) is the permanent frontend contract. Futu
 
 
 
+99. If members have no photos, dont show them in Photographers directory
+100. in V6 40 ensure the grid chooses random photos instead of repeating same photo from every photographers gallery
+101. In V6 40 Grid, every refresh photographers should be shuffled randomly
 
+102.## Membership Cleanup — 17 Jul 2026
 
 
 
+### Fixed
 
+* Removed duplicate ACTIVE membership for Afzal Khan.
+* Eliminated duplicate Photographer Directory entry caused by duplicate membership data.
+* Restored one ACTIVE membership per user.
+* Reverted permanent membership numbers for non-founding members in accordance with MEM-007.
+* Migrated legacy `BCCTemp00052` storage from `memberships.membership\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_number` to `membership\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_temp\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_identifiers`.
+* Restored `trg\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_membership\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_number\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_immutable` after maintenance.
+* Verified that no duplicate ACTIVE memberships remain.
 
+### Verification
 
+* Duplicate ACTIVE memberships: **0**
+* Permanent numbers: **Founding Members only**
+* Temporary identifiers: **All other ACTIVE members**
+* Membership triggers: **Restored and operational**
 
 
 
+103. About page - its too overwhelming , we should reduce hero image from full width to boxed, also reduce size of Arch Bridge ( Name of Bridge to changed to Arch Bridge on Chota Talab )
+Tajul Masajid photo credit with link to Kuldeep Lodhi and Arch Bridge to Dr Anil Bhati. There is another small image of Tajul Masajid with Ducks in foreground, Photo Credit to Kshitij Patle.
 
+Leadership card as per previous - 6 core coordinators and 3 mentors, i have screen shot saved
 
 
 
+104\. Create a new section in home towards end BCC Special Projects - three columns three cards - image text and link for all three pages
 
 
 
+105\. make necessary changes in V6 92 - add Special Project links in global footer
 
-\---
 
 
-
-\# FEEDBACK SESSIONS
-
-
-
-\## FEEDBACK STAGE 5 — Pre-Soft-Launch Polish
-
-
-
-\*\*Status:\*\* 🚧 P0 BLOCKERS OUTSTANDING — F5.1–F5.4 complete; P0 issues must be resolved before soft launch
-
-
-
-\*\*Priority:\*\* Highest. This block gates the Public Soft Launch. All items below must be resolved before any soft-launch announcement.
-
-
-
-\### F5.1 — Home Page Completeness — ✅ COMPLETE (Claude Code, 2026-07-12)
-
-
-
-\- ✅ Seed 3 demo activities: Monsoon Photowalk, Composition Workshop, Annual Print Exhibition — `database/migrations/0054\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_seed\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_demo\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_activities.sql`
-
-\- ✅ Populate "One Community. Four Ways to Participate." section — 4 club cards with real copy and gradients
-
-\- ✅ Replace hero editorial feature with `frontend/public/images/hero.jpg` ("Serene Morning around Tajul Masajid" — Photo by Kshitij Patle)
-
-\- ✅ Replace all remaining placeholder/editorial specification text with production-quality copy
-
-\- ✅ Restore Activity thumbnails — backend exposes `banner\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_url` via `ikUrl()`, frontend renders or falls back to gradient
-
-
-
-\### F5.2 — Photographer Profile Data Recovery — ✅ COMPLETE (Claude Code, 2026-07-12)
-
-
-
-\- ✅ Audit conducted — full field-by-field report at `ProjectDocs/SessionSummaries/2026-07-12 - Photographer Profile Data Audit.md`
-
-\- ✅ Awards (`user\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_awards`) and photography society titles (`user\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_photo\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_titles`) recovered and exposed in API + profile About tab
-
-\- ✅ `users.awards\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_html` field recovered to API
-
-\- ✅ Private fields (address, blood group, emergency contact) confirmed correctly excluded from public profile
-
-
-
-\### F5.3 — Photographer Profile Gallery — ✅ COMPLETE (Claude Code, 2026-07-12)
-
-
-
-\- ✅ Photographer profile gallery converted to canonical justified layout (`buildProfileRows()` with `flush(true)` to show all photos including partial last row)
-
-
-
-\### F5.4 — SEO Alt-Text — ✅ COMPLETE (Claude Code, 2026-07-12)
-
-
-
-\- ✅ Canonical SEO alt-text format `"${title} by ${photographerName} · Bhopal Camera Club"` applied to: gallery wall, photographer profile grid, profile lightbox
-
-
-
-\---
-
-
-
-\## FEEDBACK STAGE 5 — P0 Release Blockers
-
-
-
-\*\*Status:\*\* 🚧 MUST RESOLVE BEFORE SOFT LAUNCH
-
-
-
-These are confirmed production defects. Implementation complete in code; pending production deployment.
-
-
-
-\### P0-9 — Homepage Mobile Navigation — ✅ FIXED (Claude Code, 2026-07-12)
-
-
-
-\*\*Symptom:\*\* Hamburger menu does not open on mobile. All page interactions broken on narrow viewports.
-
-
-
-\*\*Root cause:\*\* `Nav.astro` — the `.drawer` element is `position:fixed; inset:0; z-index:950; display:block` at mobile widths even when closed. Its invisible overlay (`opacity:0`) still intercepts all pointer events, blocking the hamburger button and every other interactive element on the page.
-
-
-
-\*\*Fix:\*\* Added `pointer-events: none` to `.drawer\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\[aria-hidden="true"]` in `Nav.astro`. When closed the drawer does not intercept clicks; when open (`aria-hidden="false"`) pointer events are restored normally.
-
-
-
-\### P0-10 — Homepage Links Not Working — ✅ FIXED (Claude Code, 2026-07-12)
-
-
-
-\*\*Symptom:\*\* Photo links, gallery cards, CTAs, activity links unresponsive.
-
-
-
-\*\*Root cause (primary):\*\* Same as P0-9 — drawer overlay intercepts all clicks at mobile.
-
-
-
-\*\*Root cause (secondary):\*\* Upcoming Activities rows were `<div>` elements, not `<a>` elements. Only the inner "Register →" button was a link; clicking the row body had no effect.
-
-
-
-\*\*Fix:\*\*
-
-\- Primary: Same pointer-events fix as P0-9.
-
-\- Secondary: Changed event rows from `createElement('div')` to `createElement('a')` with `href` set to the event URL. Changed inner button from `<a>` to `<span>` to avoid invalid nested links.
-
-
-
-\---
+106\. V6 6x series cards for activities Contests, exhibitions, photowalks, workshops, meetups
 

@@ -409,6 +409,7 @@
   --input-text:         var(--ink-900);
   --input-placeholder:  var(--ink-400);
   --input-radius:       var(--r-2);  /* 8px */
+  --input-error:        #C0392B;     /* form validation error — border + text */
 
   /* Avatar */
   --avatar-member-bg:    var(--forest-gradient);

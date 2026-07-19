@@ -1,0 +1,47 @@
+---
+interface Props {
+  id: string;
+  name?: string;
+  required?: boolean;
+  autocomplete?: string;
+  class?: string;
+}
+const { id, name, required = false, autocomplete, class: className = '' } = Astro.props;
+---
+<select
+  id={id}
+  name={name}
+  required={required || undefined}
+  autocomplete={autocomplete}
+  class:list={['f-input f-select', className]}
+>
+  <slot />
+</select>
+
+<style>
+.f-input {
+  height: 44px;
+  padding: 0 32px 0 12px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color var(--m-fast), box-shadow var(--m-fast);
+}
+.f-input:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px rgba(168, 132, 60, 0.12);
+}
+.f-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+</style>

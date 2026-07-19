@@ -1,0 +1,78 @@
+---
+/**
+ * FilterSelect — labeled filter dropdown with canonical chevron and token styling.
+ *
+ * The label renders in mono uppercase above the select.
+ * Host pages supply <option> elements via the default slot.
+ *
+ * Usage:
+ *   <FilterSelect id="filter-lifecycle" label="Lifecycle">
+ *     <option value="">All States</option>
+ *     <option value="ACTIVE">Active</option>
+ *   </FilterSelect>
+ */
+interface Props {
+  id: string;
+  label: string;
+  class?: string;
+}
+const { id, label, class: className = '' } = Astro.props;
+---
+<div class:list={['fs', className]}>
+  <label class="fs-label" for={id}>{label}</label>
+  <div class="fs-wrap">
+    <select id={id} class="fs-select">
+      <slot />
+    </select>
+  </div>
+</div>
+
+<style>
+.fs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fs-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-600);
+}
+
+.fs-wrap {
+  position: relative;
+}
+.fs-wrap::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 8px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.fs-select {
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 32px 8px 10px;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  width: 100%;
+  appearance: none;
+  cursor: pointer;
+  border-radius: var(--r-1);
+  outline: none;
+  transition: border-color var(--m-fast);
+}
+.fs-select:focus { border-color: var(--gold-600); }
+.fs-select:hover { border-color: var(--ink-400); }
+</style>

@@ -1,9 +1,22 @@
 /**
- * aboutPeople.ts — Temporary configuration for About page people.
+ * aboutPeople.ts — Temporary bridge configuration for About page people.
  *
- * TEMPORARY: will be replaced by Admin-managed backend data.
- * The page consumes this module; it knows nothing about hardcoded people.
- * When the backend is ready, swap these exports for API-fetched equivalents.
+ * This is a temporary bridge. It exists only until the About Management
+ * module is implemented in the Admin Console.
+ *
+ * The final source of this data will be the Admin Console.
+ * This file will eventually be replaced by:
+ *
+ * Admin Console
+ * ↓
+ * Database
+ * ↓
+ * API
+ * ↓
+ * About Page
+ *
+ * No changes will be required to the page components when this replacement occurs.
+ * The page consumes this module and knows nothing about the underlying hardcoded structure.
  *
  * Ver2 spec: 6 Core Coordinators (3+3 grid) + 3 Mentors (3-col grid).
  * Positions pending real data are marked with _pending: true.
@@ -26,56 +39,50 @@ export interface ProfileEntry {
 }
 
 // ---------------------------------------------------------------------------
-// Core Coordinators — Row 1: Club · Joint · Secretary
-//                     Row 2: Treasurer · Activity · Content
+// Core Coordinators
 // ---------------------------------------------------------------------------
 export const leaders: ProfileEntry[] = [
   {
     name: 'Rajnish Khare',
-    role: 'Club Coordinator',
+    role: 'Core Coordinator',
     since: '2015',
-    bio: 'Travel and wildlife photographer, and the founding coordinator of Bhopal Camera Club. Rajnish has been steering the club since its earliest days — building its community, shaping its programmes, and leading from the front on photowalks, workshops and exhibitions. He believes that photography is learned most deeply when learned together.',
+    bio: 'Travel and wildlife photographer. Founder of Bhopal Camera Club. Steering the club since its earliest days, building the community and leading photowalks, workshops and exhibitions.',
     avatar: ikAvatarUrl('avatars/1/51392d1b-bd2d-4e90-8358-1d7dc5bfeb56.jpg', 176),
     profileHref: '/photographers/rajnishkhare/',
   },
   {
     name: 'Kshitij Patle',
-    role: 'Joint Coordinator',
+    role: 'Core Coordinator',
     since: '2016',
-    bio: "Energetic travel storyteller who documents remote places, trails, and local interactions. Kshitij has been a core contributor to BCC's field programmes since 2016, co-leading photowalks and mentoring members on equipment selection and composition. His enthusiasm for being out in the field sets the tone for every walk he leads.",
+    bio: 'Energetic travel storyteller documenting remote places, trails and local interactions.',
     avatar: ikAvatarUrl('uploads/avatars/1781515190910-cb635096.jpg', 176),
     profileHref: '/photographers/kshitijpatle/',
   },
   {
     name: 'Rahil Khan',
-    role: 'Secretary',
+    role: 'Core Coordinator',
     since: '2016',
-    bio: "Contemporary street visual artist capturing dynamic urban moments and frame compositions. Rahil joined BCC in 2016 and has since become one of the club's most consistent presences — on the street, at the committee table, and behind the scenes of the administrative work that keeps a volunteer-run society running.",
+    bio: 'Contemporary street visual artist capturing dynamic urban moments and strong compositions.',
     avatar: ikAvatarUrl('uploads/avatars/1781874918562-8ae28b6c.jpg', 176),
     profileHref: '/photographers/rahilkhan/',
   },
-  // TODO: Fill Treasurer, Activity Coordinator, Content Coordinator
-  // when coordinator data is available. Ver2 spec: 6 coordinators in 3+3 grid.
   {
-    name: 'Treasurer',
-    role: 'Treasurer',
-    since: '—',
-    bio: 'Profile coming soon.',
-    _pending: true,
+    name: 'Bablu Khan',
+    role: 'Social Media Coordinator',
+    since: '2018',
+    bio: "Social Media Coordinator for BCC and one of Bhopal's leading digital creators. Drives the club's online presence.",
   },
   {
-    name: 'Activity Coordinator',
-    role: 'Activity Coordinator',
-    since: '—',
-    bio: 'Profile coming soon.',
-    _pending: true,
+    name: 'Yogesh More',
+    role: 'Bird Walk Leader',
+    since: '2021',
+    bio: 'Head of the Birds of Bhopal Project. Naturalist and birding expert leading ethical bird walks and field activities.',
   },
   {
-    name: 'Content Coordinator',
-    role: 'Content Coordinator',
-    since: '—',
-    bio: 'Profile coming soon.',
-    _pending: true,
+    name: 'Vikas Gangpari',
+    role: 'Workshop Coordinator',
+    since: '2020',
+    bio: 'Coordinates workshop logistics and supports indoor learning programmes throughout the year.',
   },
 ];
 

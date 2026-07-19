@@ -1,23 +1,27 @@
----
+﻿---
 /**
  * index.astro — Home Page
- * Hierarchy per BCC_V3_Design_System.md §14 (frozen):
- *   1. BCC Spotlight hero (full-bleed, museum label plate)
+ * V6 01 Home Ver2 — Architectural Reconciliation
+ *   1. PageHero (home variant) — Hero Assignment Architecture · heroManager.location("home")
  *   2. StatBand (GSAP counter)
  *   3. Gallery Wall — "Our members, on the wall."
- *   4. Upcoming Events (3 rows from API)
- *   5. Full-bleed photo band (parallax)
- *   6. Membership tiers (3 public: Basic · Student · Individual)
- *   7. Journal preview (3 cards)
- *
- * Design: "Refined Editorial Luxury" — no glassmorphism, light surfaces,
- * square photo frames, one gold CTA per view (nav "Become a Member" is it).
+ *   4. AboutClub — "Photography is our discipline. Bhopal is our subject."
+ *   5. TheClub — Four Ways To Participate
+ *   6. FeaturedActivity (conditional)
+ *   7. UpcomingActivities (3 rows from API)
+ *   8. PhotoSeries
+ *   9. SpecialProjects — Three flagship BCC initiatives
+ *  10. Membership — Three-step educational flow
+ *  11. OpenContest (conditional)
+ *  12. Journal preview
  *
  * MEM-006: only Basic, Student, Individual classes on this public page.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/ui/PageHero.astro';
 import SectionHeader from '../components/ui/SectionHeader.astro';
 import { getUpcomingActivities, getFeaturedActivities } from '../lib/services/activity.service';
+import { PROJECTS } from '../data/projects';
 
 const upcomingEvents = (await getUpcomingActivities()).slice(0, 3);
 const featuredActs = await getFeaturedActivities();
@@ -56,6 +60,8 @@ const activeContest = {
   submitUrl: "/contests/monsoon-reflections-2026/submit/",
   detailsUrl: "/contests/monsoon-reflections-2026/"
 };
+
+const specialProjects = Object.values(PROJECTS).slice(0, 3);
 ---
 
 <BaseLayout
@@ -64,47 +70,21 @@ const activeContest = {
 >
 
   <!-- ══════════════════════════════════════════════════
-       1. HERO SPOTLIGHT
-       Full-bleed member photo + museum label plate.
-       Committee-curated — no fixed cadence.
+       1. PAGE HERO
+       Hero Assignment Architecture · heroManager.location("home")
+       Supports Fixed Hero and Rotation Pool.
+       PageHero is presentation-only — no API calls inside.
        ══════════════════════════════════════════════════ -->
-  <section class="spotlight" aria-label="BCC Spotlight" style={`padding-top: var(--nav-h);`}>
-
-    <!-- Image -->
-    <div class="spotlight-img" id="spotlight-img" data-gsap="parallax-soft">
-      <!-- Fallback gradient — replaced by JS when API returns a photo -->
-      <div class="spotlight-fallback" id="spotlight-fallback" aria-hidden="true"></div>
-      <img
-        id="spotlight-photo"
-        src=""
-        alt=""
-        class="spotlight-photo"
-        loading="eager"
-        decoding="async"
-        aria-hidden="true"
-      />
-    </div>
-
-    <!-- Dark overlay -->
-    <div class="spotlight-overlay" aria-hidden="true"></div>
-
-    <!-- Museum label plate — bottom-left -->
-    <div class="spotlight-plate" id="spotlight-plate">
-      <div class="spotlight-plate__meta">
-        <span></span>BCC Spotlight
-      </div>
-      <h1 class="spotlight-plate__title" id="spotlight-title">
-        Light, Frame,&thinsp;Moment.
-      </h1>
-      <div class="spotlight-plate__credit" id="spotlight-credit"></div>
-      <div class="spotlight-plate__activity" id="spotlight-activity"></div>
-      <div class="spotlight-plate__ctas">
-        <a href="#gallery-wall" class="spotlight-btn-gold">Explore Gallery Wall</a>
-        <a href="#membership" class="spotlight-btn-outline">Become a Member</a>
-      </div>
-    </div>
-
-  </section>
+  <PageHero
+    variant="home"
+    eyebrow="BCC Spotlight"
+    title="Photography Is Our Discipline."
+    subtitle="Bhopal Camera Club is a community of photographers dedicated to the craft, the city, and each other. Join us and photograph the extraordinary city we call home."
+    primaryCtaText="Become a Member →"
+    primaryCtaHref="/join/"
+    secondaryCtaText="Browse the Gallery"
+    secondaryCtaHref="/showcase/"
+  />
 
 
   <!-- ══════════════════════════════════════════════════
@@ -188,7 +168,38 @@ const activeContest = {
 
 
   <!-- ══════════════════════════════════════════════════
-       4. THE CLUB
+       4. ABOUT BCC
+       "Photography is our discipline. Bhopal is our subject."
+       New in Ver2 — positioned after GalleryWall.
+       ══════════════════════════════════════════════════ -->
+  <section class="section about-club" id="about-club" aria-label="About Bhopal Camera Club">
+    <div class="container">
+      <div class="about-club__grid">
+
+        <!-- Left: editorial copy -->
+        <div class="about-club__copy">
+          <div class="about-club__kicker">About Bhopal Camera Club</div>
+          <h3 class="about-club__title">Photography is our discipline.<br/>Bhopal is our subject.</h3>
+          <p class="about-club__para">Bhopal Camera Club was founded in 2016 by a group of photographers who believed a camera club should do more than host contests. We wanted to build a genuine learning community — one where a beginner could walk beside an experienced photographer, where critique happened with generosity, and where the practice of photography was valued as much as any prize.</p>
+          <p class="about-club__para">Today, more than 340 members explore Bhopal's remarkable visual world together — its forts and lakes, wildlife corridors and monsoon skies. We organise monthly photowalks, host workshops with nationally recognised photographers, and exhibit member work at the city's cultural institutions. We are affiliated members of the Federation of Indian Photography, the only camera club in Central India with this recognition.</p>
+          <a href="/about/" class="about-club__link">Read More <span aria-hidden="true">→</span></a>
+        </div>
+
+        <!-- Right: community photograph -->
+        <div class="about-club__photo-col">
+          <div class="about-club__photo-placeholder" aria-hidden="true"></div>
+          <div class="about-club__caption-bar">
+            <div class="about-club__caption-text">BCC members · Photowalk at Manav Sangralaya · 2018<br/>Photograph from the club archive</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════
+       5. THE CLUB
        ══════════════════════════════════════════════════ -->
   <section class="section the-club" id="the-club" aria-label="The Club">
     <div class="container">
@@ -208,7 +219,7 @@ const activeContest = {
           <div class="club-card__body">
             <div class="club-card__kicker">Photowalks</div>
             <h4 class="club-card__title">Walk the city with us</h4>
-            <p class="club-card__desc">Monthly guided walks through Bhopal's heritage, lakes, and markets.</p>
+            <p class="club-card__desc">Monthly guided walks through Bhopal's heritage neighbourhoods, lakes, forests, and markets. Each photowalk is led by an experienced member who knows the light, the streets, and the stories. Open to all skill levels — the city is the classroom, the camera the only credential you need.</p>
             <div class="club-card__link">Explore Photowalks <span class="arrow">→</span></div>
           </div>
         </a>
@@ -221,7 +232,7 @@ const activeContest = {
           <div class="club-card__body">
             <div class="club-card__kicker">Photo Contests</div>
             <h4 class="club-card__title">Compete and be seen</h4>
-            <p class="club-card__desc">Theme-based competitions open to members. Jury-judged with exhibition prizes.</p>
+            <p class="club-card__desc">Theme-based photography competitions open to all members. Each contest is jury-judged by practising photographers, with selected work exhibited at club events and cultural venues. Entry is free with active membership. Categories change each season; the standard does not.</p>
             <div class="club-card__link">View Contests <span class="arrow">→</span></div>
           </div>
         </a>
@@ -234,7 +245,7 @@ const activeContest = {
           <div class="club-card__body">
             <div class="club-card__kicker">Exhibitions</div>
             <h4 class="club-card__title">Print and exhibit your work</h4>
-            <p class="club-card__desc">Annual and themed exhibitions at Bhopal's cultural venues.</p>
+            <p class="club-card__desc">Annual and themed exhibitions at Bhopal's cultural venues — curated from member submissions and mounted with full production support. The club handles printing, framing, and hanging. For many members, their first public exhibition begins here.</p>
             <div class="club-card__link">See Exhibitions <span class="arrow">→</span></div>
           </div>
         </a>
@@ -390,7 +401,45 @@ const activeContest = {
 
 
   <!-- ══════════════════════════════════════════════════
-       8. MEMBERSHIP
+       9. SPECIAL PROJECTS
+       Three flagship BCC long-running initiatives.
+       Static from projects.ts registry — /projects/[slug]
+       ══════════════════════════════════════════════════ -->
+  <section class="section" id="special-projects" aria-label="BCC Special Projects">
+    <div class="container">
+
+      <div class="special-projects-header">
+        <div>
+          <div class="special-projects-header__kicker">Special Projects</div>
+          <h3 class="special-projects-header__title">BCC Special Projects</h3>
+        </div>
+        <a href="/projects/" class="special-projects-header__all-link">All Projects →</a>
+      </div>
+
+      <div class="special-projects-grid">
+        {specialProjects.map((project) => (
+          <a href={`/projects/${project.slug}/`} class="sp-card">
+            <div class="sp-card__img-wrap">
+              {project.heroImage && !project.heroImage.startsWith('/images/')
+                ? <img class="sp-card__img" src={project.heroImage} alt={project.title} loading="lazy" decoding="async" />
+                : <div class="sp-card__img-placeholder" aria-hidden="true"></div>
+              }
+            </div>
+            <div class="sp-card__body">
+              <h4 class="sp-card__title">{project.title}</h4>
+              <p class="sp-card__desc">{project.description}</p>
+              <span class="sp-card__link">View Project <span aria-hidden="true">→</span></span>
+            </div>
+          </a>
+        ))}
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════
+       10. MEMBERSHIP
        ══════════════════════════════════════════════════ -->
   <section class="section" id="membership" aria-label="Membership tiers">
     <div class="container">
@@ -561,138 +610,205 @@ const activeContest = {
 
 
 <style>
-/* ── Spotlight hero ── */
-.spotlight {
-  position: relative;
-  height: 580px;
-  overflow: hidden;
-  background: var(--surface-1);
+/* ── About BCC ── */
+.about-club {
+  background: var(--surface-0);
 }
-
-.spotlight-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: -60px;
-  z-index: 0;
-}
-.spotlight-fallback {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(135deg, #1A1816 0px, #1A1816 32px, #1E1C1A 32px, #1E1C1A 64px);
-}
-.spotlight-photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-.spotlight-photo.loaded { opacity: 1; }
-
-.spotlight-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(180deg, rgba(20,18,16,0.12) 0%, rgba(20,18,16,0) 35%, rgba(20,18,16,0.5) 100%);
-}
-
-.spotlight-plate {
-  position: absolute;
-  left: 48px;
-  bottom: 48px;
-  z-index: 10;
-  max-width: 420px;
-  background: var(--nav-bg-rest);
+.about-club__grid {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
   border: 1px solid var(--hairline);
-  box-shadow: 0 24px 64px rgba(20, 18, 16, 0.22);
-  padding: 32px 36px;
-  border-radius: var(--r-0);
+  min-height: 380px;
+  overflow: hidden;
+}
+.about-club__copy {
+  padding: 56px 64px;
+  background: var(--surface-0);
+  border-right: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
-  color: var(--ink-900);
+  justify-content: center;
 }
-.spotlight-plate__meta {
-  font-size: 10px;
+.about-club__kicker {
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold-600);
   font-weight: 600;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: auto;
+  margin-bottom: 18px;
 }
-.spotlight-plate__meta span {
-  display: block;
-  width: 20px;
-  height: 1px;
-  background: var(--gold-light);
-}
-.spotlight-plate__title {
+.about-club__title {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   color: var(--ink-900);
+  margin-bottom: 22px;
+}
+.about-club__para {
+  font-size: 15px;
+  line-height: 1.85;
+  color: #37322C;
+  font-weight: 300;
+  text-wrap: pretty;
+  margin-bottom: 18px;
+}
+.about-club__para:last-of-type {
+  margin-bottom: 28px;
+}
+.about-club__link {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold-600);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(168, 132, 60, 0.4);
+  padding-bottom: 3px;
+  width: fit-content;
+}
+.about-club__link:hover {
+  border-bottom-color: var(--gold-600);
+}
+.about-club__photo-col {
+  position: relative;
+  background: #1A1816;
+  overflow: hidden;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.about-club__photo-placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, #1A1816 0px, #1A1816 32px, #1E1C1A 32px, #1E1C1A 64px);
+}
+.about-club__caption-bar {
+  position: relative;
+  z-index: 1;
+  background: rgba(20, 18, 16, 0.85);
+  padding: 14px 20px;
+}
+.about-club__caption-text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.7;
+}
+
+/* ── Special Projects ── */
+.special-projects-header {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  padding: 22px 32px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.special-projects-header__kicker {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: 600;
   margin-bottom: 10px;
 }
-.spotlight-plate__credit {
-  font-size: 13px;
-  font-weight: 500;
+.special-projects-header__title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   color: var(--ink-900);
-  margin-bottom: 4px;
-  font-family: var(--font-body);
-  min-height: auto;
+  margin: 0;
 }
-.spotlight-plate__activity {
-  font-size: 12px;
-  color: var(--ink-400);
-  font-family: var(--font-body);
-}
-.spotlight-plate__ctas {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  flex-wrap: wrap;
-}
-
-/* Gold CTA button matching V6 style exactly */
-.spotlight-btn-gold {
+.special-projects-header__all-link {
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--ink-900) !important;
-  background: var(--gold-gradient);
-  padding: 10px 18px;
-  display: inline-block;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  border-bottom: 1px solid var(--gold-500);
+  padding-bottom: 2px;
   text-decoration: none;
-  border: none;
-  transition: opacity var(--m-fast);
 }
-.spotlight-btn-gold:hover {
-  opacity: 0.9;
+.special-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--hairline);
+  margin-bottom: 14px;
+  background: var(--surface-0);
 }
-
-/* Outline CTA button matching V6 style exactly */
-.spotlight-btn-outline {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ink-900) !important;
-  border: 1px solid var(--gold-light);
-  padding: 9px 16px;
-  display: inline-block;
+.sp-card {
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
-  background: transparent;
+  color: inherit;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface-0);
   transition: background var(--m-fast);
 }
-.spotlight-btn-outline:hover {
-  background: rgba(201, 169, 97, 0.08);
+.sp-card:last-child { border-right: none; }
+.sp-card:hover { background: var(--surface-1); }
+.sp-card__img-wrap {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  background: #1A1816;
+}
+.sp-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--m-image);
+}
+.sp-card:hover .sp-card__img { transform: scale(1.03); }
+.sp-card__img-placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, #1A1816 0, #1A1816 14px, #1E1C1A 14px, #1E1C1A 28px);
+}
+.sp-card__body {
+  padding: 20px 22px 26px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.sp-card__title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.sp-card__desc {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--ink-600);
+  margin-bottom: 18px;
+  flex: 1;
+  text-wrap: pretty;
+}
+.sp-card__link {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold-600);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(168, 132, 60, 0.4);
+  padding-bottom: 2px;
+  width: fit-content;
 }
 
 /* ── Stat band ── */
@@ -1761,6 +1877,30 @@ const activeContest = {
   }
   .gallery-wall-header { flex-direction: column; align-items: flex-start; }
   .flow-arrow  { display: none; }
+
+  /* About BCC tablet */
+  .about-club__grid {
+    grid-template-columns: 1fr;
+  }
+  .about-club__copy {
+    padding: 40px 32px;
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .about-club__photo-col {
+    min-height: 240px;
+  }
+
+  /* Special Projects tablet */
+  .special-projects-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sp-card:nth-child(2) { border-right: none; }
+  .sp-card:nth-child(3) {
+    border-right: none;
+    border-top: 1px solid var(--hairline);
+    grid-column: span 2;
+  }
 }
 @media (max-width: 640px) {
 }
@@ -1918,6 +2058,15 @@ const activeContest = {
   }
 }
 @media (max-width: 480px) {
+  /* About BCC mobile */
+  .about-club__copy { padding: 32px 20px; }
+  .about-club__photo-col { display: none; }
+
+  /* Special Projects mobile */
+  .special-projects-grid { grid-template-columns: 1fr; }
+  .sp-card { border-right: none !important; border-top: 1px solid var(--hairline); grid-column: unset !important; }
+  .sp-card:first-child { border-top: none; }
+
   .the-club-grid {
     grid-template-columns: 1fr;
   }
@@ -1954,69 +2103,18 @@ const activeContest = {
 <script>
   /**
    * Home page scripts:
-   * 1. Spotlight hero — load from /api/v1/gallery/feed (latest photo)
+   * 1. PageHero — Hero Assignment Architecture via loadHomeHero()
    * 2. Gallery wall — fetch + justified layout
-   * 3. Events — fetch upcoming 3
+   * 3. Club cards — dynamic genre photo backgrounds
    * 4. Journal — fetch latest 3 posts
-   * 5. Photo band — load a featured photo
    */
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { loadHomeHero } from '../lib/hero-loader';
   gsap.registerPlugin(ScrollTrigger);
 
-  /* ── 1. Spotlight — admin-curated editorial hero ── */
-  (async () => {
-    let photoUrl = '';
-    let photoTitle = 'Light, Frame, Moment.';
-    let photoCredit = '';
-
-    // Try admin-curated spotlight first
-    let usedSpotlight = false;
-    try {
-      const res = await fetch('/api/v1/gallery/spotlight');
-      if (res.ok) {
-        const p = await res.json();
-        photoUrl      = p.urls?.original ?? p.urls?.medium ?? '';
-        photoTitle    = p.title_override ?? p.title ?? 'Light, Frame, Moment.';
-        photoCredit   = p.credit_override ?? (p.photographer ? `Photo by ${p.photographer.name}` : '');
-        usedSpotlight = true;
-      }
-    } catch { /* fall through to feed */ }
-
-    // Fallback: most recent public photo
-    if (!usedSpotlight) {
-      try {
-        const res = await fetch('/api/v1/gallery/feed?limit=1');
-        if (res.ok) {
-          const { photos } = await res.json();
-          const p = Array.isArray(photos) ? photos[0] : null;
-          if (p) {
-            photoUrl    = p.urls?.original ?? p.urls?.medium ?? '';
-            photoTitle  = p.title ?? 'Light, Frame, Moment.';
-            photoCredit = p.photographer ? `Photo by ${p.photographer.name}` : '';
-          }
-        }
-      } catch { /* keep defaults */ }
-    }
-
-    if (photoUrl) {
-      const img = document.getElementById('spotlight-photo') as HTMLImageElement | null;
-      if (img) {
-        img.src = photoUrl;
-        img.alt = `${photoTitle}${photoCredit ? ' · ' + photoCredit : ''} · Bhopal Camera Club`;
-        img.onload = () => img.classList.add('loaded');
-      }
-    }
-
-    const titleEl = document.getElementById('spotlight-title');
-    if (titleEl && photoTitle !== 'Light, Frame, Moment.') titleEl.textContent = photoTitle;
-
-    const creditEl = document.getElementById('spotlight-credit');
-    if (creditEl) creditEl.textContent = photoCredit;
-
-    const activity = document.getElementById('spotlight-activity');
-    if (activity) activity.style.display = 'none';
-  })();
+  /* ── 1. PageHero — Hero Assignment Architecture ── */
+  loadHomeHero();
 
   /* ── 1b. Club cards — dynamic genre photo backgrounds ── */
   (() => {

@@ -17,16 +17,22 @@ interface Props {
   title: string;
   subtitle: string;
   meta?: string;
-  
+
   // Dynamic or static hero image & attribution
   heroImage?: string;
   heroCredit?: string;
-  
+
   // Stats band (optional, for About style pages)
   stats?: StatItem[];
-  
-  // Layout variants: 'standard' | 'overlay' | 'project'
-  variant?: 'standard' | 'overlay' | 'project';
+
+  // Layout variants: 'standard' | 'overlay' | 'project' | 'home'
+  variant?: 'standard' | 'overlay' | 'project' | 'home';
+
+  // Home variant CTAs
+  primaryCtaText?: string;
+  primaryCtaHref?: string;
+  secondaryCtaText?: string;
+  secondaryCtaHref?: string;
 }
 
 const {
@@ -37,7 +43,11 @@ const {
   heroImage,
   heroCredit,
   stats,
-  variant = 'standard'
+  variant = 'standard',
+  primaryCtaText = 'Become a Member →',
+  primaryCtaHref = '/join/',
+  secondaryCtaText = 'Browse the Gallery',
+  secondaryCtaHref = '/showcase/',
 } = Astro.props;
 ---
 
@@ -122,6 +132,42 @@ const {
   </div>
 )}
 
+{variant === 'home' && (
+  <div class="home-hero" id="page-hero-container">
+    <div class="container">
+      <div class="home-hero__frame" data-gsap="image-reveal">
+        <div class="home-hero__placeholder" id="home-hero-fallback" aria-hidden="true"></div>
+        <img
+          id="home-hero-img"
+          src=""
+          alt=""
+          class="home-hero__photo"
+          loading="eager"
+          decoding="async"
+          aria-hidden="true"
+        />
+        <div class="home-hero__gradient" aria-hidden="true"></div>
+        <div class="home-hero__overlay">
+          <div class="home-hero__kicker" id="home-hero-kicker">
+            <span class="home-hero__kicker-line" aria-hidden="true"></span>
+            <span id="home-hero-kicker-text">{eyebrow}</span>
+          </div>
+          <h1 class="home-hero__title">{title}</h1>
+          <p class="home-hero__copy">{subtitle}</p>
+          <div class="home-hero__ctas">
+            <a href={primaryCtaHref} class="home-hero__cta-primary">{primaryCtaText}</a>
+            <a href={secondaryCtaHref} class="home-hero__cta-secondary">{secondaryCtaText}</a>
+          </div>
+        </div>
+        <div class="home-hero__credit" id="home-hero-credit" style="display: none;">
+          <span class="home-hero__credit-label">Photo by</span>
+          <span class="home-hero__credit-name" id="home-hero-credit-name"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 {variant === 'standard' && (
   <div class="page-hero surface-white" id="page-hero-container">
     <div class="container">
@@ -148,6 +194,160 @@ const {
 )}
 
 <style>
+/* ── Home Hero (variant="home") ── */
+.home-hero {
+  padding-top: var(--nav-h);
+  background: var(--surface-1);
+}
+.home-hero__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  background: var(--dark-100);
+  margin-bottom: 0;
+}
+.home-hero__placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    #1A1816 0px, #1A1816 32px,
+    #1E1C1A 32px, #1E1C1A 64px
+  );
+}
+.home-hero__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.home-hero__photo.loaded { opacity: 1; }
+.home-hero__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 18, 16, 0.12) 0%,
+    rgba(20, 18, 16, 0) 28%,
+    rgba(20, 18, 16, 0) 42%,
+    rgba(20, 18, 16, 0.82) 100%
+  );
+  pointer-events: none;
+}
+.home-hero__overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 48px 56px 44px;
+}
+.home-hero__kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.home-hero__kicker-line {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--gold-light);
+  flex-shrink: 0;
+}
+.home-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+  line-height: 1.0;
+  margin-bottom: 16px;
+  text-wrap: pretty;
+}
+.home-hero__copy {
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 520px;
+  font-weight: 300;
+  margin-bottom: 28px;
+}
+.home-hero__ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.home-hero__cta-primary {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-900) !important;
+  background: var(--gold-gradient);
+  padding: 13px 30px;
+  display: inline-block;
+  border-radius: 2px;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(168, 132, 60, 0.30);
+  transition: opacity var(--m-fast);
+}
+.home-hero__cta-primary:hover { opacity: 0.9; }
+.home-hero__cta-secondary {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 12px 26px;
+  display: inline-block;
+  border-radius: 2px;
+  text-decoration: none;
+  transition: background var(--m-fast);
+}
+.home-hero__cta-secondary:hover { background: rgba(255, 255, 255, 0.08); }
+.home-hero__credit {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.home-hero__credit-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.home-hero__credit-name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.06em;
+}
+@media (max-width: 900px) {
+  .home-hero__overlay { padding: 36px 32px 28px; }
+  .home-hero__copy { font-size: 15px; max-width: 100%; }
+}
+@media (max-width: 768px) {
+  .home-hero__overlay { padding: 28px 24px 22px; }
+}
+@media (max-width: 480px) {
+  .home-hero__overlay { padding: 20px 16px 18px; }
+  .home-hero__copy { display: none; }
+  .home-hero__cta-secondary { display: none; }
+}
+
 /* Standard PageHero Styles */
 .page-hero {
   padding-top: calc(var(--nav-h) + var(--s-6));

@@ -19,7 +19,6 @@ export interface ProfileEntry {
   defaultAvatar?: string;
   defaultBio?: string;
   defaultProfileHref?: string;
-  bioOverride?: string;
   contribution?: string;
 }
 
@@ -107,9 +106,8 @@ export const mentors: ProfileEntry[] = [
     username: 'kshitijpatle',
     role: 'BCC Mentor',
     since: '2016',
-    bioOverride: `Kshitij is the go-to advisor for photographers across the club—whether a youngster, a new member, or a seasoned enthusiast. Always approachable and generous with his time, he is known for patiently guiding members both in the field and during club activities.
-
-Members regularly seek his advice on equipment selection, birding practices, fieldcraft and composition techniques. He has conducted numerous indoor sessions, field workshops and mentoring walks on a wide range of photography topics, making him one of BCC's most trusted mentors and a key contributor to its learning culture.`,
+    defaultBio: 'Kshitij is one of those mentors whose guidance extends far beyond the technical aspects of photography. Equally comfortable mentoring a youngster picking up a camera for the first time or an experienced member refining their craft, he is known for his practical, approachable teaching style and his willingness to share knowledge without hesitation. His interests in bird photography, nature observation and field techniques have made him a trusted resource for photographers across the club.',
+    contribution: 'Has conducted numerous indoor workshops, field sessions and mentoring walks covering equipment selection, birding practices, composition and practical shooting techniques. His patient guidance and hands-on approach have helped members build confidence in the field, making him one of BCC\'s most dependable mentors and an important contributor to the club\'s learning culture.',
     defaultName: 'Kshitij Patle',
     defaultAvatar: ikAvatarUrl('uploads/avatars/1781515190910-cb635096.jpg', 192),
     defaultProfileHref: '/photographers/kshitijpatle/',

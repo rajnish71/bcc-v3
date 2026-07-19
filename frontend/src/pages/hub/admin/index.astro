@@ -27,46 +27,44 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       <div id="pending-list" class="pending-list" hidden></div>
     </section>
 
-    <!-- ② SPOTLIGHT MANAGEMENT ─────────────────────────────────────────── -->
-    <section class="admin-section" id="section-spotlight">
-      <div class="section-kicker"><span class="kicker-rule"></span>Homepage</div>
-      <h2 class="section-title">Spotlight Photo</h2>
+    <!-- ② EDITORIAL HERO MANAGER ─────────────────────────────────────────── -->
+    <section class="admin-section" id="section-hero-manager">
+      <div class="section-kicker"><span class="kicker-rule"></span>Homepage & Pages</div>
+      <h2 class="section-title">Editorial Hero Manager</h2>
 
-      <!-- Current spotlight preview -->
-      <div id="spotlight-current" class="spotlight-current" hidden>
-        <div class="spotlight-label">Current spotlight</div>
-        <div class="spotlight-preview-row">
-          <img id="spotlight-preview-img" class="spotlight-preview-img" src="" alt="" />
-          <div class="spotlight-preview-info">
-            <div class="spotlight-preview-title" id="spotlight-preview-title"></div>
-            <div class="spotlight-preview-credit" id="spotlight-preview-credit"></div>
-          </div>
+      <!-- Filters Bar -->
+      <div class="hero-filters-bar">
+        <div class="filter-row-top">
+          <input type="text" id="hero-search-photographer" class="search-input" placeholder="Search photographer..." style="flex:1;" />
+          <input type="text" id="hero-search-title" class="search-input" placeholder="Search photo title..." style="flex:1;" />
+          <select id="hero-filter-project" class="search-input select-filter" style="flex:1;">
+            <option value="">All Projects</option>
+          </select>
+          <select id="hero-filter-tag" class="search-input select-filter" style="flex:1;">
+            <option value="">All Tags</option>
+          </select>
+        </div>
+        <div class="filter-row-bottom">
+          <select id="hero-filter-usage" class="search-input select-filter" style="flex:1;">
+            <option value="">All Usage Status</option>
+            <option value="unused">Unused Hero Images</option>
+            <option value="assigned">Already Assigned</option>
+            <option value="fixed">Fixed Heroes</option>
+            <option value="pool">Rotation Pool</option>
+          </select>
+          <select id="hero-sort" class="search-input select-filter" style="flex:1;">
+            <option value="newest">Newest Upload</option>
+            <option value="oldest">Oldest Upload</option>
+          </select>
         </div>
       </div>
-      <div id="spotlight-none" class="state-empty" hidden>No spotlight set — homepage falls back to latest gallery photo.</div>
 
-      <!-- Photo search -->
-      <form class="search-form" id="spotlight-search-form" autocomplete="off">
-        <input
-          type="text"
-          id="spotlight-search-input"
-          class="search-input"
-          placeholder="Search public photos by title or photographer…"
-          minlength="2"
-          required
-        />
-        <button type="submit" class="btn-search">Search</button>
-      </form>
+      <div id="hero-manager-loading" class="state-loading">Loading eligible photos…</div>
+      <div id="hero-manager-empty" class="state-empty" hidden>No eligible 16:5 photographs found.</div>
+      <div id="hero-manager-error" class="state-error" hidden></div>
 
-      <div id="spotlight-search-loading" class="state-loading" hidden>Searching…</div>
-      <div id="spotlight-search-empty"   class="state-empty"   hidden>No photos found.</div>
-      <div id="spotlight-search-error"   class="state-error"   hidden></div>
-
-      <!-- Photo results grid -->
-      <div id="spotlight-results" class="spotlight-results" hidden></div>
-
-      <!-- Set confirmation -->
-      <div id="spotlight-set-feedback" class="reset-feedback" hidden></div>
+      <!-- Single-Column Editorial Photo Browser -->
+      <div id="hero-photo-list" class="hero-photo-list" hidden></div>
     </section>
 
     <!-- ③ USER IDENTITY & MEMBERSHIP ──────────────────────────────── -->
@@ -128,6 +126,75 @@ import HubLayout from '../../../layouts/HubLayout.astro';
         <div id="identity-feedback" class="reset-feedback" hidden></div>
       </div>
     </section>
+
+    <!-- Assign Hero Modal -->
+    <div id="hero-assign-modal" class="admin-modal" hidden>
+      <div class="admin-modal__overlay" id="hero-assign-modal-overlay"></div>
+      <div class="admin-modal__content">
+        <div class="admin-modal__header">
+          <h3 class="admin-modal__title">Assign Hero Image</h3>
+          <button type="button" class="admin-modal__close" id="hero-assign-modal-close">&times;</button>
+        </div>
+        <div class="admin-modal__body">
+          <div class="hero-modal-photo-preview-wrap">
+            <img id="hero-modal-photo-img" class="hero-modal-photo-img" src="" alt="" />
+            <div class="hero-modal-photo-meta">
+              <div class="hero-modal-photo-title" id="hero-modal-photo-title"></div>
+              <div class="hero-modal-photo-credit" id="hero-modal-photo-credit"></div>
+              <div class="hero-modal-photo-dims" id="hero-modal-photo-dims"></div>
+            </div>
+          </div>
+
+          <div class="hero-destinations-list-header">Select Hero Destinations</div>
+          <div id="hero-destinations-container" class="hero-destinations-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        <div class="admin-modal__footer">
+          <button type="button" class="btn btn-outline" id="hero-assign-cancel">Cancel</button>
+          <button type="button" class="btn btn-dark" id="hero-assign-save" style="margin-left: 10px;">Save Assignments</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Replace Modal -->
+    <div id="hero-replace-modal" class="admin-modal admin-modal--confirm" hidden>
+      <div class="admin-modal__overlay" id="hero-replace-modal-overlay"></div>
+      <div class="admin-modal__content admin-modal__content--confirm">
+        <div class="admin-modal__header">
+          <h3 class="admin-modal__title">Replace Fixed Hero?</h3>
+        </div>
+        <div class="admin-modal__body">
+          <p class="replace-warning-text"><strong id="replace-destination-label">About</strong> already has a Fixed Hero. Overwrite assignment?</p>
+          
+          <div class="hero-replace-preview-grid">
+            <div class="replace-preview-column">
+              <div class="replace-preview-header">Current Hero</div>
+              <div class="replace-preview-card">
+                <img id="replace-current-img" class="replace-preview-img" src="" alt="Current Hero" />
+                <div class="replace-preview-title" id="replace-current-title"></div>
+                <div class="replace-preview-credit" id="replace-current-credit"></div>
+              </div>
+            </div>
+            
+            <div class="replace-preview-divider" aria-hidden="true">&rarr;</div>
+            
+            <div class="replace-preview-column">
+              <div class="replace-preview-header">New Hero</div>
+              <div class="replace-preview-card">
+                <img id="replace-new-img" class="replace-preview-img" src="" alt="New Hero" />
+                <div class="replace-preview-title" id="replace-new-title"></div>
+                <div class="replace-preview-credit" id="replace-new-credit"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="admin-modal__footer">
+          <button type="button" class="btn btn-outline" id="hero-replace-cancel">Cancel</button>
+          <button type="button" class="btn btn-dark" id="hero-replace-confirm" style="margin-left: 10px;">Replace</button>
+        </div>
+      </div>
+    </div>
 
   </div>
 
@@ -480,65 +547,309 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .btn-identity-action:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-identity-action:hover:not(:disabled) { opacity: 0.8; }
 
-/* ─── Spotlight management ─────────────────────────────────── */
-.spotlight-current {
+/* ─── Editorial Hero Manager ────────────────────────────────── */
+.hero-filters-bar {
   background: var(--surface-1);
   border: 1px solid var(--hairline);
-  padding: 14px 16px;
-  max-width: 560px;
-}
-.spotlight-label {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--gold-600);
-  margin-bottom: 10px;
-}
-.spotlight-preview-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-.spotlight-preview-img {
-  width: 96px;
-  height: 64px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid var(--hairline);
-}
-.spotlight-preview-info {
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
-.spotlight-preview-title {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
+.filter-row-top,
+.filter-row-bottom {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.select-filter {
+  height: 38px;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-0);
   color: var(--ink-900);
-}
-.spotlight-preview-credit {
   font-family: var(--font-body);
+  font-size: 13px;
+  padding: 0 8px;
+  outline: none;
+  cursor: pointer;
+}
+.hero-photo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.hero-photo-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.hero-photo-card__preview {
+  width: 100%;
+  border: 1px solid var(--hairline-soft);
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 16/5;
+  background: var(--surface-2);
+}
+.hero-photo-card__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hero-photo-card__details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hero-photo-card__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0;
+}
+.hero-photo-card__photographer {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-600);
+  font-weight: 500;
+}
+.hero-photo-card__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-400);
+  letter-spacing: var(--ls-mono);
+}
+.meta-dot {
+  margin: 0 4px;
+}
+.hero-photo-card__usage {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+.usage-none-text {
   font-size: 12px;
   color: var(--ink-400);
+  font-style: italic;
 }
-.spotlight-results {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
-  max-width: 640px;
+.usage-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: var(--r-0);
+  font-weight: 600;
+  letter-spacing: var(--ls-mono);
 }
-.spotlight-photo-card {
-  position: relative;
+.usage-badge--fixed {
+  background: rgba(201, 169, 97, 0.12);
+  color: var(--gold-600);
+  border: 1px solid rgba(201, 169, 97, 0.3);
+}
+.usage-badge--pool {
+  background: rgba(20, 18, 16, 0.05);
+  color: var(--ink-600);
+  border: 1px solid var(--hairline);
+}
+.btn-assign-hero {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: 1px solid var(--ink-900);
+  background: var(--surface-0);
+  color: var(--ink-900);
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: border-color var(--m-fast);
+  transition: background var(--m-fast), color var(--m-fast);
+  width: fit-content;
 }
-.spotlight-photo-card:hover { border-color: var(--gold-500); }
-.spotlight-photo-card img {
-  display: block;
+.btn-assign-hero:hover {
+  background: var(--ink-900);
+  color: var(--surface-0);
+}
+
+/* Modals */
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.admin-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 18, 16, 0.6);
+  backdrop-filter: blur(4px);
+}
+.admin-modal__content {
+  position: relative;
+  z-index: 1;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  width: 100%;
+  max-width: 580px;
+  box-shadow: var(--e-4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 90vh;
+}
+.admin-modal__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.admin-modal__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0;
+}
+.admin-modal__close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--ink-400);
+  cursor: pointer;
+  transition: color var(--m-fast);
+  line-height: 1;
+}
+.admin-modal__close:hover {
+  color: var(--ink-900);
+}
+.admin-modal__body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.admin-modal__footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  justify-content: flex-end;
+  background: var(--surface-1);
+}
+.hero-modal-photo-preview-wrap {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+}
+.hero-modal-photo-img {
+  width: 120px;
+  aspect-ratio: 16/5;
+  object-fit: cover;
+  border: 1px solid var(--hairline-soft);
+  background: var(--surface-2);
+}
+.hero-modal-photo-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  justify-content: center;
+}
+.hero-modal-photo-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.hero-modal-photo-credit {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-600);
+}
+.hero-modal-photo-dims {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+}
+.hero-destinations-list-header {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-900);
+  border-bottom: 1px solid var(--hairline-strong);
+  padding-bottom: 8px;
+  margin-top: 8px;
+}
+.hero-destinations-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.hero-dest-item {
+  border-bottom: 1px solid var(--hairline-soft);
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hero-dest-item:last-child {
+  border-bottom: none;
+}
+.hero-dest-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-dest-label-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.hero-dest-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-900);
+  cursor: pointer;
+}
+.hero-dest-desc {
+  font-size: 11px;
+  color: var(--ink-400);
+  line-height: 1.4;
+}
+.hero-dest-modes {
+  display: flex;
+  gap: 16px;
+  margin-left: 26px;
+  background: var(--surface-1);
+  padding: 6px 12px;
+  border-radius: var(--r-0);
+  font-size: 12px;
+}
+.hero-dest-modes label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+/* Confirm modal side by side */
+.admin-modal--confirm {
+  background: rgba(20, 18, 16, 0.3);
+  z-index: 2010;
+}
+.admin-modal__content--confirm {
+  max-width: 640px;
   width: 100%;
   height: 108px;
   object-fit: cover;
@@ -872,132 +1183,423 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   });
 
   /* ════════════════════════════════════════════════════════════
-     SECTION 3 — SPOTLIGHT MANAGEMENT
+     SECTION 3 — EDITORIAL HERO MANAGER
   ════════════════════════════════════════════════════════════ */
 
-  async function loadCurrentSpotlight() {
-    const currentEl = document.getElementById('spotlight-current');
-    const noneEl    = document.getElementById('spotlight-none');
+  let eligiblePhotos = [];
+  let destinations = [];
+  let selectedPhotoUuid = '';
+  let pendingSaveDestinations = [];
+  let pendingReplacements = [];
+  let currentReplacementIndex = 0;
+
+  async function loadHeroManagerData() {
+    const loadingEl = document.getElementById('hero-manager-loading');
+    const emptyEl   = document.getElementById('hero-manager-empty');
+    const errorEl   = document.getElementById('hero-manager-error');
+    const listEl    = document.getElementById('hero-photo-list');
+
+    show(loadingEl); hide(emptyEl); hide(errorEl); hide(listEl);
+
     try {
-      const res = await fetch(`${API}/gallery/spotlight`);
-      if (res.ok) {
-        const p = await res.json() as any;
-        const img   = document.getElementById('spotlight-preview-img')  as HTMLImageElement | null;
-        const title = document.getElementById('spotlight-preview-title') as HTMLElement | null;
-        const credit= document.getElementById('spotlight-preview-credit')as HTMLElement | null;
-        if (img)    img.src         = p.urls?.medium ?? p.urls?.thumbnail ?? '';
-        if (img)    img.alt         = p.title ?? 'Spotlight';
-        if (title)  title.textContent  = p.title_override ?? p.title ?? '—';
-        if (credit) credit.textContent = p.credit_override ?? (p.photographer ? `Photo by ${p.photographer.name}` : '—');
-        show(currentEl);
-      } else {
-        show(noneEl);
+      if (destinations.length === 0) {
+        const destRes = await fetch(`${API}/gallery/hero/destinations`);
+        if (destRes.ok) {
+          destinations = await destRes.json();
+        }
       }
-    } catch {
-      show(noneEl);
+
+      const res = await fetch(`${API}/gallery/hero/eligible`, { headers: authHeaders() });
+      hide(loadingEl);
+      if (!res.ok) {
+        if (errorEl) {
+          errorEl.textContent = `Error loading eligible photos: ${res.status}`;
+          show(errorEl);
+        }
+        return;
+      }
+      eligiblePhotos = await res.json();
+      
+      renderEligiblePhotos();
+      populateFilters();
+    } catch (e) {
+      hide(loadingEl);
+      if (errorEl) {
+        errorEl.textContent = 'Network error loading eligible photos.';
+        show(errorEl);
+      }
+      console.error(e);
     }
   }
 
-  const spotlightSearchForm    = document.getElementById('spotlight-search-form')    as HTMLFormElement | null;
-  const spotlightSearchInput   = document.getElementById('spotlight-search-input')   as HTMLInputElement | null;
-  const spotlightSearchLoading = document.getElementById('spotlight-search-loading');
-  const spotlightSearchEmpty   = document.getElementById('spotlight-search-empty');
-  const spotlightSearchError   = document.getElementById('spotlight-search-error');
-  const spotlightResults       = document.getElementById('spotlight-results');
-  const spotlightFeedback      = document.getElementById('spotlight-set-feedback');
+  function populateFilters() {
+    const projectSelect = document.getElementById('hero-filter-project') as HTMLSelectElement | null;
+    const tagSelect     = document.getElementById('hero-filter-tag') as HTMLSelectElement | null;
 
-  spotlightSearchForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const q = spotlightSearchInput?.value.trim() ?? '';
-    if (q.length < 2) return;
+    if (!projectSelect || !tagSelect) return;
 
-    hide(spotlightSearchEmpty); hide(spotlightSearchError); hide(spotlightResults);
-    if (spotlightResults) spotlightResults.innerHTML = '';
-    show(spotlightSearchLoading);
+    projectSelect.innerHTML = '<option value="">All Projects</option>';
+    tagSelect.innerHTML     = '<option value="">All Tags</option>';
 
-    try {
-      // Search public feed with the query as a tag/title hint
-      const res = await fetch(`${API}/gallery/feed?limit=20&shuffle=false`, { headers: authHeaders() });
-      hide(spotlightSearchLoading);
-      if (!res.ok) {
-        if (spotlightSearchError) { spotlightSearchError.textContent = `Error ${res.status}`; show(spotlightSearchError); }
-        return;
+    const projects = new Set<string>();
+    const tags = new Set<string>();
+
+    eligiblePhotos.forEach(p => {
+      (p.tags || []).forEach((t: any) => {
+        if (t.category === 'PROJECT') {
+          projects.add(JSON.stringify({ key: t.tag_key, name: t.display_name }));
+        } else {
+          tags.add(JSON.stringify({ key: t.tag_key, name: t.display_name }));
+        }
+      });
+    });
+
+    Array.from(projects).map(item => JSON.parse(item)).sort((a,b) => a.name.localeCompare(b.name)).forEach(proj => {
+      const opt = document.createElement('option');
+      opt.value = proj.key;
+      opt.textContent = proj.name;
+      projectSelect.appendChild(opt);
+    });
+
+    Array.from(tags).map(item => JSON.parse(item)).sort((a,b) => a.name.localeCompare(b.name)).forEach(tag => {
+      const opt = document.createElement('option');
+      opt.value = tag.key;
+      opt.textContent = tag.name;
+      tagSelect.appendChild(opt);
+    });
+  }
+
+  function renderEligiblePhotos() {
+    const listEl = document.getElementById('hero-photo-list');
+    const emptyEl = document.getElementById('hero-manager-empty');
+    if (!listEl) return;
+
+    const qPhotographer = (document.getElementById('hero-search-photographer') as HTMLInputElement | null)?.value.trim().toLowerCase() ?? '';
+    const qTitle = (document.getElementById('hero-search-title') as HTMLInputElement | null)?.value.trim().toLowerCase() ?? '';
+    const fProject = (document.getElementById('hero-filter-project') as HTMLSelectElement | null)?.value ?? '';
+    const fTag = (document.getElementById('hero-filter-tag') as HTMLSelectElement | null)?.value ?? '';
+    const fUsage = (document.getElementById('hero-filter-usage') as HTMLSelectElement | null)?.value ?? '';
+    const sortVal = (document.getElementById('hero-sort') as HTMLSelectElement | null)?.value ?? 'newest';
+
+    let filtered = [...eligiblePhotos];
+
+    if (qPhotographer) {
+      filtered = filtered.filter(p => (p.photographer?.name ?? '').toLowerCase().includes(qPhotographer));
+    }
+    if (qTitle) {
+      filtered = filtered.filter(p => (p.title ?? '').toLowerCase().includes(qTitle));
+    }
+    if (fProject) {
+      filtered = filtered.filter(p => (p.tags || []).some((t: any) => t.tag_key === fProject));
+    }
+    if (fTag) {
+      filtered = filtered.filter(p => (p.tags || []).some((t: any) => t.tag_key === fTag));
+    }
+    if (fUsage === 'unused') {
+      filtered = filtered.filter(p => (p.assignments || []).length === 0);
+    } else if (fUsage === 'assigned') {
+      filtered = filtered.filter(p => (p.assignments || []).length > 0);
+    } else if (fUsage === 'fixed') {
+      filtered = filtered.filter(p => (p.assignments || []).some((a: any) => a.mode === 'FIXED'));
+    } else if (fUsage === 'pool') {
+      filtered = filtered.filter(p => (p.assignments || []).some((a: any) => a.mode === 'POOL'));
+    }
+
+    if (sortVal === 'newest') {
+      filtered.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else {
+      filtered.sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+
+    listEl.innerHTML = '';
+    if (filtered.length === 0) {
+      show(emptyEl);
+      hide(listEl);
+      return;
+    }
+
+    hide(emptyEl);
+    show(listEl);
+
+    filtered.forEach(p => {
+      const ratio = p.width_px && p.height_px ? (p.width_px / p.height_px).toFixed(2) : '—';
+      const dateStr = new Date(p.created_at).toLocaleDateString('en-IN', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      let usageHtml = '<span class="usage-none-text">Not used currently</span>';
+      if (p.assignments && p.assignments.length > 0) {
+        usageHtml = p.assignments.map((a: any) => {
+          const dest = destinations.find(d => d.key === a.location);
+          const label = dest ? dest.label : a.location;
+          const modeLabel = a.mode === 'FIXED' ? 'Fixed' : 'Pool';
+          const badgeClass = a.mode === 'FIXED' ? 'usage-badge--fixed' : 'usage-badge--pool';
+          return `<span class="usage-badge ${badgeClass}">✓ ${label} (${modeLabel})</span>`;
+        }).join(' ');
       }
-      const { photos } = await res.json() as { photos: any[] };
-      // Client-side filter by title or photographer name
-      const ql = q.toLowerCase();
-      const filtered = photos.filter(p =>
-        (p.title ?? '').toLowerCase().includes(ql) ||
-        (p.photographer?.name ?? '').toLowerCase().includes(ql) ||
-        (p.caption ?? '').toLowerCase().includes(ql)
-      );
-      if (!filtered.length) { show(spotlightSearchEmpty); return; }
 
-      if (spotlightResults) {
-        spotlightResults.innerHTML = filtered.map(p => {
-          const thumb = p.urls?.thumbnail ?? p.urls?.medium ?? '';
-          const title = p.title ?? 'Untitled';
-          const credit = p.photographer ? `by ${p.photographer.name}` : '';
-          return `
-            <div class="spotlight-photo-card" data-uuid="${p.uuid}">
-              <img src="${thumb}" alt="${title.replace(/"/g, '&quot;')}" loading="lazy" />
-              <div class="spotlight-photo-card__title">${title}</div>
-              <div class="spotlight-photo-card__credit">${credit}</div>
-              <button class="btn-set-spotlight" data-uuid="${p.uuid}">Set as Spotlight</button>
+      const card = document.createElement('div');
+      card.className = 'hero-photo-card';
+      card.innerHTML = `
+        <div class="hero-photo-card__preview">
+          <img src="${p.urls?.medium ?? p.urls?.original ?? ''}" alt="${p.title ?? 'Hero Candidate'}" loading="lazy" />
+        </div>
+        <div class="hero-photo-card__details">
+          <h3 class="hero-photo-card__title">${p.title ?? 'Untitled'}</h3>
+          <div class="hero-photo-card__photographer">${p.photographer ? p.photographer.name : 'Unknown Photographer'}</div>
+          <div class="hero-photo-card__meta">
+            <span>Dimensions: ${p.width_px ?? '—'} &times; ${p.height_px ?? '—'}</span>
+            <span class="meta-dot">&middot;</span>
+            <span>Aspect Ratio: ${ratio}</span>
+            <span class="meta-dot">&middot;</span>
+            <span>Uploaded: ${dateStr}</span>
+          </div>
+          <div class="hero-photo-card__usage">
+            <strong style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-400);">Used By:</strong>
+            <div class="usage-list" style="display:inline-flex; flex-wrap:wrap; gap:6px; margin-left:8px; align-items:center;">
+              ${usageHtml}
             </div>
-          `;
-        }).join('');
-        show(spotlightResults);
+          </div>
+          <button type="button" class="btn-assign-hero" data-uuid="${p.uuid}">Assign Hero</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+  }
 
-        spotlightResults.addEventListener('click', async (ev) => {
-          const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('.btn-set-spotlight');
-          if (!btn) return;
-          const uuid = btn.dataset.uuid!;
-          btn.disabled = true;
-          btn.textContent = 'Setting…';
-          if (spotlightFeedback) { hide(spotlightFeedback); spotlightFeedback.className = 'reset-feedback'; }
+  function openAssignModal(uuid: string) {
+    selectedPhotoUuid = uuid;
+    const p = eligiblePhotos.find(photo => photo.uuid === uuid);
+    if (!p) return;
 
-          try {
-            const setRes = await fetch(`${API}/gallery/spotlight`, {
-              method: 'PUT',
-              headers: authHeaders(),
-              body: JSON.stringify({ photo_uuid: uuid }),
-            });
-            if (setRes.ok) {
-              if (spotlightFeedback) {
-                spotlightFeedback.textContent = 'Spotlight updated. Homepage will show this photo.';
-                spotlightFeedback.className = 'reset-feedback ok';
-                show(spotlightFeedback);
-              }
-              // Refresh current spotlight preview
-              hide(document.getElementById('spotlight-current'));
-              hide(document.getElementById('spotlight-none'));
-              loadCurrentSpotlight();
-            } else {
-              const err = await setRes.json().catch(() => ({})) as { message?: string };
-              if (spotlightFeedback) {
-                spotlightFeedback.textContent = `Error: ${err.message ?? setRes.status}`;
-                spotlightFeedback.className = 'reset-feedback error';
-                show(spotlightFeedback);
-              }
-              btn.disabled = false;
-              btn.textContent = 'Set as Spotlight';
-            }
-          } catch {
-            if (spotlightFeedback) {
-              spotlightFeedback.textContent = 'Network error. Please try again.';
-              spotlightFeedback.className = 'reset-feedback error';
-              show(spotlightFeedback);
-            }
-            btn.disabled = false;
-            btn.textContent = 'Set as Spotlight';
+    const img = document.getElementById('hero-modal-photo-img') as HTMLImageElement | null;
+    const title = document.getElementById('hero-modal-photo-title');
+    const credit = document.getElementById('hero-modal-photo-credit');
+    const dims = document.getElementById('hero-modal-photo-dims');
+    const container = document.getElementById('hero-destinations-container');
+
+    if (img) img.src = p.urls?.medium ?? p.urls?.original ?? '';
+    if (title) title.textContent = p.title ?? 'Untitled';
+    if (credit) credit.textContent = p.photographer ? p.photographer.name : 'Unknown';
+    if (dims) {
+      const ratio = p.width_px && p.height_px ? (p.width_px / p.height_px).toFixed(2) : '—';
+      dims.textContent = `${p.width_px ?? '—'} x ${p.height_px ?? '—'} (Ratio: ${ratio})`;
+    }
+
+    if (container) {
+      container.innerHTML = destinations.map(dest => {
+        const existing = (p.assignments || []).find((a: any) => a.location === dest.key);
+        const isChecked = existing ? 'checked' : '';
+        const isFixed = !existing || existing.mode === 'FIXED' ? 'checked' : '';
+        const isPool = existing && existing.mode === 'POOL' ? 'checked' : '';
+        const modesStyle = existing ? '' : 'style="display:none;"';
+
+        return `
+          <div class="hero-dest-item" data-key="${dest.key}">
+            <div class="hero-dest-row">
+              <input type="checkbox" id="chk-${dest.key}" class="dest-checkbox" data-key="${dest.key}" ${isChecked} />
+              <div class="hero-dest-label-group">
+                <label for="chk-${dest.key}" class="hero-dest-label">${dest.label}</label>
+                <span class="hero-dest-desc">${dest.description}</span>
+              </div>
+            </div>
+            <div class="hero-dest-modes" id="modes-${dest.key}" ${modesStyle}>
+              ${dest.supportsFixed ? `
+                <label>
+                  <input type="radio" name="mode-${dest.key}" value="FIXED" ${isFixed} />
+                  Fixed Hero
+                </label>
+              ` : ''}
+              ${dest.supportsRotation ? `
+                <label>
+                  <input type="radio" name="mode-${dest.key}" value="POOL" ${isPool} />
+                  Daily Rotation Pool
+                </label>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.dest-checkbox').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const key = (e.target as HTMLInputElement).dataset.key!;
+          const checked = (e.target as HTMLInputElement).checked;
+          const modesDiv = document.getElementById(`modes-${key}`);
+          if (modesDiv) {
+            modesDiv.style.display = checked ? 'flex' : 'none';
           }
         });
-      }
-    } catch {
-      hide(spotlightSearchLoading);
-      if (spotlightSearchError) { spotlightSearchError.textContent = 'Failed to search photos.'; show(spotlightSearchError); }
+      });
     }
+
+    show(document.getElementById('hero-assign-modal'));
+  }
+
+  async function saveAssignmentsFlow() {
+    pendingSaveDestinations = [];
+    pendingReplacements = [];
+    currentReplacementIndex = 0;
+
+    destinations.forEach(dest => {
+      const chk = document.getElementById(`chk-${dest.key}`) as HTMLInputElement | null;
+      if (chk && chk.checked) {
+        const modeRadio = document.querySelector(`input[name="mode-${dest.key}"]:checked`) as HTMLInputElement | null;
+        const mode = modeRadio ? modeRadio.value : 'FIXED';
+        
+        pendingSaveDestinations.push({ location: dest.key, mode });
+
+        if (mode === 'FIXED') {
+          const conflictPhoto = eligiblePhotos.find(other => 
+            other.uuid !== selectedPhotoUuid && 
+            (other.assignments || []).some((a: any) => a.location === dest.key && a.mode === 'FIXED')
+          );
+          if (conflictPhoto) {
+            pendingReplacements.push({
+              destination: dest,
+              currentPhoto: conflictPhoto
+            });
+          }
+        }
+      }
+    });
+
+    if (pendingReplacements.length > 0) {
+      hide(document.getElementById('hero-assign-modal'));
+      showReplacementConfirmation();
+    } else {
+      await commitAssignments();
+    }
+  }
+
+  function showReplacementConfirmation() {
+    if (currentReplacementIndex >= pendingReplacements.length) {
+      commitAssignments();
+      return;
+    }
+
+    const rep = pendingReplacements[currentReplacementIndex];
+    const destLabel = document.getElementById('replace-destination-label');
+    const currentImg = document.getElementById('replace-current-img') as HTMLImageElement | null;
+    const currentTitle = document.getElementById('replace-current-title');
+    const currentCredit = document.getElementById('replace-current-credit');
+
+    const newImg = document.getElementById('replace-new-img') as HTMLImageElement | null;
+    const newTitle = document.getElementById('replace-new-title');
+    const newCredit = document.getElementById('replace-new-credit');
+
+    const newPhoto = eligiblePhotos.find(p => p.uuid === selectedPhotoUuid)!;
+
+    if (destLabel) destLabel.textContent = rep.destination.label;
+    
+    if (currentImg) currentImg.src = rep.currentPhoto.urls?.medium ?? rep.currentPhoto.urls?.original ?? '';
+    if (currentTitle) currentTitle.textContent = rep.currentPhoto.title ?? 'Untitled';
+    if (currentCredit) currentCredit.textContent = rep.currentPhoto.photographer ? `by ${rep.currentPhoto.photographer.name}` : 'Unknown';
+
+    if (newImg) newImg.src = newPhoto.urls?.medium ?? newPhoto.urls?.original ?? '';
+    if (newTitle) newTitle.textContent = newPhoto.title ?? 'Untitled';
+    if (newCredit) newCredit.textContent = newPhoto.photographer ? `by ${newPhoto.photographer.name}` : 'Unknown';
+
+    show(document.getElementById('hero-replace-modal'));
+  }
+
+  async function commitAssignments() {
+    hide(document.getElementById('hero-assign-modal'));
+    hide(document.getElementById('hero-replace-modal'));
+
+    const p = eligiblePhotos.find(photo => photo.uuid === selectedPhotoUuid);
+    if (!p) return;
+
+    const currentAssignments = p.assignments || [];
+    const newAssignments = [...pendingSaveDestinations];
+
+    const toUnassign = currentAssignments.filter((curr: any) => 
+      !newAssignments.some(nxt => nxt.location === curr.location)
+    );
+    const toAssign = [...newAssignments];
+
+    const saveBtn = document.getElementById('hero-assign-save') as HTMLButtonElement | null;
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+    }
+
+    try {
+      const promises = [];
+
+      toUnassign.forEach(u => {
+        promises.push(
+          fetch(`${API}/gallery/hero/unassign`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ photo_uuid: selectedPhotoUuid, location: u.location })
+          })
+        );
+      });
+
+      toAssign.forEach(a => {
+        promises.push(
+          fetch(`${API}/gallery/hero/assign`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ photo_uuid: selectedPhotoUuid, location: a.location, mode: a.mode })
+          })
+        );
+      });
+
+      await Promise.all(promises);
+      await loadHeroManagerData();
+    } catch (e) {
+      console.error('Failed to save assignments', e);
+      alert('An error occurred while saving assignments.');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Assignments';
+      }
+    }
+  }
+
+  // Register filter event listeners
+  document.getElementById('hero-search-photographer')?.addEventListener('input', () => renderEligiblePhotos());
+  document.getElementById('hero-search-title')?.addEventListener('input', () => renderEligiblePhotos());
+  document.getElementById('hero-filter-project')?.addEventListener('change', () => renderEligiblePhotos());
+  document.getElementById('hero-filter-tag')?.addEventListener('change', () => renderEligiblePhotos());
+  document.getElementById('hero-filter-usage')?.addEventListener('change', () => renderEligiblePhotos());
+  document.getElementById('hero-sort')?.addEventListener('change', () => renderEligiblePhotos());
+
+  // Close modals listeners
+  document.getElementById('hero-assign-modal-close')?.addEventListener('click', () => {
+    hide(document.getElementById('hero-assign-modal'));
+  });
+  document.getElementById('hero-assign-cancel')?.addEventListener('click', () => {
+    hide(document.getElementById('hero-assign-modal'));
+  });
+  document.getElementById('hero-assign-save')?.addEventListener('click', () => {
+    saveAssignmentsFlow();
+  });
+
+  document.getElementById('hero-replace-cancel')?.addEventListener('click', () => {
+    hide(document.getElementById('hero-replace-modal'));
+    show(document.getElementById('hero-assign-modal'));
+  });
+
+  document.getElementById('hero-replace-confirm')?.addEventListener('click', () => {
+    hide(document.getElementById('hero-replace-modal'));
+    currentReplacementIndex++;
+    if (currentReplacementIndex >= pendingReplacements.length) {
+      commitAssignments();
+    } else {
+      showReplacementConfirmation();
+    }
+  });
+
+  // Assign button click listener delegation
+  document.getElementById('hero-photo-list')?.addEventListener('click', (ev) => {
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('.btn-assign-hero');
+    if (!btn) return;
+    const uuid = btn.dataset.uuid!;
+    openAssignModal(uuid);
   });
 
   /* ════════════════════════════════════════════════════════════
@@ -1067,5 +1669,5 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
   /* ── Init ────────────────────────────────────────────────── */
   loadPending();
-  loadCurrentSpotlight();
+  loadHeroManagerData();
 </script>

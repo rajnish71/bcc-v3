@@ -5,6 +5,7 @@
  * Design authority: V6 02 Showcase.dc.html
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/ui/PageHero.astro';
 import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
 ---
 
@@ -13,19 +14,11 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   description="Every approved photograph from every BCC member, displayed at its natural proportions. No cropping. No ranking."
 >
 
-  <!-- Page hero -->
-  <div class="showcase-hero container">
-    <div class="showcase-hero-inner">
-      <div class="showcase-hero-content">
-        <div class="showcase-kicker">
-          <span class="showcase-kicker-line"></span>
-          Member Showcase · /showcase
-        </div>
-        <h1 class="showcase-title">Our members,<br/>on the wall.</h1>
-        <p class="showcase-lead">Every approved photograph from every member, displayed at its natural proportions. No cropping. No ranking. Photography as it was taken.</p>
-      </div>
-    </div>
-  </div>
+  <PageHero
+    eyebrow="Member Showcase · /showcase"
+    title="Our members,<br/>on the wall."
+    subtitle="Every approved photograph from every member, displayed at its natural proportions. No cropping. No ranking. Photography as it was taken."
+  />
 
   <!-- Gallery Wall: justified grid in unified container -->
   <div class="container">
@@ -510,11 +503,14 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
     } catch { /* silent */ }
   }
 
+  import { loadPageHero } from '../lib/hero-loader';
+  loadPageHero('showcase');
+
   /* ── Initial load ── */
   loadPhotographers();
 
   /* ── GSAP entrance ── */
-  gsap.from('.showcase-hero .showcase-hero-content', {
+  gsap.from('.page-hero', {
     opacity: 0, y: 24, duration: 0.6, ease: 'power3.out', delay: 0.1,
   });
 </script>

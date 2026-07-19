@@ -1,4 +1,6 @@
 ---
+import { getPhotographerProfileUrl } from '../../data/photoRegistry';
+
 /**
  * PageHero.astro — Consolidated page hero for all BCC pages.
  * Supports standard text/banner, overlay (About page), and project (Special Projects) layouts.
@@ -58,10 +60,16 @@ const {
             <h1 class="hero-title" set:html={title}></h1>
             <p class="hero-intro">{subtitle}</p>
           </div>
-          <div class="hero-credit" id="page-hero-credit" style={heroCredit ? "" : "display: none;"}>
-            <span class="hero-credit__label">Photo by</span>
-            <span class="hero-credit__name" id="page-hero-credit-name">{heroCredit}</span>
-          </div>
+        </div>
+
+        <div class="photo-credit-bar" id="page-hero-credit" style={heroCredit ? "" : "display: none;"}>
+          <span class="photo-credit-bar__caption" id="page-hero-credit-caption">Taj-ul-Masajid at night · Bhopal</span>
+          <span class="photo-credit-bar__right">
+            <span class="photo-credit-bar__by">Photo by</span>
+            <a href={heroCredit ? getPhotographerProfileUrl(heroCredit) : "#"} class="photo-credit-bar__name" id="page-hero-credit-name-link">
+              <span id="page-hero-credit-name">{heroCredit}</span>
+            </a>
+          </span>
         </div>
 
         {stats && stats.length > 0 && (
@@ -279,6 +287,55 @@ const {
   font-size: 9px;
   color: rgba(255, 255, 255, 0.6);
   letter-spacing: 0.06em;
+}
+
+/* Photo Credit Bar styles (when rendered below image) */
+.photo-credit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  background: var(--surface-1);
+  border-top: 1px solid var(--hairline);
+  padding: 12px 20px;
+}
+.photo-credit-bar__caption {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+  letter-spacing: 0.06em;
+}
+.photo-credit-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.photo-credit-bar__by {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-400);
+}
+.photo-credit-bar__name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-600);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+.photo-credit-bar__name:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .photo-credit-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
 }
 
 /* Stats band */

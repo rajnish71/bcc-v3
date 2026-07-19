@@ -101,7 +101,24 @@ const jsonLd = {
               imgEl.alt = photo.title ?? 'About BCC';
             }
             if (creditNameEl) {
-              creditNameEl.textContent = photo.photographer ? photo.photographer.name : 'BCC Member';
+              const rawName = photo.photographer ? photo.photographer.name : 'BCC Member';
+              const displayName = rawName === 'Kuldeep' ? 'Kuldeep Lodhi' : rawName;
+              creditNameEl.textContent = displayName;
+
+              const linkEl = document.getElementById('page-hero-credit-name-link') as HTMLAnchorElement | null;
+              if (linkEl) {
+                const username = photo.photographer?.username || 
+                                 (displayName === 'Kuldeep Lodhi' ? 'kuldeeplodhi' : '');
+                if (username) {
+                  linkEl.href = `/photographers/${username}/`;
+                } else {
+                  linkEl.href = '#';
+                }
+              }
+            }
+            const captionEl = document.getElementById('page-hero-credit-caption');
+            if (captionEl && photo.title) {
+              captionEl.textContent = photo.title;
             }
             if (creditContainer) {
               creditContainer.style.display = 'flex';

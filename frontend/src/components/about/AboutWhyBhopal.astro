@@ -1,5 +1,5 @@
 ---
-import { aboutPhotos, photoSrc, photoSrcset } from '../../data/photoRegistry';
+import { aboutPhotos, photoSrc, photoSrcset, getPhotographerProfileUrl } from '../../data/photoRegistry';
 
 const primary = aboutPhotos.whyBhopalPrimary;
 const secondary = aboutPhotos.whyBhopalSecondary;
@@ -30,7 +30,7 @@ const secondary = aboutPhotos.whyBhopalSecondary;
         <span class="photo-credit-bar__caption">{primary.caption}</span>
         <span class="photo-credit-bar__right">
           <span class="photo-credit-bar__by">Photo by</span>
-          <span class="photo-credit-bar__name">{primary.photographer}</span>
+          <a href={getPhotographerProfileUrl(primary.photographer)} class="photo-credit-bar__name">{primary.photographer}</a>
         </span>
       </div>
     </div>
@@ -45,43 +45,7 @@ const secondary = aboutPhotos.whyBhopalSecondary;
       </div>
 
       <div class="why-col-right">
-        <div class="why-col-kicker">What Bhopal Offers the Photographer</div>
-        <div class="bhopal-subjects" role="list">
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Upper Lake</div>
-            <div class="subject-desc">Dawn reflections · boat silhouettes</div>
-          </div>
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Van Vihar</div>
-            <div class="subject-desc">Wildlife · forest light · seasons</div>
-          </div>
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Taj-ul-Masajid</div>
-            <div class="subject-desc">Heritage · Mughal architecture · night</div>
-          </div>
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Old City</div>
-            <div class="subject-desc">Street · portraits · layered history</div>
-          </div>
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Bhoj Wetland</div>
-            <div class="subject-desc">Migratory birds · winter mornings</div>
-          </div>
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Festivals</div>
-            <div class="subject-desc">Ganesh Chaturthi · Eid · Navratri</div>
-          </div>
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Monsoon</div>
-            <div class="subject-desc">Dramatic skies · saturated greens</div>
-          </div>
-          <div class="subject-item" role="listitem">
-            <div class="subject-name">Architecture</div>
-            <div class="subject-desc">Temples · mosques · colonial layers</div>
-          </div>
-        </div>
-
-        <!-- Supporting photograph — integrated into editorial column, anchored below subject grid -->
+        <!-- Supporting photograph — aligned beside the editorial text -->
         <div class="why-secondary-frame">
           <img
             src={photoSrc(secondary, 720)}
@@ -96,8 +60,47 @@ const secondary = aboutPhotos.whyBhopalSecondary;
           <span class="photo-credit-bar__caption">{secondary.caption}</span>
           <span class="photo-credit-bar__right">
             <span class="photo-credit-bar__by">Photo by</span>
-            <span class="photo-credit-bar__name">{secondary.photographer}</span>
+            <a href={getPhotographerProfileUrl(secondary.photographer)} class="photo-credit-bar__name">{secondary.photographer}</a>
           </span>
+        </div>
+      </div>
+
+      <!-- 3. What Bhopal Offers — Full-width editorial strip -->
+      <div class="why-offers-strip">
+        <div class="why-offers-kicker">What Bhopal Offers the Photographer</div>
+        <div class="why-offers-ribbon" role="list">
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Upper Lake</div>
+            <div class="offers-desc">Dawn reflections · boat silhouettes</div>
+          </div>
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Van Vihar</div>
+            <div class="offers-desc">Wildlife · forest light · seasons</div>
+          </div>
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Taj-ul-Masajid</div>
+            <div class="offers-desc">Heritage · Mughal architecture · night</div>
+          </div>
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Old City</div>
+            <div class="offers-desc">Street · portraits · layered history</div>
+          </div>
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Bhoj Wetland</div>
+            <div class="offers-desc">Migratory birds · winter mornings</div>
+          </div>
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Festivals</div>
+            <div class="offers-desc">Ganesh Chaturthi · Eid · Navratri</div>
+          </div>
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Monsoon</div>
+            <div class="offers-desc">Dramatic skies · saturated greens</div>
+          </div>
+          <div class="offers-item" role="listitem">
+            <div class="offers-name">Architecture</div>
+            <div class="offers-desc">Temples · mosques · colonial layers</div>
+          </div>
         </div>
       </div>
     </div>
@@ -185,7 +188,12 @@ const secondary = aboutPhotos.whyBhopalSecondary;
   color: var(--gold-600);
   font-weight: 500;
   letter-spacing: 0.04em;
+  text-decoration: none;
 }
+.photo-credit-bar__name:hover {
+  text-decoration: underline;
+}
+
 /* 2. Two-column editorial */
 .why-editorial {
   display: grid;
@@ -216,43 +224,11 @@ const secondary = aboutPhotos.whyBhopalSecondary;
   margin-bottom: 0;
 }
 
-/* Bhopal subjects grid */
-.bhopal-subjects {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--hairline);
-}
-.subject-item {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--hairline);
-  border-right: 1px solid var(--hairline);
-}
-.subject-item:nth-child(even) {
-  border-right: none;
-}
-.subject-item:nth-last-child(-n+2) {
-  border-bottom: none;
-}
-.subject-name {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: var(--weight-semibold);
-  color: var(--ink-900);
-  margin-bottom: 3px;
-}
-.subject-desc {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: var(--ink-400);
-  line-height: 1.5;
-}
-
-/* 3. Supporting photograph — anchored in right editorial column below subject grid */
+/* 3. Supporting photograph — anchored in right editorial column */
 .why-secondary-frame {
   border: 1px solid var(--hairline);
   border-bottom: none;
   overflow: hidden;
-  margin-top: var(--s-4);
 }
 .why-secondary-photo {
   width: 100%;
@@ -260,17 +236,87 @@ const secondary = aboutPhotos.whyBhopalSecondary;
   display: block;
 }
 
+/* 4. Editorial Information Ribbon */
+.why-offers-strip {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--hairline);
+  padding-top: 40px;
+  margin-top: 16px;
+}
+.why-offers-kicker {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  font-weight: var(--weight-semibold);
+  margin-bottom: 24px;
+}
+.why-offers-ribbon {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px 0;
+}
+.offers-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 24px;
+  border-right: 1px solid var(--hairline);
+}
+.offers-item:first-child {
+  padding-left: 0;
+}
+.offers-item:nth-child(4n) {
+  border-right: none;
+  padding-right: 0;
+}
+.offers-item:nth-child(4n + 1) {
+  padding-left: 0;
+}
+.offers-name {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: var(--weight-semibold);
+  color: var(--ink-900);
+  margin-bottom: 3px;
+}
+.offers-desc {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+  line-height: 1.5;
+}
+
 /* Responsive */
+@media (max-width: 1024px) {
+  .why-offers-ribbon {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .offers-item {
+    border-right: 1px solid var(--hairline);
+    padding: 0 16px;
+  }
+  .offers-item:nth-child(2n) {
+    border-right: none;
+    padding-right: 0;
+  }
+  .offers-item:nth-child(2n + 1) {
+    padding-left: 0;
+  }
+}
+
 @media (max-width: 900px) {
   .why-editorial {
     grid-template-columns: 1fr;
     gap: 40px;
     padding: 40px 32px;
   }
-  .why-secondary-frame {
-    margin-top: var(--s-3);
+  .why-offers-strip {
+    padding-top: 32px;
   }
 }
+
 @media (max-width: 480px) {
   .why-section {
     padding: var(--s-8) 0;
@@ -279,6 +325,19 @@ const secondary = aboutPhotos.whyBhopalSecondary;
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+  }
+  .why-offers-ribbon {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .offers-item {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    padding: 0 0 16px 0;
+  }
+  .offers-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
   }
 }
 </style>

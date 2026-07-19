@@ -47,6 +47,26 @@ export function photoCredit(record: PhotoRecord): string {
   return `${record.caption} · Photo: ${record.photographer}`;
 }
 
+/**
+ * Centralized mapping of photographer names to their canonical profile usernames.
+ */
+export const photographerUsernames: Record<string, string> = {
+  'Dr. Anil Bhati': 'anilbhati',
+  'Dr Anil Bhati': 'anilbhati',
+  'Kshitij Patle': 'kshitijpatle',
+  'Kuldeep Lodhi': 'kuldeeplodhi',
+  'Kuldeep': 'kuldeeplodhi',
+};
+
+/**
+ * Gets the canonical profile URL for a photographer.
+ */
+export function getPhotographerProfileUrl(photographerName: string): string {
+  const name = photographerName.trim();
+  const username = photographerUsernames[name] || name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `/photographers/${username}/`;
+}
+
 // ---------------------------------------------------------------------------
 // About page archival photograph registry
 // All src values point to masters in public/images/ — originals are never modified.
@@ -58,7 +78,7 @@ export const aboutPhotos = {
     src: '/images/Kuldeep Tajul Masajid Evening.jpg',
     // r2Path: 'about/kuldeep-tajul-masajid-evening.jpg',
     alt: 'Taj-ul-Masajid aerial view at evening — photograph by BCC member Kuldeep',
-    photographer: 'Kuldeep',
+    photographer: 'Kuldeep Lodhi',
     caption: 'Taj-ul-Masajid at night · Bhopal',
     copyright: '© BCC Member Kuldeep',
     location: 'Taj-ul-Masajid, Bhopal',

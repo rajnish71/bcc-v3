@@ -41,6 +41,7 @@ Related Documents
 • HUB-ARCH-001 — Hub Component Architecture Freeze v1.0
 • CLAUDE.md — Claude Code Operating Contract
 • SOURCE_INDEX.md
+• Conforms to PLATFORM-ARCH-001.
 
 ---
 

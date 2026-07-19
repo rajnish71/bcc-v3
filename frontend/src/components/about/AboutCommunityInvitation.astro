@@ -1,45 +1,53 @@
 ---
-import { aboutPhotos, photoSrc, photoSrcset, photoCredit } from '../../data/photoRegistry';
+import { aboutPhotos, photoSrc, photoSrcset } from '../../data/photoRegistry';
 
 const img = aboutPhotos.communityPhotowalk;
 ---
 
 <section class="invitation-section" aria-labelledby="invitation-heading">
-  <!-- Community photograph -->
-  <div class="invitation-photo-wrap">
-    <img
-      src={photoSrc(img, 1440)}
-      srcset={photoSrcset(img, [800, 1200, 1440])}
-      sizes="100vw"
-      alt={img.alt}
-      class="invitation-photo"
-      loading="lazy"
-    />
-    <div class="invitation-photo-caption-bar" aria-hidden="true">
-      <span class="invitation-photo-caption">{photoCredit(img)}</span>
-    </div>
-  </div>
+  <div class="container">
+    <div class="invitation-frame" data-gsap="reveal">
 
-  <!-- Invitation copy and CTAs -->
-  <div class="invitation-body">
-    <div class="invitation-inner">
-      <div class="invitation-kicker">You Belong Here</div>
-      <h2 class="invitation-title" id="invitation-heading">Ready to Tell Your Story?</h2>
-      <p class="invitation-copy">Whether you have been shooting for twenty years or you just picked up your first camera last week — there is a place for you in Bhopal Camera Club. We have never asked anyone to be better than they are before they join us. We only ask that they love photography and bring it honestly.</p>
-      <p class="invitation-copy">Every outstanding photograph in our gallery, every workshop that changed the way someone sees, every friendship that began at a photowalk — all of it started with someone deciding to show up. Come and find your community.</p>
-
-      <!-- CTAs — "Become a Member" hidden for authenticated members -->
-      <div class="invitation-ctas">
-        <a href="/join/" class="btn btn-gold btn-lg invitation-cta-primary guest-only" aria-label="Become a member of Bhopal Camera Club">
-          Become a Member
-        </a>
-        <a href="/activities/" class="invitation-cta-secondary">
-          Explore Activities
-        </a>
-        <a href="/showcase/" class="invitation-cta-tertiary">
-          Browse Showcase <span aria-hidden="true">→</span>
-        </a>
+      <!-- Left: Community photograph (45%) — object-fit:cover, layout use -->
+      <div class="invitation-photo-col">
+        <img
+          src={photoSrc(img, 960)}
+          srcset={photoSrcset(img, [480, 720, 960])}
+          sizes="(max-width: 900px) 100vw, 45vw"
+          alt={img.alt}
+          class="invitation-photo"
+          loading="lazy"
+        />
+        <div class="invitation-photo-caption" aria-hidden="true">
+          {img.caption}
+        </div>
+        <div class="invitation-photo-credit" aria-hidden="true">
+          <span class="photo-credit__by">Photo by</span>
+          <span class="photo-credit__name">{img.photographer}</span>
+        </div>
       </div>
+
+      <!-- Right: Invitation text + CTAs (55%) -->
+      <div class="invitation-body">
+        <div class="invitation-kicker">You Belong Here</div>
+        <h2 class="invitation-title" id="invitation-heading">Ready to Tell<br/>Your Story?</h2>
+        <p class="invitation-copy">Whether you have been shooting for twenty years or you just picked up your first camera last week — there is a place for you in Bhopal Camera Club.</p>
+        <p class="invitation-copy">Every outstanding photograph in our gallery, every workshop that changed the way someone sees, every friendship that began at a photowalk — all of it started with someone deciding to show up.</p>
+
+        <!-- CTAs — "Become a Member" hidden for authenticated members -->
+        <div class="invitation-ctas">
+          <a href="/join/" class="btn btn-gold btn-lg invitation-cta-primary guest-only" aria-label="Become a member of Bhopal Camera Club">
+            Become a Member
+          </a>
+          <a href="/activities/" class="invitation-cta-secondary">
+            Explore Activities
+          </a>
+          <a href="/showcase/" class="invitation-cta-tertiary">
+            Browse Showcase <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -47,90 +55,118 @@ const img = aboutPhotos.communityPhotowalk;
 <style>
 .invitation-section {
   border-top: 1px solid var(--hairline);
+  padding: var(--s-12) 0;
+  background: var(--surface-0);
 }
 
-/* Photo */
-.invitation-photo-wrap {
+/* Two-column frame: photo 45% · CTA 55% */
+.invitation-frame {
+  display: grid;
+  grid-template-columns: 45fr 55fr;
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  background: var(--surface-0);
+}
+
+/* Left: photograph column */
+.invitation-photo-col {
   position: relative;
   overflow: hidden;
-  border-bottom: none;
+  border-right: 1px solid var(--hairline);
+  min-height: 480px;
 }
 .invitation-photo {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
-.invitation-photo-caption-bar {
+.invitation-photo-caption {
   position: absolute;
-  bottom: 0;
+  bottom: 28px;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(20, 18, 16, 0.6));
-  padding: 20px 28px 14px;
-}
-.invitation-photo-caption {
+  padding: 0 20px;
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.55);
   letter-spacing: 0.08em;
+  background: linear-gradient(transparent, rgba(20, 18, 16, 0.55));
+  padding-top: 24px;
+}
+.invitation-photo-credit {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.photo-credit__by {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.photo-credit__name {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.04em;
 }
 
-/* Invitation body */
+/* Right: invitation body */
 .invitation-body {
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  border-top: none;
-  padding: 64px 0;
-}
-.invitation-inner {
-  max-width: 760px;
-  margin: 0 auto;
-  text-align: center;
-  padding: 0 var(--gutter);
+  padding: 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .invitation-kicker {
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: var(--text-micro);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gold-600);
-  font-weight: 600;
-  margin-bottom: 20px;
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--s-2);
 }
 .invitation-title {
   font-family: var(--font-display);
-  font-size: clamp(32px, 4vw, 48px);
-  font-weight: 700;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.025em;
   line-height: 1.05;
-  margin-bottom: 28px;
   color: var(--ink-900);
+  margin-bottom: var(--s-4);
 }
 .invitation-copy {
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
   line-height: 1.85;
   color: var(--ink-600);
-  margin-bottom: 16px;
+  margin-bottom: var(--s-2);
   text-wrap: pretty;
 }
 .invitation-copy:last-of-type {
-  margin-bottom: 40px;
+  margin-bottom: var(--s-7);
 }
 
-/* CTAs */
+/* CTAs — stacked column, left-aligned */
 .invitation-ctas {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
 }
 .invitation-cta-primary {
   /* extends .btn.btn-gold.btn-lg */
 }
 .invitation-cta-secondary {
+  font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   border: 1px solid var(--hairline-strong);
@@ -138,13 +174,14 @@ const img = aboutPhotos.communityPhotowalk;
   padding: 15px 28px;
   display: inline-block;
   text-decoration: none;
+  background: var(--surface-0);
   transition: border-color var(--m-fast), color var(--m-fast);
 }
 .invitation-cta-secondary:hover {
   border-color: var(--ink-900);
-  color: var(--ink-900);
 }
 .invitation-cta-tertiary {
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 500;
   color: var(--gold-600);
@@ -152,6 +189,7 @@ const img = aboutPhotos.communityPhotowalk;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 4px 0;
   text-decoration: none;
   transition: color var(--m-fast);
 }
@@ -160,17 +198,30 @@ const img = aboutPhotos.communityPhotowalk;
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 900px) {
+  .invitation-frame {
+    grid-template-columns: 1fr;
+  }
+  .invitation-photo-col {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    min-height: 320px;
+  }
   .invitation-body {
-    padding: 48px 0;
+    padding: 40px 32px;
+  }
+}
+@media (max-width: 480px) {
+  .invitation-section {
+    padding: var(--s-8) 0;
+  }
+  .invitation-body {
+    padding: 32px 20px;
   }
   .invitation-ctas {
-    flex-direction: column;
     align-items: stretch;
   }
-  .invitation-cta-primary,
   .invitation-cta-secondary {
-    width: 100%;
     text-align: center;
   }
 }

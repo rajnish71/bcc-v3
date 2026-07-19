@@ -34,6 +34,7 @@ Related Documents:
 * CLAUDE.md — Claude Code Operating Contract
 * SOURCE_INDEX.md
 * PHOTO-ARCH-001
+* Conforms to PLATFORM-ARCH-001.
 
 ---
 

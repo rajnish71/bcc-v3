@@ -1,5 +1,5 @@
 ---
-import { aboutPhotos, photoSrc, photoSrcset, photoCredit } from '../../data/photoRegistry';
+import { aboutPhotos, photoSrc, photoSrcset } from '../../data/photoRegistry';
 
 interface Props {
   membersCount?: number;
@@ -15,69 +15,78 @@ const yearsCount = currentYear - 2015;
 ---
 
 <div class="about-hero">
-  <!-- Full-width hero photograph -->
-  <div class="hero-photo-wrap" data-gsap="image-reveal">
-    <img
-      src={photoSrc(img, 1920)}
-      srcset={photoSrcset(img, [800, 1200, 1600, 1920])}
-      sizes="100vw"
-      alt={img.alt}
-      class="hero-photo"
-      loading="eager"
-      fetchpriority="high"
-      width="1360"
-      height="765"
-    />
-    <div class="hero-overlay" aria-hidden="true"></div>
-    <div class="hero-text">
-      <div class="hero-eyebrow">Bhopal Camera Club · Est. 2015</div>
-      <h1 class="hero-title">The Story of<br/>Bhopal Camera Club</h1>
-      <p class="hero-intro">We began as a handful of photographers who loved Bhopal and believed that the best way to learn was to go out and make photographs together. A decade later, we are a registered society, a community of hundreds, and a growing visual archive of one of India's most photogenic cities.</p>
-      <div class="hero-photo-credit">{photoCredit(img)}</div>
-    </div>
-  </div>
+  <div class="container">
+    <!-- Canonical PageHero — boxed 16:9 inside container -->
+    <div class="hero-frame-wrap" data-gsap="image-reveal">
+      <!-- 16:9 hero frame -->
+      <div class="hero-frame">
+        <img
+          src={photoSrc(img, 1360)}
+          srcset={photoSrcset(img, [800, 1100, 1360])}
+          sizes="(max-width: 1200px) 100vw, 1140px"
+          alt={img.alt}
+          class="hero-img"
+          loading="eager"
+          fetchpriority="high"
+          width="1140"
+          height="641"
+        />
+        <div class="hero-overlay" aria-hidden="true"></div>
+        <div class="hero-text">
+          <div class="hero-eyebrow">Bhopal Camera Club · Est. 2015</div>
+          <h1 class="hero-title">The Story of<br/>Bhopal Camera Club</h1>
+          <p class="hero-intro">We began as a handful of photographers who loved Bhopal and believed the best way to learn was to go out and make photographs together. A decade later, we are a registered society, a community of hundreds, and a growing visual archive of one of India's most photogenic cities.</p>
+        </div>
+        <!-- Photo credit — bottom-right inside frame -->
+        <div class="hero-credit" aria-hidden="true">
+          <span class="hero-credit__label">Photo by</span>
+          <span class="hero-credit__name">{img.photographer}</span>
+        </div>
+      </div>
 
-  <!-- Stats band -->
-  <div class="stats-band" aria-label="Club statistics">
-    <div class="stat-item">
-      <div class="stat-label">Established</div>
-      <div class="stat-value">2015</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-label">Registered</div>
-      <div class="stat-value">Oct 2019</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-label">Members</div>
-      <div class="stat-value">
-        {membersCount
-          ? <span data-gsap="counter" data-target={membersCount}>{membersCount}</span>
-          : <span class="stat-pending">—</span>
-        }
-      </div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-label">Activities</div>
-      <div class="stat-value">
-        {activitiesCount
-          ? <span data-gsap="counter" data-target={activitiesCount}>{activitiesCount}</span>
-          : <span class="stat-pending">—</span>
-        }
-      </div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-label">Photographs</div>
-      <div class="stat-value">
-        {photosCount
-          ? <span data-gsap="counter" data-target={photosCount}>{photosCount}</span>
-          : <span class="stat-pending">—</span>
-        }
-      </div>
-    </div>
-    <div class="stat-item stat-item--gold">
-      <div class="stat-label">Years Documenting Bhopal</div>
-      <div class="stat-value stat-value--gold">
-        <span data-gsap="counter" data-target={yearsCount}>{yearsCount}</span>
+      <!-- Stats band — contiguous below hero frame -->
+      <div class="stats-band" aria-label="Club statistics">
+        <div class="stat-item">
+          <div class="stat-label">Established</div>
+          <div class="stat-value">2015</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Registered</div>
+          <div class="stat-value">Oct 2019</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Members</div>
+          <div class="stat-value">
+            {membersCount
+              ? <span data-gsap="counter" data-target={membersCount}>{membersCount}</span>
+              : <span class="stat-pending">—</span>
+            }
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Activities</div>
+          <div class="stat-value">
+            {activitiesCount
+              ? <span data-gsap="counter" data-target={activitiesCount}>{activitiesCount}</span>
+              : <span class="stat-pending">—</span>
+            }
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Photographs</div>
+          <div class="stat-value">
+            {photosCount
+              ? <span data-gsap="counter" data-target={photosCount}>{photosCount}</span>
+              : <span class="stat-pending">—</span>
+            }
+          </div>
+        </div>
+        <div class="stat-item stat-item--wide">
+          <div class="stat-label">Years Documenting Bhopal</div>
+          <div class="stat-value stat-value--gold">
+            <span data-gsap="counter" data-target={yearsCount}>{yearsCount}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -85,29 +94,38 @@ const yearsCount = currentYear - 2015;
 
 <style>
 .about-hero {
-  margin-top: calc(-1 * var(--nav-h));
+  padding-top: var(--nav-h, 64px);
+  padding-bottom: var(--s-10);
+  background: var(--surface-0);
 }
 
-/* Hero photograph */
-.hero-photo-wrap {
-  position: relative;
+/* Canonical PageHero — boxed frame + stats band share one bordered unit */
+.hero-frame-wrap {
+  border: 1px solid var(--hairline);
   overflow: hidden;
 }
-.hero-photo {
+
+/* 16:9 hero photograph */
+.hero-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+.hero-img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  object-fit: contain;
 }
 .hero-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(20, 18, 16, 0.18) 0%,
-    rgba(20, 18, 16, 0) 30%,
-    rgba(20, 18, 16, 0) 50%,
-    rgba(20, 18, 16, 0.75) 100%
+    rgba(20, 18, 16, 0.10) 0%,
+    rgba(20, 18, 16, 0) 25%,
+    rgba(20, 18, 16, 0) 45%,
+    rgba(20, 18, 16, 0.70) 100%
   );
 }
 .hero-text {
@@ -115,70 +133,89 @@ const yearsCount = currentYear - 2015;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 56px 64px 52px;
+  padding: 48px 56px 44px;
 }
 .hero-eyebrow {
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gold-500);
-  font-weight: 600;
-  margin-bottom: 16px;
-  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  margin-bottom: 14px;
 }
 .hero-title {
   font-family: var(--font-display);
-  font-size: clamp(40px, 4.5vw, 64px);
-  font-weight: 700;
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.03em;
   color: #ffffff;
   line-height: 1.0;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 .hero-intro {
-  font-size: 17px;
+  font-family: var(--font-body);
+  font-size: 16px;
   line-height: 1.8;
   color: rgba(255, 255, 255, 0.78);
-  max-width: 600px;
+  max-width: 540px;
   font-weight: 300;
-  font-family: var(--font-body);
-}
-.hero-photo-credit {
-  margin-top: 12px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.1em;
 }
 
-/* Stats band */
+/* Photo credit — canonical bottom-right overlay */
+.hero-credit {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero-credit__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hero-credit__name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.06em;
+}
+
+/* Stats band — contiguous below hero, full container width */
 .stats-band {
   display: flex;
   background: var(--surface-1);
-  border: 1px solid var(--hairline);
-  border-top: none;
+  border-top: 1px solid var(--hairline);
 }
 .stat-item {
   flex: 1;
-  padding: 20px 28px;
+  padding: 18px 24px;
   border-right: 1px solid var(--hairline);
 }
 .stat-item:last-child {
   border-right: none;
 }
+.stat-item--wide {
+  flex: 2;
+}
 .stat-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--ink-400);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 .stat-value {
   font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: var(--weight-bold);
   color: var(--ink-900);
+  letter-spacing: -0.01em;
 }
 .stat-value--gold {
   color: var(--gold-600);
@@ -194,7 +231,7 @@ const yearsCount = currentYear - 2015;
     padding: 32px 32px 28px;
   }
   .hero-intro {
-    font-size: 15px;
+    font-size: 14px;
     max-width: 100%;
   }
   .stats-band {
@@ -205,23 +242,26 @@ const yearsCount = currentYear - 2015;
     min-width: 0;
     border-bottom: 1px solid var(--hairline);
   }
+  .stat-item--wide {
+    flex: 1 0 33.33%;
+  }
   .stat-item:nth-child(3n) {
     border-right: none;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 540px) {
   .hero-text {
-    padding: 24px 20px 20px;
+    padding: 20px 20px 16px;
   }
   .hero-title {
-    font-size: clamp(28px, 8vw, 40px);
+    font-size: clamp(28px, 7vw, 36px);
   }
   .hero-intro {
-    font-size: 14px;
+    display: none;
   }
   .stat-item {
     flex: 1 0 50%;
-    padding: 14px 16px;
+    padding: 12px 16px;
   }
   .stat-item:nth-child(3n) {
     border-right: 1px solid var(--hairline);
@@ -230,7 +270,7 @@ const yearsCount = currentYear - 2015;
     border-right: none;
   }
   .stat-value {
-    font-size: 18px;
+    font-size: 17px;
   }
 }
 </style>

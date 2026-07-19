@@ -84,37 +84,36 @@ const jsonLd = {
 </BaseLayout>
 
 <style>
-/* Reset top padding — hero uses negative margin to go under nav */
+/* Reset top padding — hero handles its own padding-top (nav height) */
 :global(.about-page main) {
   padding-top: 0;
 }
 
-/* Transparent nav at rest over hero; dark-glass after scroll handled by Nav.astro GSAP */
+/* Nav at rest — transparent over ivory page background; dark ink links (default) */
 :global(.about-page #site-nav) {
-  background: rgba(20, 18, 16, 0.0);
+  background: transparent;
   border-bottom-color: transparent;
 }
+
+/* Nav condensed (after scroll) — dark glass; switch to white links */
 :global(.about-page #site-nav.nav--condensed) {
   background: rgba(20, 18, 16, 0.92);
   border-bottom-color: transparent;
 }
-:global(.about-page #site-nav .nav-link) {
+:global(.about-page #site-nav.nav--condensed .nav-link) {
   color: rgba(255, 255, 255, 0.85);
 }
-:global(.about-page #site-nav .nav-link:hover) {
+:global(.about-page #site-nav.nav--condensed .nav-link:hover) {
   color: #ffffff;
 }
-:global(.about-page #site-nav .nav-link--active) {
+:global(.about-page #site-nav.nav--condensed .nav-link--active) {
   color: #ffffff;
   border-bottom-color: var(--gold-500);
-}
-:global(.about-page #site-nav .nav-logo) {
-  filter: brightness(0) invert(1);
 }
 :global(.about-page #site-nav.nav--condensed .nav-logo) {
   filter: brightness(0) invert(1);
 }
-:global(.about-page #site-nav .nav-signin) {
+:global(.about-page #site-nav.nav--condensed .nav-signin) {
   color: rgba(255, 255, 255, 0.8);
 }
 

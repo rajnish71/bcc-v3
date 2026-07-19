@@ -48,6 +48,7 @@ Related Documents (Authority Order)
 5. HUB-ARCH-001
 6. ADMIN-ARCH-001
 7. BCC Unified Platform Specification
+8. Conforms to PLATFORM-ARCH-001.
 
 ------------------------------------------------------------
 PURPOSE

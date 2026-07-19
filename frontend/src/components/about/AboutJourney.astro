@@ -1,427 +1,297 @@
 ---
 import { chapters } from '../../data/timeline';
-
-const chaptersJson = JSON.stringify(chapters);
 ---
 
 <section class="journey-section" aria-labelledby="journey-heading">
   <div class="container">
+
     <div class="journey-header" data-gsap="reveal">
       <div class="journey-kicker">Our Journey</div>
       <h2 class="journey-title" id="journey-heading">Seven Chapters</h2>
       <p class="journey-intro">Every community has a beginning. Ours began with a shared love for photography and a belief that the best way to learn was to explore together.</p>
     </div>
 
-    <!-- Chapter navigation pills -->
-    <div class="chapter-nav" role="tablist" aria-label="Journey chapters" id="chapter-nav">
-      {chapters.map((ch, i) => (
-        <button
-          class:list={['chapter-pill', i === 0 && 'chapter-pill--active']}
-          role="tab"
-          aria-selected={i === 0 ? 'true' : 'false'}
-          aria-controls={`chapter-panel-${i}`}
-          id={`chapter-tab-${i}`}
-          data-chapter={i}
-        >
-          {ch.shortYear}
-        </button>
-      ))}
-      <div class="chapter-counter-slot" aria-live="polite">
-        <span id="chapter-counter" class="chapter-counter">1 / {chapters.length}</span>
+    <!-- Documentary mandate callout -->
+    <div class="doc-mandate" role="note">
+      <div class="doc-mandate__rule" aria-hidden="true"></div>
+      <div>
+        <div class="doc-mandate__heading">Documentary Mandate — Journey Section</div>
+        <p class="doc-mandate__body">All dates are exact as documented in BCC records. All photographs are authentic BCC archival images. Photo captions include date and location exactly as recorded. Chapters without photographs show a typographic placeholder — never a stock image.</p>
       </div>
     </div>
 
-    <!-- Chapter panels -->
-    <div class="chapter-display" id="chapter-display">
-      {chapters.map((ch, i) => (
-        <div
-          class:list={['chapter-panel', i !== 0 && 'chapter-panel--hidden']}
-          id={`chapter-panel-${i}`}
-          role="tabpanel"
-          aria-labelledby={`chapter-tab-${i}`}
-          data-panel={i}
-        >
-          <!-- Photo column -->
-          <div class="chapter-photo-col" aria-hidden={!ch.hasPhoto ? 'true' : undefined}>
+    <!-- Editorial timeline — all chapters always visible -->
+    <div class="journey-timeline" role="list">
+      {chapters.map((ch) => (
+        <div class="journey-entry" role="listitem" id={ch.id}>
+          <!-- Year column -->
+          <div class="entry-year" aria-hidden="true">
+            <span class="entry-year__text">{ch.year}</span>
+          </div>
+
+          <!-- Content column -->
+          <div class="entry-content">
+            <div class="entry-date">{ch.year}</div>
+            <h3 class="entry-title">{ch.title}</h3>
+            <div class="entry-subtitle">{ch.subtitle}</div>
+            <p class="entry-story">{ch.story}</p>
+
             {ch.hasPhoto && ch.photo ? (
-              <div class="chapter-photo-wrap">
-                <img
-                  src={ch.photo}
-                  alt={ch.photoAlt || ''}
-                  class="chapter-photo"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div class="chapter-photo-caption-bar" aria-hidden="true">
-                  <span class="chapter-photo-caption">
-                    {ch.photoLabel}{ch.photographer ? ` · Photo: ${ch.photographer}` : ''}
-                  </span>
+              <div class="entry-photo-wrap">
+                <div class="entry-photo-frame">
+                  <img
+                    src={ch.photo}
+                    alt={ch.photoAlt || ''}
+                    class="entry-photo"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div class="entry-photo-bar">
+                  <span class="entry-photo-label">{ch.photoLabel}</span>
+                  {ch.photographer && (
+                    <span class="entry-photo-credit">
+                      <span class="entry-photo-credit__by">Photo by</span>
+                      <span class="entry-photo-credit__name">{ch.photographer}</span>
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
-              <div class="chapter-photo-placeholder">
-                <div class="placeholder-rule" aria-hidden="true"></div>
-                <div class="placeholder-label">{ch.placeholderLabel}</div>
-                <div class="placeholder-rule" aria-hidden="true"></div>
+              <div class="entry-placeholder">
+                <div class="entry-placeholder__label">{ch.placeholderLabel}</div>
               </div>
             )}
-          </div>
-
-          <!-- Text column -->
-          <div class="chapter-text-col">
-            <div class="chapter-date">{ch.year}</div>
-            <h3 class="chapter-title">{ch.title}</h3>
-            <div class="chapter-subtitle">{ch.subtitle}</div>
-            <p class="chapter-story">{ch.story}</p>
-            <div class="chapter-controls">
-              <button
-                class="chapter-arrow chapter-arrow--prev"
-                id={`prev-${i}`}
-                aria-label="Previous chapter"
-                data-target={i - 1}
-                disabled={i === 0}
-              >←</button>
-              <span class="chapter-controls-counter">{i + 1} / {chapters.length}</span>
-              <button
-                class="chapter-arrow chapter-arrow--next"
-                id={`next-${i}`}
-                aria-label="Next chapter"
-                data-target={i + 1}
-                disabled={i === chapters.length - 1}
-              >→</button>
-            </div>
           </div>
         </div>
       ))}
     </div>
+
   </div>
 </section>
-
-<script define:vars={{ chaptersJson }}>
-  const chapters = JSON.parse(chaptersJson);
-  let current = 0;
-
-  const pills = document.querySelectorAll('.chapter-pill');
-  const panels = document.querySelectorAll('.chapter-panel');
-  const counter = document.getElementById('chapter-counter');
-
-  function goTo(index) {
-    if (index < 0 || index >= chapters.length) return;
-
-    // Deactivate current
-    panels[current]?.classList.add('chapter-panel--hidden');
-    pills[current]?.classList.remove('chapter-pill--active');
-    pills[current]?.setAttribute('aria-selected', 'false');
-
-    // Activate new
-    current = index;
-    panels[current]?.classList.remove('chapter-panel--hidden');
-    pills[current]?.classList.add('chapter-pill--active');
-    pills[current]?.setAttribute('aria-selected', 'true');
-
-    if (counter) counter.textContent = `${current + 1} / ${chapters.length}`;
-
-    // Update URL hash for deep-linking
-    const ch = chapters[current];
-    if (ch?.id) {
-      history.replaceState(null, '', `#${ch.id}`);
-    }
-
-    // Scroll pill into view on mobile
-    pills[current]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
-  }
-
-  // Tab click
-  pills.forEach((pill, i) => {
-    pill.addEventListener('click', () => goTo(i));
-  });
-
-  // Prev/Next buttons
-  document.querySelectorAll('.chapter-arrow').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const target = parseInt(e.currentTarget.dataset.target);
-      if (!isNaN(target)) goTo(target);
-    });
-  });
-
-  // Keyboard navigation on tabs
-  document.getElementById('chapter-nav')?.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') { e.preventDefault(); goTo(current + 1); }
-    if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(current - 1); }
-    if (e.key === 'Home')       { e.preventDefault(); goTo(0); }
-    if (e.key === 'End')        { e.preventDefault(); goTo(chapters.length - 1); }
-  });
-
-  // Deep-link on load
-  const hash = window.location.hash.replace('#', '');
-  if (hash) {
-    const idx = chapters.findIndex(ch => ch.id === hash);
-    if (idx >= 0) goTo(idx);
-  }
-</script>
 
 <style>
 .journey-section {
   background: var(--surface-1);
   border-top: 1px solid var(--hairline);
   border-bottom: 1px solid var(--hairline);
-  padding: 96px 0;
+  padding: var(--s-12) 0;
 }
+
 .journey-header {
-  margin-bottom: 40px;
+  margin-bottom: var(--s-6);
 }
 .journey-kicker {
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: var(--text-micro);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gold-600);
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--s-1);
 }
 .journey-title {
   font-family: var(--font-display);
   font-size: clamp(28px, 3.5vw, 40px);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   letter-spacing: -0.025em;
   color: var(--ink-900);
   margin-bottom: 12px;
 }
 .journey-intro {
+  font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.7;
   color: var(--ink-600);
-  max-width: 640px;
+  max-width: 680px;
   font-style: italic;
 }
 
-/* Chapter navigation */
-.chapter-nav {
+/* Documentary mandate callout */
+.doc-mandate {
   display: flex;
-  border: 1px solid var(--hairline);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.chapter-nav::-webkit-scrollbar { display: none; }
-
-.chapter-pill {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 12px 14px;
-  background: var(--surface-0);
-  color: var(--ink-600);
-  border: none;
-  border-right: 1px solid var(--hairline);
-  letter-spacing: 0.04em;
-  transition: background 0.2s, color 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-.chapter-pill:hover {
-  background: var(--surface-1);
-  color: var(--ink-900);
-}
-.chapter-pill--active {
+  align-items: flex-start;
+  gap: var(--s-3);
   background: var(--ink-900);
-  color: var(--gold-500);
+  color: var(--surface-1);
+  padding: 20px 28px;
+  margin-bottom: var(--s-7);
 }
-.chapter-counter-slot {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 16px;
-  background: var(--surface-1);
-}
-.chapter-counter {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-400);
-}
-
-/* Chapter panels */
-.chapter-panel {
-  display: flex;
-  border: 1px solid var(--hairline);
-  border-top: none;
-  background: var(--surface-0);
-  min-height: 380px;
-}
-.chapter-panel--hidden {
-  display: none;
-}
-
-/* Photo column */
-.chapter-photo-col {
-  flex: 1;
-  background: var(--surface-deep);
-  position: relative;
-  overflow: hidden;
-  min-height: 380px;
-}
-.chapter-photo-wrap {
-  position: relative;
-  height: 100%;
-}
-.chapter-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.chapter-photo-caption-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(transparent, rgba(20, 18, 16, 0.8));
-  padding: 32px 24px 18px;
-}
-.chapter-photo-caption {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.65);
-  letter-spacing: 0.08em;
-  line-height: 1.7;
-}
-.chapter-photo-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 48px;
-  background: repeating-linear-gradient(
-    135deg,
-    #1a1816 0px, #1a1816 24px,
-    #1c1a18 24px, #1c1a18 48px
-  );
-}
-.placeholder-rule {
-  width: 48px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.12);
-}
-.placeholder-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.25);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-align: center;
-  line-height: 1.8;
-}
-
-/* Text column */
-.chapter-text-col {
-  width: 420px;
+.doc-mandate__rule {
+  width: 3px;
+  background: var(--gold-500);
   flex-shrink: 0;
-  padding: 48px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-left: 1px solid var(--hairline);
+  align-self: stretch;
 }
-.chapter-date {
+.doc-mandate__heading {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-500);
+  font-weight: var(--weight-semibold);
+  margin-bottom: 6px;
+}
+.doc-mandate__body {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--dark-muted, rgba(216, 210, 198, 0.85));
+}
+
+/* Editorial timeline */
+.journey-timeline {
+  border-top: 1px solid var(--hairline);
+}
+
+.journey-entry {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--s-8);
+  padding: var(--s-8) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Year column */
+.entry-year {
+  padding-top: 2px;
+}
+.entry-year__text {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--gold-500);
+  line-height: 1.2;
+  white-space: pre-line;
+}
+
+/* Content column */
+.entry-content {
+  max-width: 680px;
+}
+.entry-date {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--gold-600);
-  letter-spacing: 0.16em;
+  color: var(--ink-400);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 10px;
 }
-.chapter-title {
+.entry-title {
   font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 26px;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.015em;
   line-height: 1.1;
-  margin-bottom: 6px;
   color: var(--ink-900);
+  margin-bottom: 6px;
 }
-.chapter-subtitle {
+.entry-subtitle {
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--ink-400);
   font-style: italic;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--hairline-soft, #F0EBE0);
 }
-.chapter-story {
-  font-size: 14px;
-  line-height: 1.9;
-  color: var(--ink-600);
-  text-wrap: pretty;
-}
-.chapter-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid var(--hairline);
-}
-.chapter-arrow {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--hairline);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink-900);
+.entry-story {
+  font-family: var(--font-body);
   font-size: 15px;
-  background: var(--surface-0);
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
+  line-height: 1.85;
+  color: var(--ink-600);
+  margin-bottom: var(--s-4);
 }
-.chapter-arrow:hover:not(:disabled) {
-  border-color: var(--ink-900);
+
+/* Photo — editorial scale, not full-width */
+.entry-photo-wrap {
+  max-width: 480px;
 }
-.chapter-arrow:disabled {
-  color: var(--ink-400);
-  border-color: var(--hairline-soft);
-  cursor: default;
+.entry-photo-frame {
+  border: 1px solid var(--hairline);
+  overflow: hidden;
 }
-.chapter-controls-counter {
+.entry-photo {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.entry-photo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-top: none;
+  padding: 10px 14px;
+}
+.entry-photo-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--ink-400);
-  flex: 1;
-  text-align: center;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+}
+.entry-photo-credit {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.entry-photo-credit__by {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-400);
+}
+.entry-photo-credit__name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--gold-600);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Placeholder — no archival photo */
+.entry-placeholder {
+  max-width: 360px;
+  border: 1px solid var(--hairline);
+  padding: 20px 24px;
+  background: var(--surface-1);
+}
+.entry-placeholder__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-400);
+  line-height: 1.8;
 }
 
 /* Responsive */
-@media (max-width: 900px) {
-  .chapter-panel {
-    flex-direction: column;
+@media (max-width: 720px) {
+  .journey-entry {
+    grid-template-columns: 1fr;
+    gap: var(--s-2);
   }
-  .chapter-photo-col {
-    min-height: 260px;
+  .entry-year {
+    display: none;
   }
-  .chapter-text-col {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--hairline);
-    padding: 32px 24px;
-  }
-  .chapter-photo {
-    object-fit: cover;
+  .entry-content {
+    max-width: 100%;
   }
 }
 @media (max-width: 480px) {
   .journey-section {
-    padding: 64px 0;
+    padding: var(--s-8) 0;
   }
-  .chapter-text-col {
-    padding: 24px 20px;
+  .entry-title {
+    font-size: 20px;
   }
-  .chapter-title {
-    font-size: 24px;
+  .entry-photo-wrap {
+    max-width: 100%;
   }
 }
 </style>

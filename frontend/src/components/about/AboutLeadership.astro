@@ -1,5 +1,5 @@
 ---
-import { leadership } from '../../data/leadership';
+import { leaders } from '../../data/aboutPeople';
 import PersonCard from '../ui/PersonCard.astro';
 ---
 
@@ -12,18 +12,18 @@ import PersonCard from '../ui/PersonCard.astro';
     </div>
 
     <div class="leadership-grid" data-gsap="stagger">
-      {leadership.map((person, i) => (
-        <div class:list={['leader-card', i === 1 && 'leader-card--alt']}>
+      {leaders.map((person) => (
+        <div class:list={['leader-card', person._pending && 'leader-card--pending']}>
           <PersonCard
             name={person.name}
             eyebrow={person.role}
-            subtitle="BCC · Bhopal"
-            bio={person.bio}
+            subtitle={person.since ? `Since ${person.since}` : undefined}
+            bio={person._pending ? undefined : person.bio}
             avatar={person.avatar}
-            avatarSize={88}
+            avatarSize={80}
             layout="vertical"
             placeholderVariant="forest"
-            profileHref={person.username ? `/photographers/${person.username}/` : undefined}
+            profileHref={person.profileHref}
           />
         </div>
       ))}
@@ -59,6 +59,7 @@ import PersonCard from '../ui/PersonCard.astro';
   margin-bottom: 12px;
 }
 .leadership-intro {
+  font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.7;
   color: var(--ink-600);
@@ -66,49 +67,66 @@ import PersonCard from '../ui/PersonCard.astro';
   font-style: italic;
 }
 
-/* Card grid */
+/* 3+3 grid — canonical Profile Card family */
 .leadership-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border: 1px solid var(--hairline);
   background: var(--surface-0);
+  overflow: hidden;
 }
 .leader-card {
-  padding: 40px 36px;
+  padding: 36px;
   border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
 }
-.leader-card:last-child {
+.leader-card:nth-child(3n) {
   border-right: none;
 }
-.leader-card--alt {
+.leader-card:nth-last-child(-n+3) {
+  border-bottom: none;
+}
+/* Alternate background on second row */
+.leader-card:nth-child(n+4) {
   background: var(--surface-1);
 }
 
 /* Responsive */
 @media (max-width: 900px) {
   .leadership-grid {
-    grid-template-columns: 1fr;
-  }
-  .leader-card {
-    border-right: none;
-    border-bottom: 1px solid var(--hairline);
-    padding: var(--s-4) 28px;
-  }
-  .leader-card:last-child {
-    border-bottom: none;
-  }
-}
-@media (min-width: 640px) and (max-width: 900px) {
-  .leadership-grid {
     grid-template-columns: 1fr 1fr;
   }
-  .leader-card:last-child {
-    border-right: none;
-    grid-column: 1 / -1;
-    border-bottom: none;
+  .leader-card:nth-child(3n) {
+    border-right: 1px solid var(--hairline);
   }
   .leader-card:nth-child(even) {
     border-right: none;
+  }
+  .leader-card:nth-last-child(-n+3) {
+    border-bottom: 1px solid var(--hairline);
+  }
+  .leader-card:nth-last-child(-n+2) {
+    border-bottom: none;
+  }
+  .leader-card {
+    padding: 28px;
+  }
+}
+@media (max-width: 540px) {
+  .leadership-grid {
+    grid-template-columns: 1fr;
+  }
+  .leader-card,
+  .leader-card:nth-child(3n),
+  .leader-card:nth-child(even) {
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .leader-card:last-child {
+    border-bottom: none;
+  }
+  .leader-card:nth-last-child(-n+2) {
+    border-bottom: 1px solid var(--hairline);
   }
 }
 </style>

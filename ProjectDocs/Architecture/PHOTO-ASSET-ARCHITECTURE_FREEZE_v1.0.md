@@ -40,6 +40,7 @@ Related Documents
 • V6 00 BCC Design Principles
 • CLAUDE.md
 • SOURCE_INDEX.md
+• Conforms to PLATFORM-ARCH-001.
 
 ---
 

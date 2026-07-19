@@ -1,5 +1,5 @@
 ---
-import { mentors } from '../../data/leadership';
+import { mentors } from '../../data/aboutPeople';
 import PersonCard from '../ui/PersonCard.astro';
 ---
 
@@ -8,30 +8,37 @@ import PersonCard from '../ui/PersonCard.astro';
     <div class="mentors-header" data-gsap="reveal">
       <div class="mentors-kicker">Learning From Masters</div>
       <h2 class="mentors-title" id="mentors-heading">Learning From Masters</h2>
-      <p class="mentors-intro">Senior photographers whose experience and generosity have shaped BCC's creative direction. Each mentor brings a distinct mastery to the club — and a willingness to share it.</p>
+      <p class="mentors-intro">Senior photographers whose experience and generosity have shaped BCC's creative direction. Each mentor brings a distinct mastery to the club — and a willingness to share it. One individual may appear in both Leadership and Mentors; leadership and mentoring are distinct responsibilities.</p>
     </div>
 
     <div class="mentors-grid" data-gsap="stagger">
-      {mentors.map((mentor, i) => (
-        <div class:list={['mentor-card', i % 2 === 1 && 'mentor-card--alt']}>
+      {mentors.map((mentor) => (
+        <div class:list={['mentor-card', mentor._pending && 'mentor-card--pending']}>
           <PersonCard
             name={mentor.name}
-            eyebrow={mentor.expertise}
-            subtitle={`${mentor.role} · Bhopal`}
-            bio={mentor.bio}
+            eyebrow={mentor.role}
+            subtitle={mentor.since ? `Since ${mentor.since}` : undefined}
+            bio={mentor._pending ? undefined : mentor.bio}
             avatar={mentor.avatar}
-            avatarSize={96}
-            layout="horizontal"
-            placeholderVariant="gold"
-            profileHref={mentor.username ? `/photographers/${mentor.username}/` : undefined}
+            avatarSize={80}
+            layout="vertical"
+            placeholderVariant="forest"
+            profileHref={mentor.profileHref}
           >
-            <div class="mentor-contribution">
-              <div class="contribution-heading">Contribution to BCC</div>
-              <p class="contribution-body">{mentor.contribution}</p>
-            </div>
+            {/* Contribution to BCC — mentor-specific extension, omitted when pending */}
+            {mentor.contribution && !mentor._pending && (
+              <div class="mentor-contribution">
+                <div class="contribution-heading">Contribution to BCC</div>
+                <p class="contribution-body">{mentor.contribution}</p>
+              </div>
+            )}
           </PersonCard>
         </div>
       ))}
+    </div>
+
+    <div class="mentors-note">
+      <div class="mentors-note__text">V6 02 used distinct avatar colours for mentors and coordinators — Ver2 uses the same Profile Card family for both. The distinction between sections is carried by the section heading and the Contribution field.</div>
     </div>
   </div>
 </section>
@@ -64,60 +71,89 @@ import PersonCard from '../ui/PersonCard.astro';
   margin-bottom: 12px;
 }
 .mentors-intro {
+  font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.7;
   color: var(--ink-600);
   max-width: 680px;
 }
 
-/* Mentor grid */
+/* 3-col grid — same Profile Card family as Leadership */
 .mentors-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   border: 1px solid var(--hairline);
   background: var(--surface-0);
+  overflow: hidden;
+  margin-bottom: var(--s-3);
 }
 .mentor-card {
-  padding: var(--s-6);
+  padding: 36px;
   border-right: 1px solid var(--hairline);
 }
 .mentor-card:last-child {
   border-right: none;
 }
-.mentor-card--alt {
-  background: var(--surface-1);
-}
 
-/* Contribution section (mentor-specific extra content) */
-.mentor-contribution {
+/* Contribution section — mentor-specific slot content */
+:global(.mentor-contribution) {
   border-top: 1px solid var(--hairline);
   padding-top: var(--s-2);
   margin-bottom: 20px;
 }
-.contribution-heading {
+:global(.contribution-heading) {
+  font-family: var(--font-body);
   font-size: var(--text-micro);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--ink-400);
   font-weight: var(--weight-semibold);
   margin-bottom: var(--s-1);
-  font-family: var(--font-body);
 }
-.contribution-body {
+:global(.contribution-body) {
+  font-family: var(--font-body);
   font-size: var(--text-ui);
   line-height: 1.8;
   color: var(--ink-600);
 }
 
+/* Component family note — internal design annotation */
+.mentors-note {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 22px 26px;
+}
+.mentors-note__text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  max-width: 720px;
+}
+
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .mentors-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mentor-card:nth-child(2n) {
+    border-right: none;
+  }
+  .mentor-card:nth-child(2n+1) {
+    border-right: 1px solid var(--hairline);
+  }
+  .mentor-card {
+    padding: 28px;
+  }
+}
+@media (max-width: 540px) {
   .mentors-grid {
     grid-template-columns: 1fr;
   }
-  .mentor-card {
+  .mentor-card,
+  .mentor-card:nth-child(2n+1) {
     border-right: none;
     border-bottom: 1px solid var(--hairline);
-    padding: var(--s-4) 28px;
   }
   .mentor-card:last-child {
     border-bottom: none;

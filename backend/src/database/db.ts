@@ -850,6 +850,19 @@ export interface GallerySpotlightTable {
 }
 
 // ============================================================================
+// Editorial Hero Assignments
+// ============================================================================
+
+export interface HeroAssignmentsTable {
+  id:          Generated<number>;
+  photo_uuid:  string;
+  location:    string;
+  mode:        'FIXED' | 'POOL';
+  assigned_by: number;
+  assigned_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+// ============================================================================
 // Journal
 // ============================================================================
 
@@ -976,6 +989,7 @@ export interface DB {
   photo_reactions: PhotoReactionsTable;
   photo_comments: PhotoCommentsTable;
   gallery_spotlight: GallerySpotlightTable;
+  hero_assignments: HeroAssignmentsTable;
 
   journal_posts: JournalPostsTable;
 }

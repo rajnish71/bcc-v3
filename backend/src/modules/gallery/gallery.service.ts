@@ -55,6 +55,7 @@ import type { PresignPhotoDto } from './dto/presign-photo.dto';
 import type { ConfirmPhotoDto } from './dto/confirm-photo.dto';
 import type { UpdatePhotoDto } from './dto/update-photo.dto';
 import type { CreateAlbumDto, UpdateAlbumDto, AddPhotoToAlbumDto } from './dto/album.dto';
+import { HERO_DESTINATIONS } from './hero-destinations.config';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -1221,28 +1222,12 @@ export class GalleryService {
     title_override: string | null;
     credit_override: string | null;
   }) | null> {
-    const row = await db
-      .selectFrom('gallery_spotlight as gs')
-      .innerJoin('photos as p', 'p.uuid', 'gs.photo_uuid')
-      .leftJoin('users as u', 'u.id', 'p.owner_user_id')
-      .where('p.status', '=', 'ACTIVE')
-      .where('p.visibility', '=', 'PUBLIC')
-      .selectAll('p')
-      .select([
-        'gs.title_override',
-        'gs.credit_override',
-        'u.full_name as photographer_name',
-        'u.username as photographer_username',
-      ] as any)
-      .executeTakeFirst();
-
-    if (!row) return null;
-
-    const photo = formatPhoto(row as Record<string, unknown>);
+    const photo = await this.getHeroForLocation('home');
+    if (!photo) return null;
     return {
       ...photo,
-      title_override:  (row as any).title_override  ?? null,
-      credit_override: (row as any).credit_override ?? null,
+      title_override: null,
+      credit_override: null,
     };
   }
 
@@ -1252,29 +1237,202 @@ export class GalleryService {
     titleOverride?: string | null,
     creditOverride?: string | null,
   ): Promise<void> {
+    // Backward compatibility: delegate to assignHero
+    await this.assignHero(adminUserId, {
+      photo_uuid: photoUuid,
+      location: 'home',
+      mode: 'FIXED',
+    });
+  }
+
+  // =========================================================================
+  // Editorial Hero Manager (Page Heros)
+  // =========================================================================
+
+  async getEligiblePhotos(): Promise<any[]> {
+    // Aspect ratio 16:5 ± 0.1 (3.1 to 3.3)
+    const photos = await db
+      .selectFrom('photos as p')
+      .leftJoin('users as u', 'u.id', 'p.owner_user_id')
+      .where('p.status', '=', 'ACTIVE')
+      .where('p.visibility', '=', 'PUBLIC')
+      .where('p.width_px', 'is not', null)
+      .where('p.height_px', 'is not', null)
+      .where(sql<boolean>`p.width_px >= p.height_px * 3.1`)
+      .where(sql<boolean>`p.width_px <= p.height_px * 3.3`)
+      .selectAll('p')
+      .select([
+        'u.full_name as photographer_name',
+        'u.username as photographer_username',
+      ] as any)
+      .orderBy('p.created_at', 'desc')
+      .execute();
+
+    const photoIds = photos.map(p => p.id);
+    let tags: any[] = [];
+    let assignments: any[] = [];
+    if (photoIds.length > 0) {
+      tags = await db
+        .selectFrom('photo_tag_assignments as pta')
+        .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+        .where('pta.photo_id', 'in', photoIds)
+        .select(['pta.photo_id', 'pt.tag_key', 'pt.display_name', 'pt.category'])
+        .execute();
+
+      assignments = await db
+        .selectFrom('hero_assignments')
+        .where('photo_uuid', 'in', photos.map(p => p.uuid))
+        .selectAll()
+        .execute();
+    }
+
+    const tagsByPhotoId = new Map<number, any[]>();
+    for (const t of tags) {
+      if (!tagsByPhotoId.has(t.photo_id)) tagsByPhotoId.set(t.photo_id, []);
+      tagsByPhotoId.get(t.photo_id)!.push(t);
+    }
+
+    const assignmentsByPhotoUuid = new Map<string, any[]>();
+    for (const a of assignments) {
+      if (!assignmentsByPhotoUuid.has(a.photo_uuid)) assignmentsByPhotoUuid.set(a.photo_uuid, []);
+      assignmentsByPhotoUuid.get(a.photo_uuid)!.push(a);
+    }
+
+    return photos.map(p => {
+      const formatted = formatPhoto(p as any);
+      const photoTags = tagsByPhotoId.get(p.id) ?? [];
+      const photoAssignments = assignmentsByPhotoUuid.get(p.uuid) ?? [];
+      return {
+        ...formatted,
+        tags: photoTags,
+        assignments: photoAssignments.map(a => ({
+          location: a.location,
+          mode: a.mode,
+          assigned_at: a.assigned_at,
+        })),
+      };
+    });
+  }
+
+  async assignHero(
+    adminUserId: number,
+    dto: { photo_uuid: string; location: string; mode: 'FIXED' | 'POOL' },
+  ): Promise<void> {
+    // Validate destination
+    const valid = HERO_DESTINATIONS.some(d => d.key === dto.location);
+    if (!valid) {
+      throw new BadRequestException(`Invalid hero location: ${dto.location}`);
+    }
+
+    // Verify photo exists and is eligible
     const photo = await db
       .selectFrom('photos')
-      .where('uuid', '=', photoUuid)
+      .where('uuid', '=', dto.photo_uuid)
       .where('status', '=', 'ACTIVE')
       .where('visibility', '=', 'PUBLIC')
-      .select('uuid')
+      .select(['uuid', 'width_px', 'height_px'])
       .executeTakeFirst();
 
     if (!photo) {
-      throw new NotFoundException(`Photo ${photoUuid} not found or is not a public active photo.`);
+      throw new NotFoundException(`Photo ${dto.photo_uuid} not found or is not a public active photo.`);
     }
 
-    const now: any = toMysqlDatetime(new Date());
-    await sql`
-      INSERT INTO gallery_spotlight (id, photo_uuid, title_override, credit_override, set_by_user_id, set_at)
-      VALUES (1, ${photoUuid}, ${titleOverride ?? null}, ${creditOverride ?? null}, ${adminUserId}, ${now})
-      ON DUPLICATE KEY UPDATE
-        photo_uuid      = VALUES(photo_uuid),
-        title_override  = VALUES(title_override),
-        credit_override = VALUES(credit_override),
-        set_by_user_id  = VALUES(set_by_user_id),
-        set_at          = VALUES(set_at)
-    `.execute(db);
+    if (!photo.width_px || !photo.height_px) {
+      throw new BadRequestException('Photo is missing dimensions.');
+    }
+    const ratio = photo.width_px / photo.height_px;
+    if (ratio < 3.1 || ratio > 3.3) {
+      throw new BadRequestException(`Photo is not eligible for Hero usage (aspect ratio is ${ratio.toFixed(2)}, must be 16:5 ± 0.1).`);
+    }
+
+    // If mode is FIXED, remove any other FIXED assignments for this location
+    if (dto.mode === 'FIXED') {
+      await db
+        .deleteFrom('hero_assignments')
+        .where('location', '=', dto.location)
+        .where('mode', '=', 'FIXED')
+        .execute();
+    }
+
+    // Remove any existing assignment for this exact photo at this location (either fixed or pool) to prevent duplicate key
+    await db
+      .deleteFrom('hero_assignments')
+      .where('location', '=', dto.location)
+      .where('photo_uuid', '=', dto.photo_uuid)
+      .execute();
+
+    // Insert new assignment
+    await db
+      .insertInto('hero_assignments')
+      .values({
+        photo_uuid: dto.photo_uuid,
+        location: dto.location,
+        mode: dto.mode,
+        assigned_by: adminUserId,
+        assigned_at: toMysqlDatetime(new Date()) as any,
+      })
+      .execute();
+  }
+
+  async unassignHero(dto: { photo_uuid: string; location: string }): Promise<void> {
+    await db
+      .deleteFrom('hero_assignments')
+      .where('location', '=', dto.location)
+      .where('photo_uuid', '=', dto.photo_uuid)
+      .execute();
+  }
+
+  async getHeroForLocation(location: string): Promise<ReturnType<typeof formatPhoto> | null> {
+    const loc = location.toLowerCase().trim();
+
+    // 1. Check FIXED hero
+    let assignment = await db
+      .selectFrom('hero_assignments as ha')
+      .innerJoin('photos as p', 'p.uuid', 'ha.photo_uuid')
+      .leftJoin('users as u', 'u.id', 'p.owner_user_id')
+      .where('p.status', '=', 'ACTIVE')
+      .where('p.visibility', '=', 'PUBLIC')
+      .where('ha.location', '=', loc)
+      .where('ha.mode', '=', 'FIXED')
+      .selectAll('p')
+      .select([
+        'u.full_name as photographer_name',
+        'u.username as photographer_username',
+      ] as any)
+      .executeTakeFirst();
+
+    // 2. If no FIXED hero, check POOL
+    if (!assignment) {
+      const pool = await db
+        .selectFrom('hero_assignments as ha')
+        .innerJoin('photos as p', 'p.uuid', 'ha.photo_uuid')
+        .leftJoin('users as u', 'u.id', 'p.owner_user_id')
+        .where('p.status', '=', 'ACTIVE')
+        .where('p.visibility', '=', 'PUBLIC')
+        .where('ha.location', '=', loc)
+        .where('ha.mode', '=', 'POOL')
+        .selectAll('p')
+        .select([
+          'u.full_name as photographer_name',
+          'u.username as photographer_username',
+        ] as any)
+        .orderBy('ha.id', 'asc') // Deterministic order for daily seed stability
+        .execute();
+
+      if (pool.length > 0) {
+        // Daily rotation using current date seed (YYYY-MM-DD)
+        const dateStr = new Date().toISOString().split('T')[0];
+        let hash = 0;
+        for (let i = 0; i < dateStr.length; i++) {
+          hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % pool.length;
+        assignment = pool[index];
+      }
+    }
+
+    if (!assignment) return null;
+    return formatPhoto(assignment as Record<string, unknown>);
   }
 
   // =========================================================================

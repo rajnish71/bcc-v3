@@ -37,9 +37,6 @@ import PersonCard from '../ui/PersonCard.astro';
       ))}
     </div>
 
-    <div class="mentors-note">
-      <div class="mentors-note__text">V6 02 used distinct avatar colours for mentors and coordinators — Ver2 uses the same Profile Card family for both. The distinction between sections is carried by the section heading and the Contribution field.</div>
-    </div>
   </div>
 </section>
 
@@ -85,7 +82,6 @@ import PersonCard from '../ui/PersonCard.astro';
   border: 1px solid var(--hairline);
   background: var(--surface-0);
   overflow: hidden;
-  margin-bottom: var(--s-3);
 }
 .mentor-card {
   padding: 36px;
@@ -115,20 +111,6 @@ import PersonCard from '../ui/PersonCard.astro';
   font-size: var(--text-ui);
   line-height: 1.8;
   color: var(--ink-600);
-}
-
-/* Component family note — internal design annotation */
-.mentors-note {
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  padding: 22px 26px;
-}
-.mentors-note__text {
-  font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--ink-600);
-  max-width: 720px;
 }
 
 /* Responsive */

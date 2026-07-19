@@ -51,6 +51,7 @@ import type { PresignPhotoDto } from './dto/presign-photo.dto';
 import type { ConfirmPhotoDto } from './dto/confirm-photo.dto';
 import type { UpdatePhotoDto } from './dto/update-photo.dto';
 import type { CreateAlbumDto, UpdateAlbumDto, AddPhotoToAlbumDto } from './dto/album.dto';
+import { HERO_DESTINATIONS } from './hero-destinations.config';
 
 @Controller('api/v1/gallery')
 export class GalleryController {
@@ -118,6 +119,53 @@ export class GalleryController {
   ) {
     await this.gallery.setSpotlight(req.user.sub, body.photo_uuid, body.title_override, body.credit_override);
     return { ok: true };
+  }
+
+  /** Get all valid hero destinations configuration. */
+  @Get('hero/destinations')
+  async getHeroDestinations() {
+    return HERO_DESTINATIONS;
+  }
+
+  /** Get eligible photos for hero assignments — admin only. */
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('gallery.spotlight.set')
+  @Get('hero/eligible')
+  async getEligiblePhotos() {
+    return this.gallery.getEligiblePhotos();
+  }
+
+  /** Assign a hero image to a destination — admin only. */
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('gallery.spotlight.set')
+  @HttpCode(HttpStatus.OK)
+  @Post('hero/assign')
+  async assignHero(
+    @Body() body: { photo_uuid: string; location: string; mode: 'FIXED' | 'POOL' },
+    @Req() req: any,
+  ) {
+    await this.gallery.assignHero(req.user.sub, body);
+    return { ok: true };
+  }
+
+  /** Unassign a hero image from a destination — admin only. */
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('gallery.spotlight.set')
+  @HttpCode(HttpStatus.OK)
+  @Post('hero/unassign')
+  async unassignHero(
+    @Body() body: { photo_uuid: string; location: string },
+  ) {
+    await this.gallery.unassignHero(body);
+    return { ok: true };
+  }
+
+  /** Get the current hero image for a page/location. */
+  @Get('hero/location/:location')
+  async getHeroForLocation(@Param('location') location: string) {
+    const hero = await this.gallery.getHeroForLocation(location);
+    if (!hero) throw new NotFoundException(`No hero configured for location ${location}`);
+    return hero;
   }
 
   /** Tag taxonomy list. */

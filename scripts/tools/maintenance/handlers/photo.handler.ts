@@ -10,7 +10,8 @@ export class PhotoHandler implements MaintenanceHandler {
       'photo_reactions.user_id',
       'photo_comments.user_id',
       'photo_tag_assignments.assigned_by',
-      'gallery_spotlight.set_by_user_id'
+      'gallery_spotlight.set_by_user_id',
+      'hero_assignments.assigned_by'
     ];
   }
 
@@ -69,6 +70,12 @@ export class PhotoHandler implements MaintenanceHandler {
         action: 'nullify',
         description: 'Nullify set_by_user_id references to target user',
         phase: 4
+      },
+      {
+        table: 'hero_assignments',
+        action: 'nullify',
+        description: 'Nullify assigned_by references to target user',
+        phase: 4
       }
     ];
   }
@@ -98,6 +105,7 @@ export class PhotoHandler implements MaintenanceHandler {
     await countRows('photo_comments', 'user_id', 'user_id');
     await countRows('photo_tag_assignments', 'assigned_by', 'assigned_by');
     await countRows('gallery_spotlight', 'set_by_user_id', 'set_by_user_id');
+    await countRows('hero_assignments', 'assigned_by', 'assigned_by');
 
     // Retrieve user's photo IDs and album IDs
     const userPhotos = await db
@@ -231,6 +239,12 @@ export class PhotoHandler implements MaintenanceHandler {
         .updateTable('gallery_spotlight')
         .set({ set_by_user_id: targetAdminId })
         .where('set_by_user_id', 'in', userIds)
+        .execute();
+
+      await db
+        .updateTable('hero_assignments')
+        .set({ assigned_by: targetAdminId })
+        .where('assigned_by', 'in', userIds)
         .execute();
     }
   }

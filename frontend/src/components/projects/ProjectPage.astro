@@ -17,7 +17,7 @@
  * All variation is data-driven. No project-specific layouts or CSS.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ProjectHero from './ProjectHero.astro';
+import PageHero from '../ui/PageHero.astro';
 import ProjectStatBand from './ProjectStatBand.astro';
 import ProjectAbout from './ProjectAbout.astro';
 import ProjectHighlights from './ProjectHighlights.astro';
@@ -42,11 +42,42 @@ const related = getRelatedProjects(project.slug);
 >
 
   <!-- 01 Hero — always -->
-  <ProjectHero
+  <PageHero
+    variant="project"
+    eyebrow="BCC Special Project"
     title={project.title}
-    description={project.description}
+    subtitle={project.description}
     heroImage={project.heroImage}
   />
+
+  <script define:vars={{ slug: project.slug }}>
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/gallery/hero/location/' + encodeURIComponent(slug));
+        if (res.ok) {
+          const photo = await res.json();
+          if (photo && photo.urls) {
+            var imgEl = document.getElementById('page-hero-img');
+            var creditNameEl = document.getElementById('page-hero-credit-name');
+            var creditContainer = document.getElementById('page-hero-credit');
+            if (imgEl) {
+              imgEl.src = photo.urls.original || photo.urls.medium || '';
+              imgEl.alt = photo.title || 'Special Project Hero';
+              imgEl.style.display = 'block';
+            }
+            if (creditNameEl) {
+              creditNameEl.textContent = photo.photographer ? photo.photographer.name : 'BCC Member';
+            }
+            if (creditContainer) {
+              creditContainer.style.display = 'flex';
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load project hero dynamically', e);
+      }
+    })();
+  </script>
 
   <!-- 02 StatBand — always (populated by client script below) -->
   <ProjectStatBand

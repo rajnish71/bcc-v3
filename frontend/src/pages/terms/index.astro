@@ -170,3 +170,8 @@ import PageHero from '../../components/ui/PageHero.astro';
   }
 }
 </style>
+
+<script>
+  import { loadPageHero } from '../../lib/hero-loader';
+  loadPageHero('terms');
+</script>

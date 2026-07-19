@@ -6,7 +6,8 @@
  * 10 sections, all unconditional.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import AboutHero from '../components/about/AboutHero.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import { aboutPhotos, photoSrc } from '../data/photoRegistry';
 import AboutPhilosophy from '../components/about/AboutPhilosophy.astro';
 import AboutPillars from '../components/about/AboutPillars.astro';
 import AboutJourney from '../components/about/AboutJourney.astro';
@@ -16,11 +17,37 @@ import AboutLeadership from '../components/about/AboutLeadership.astro';
 import AboutMentors from '../components/about/AboutMentors.astro';
 import AboutCommunityInvitation from '../components/about/AboutCommunityInvitation.astro';
 
-// TODO: Replace with live API values when stats endpoints are available
-// e.g. fetch('http://localhost:3001/api/v1/stats') → { members, activities, photos }
-const membersCount: number | undefined = undefined;
-const activitiesCount: number | undefined = undefined;
-const photosCount: number | undefined = undefined;
+let membersCount: number | undefined = undefined;
+let activitiesCount: number | undefined = undefined;
+let photosCount: number | undefined = undefined;
+
+try {
+  const res = await fetch('http://localhost:3001/api/v1/stats');
+  if (res.ok) {
+    const data = await res.json();
+    if (data.members    > 0) membersCount    = data.members;
+    if (data.activities > 0) activitiesCount = data.activities;
+    if (data.photos     > 0) photosCount     = data.photos;
+  }
+} catch {
+  // Backend unavailable at build time — stats band shows "—" fallback
+}
+
+const currentYear = new Date().getFullYear();
+const yearsCount = currentYear - 2015;
+
+const stats = [
+  { label: 'Established', value: '2015' },
+  { label: 'Registered', value: 'Oct 2019' },
+  { label: 'Members', value: membersCount, target: membersCount },
+  { label: 'Activities', value: activitiesCount, target: activitiesCount },
+  { label: 'Photographs', value: photosCount, target: photosCount },
+  { label: 'Years Documenting Bhopal', value: yearsCount, target: yearsCount, isWide: true }
+];
+
+const img = aboutPhotos.hero;
+const defaultHeroImg = photoSrc(img, 1360);
+const defaultHeroCredit = img.photographer;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -49,11 +76,43 @@ const jsonLd = {
 >
 
   <!-- 1. Hero — full-width photograph + stats band -->
-  <AboutHero
-    membersCount={membersCount}
-    activitiesCount={activitiesCount}
-    photosCount={photosCount}
+  <PageHero
+    variant="overlay"
+    eyebrow="Bhopal Camera Club · Est. 2015"
+    title="The Story of<br/>Bhopal Camera Club"
+    subtitle="We began as a handful of photographers who loved Bhopal and believed the best way to learn was to go out and make photographs together. A decade later, we are a registered society, a community of hundreds, and a growing visual archive of one of India's most photogenic cities."
+    heroImage={defaultHeroImg}
+    heroCredit={defaultHeroCredit}
+    stats={stats}
   />
+
+  <script>
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/gallery/hero/location/about');
+        if (res.ok) {
+          const photo = await res.json();
+          if (photo && photo.urls) {
+            const imgEl = document.getElementById('page-hero-img') as HTMLImageElement | null;
+            const creditNameEl = document.getElementById('page-hero-credit-name');
+            const creditContainer = document.getElementById('page-hero-credit');
+            if (imgEl) {
+              imgEl.src = photo.urls.original ?? photo.urls.medium ?? '';
+              imgEl.alt = photo.title ?? 'About BCC';
+            }
+            if (creditNameEl) {
+              creditNameEl.textContent = photo.photographer ? photo.photographer.name : 'BCC Member';
+            }
+            if (creditContainer) {
+              creditContainer.style.display = 'flex';
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load about page hero dynamically', e);
+      }
+    })();
+  </script>
 
   <!-- 2. Our Philosophy — mission, vision, display quote -->
   <AboutPhilosophy />

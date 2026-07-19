@@ -273,7 +273,19 @@ const defaultPost = fallbackPosts[slug] || {
       if (!res.ok) throw new Error('API error');
       const { data } = await res.json();
       if (data) {
-        document.getElementById('article-hero-img')!.setAttribute('src', data.heroImage);
+        let heroImg = data.heroImage;
+        if (!heroImg || heroImg === '/images/StreetLife-Rahil-Khan-1024x768.jpeg') {
+          try {
+            const hRes = await fetch('/api/v1/gallery/hero/location/journal-articles');
+            if (hRes.ok) {
+              const hPhoto = await hRes.json();
+              if (hPhoto && hPhoto.urls) {
+                heroImg = hPhoto.urls.original || hPhoto.urls.medium || heroImg;
+              }
+            }
+          } catch (e) {}
+        }
+        document.getElementById('article-hero-img')!.setAttribute('src', heroImg);
         document.getElementById('article-hero-img')!.setAttribute('alt', data.title);
         document.getElementById('article-cat')!.textContent = data.category || 'Journal';
         document.getElementById('article-title')!.textContent = data.title;

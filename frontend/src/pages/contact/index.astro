@@ -346,6 +346,9 @@ import ValidationMessage from '../../components/forms/ValidationMessage.astro';
 </style>
 
 <script>
+  import { loadPageHero } from '../../lib/hero-loader';
+  loadPageHero('contact');
+
   const API_URL = '/api/v1/contact';
 
   const form = document.getElementById('contact-form') as HTMLFormElement;

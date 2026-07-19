@@ -10,6 +10,7 @@
  * Uses EditorialCard (V6 62) for both featured and grid cards.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/ui/PageHero.astro';
 import SectionHeader from '../../components/ui/SectionHeader.astro';
 import EditorialCard from '../../components/ui/EditorialCard.astro';
 
@@ -53,18 +54,11 @@ function formatDate(iso: string) {
   <div class="journal-wrapper">
 
     <!-- Header -->
-    <header class="journal-header surface-white">
-      <div class="container">
-        <SectionHeader
-          eyebrow="Stories & Craft"
-          title="The Journal"
-          subtitle="Guides, tutorial logs, event field reports, and artistic perspectives written by the Bhopal Camera Club community."
-          as="h1"
-          data-gsap="reveal"
-        />
-      </div>
-      <div class="hairline"></div>
-    </header>
+    <PageHero
+      eyebrow="Stories & Craft"
+      title="The Journal"
+      subtitle="Guides, tutorial logs, event field reports, and artistic perspectives written by the Bhopal Camera Club community."
+    />
 
     <!-- Featured Post -->
     {featuredPost && (
@@ -229,6 +223,9 @@ function formatDate(iso: string) {
       grid.appendChild(card);
     });
   }
+
+  import { loadPageHero } from '../../lib/hero-loader';
+  loadPageHero('journal');
 
   loadJournalIndex();
 </script>

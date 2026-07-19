@@ -1,12 +1,6 @@
 ---
-/**
- * activities.astro — Activities Page
- * Route: /activities/
- * Replaces the previously built /events/ route.
- * Filterable: Photowalks · Workshops · Exhibitions (and all types)
- */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SectionHeader from '../components/ui/SectionHeader.astro';
+import PageHero from '../components/ui/PageHero.astro';
 import { getUpcomingActivities, getPastActivities } from '../lib/services/activity.service';
 
 const TYPES = [
@@ -27,32 +21,26 @@ const pastActivities = await getPastActivities();
   description="BCC activities — photowalks, workshops, exhibitions, and meetups across Bhopal."
 >
 
-  <div class="page-hero surface-white">
-    <div class="container">
-      <SectionHeader
-        eyebrow="Activities"
-        title="Events & Activities"
-        subtitle="Photowalks, workshops, exhibitions, and community meetups — open to members at every level."
-        as="h1"
-      />
-
-      <!-- Filter chips -->
-      <div class="filter-row" role="group" aria-label="Filter by type" id="type-filters">
-        {TYPES.map((t, i) => (
-          <button
-            class:list={['chip', i === 0 && 'active']}
-            data-type={t.value}
-            aria-pressed={i === 0 ? 'true' : 'false'}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-    </div>
-    <div class="hairline"></div>
-  </div>
+  <PageHero
+    eyebrow="Activities"
+    title="Events & Activities"
+    subtitle="Photowalks, workshops, exhibitions, and community meetups — open to members at every level."
+  />
 
   <div class="container" style="padding-top:var(--s-6);padding-bottom:var(--s-12);">
+
+    <!-- Filter chips -->
+    <div class="filter-row" role="group" aria-label="Filter by type" id="type-filters" style="margin-bottom:var(--s-8);">
+      {TYPES.map((t, i) => (
+        <button
+          class:list={['chip', i === 0 && 'active']}
+          data-type={t.value}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
 
     <!-- Upcoming -->
     <div class="acts-section">
@@ -234,6 +222,44 @@ const pastActivities = await getPastActivities();
     if (loadWrap) loadWrap.setAttribute('hidden', '');
   }
 
+  async function updateHeroForType(type) {
+    let locationKey = 'activities';
+    if (type === 'workshop') locationKey = 'workshops';
+    else if (type === 'photowalk') locationKey = 'photowalks';
+    else if (type === 'contest') locationKey = 'contests';
+    else if (type === 'exhibition') locationKey = 'exhibitions';
+
+    try {
+      const res = await fetch('/api/v1/gallery/hero/location/' + encodeURIComponent(locationKey));
+      const banner = document.getElementById('page-hero-banner');
+      const imgEl = document.getElementById('page-hero-img');
+      const creditNameEl = document.getElementById('page-hero-credit-name');
+      const creditContainer = document.getElementById('page-hero-credit');
+
+      if (res.ok) {
+        const photo = await res.json();
+        if (photo && photo.urls) {
+          if (imgEl && banner) {
+            imgEl.src = photo.urls.original || photo.urls.medium || '';
+            imgEl.alt = photo.title || 'Activities Hero';
+            banner.style.display = 'block';
+          }
+          if (creditNameEl) {
+            creditNameEl.textContent = photo.photographer ? photo.photographer.name : 'BCC Member';
+          }
+          if (creditContainer) {
+            creditContainer.style.display = 'flex';
+          }
+        }
+      } else {
+        if (banner) banner.style.display = 'none';
+        if (creditContainer) creditContainer.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('Failed to load activities page hero dynamically', e);
+    }
+  }
+
   document.querySelectorAll('.chip').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(b => { 
@@ -242,7 +268,15 @@ const pastActivities = await getPastActivities();
       });
       btn.classList.add('active'); 
       btn.setAttribute('aria-pressed', 'true');
-      currentType = btn.dataset.type ?? 'all';
+      const type = btn.dataset.type ?? 'all';
+      currentType = type;
+
+      const url = new URL(window.location.href);
+      if (type === 'all') url.searchParams.delete('type');
+      else url.searchParams.set('type', type);
+      window.history.replaceState({}, '', url);
+
+      updateHeroForType(type);
       loadUpcoming(); 
       loadPast(true);
     });
@@ -254,10 +288,26 @@ const pastActivities = await getPastActivities();
       b.classList.toggle('active', b.dataset.type === 'all');
       b.setAttribute('aria-pressed', b.dataset.type === 'all' ? 'true' : 'false');
     });
+    const url = new URL(window.location.href);
+    url.searchParams.delete('type');
+    window.history.replaceState({}, '', url);
+
+    updateHeroForType('all');
     loadUpcoming(); 
     loadPast(true);
   });
 
+  // Initial load alignment
+  const params = new URLSearchParams(window.location.search);
+  const initialType = params.get('type') || 'all';
+  currentType = initialType;
+  document.querySelectorAll('.chip').forEach(b => {
+    const isAct = b.dataset.type === initialType;
+    b.classList.toggle('active', isAct);
+    b.setAttribute('aria-pressed', isAct ? 'true' : 'false');
+  });
+
+  updateHeroForType(initialType);
   loadUpcoming();
   loadPast(true);
 </script>

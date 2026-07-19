@@ -80,23 +80,18 @@ const secondary = aboutPhotos.whyBhopalSecondary;
             <div class="subject-desc">Temples · mosques · colonial layers</div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 3. Supporting photograph — editorial scale (max-width 520px), not full-width -->
-    <div class="why-secondary-section">
-      <div class="why-secondary-wrap">
+        <!-- Supporting photograph — integrated into editorial column, anchored below subject grid -->
         <div class="why-secondary-frame">
           <img
             src={photoSrc(secondary, 720)}
             srcset={photoSrcset(secondary, [480, 720])}
-            sizes="(max-width: 900px) 100vw, 520px"
+            sizes="(max-width: 900px) 100vw, 560px"
             alt={secondary.alt}
             class="why-secondary-photo"
             loading="lazy"
           />
         </div>
-        <!-- Canonical Photo Credit Component -->
         <div class="photo-credit-bar photo-credit-bar--sm">
           <span class="photo-credit-bar__caption">{secondary.caption}</span>
           <span class="photo-credit-bar__right">
@@ -252,19 +247,12 @@ const secondary = aboutPhotos.whyBhopalSecondary;
   line-height: 1.5;
 }
 
-/* 3. Supporting photograph — editorial scale, not full-width */
-.why-secondary-section {
-  background: var(--surface-1);
-  border: 1px solid var(--hairline);
-  border-top: none;
-  padding: 40px 56px;
-}
-.why-secondary-wrap {
-  max-width: 520px;
-}
+/* 3. Supporting photograph — anchored in right editorial column below subject grid */
 .why-secondary-frame {
   border: 1px solid var(--hairline);
+  border-bottom: none;
   overflow: hidden;
+  margin-top: var(--s-4);
 }
 .why-secondary-photo {
   width: 100%;
@@ -279,11 +267,8 @@ const secondary = aboutPhotos.whyBhopalSecondary;
     gap: 40px;
     padding: 40px 32px;
   }
-  .why-secondary-section {
-    padding: 32px;
-  }
-  .why-secondary-wrap {
-    max-width: 100%;
+  .why-secondary-frame {
+    margin-top: var(--s-3);
   }
 }
 @media (max-width: 480px) {

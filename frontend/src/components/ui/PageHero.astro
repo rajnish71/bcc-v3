@@ -1,38 +1,173 @@
 ---
 /**
- * PageHero.astro — Shared page hero for editorial/policy/info pages.
- * Eyebrow · H1 · Subtitle · optional "Last updated" date · bottom hairline.
- * Used by: terms, conduct, privacy, membership-rules, copyright, contact, partner-with-us.
+ * PageHero.astro — Consolidated page hero for all BCC pages.
+ * Supports standard text/banner, overlay (About page), and project (Special Projects) layouts.
  */
+interface StatItem {
+  label: string;
+  value?: string | number;
+  isWide?: boolean;
+  target?: number;
+}
+
 interface Props {
   eyebrow: string;
   title: string;
   subtitle: string;
-  /** Optional date string — "Last updated: June 12, 2026" */
   meta?: string;
+  
+  // Dynamic or static hero image & attribution
+  heroImage?: string;
+  heroCredit?: string;
+  
+  // Stats band (optional, for About style pages)
+  stats?: StatItem[];
+  
+  // Layout variants: 'standard' | 'overlay' | 'project'
+  variant?: 'standard' | 'overlay' | 'project';
 }
 
-const { eyebrow, title, subtitle, meta } = Astro.props;
+const {
+  eyebrow,
+  title,
+  subtitle,
+  meta,
+  heroImage,
+  heroCredit,
+  stats,
+  variant = 'standard'
+} = Astro.props;
 ---
 
-<div class="page-hero surface-white">
-  <div class="container">
-    <span class="eyebrow">{eyebrow}</span>
-    <h1 class="page-hero__title">{title}</h1>
-    <p class="page-hero__meta">
-      {subtitle}
-      {meta && <><br /><span class="page-hero__date">{meta}</span></>}
-    </p>
+{variant === 'overlay' && (
+  <div class="about-hero" id="page-hero-container">
+    <div class="container">
+      <div class="hero-frame-wrap" data-gsap="image-reveal">
+        <div class="hero-frame">
+          <img
+            id="page-hero-img"
+            src={heroImage}
+            alt={title}
+            class="hero-img"
+            loading="eager"
+            fetchpriority="high"
+          />
+          <div class="hero-overlay" aria-hidden="true"></div>
+          <div class="hero-text">
+            <div class="hero-eyebrow">{eyebrow}</div>
+            <h1 class="hero-title" set:html={title}></h1>
+            <p class="hero-intro">{subtitle}</p>
+          </div>
+          <div class="hero-credit" id="page-hero-credit" style={heroCredit ? "" : "display: none;"}>
+            <span class="hero-credit__label">Photo by</span>
+            <span class="hero-credit__name" id="page-hero-credit-name">{heroCredit}</span>
+          </div>
+        </div>
+
+        {stats && stats.length > 0 && (
+          <div class="stats-band" aria-label="Club statistics">
+            {stats.map(s => (
+              <div class={`stat-item ${s.isWide ? 'stat-item--wide' : ''}`}>
+                <div class="stat-label">{s.label}</div>
+                <div class={`stat-value ${s.isWide ? 'stat-value--gold' : ''}`}>
+                  {s.value === undefined ? (
+                    <span class="stat-pending">—</span>
+                  ) : s.target !== undefined ? (
+                    <span data-gsap="counter" data-target={s.target}>{s.value}</span>
+                  ) : (
+                    <span>{s.value}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   </div>
-  <div class="hairline"></div>
-</div>
+)}
+
+{variant === 'project' && (
+  <div class="ph-hero" id="page-hero-container" data-gsap="image-reveal">
+    <img
+      class="ph-hero-img"
+      id="page-hero-img"
+      src={heroImage}
+      alt={`${title} — BCC Special Project`}
+      loading="eager"
+      decoding="async"
+      style={heroImage ? "" : "display: none;"}
+    />
+    <div class="ph-hero-gradient" aria-hidden="true"></div>
+    <div class="ph-hero-content">
+      <div class="ph-kicker">
+        <span class="ph-kicker-line" aria-hidden="true"></span>
+        {eyebrow}
+      </div>
+      <h1 class="ph-title">{title}</h1>
+      <p class="ph-desc">{subtitle}</p>
+    </div>
+    <div class="hero-credit" id="page-hero-credit" style={heroCredit ? "position: absolute; bottom: 16px; right: 20px; display: flex; align-items: center; gap: 6px; z-index: 10;" : "display: none; position: absolute; bottom: 16px; right: 20px; align-items: center; gap: 6px; z-index: 10;"}>
+      <span class="hero-credit__label" style="font-family: var(--font-mono); font-size: 9px; color: rgba(255, 255, 255, 0.4); letter-spacing: 0.08em; text-transform: uppercase;">Photo by</span>
+      <span class="hero-credit__name" id="page-hero-credit-name" style="font-family: var(--font-mono); font-size: 9px; color: rgba(255, 255, 255, 0.6); letter-spacing: 0.06em;">{heroCredit}</span>
+    </div>
+  </div>
+)}
+
+{variant === 'standard' && (
+  <div class="page-hero surface-white" id="page-hero-container">
+    <div class="container">
+      {heroImage && (
+        <div class="page-hero-banner-wrap" id="page-hero-banner">
+          <img id="page-hero-img" src={heroImage} alt={title} />
+          {heroCredit && (
+            <div class="hero-credit" id="page-hero-credit">
+              <span class="hero-credit__label">Photo by</span>
+              <span class="hero-credit__name" id="page-hero-credit-name">{heroCredit}</span>
+            </div>
+          )}
+        </div>
+      )}
+      <span class="eyebrow">{eyebrow}</span>
+      <h1 class="page-hero__title">{title}</h1>
+      <p class="page-hero__meta">
+        {subtitle}
+        {meta && <><br /><span class="page-hero__date">{meta}</span></>}
+      </p>
+    </div>
+    <div class="hairline"></div>
+  </div>
+)}
 
 <style>
+/* Standard PageHero Styles */
 .page-hero {
   padding-top: calc(var(--nav-h) + var(--s-6));
   padding-bottom: var(--s-4);
 }
-
+.page-hero-banner-wrap {
+  margin-bottom: var(--s-6);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 16 / 5;
+}
+.page-hero-banner-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.page-hero-banner-wrap .hero-credit {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(20, 18, 16, 0.6);
+  padding: 3px 8px;
+}
 .page-hero__title {
   font-family: var(--font-display);
   font-size: var(--text-h1);
@@ -43,18 +178,279 @@ const { eyebrow, title, subtitle, meta } = Astro.props;
   margin-top: var(--s-1);
   margin-bottom: var(--s-2);
 }
-
 .page-hero__meta {
   font-family: var(--font-body);
   font-size: var(--text-body-sm);
   color: var(--ink-600);
   line-height: 1.65;
 }
-
 .page-hero__date {
   font-family: var(--font-mono);
   font-size: var(--text-caption);
   color: var(--ink-400);
   letter-spacing: var(--ls-mono);
+}
+
+/* About Hero Styles (Overlay) */
+.about-hero {
+  padding-top: var(--nav-h, 64px);
+  padding-bottom: var(--s-5);
+  background: var(--surface-0);
+}
+.hero-frame-wrap {
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.hero-frame {
+  position: relative;
+  aspect-ratio: 16 / 5;
+  overflow: hidden;
+}
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 18, 16, 0.12) 0%,
+    rgba(20, 18, 16, 0) 28%,
+    rgba(20, 18, 16, 0) 42%,
+    rgba(20, 18, 16, 0.55) 70%,
+    rgba(20, 18, 16, 0.86) 100%
+  );
+}
+.hero-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 48px 56px 44px;
+}
+.hero-eyebrow {
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-500);
+  font-weight: var(--weight-semibold);
+  margin-bottom: 14px;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  line-height: 1.0;
+  margin-bottom: 18px;
+}
+.hero-intro {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 540px;
+  font-weight: 300;
+}
+
+/* Photographer attribution shared styles */
+.hero-credit {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero-credit__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hero-credit__name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.06em;
+}
+
+/* Stats band */
+.stats-band {
+  display: flex;
+  background: var(--surface-1);
+  border-top: 1px solid var(--hairline);
+}
+.stat-item {
+  flex: 1;
+  padding: 18px 24px;
+  border-right: 1px solid var(--hairline);
+}
+.stat-item:last-child {
+  border-right: none;
+}
+.stat-item--wide {
+  flex: 2;
+}
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-400);
+  margin-bottom: 5px;
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+}
+.stat-value--gold {
+  color: var(--gold-600);
+}
+.stat-pending {
+  color: var(--ink-400);
+  font-size: 18px;
+}
+
+/* Project Hero Styles (Full bleed) */
+.ph-hero {
+  position: relative;
+  width: 100%;
+  min-height: 640px;
+  background: var(--image-backdrop);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  margin-top: var(--nav-h);
+}
+.ph-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ph-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 18, 16, 0.10) 0%,
+    rgba(20, 18, 16, 0) 40%,
+    rgba(20, 18, 16, 0.78) 100%
+  );
+  pointer-events: none;
+}
+.ph-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 56px 64px;
+  width: 100%;
+}
+.ph-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-500);
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ph-kicker-line {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--gold-500);
+  flex-shrink: 0;
+}
+.ph-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4.5vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.0;
+  color: var(--ink-inverse);
+  margin-bottom: 16px;
+  max-width: 720px;
+}
+.ph-desc {
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(250, 248, 244, 0.78);
+  max-width: 600px;
+  font-weight: 300;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .ph-hero-content { padding: 44px 40px; }
+}
+@media (max-width: 900px) {
+  .hero-text {
+    padding: 32px 32px 28px;
+  }
+  .hero-intro {
+    font-size: 14px;
+    max-width: 100%;
+  }
+  .stats-band {
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    flex: 1 0 33.33%;
+    min-width: 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .stat-item--wide {
+    flex: 1 0 33.33%;
+  }
+  .stat-item:nth-child(3n) {
+    border-right: none;
+  }
+}
+@media (max-width: 768px) {
+  .ph-hero { min-height: 440px; }
+  .ph-hero-content { padding: 36px 24px; }
+}
+@media (max-width: 540px) {
+  .hero-text {
+    padding: 20px 20px 16px;
+  }
+  .hero-title {
+    font-size: clamp(28px, 7vw, 36px);
+  }
+  .hero-intro {
+    display: none;
+  }
+  .stat-item {
+    flex: 1 0 50%;
+    padding: 12px 16px;
+  }
+  .stat-item:nth-child(3n) {
+    border-right: 1px solid var(--hairline);
+  }
+  .stat-item:nth-child(even) {
+    border-right: none;
+  }
+  .stat-value {
+    font-size: 17px;
+  }
+}
+@media (max-width: 480px) {
+  .ph-hero { min-height: 360px; }
+  .ph-desc { display: none; }
 }
 </style>

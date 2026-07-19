@@ -16,6 +16,7 @@
  * The nav gold CTA "Become a Member" brings users here; this page explains the steps.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/ui/PageHero.astro';
 import SectionHeader from '../components/ui/SectionHeader.astro';
 
 const CLASSES = [
@@ -57,61 +58,55 @@ const FAQS = [
 >
 
   <!-- Hero -->
-  <div class="join-hero surface-white">
-    <div class="container">
-      <SectionHeader
-        eyebrow="Membership"
-        title="Join Bhopal Camera Club"
-        subtitle="We welcome photographers at every level. Registration is always free and comes before membership application."
-        as="h1"
-        align="center"
-        data-gsap="reveal"
-      />
+  <PageHero
+    eyebrow="Membership"
+    title="Join Bhopal Camera Club"
+    subtitle="We welcome photographers at every level. Registration is always free and comes before membership application."
+  />
 
-      <!-- 3-step flow -->
-      <div class="join-flow" data-gsap="stagger">
-        <div class="join-flow__step">
-          <div class="join-flow__num">01</div>
-          <div class="join-flow__label">Register Free</div>
-          <div class="join-flow__sub">Create your BCC platform identity — no cost, no commitment.</div>
-        </div>
-        <div class="join-flow__arrow" aria-hidden="true">→</div>
-        <div class="join-flow__step">
-          <div class="join-flow__num">02</div>
-          <div class="join-flow__label">Apply for Membership</div>
-          <div class="join-flow__sub">Choose a class and submit your application. Committee reviews in days.</div>
-        </div>
-        <div class="join-flow__arrow" aria-hidden="true">→</div>
-        <div class="join-flow__step">
-          <div class="join-flow__num">03</div>
-          <div class="join-flow__label">Start Participating</div>
-          <div class="join-flow__sub">Events, workshops, exhibitions, and the full BCC community.</div>
-        </div>
+  <div class="container" style="padding-top: var(--s-6);">
+    <!-- 3-step flow -->
+    <div class="join-flow" data-gsap="stagger">
+      <div class="join-flow__step">
+        <div class="join-flow__num">01</div>
+        <div class="join-flow__label">Register Free</div>
+        <div class="join-flow__sub">Create your BCC platform identity — no cost, no commitment.</div>
       </div>
-
-      <div class="join-hero-ctas auth-hide">
-        <a href="/auth/register/" class="btn btn-dark btn-lg">Register Free →</a>
-        <a href="/auth/signin/?next=/hub/membership/apply/" class="btn btn-outline btn-lg">Sign In &amp; Apply</a>
+      <div class="join-flow__arrow" aria-hidden="true">→</div>
+      <div class="join-flow__step">
+        <div class="join-flow__num">02</div>
+        <div class="join-flow__label">Apply for Membership</div>
+        <div class="join-flow__sub">Choose a class and submit your application. Committee reviews in days.</div>
       </div>
-
-      <!-- Logged-in / Authenticated Member Banner -->
-      <div class="authenticated-member-banner" id="authenticated-member-banner" style="display: none;">
-        <div class="authenticated-member-banner__content">
-          <div class="authenticated-member-banner__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-          </div>
-          <div class="authenticated-member-banner__text-group">
-            <h3 class="authenticated-member-banner__title">You are logged in</h3>
-            <p class="authenticated-member-banner__desc">You have an active session. Visit your Member Hub to check your membership status, apply for a membership class, or access exclusive features.</p>
-          </div>
-        </div>
-        <a href="/hub/" class="btn btn-gold btn-md">Go to Member Hub</a>
+      <div class="join-flow__arrow" aria-hidden="true">→</div>
+      <div class="join-flow__step">
+        <div class="join-flow__num">03</div>
+        <div class="join-flow__label">Start Participating</div>
+        <div class="join-flow__sub">Events, workshops, exhibitions, and the full BCC community.</div>
       </div>
     </div>
-    <div class="hairline"></div>
+
+    <div class="join-hero-ctas auth-hide">
+      <a href="/auth/register/" class="btn btn-dark btn-lg">Register Free →</a>
+      <a href="/auth/signin/?next=/hub/membership/apply/" class="btn btn-outline btn-lg">Sign In &amp; Apply</a>
+    </div>
+
+    <!-- Logged-in / Authenticated Member Banner -->
+    <div class="authenticated-member-banner" id="authenticated-member-banner" style="display: none; margin-bottom: var(--s-8);">
+      <div class="authenticated-member-banner__content">
+        <div class="authenticated-member-banner__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="authenticated-member-banner__text-group">
+          <h3 class="authenticated-member-banner__title">You are logged in</h3>
+          <p class="authenticated-member-banner__desc">You have an active session. Visit your Member Hub to check your membership status, apply for a membership class, or access exclusive features.</p>
+        </div>
+      </div>
+      <a href="/hub/" class="btn btn-gold btn-md">Go to Member Hub</a>
+    </div>
   </div>
 
   <!-- Class cards -->
@@ -519,6 +514,9 @@ details[open] .faq-q { color: var(--gold-600); }
 </style>
 
 <script>
+  import { loadPageHero } from '../lib/hero-loader';
+  loadPageHero('membership');
+
   /* Smooth scroll to #apply / #faq from class card CTAs */
   document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(link => {
     link.addEventListener('click', e => {

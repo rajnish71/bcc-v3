@@ -44,18 +44,21 @@ import HubLayout from '../../../layouts/HubLayout.astro';
             <option value="">All Tags</option>
           </select>
         </div>
-        <div class="filter-row-bottom">
-          <select id="hero-filter-usage" class="search-input select-filter" style="flex:1;">
-            <option value="">All Usage Status</option>
-            <option value="unused">Unused Hero Images</option>
-            <option value="assigned">Already Assigned</option>
-            <option value="fixed">Fixed Heroes</option>
-            <option value="pool">Rotation Pool</option>
-          </select>
-          <select id="hero-sort" class="search-input select-filter" style="flex:1;">
-            <option value="newest">Newest Upload</option>
-            <option value="oldest">Oldest Upload</option>
-          </select>
+        <div class="filter-row-bottom" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; width:100%;">
+          <div style="display:flex; gap:12px; flex:1; flex-wrap:wrap;">
+            <select id="hero-filter-usage" class="search-input select-filter" style="flex:1; min-width:150px;">
+              <option value="">All Usage Status</option>
+              <option value="unused">Unused Hero Images</option>
+              <option value="assigned">Already Assigned</option>
+              <option value="fixed">Fixed Heroes</option>
+              <option value="pool">Rotation Pool</option>
+            </select>
+            <select id="hero-sort" class="search-input select-filter" style="flex:1; min-width:150px;">
+              <option value="newest">Newest Upload</option>
+              <option value="oldest">Oldest Upload</option>
+            </select>
+          </div>
+          <button type="button" id="btn-hero-reset-filters" class="btn btn-outline btn-md" style="height:38px; padding:0 16px;">Reset Filters</button>
         </div>
       </div>
 
@@ -1570,6 +1573,25 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   document.getElementById('hero-filter-tag')?.addEventListener('change', () => renderEligiblePhotos());
   document.getElementById('hero-filter-usage')?.addEventListener('change', () => renderEligiblePhotos());
   document.getElementById('hero-sort')?.addEventListener('change', () => renderEligiblePhotos());
+
+  // Reset Filters listener
+  document.getElementById('btn-hero-reset-filters')?.addEventListener('click', () => {
+    const searchPhotographer = document.getElementById('hero-search-photographer') as HTMLInputElement | null;
+    const searchTitle = document.getElementById('hero-search-title') as HTMLInputElement | null;
+    const filterProject = document.getElementById('hero-filter-project') as HTMLSelectElement | null;
+    const filterTag = document.getElementById('hero-filter-tag') as HTMLSelectElement | null;
+    const filterUsage = document.getElementById('hero-filter-usage') as HTMLSelectElement | null;
+    const sort = document.getElementById('hero-sort') as HTMLSelectElement | null;
+
+    if (searchPhotographer) searchPhotographer.value = '';
+    if (searchTitle) searchTitle.value = '';
+    if (filterProject) filterProject.value = '';
+    if (filterTag) filterTag.value = '';
+    if (filterUsage) filterUsage.value = '';
+    if (sort) sort.value = 'newest';
+
+    renderEligiblePhotos();
+  });
 
   // Close modals listeners
   document.getElementById('hero-assign-modal-close')?.addEventListener('click', () => {

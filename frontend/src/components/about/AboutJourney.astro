@@ -1,67 +1,61 @@
 ---
-import { chapters } from '../../data/timeline';
+const milestones = [
+  {
+    year: "2015",
+    date: "May 2015",
+    title: "First informal grouping",
+    story: "A group of local photography enthusiasts began meeting informally in Bhopal to share critiques and capture the lakes together."
+  },
+  {
+    year: "2016",
+    date: "Apr 2016",
+    title: "First Organized Photowalk",
+    story: "Held on Heritage Day, our first structured walk took place at the historic Taj-ul-Masajid, establishing our core focus on documentation."
+  },
+  {
+    year: "2016",
+    date: "Jun 2016",
+    title: "Facebook Group Created",
+    story: "On June 8th, 2016, our official Facebook group was created, serving as the digital foundation for our growing community."
+  },
+  {
+    year: "2019",
+    date: "Oct 2019",
+    title: "Formal Society Registration",
+    story: "Bhopal Camera Club was formally registered as an official society under the MP Society Registrikaran Adhiniyam 1973."
+  },
+  {
+    year: "2026",
+    date: "Jun 2026",
+    title: "New Platform Launch",
+    story: "We launched the bcc.bhopal.info portal, expanding our school curriculum and preparing for our 10th anniversary next year."
+  }
+];
 ---
 
 <section class="journey-section" aria-labelledby="journey-heading">
   <div class="container">
 
     <div class="journey-header" data-gsap="reveal">
-      <div class="journey-kicker">Our Journey</div>
-      <h2 class="journey-title" id="journey-heading">Seven Chapters</h2>
+      <div class="journey-kicker">Our Story</div>
+      <h2 class="journey-title" id="journey-heading">A Legacy of Light</h2>
       <p class="journey-intro">Every community has a beginning. Ours began with a shared love for photography and a belief that the best way to learn was to explore together.</p>
     </div>
 
-    <!-- Documentary mandate callout -->
-    <div class="doc-mandate" role="note">
-      <div class="doc-mandate__rule" aria-hidden="true"></div>
-      <div>
-        <div class="doc-mandate__heading">Documentary Mandate — Journey Section</div>
-        <p class="doc-mandate__body">All dates are exact as documented in BCC records. All photographs are authentic BCC archival images. Photo captions include date and location exactly as recorded. Chapters without photographs show a typographic placeholder — never a stock image.</p>
-      </div>
-    </div>
-
-    <!-- Editorial timeline — all chapters always visible -->
+    <!-- Editorial timeline — all milestones always visible -->
     <div class="journey-timeline" role="list">
-      {chapters.map((ch) => (
-        <div class="journey-entry" role="listitem" id={ch.id}>
+      {milestones.map((m, index) => (
+        <div class="journey-entry" role="listitem" id={`milestone-${index}`}>
           <!-- Year column -->
           <div class="entry-year" aria-hidden="true">
-            <span class="entry-year__text">{ch.year}</span>
+            <span class="entry-year__text">{m.year}</span>
           </div>
 
           <!-- Content column -->
           <div class="entry-content">
-            <div class="entry-date">{ch.year}</div>
-            <h3 class="entry-title">{ch.title}</h3>
-            <div class="entry-subtitle">{ch.subtitle}</div>
-            <p class="entry-story">{ch.story}</p>
-
-            {ch.hasPhoto && ch.photo ? (
-              <div class="entry-photo-wrap">
-                <div class="entry-photo-frame">
-                  <img
-                    src={ch.photo}
-                    alt={ch.photoAlt || ''}
-                    class="entry-photo"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <div class="entry-photo-bar">
-                  <span class="entry-photo-label">{ch.photoLabel}</span>
-                  {ch.photographer && (
-                    <span class="entry-photo-credit">
-                      <span class="entry-photo-credit__by">Photo by</span>
-                      <span class="entry-photo-credit__name">{ch.photographer}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div class="entry-placeholder">
-                <div class="entry-placeholder__label">{ch.placeholderLabel}</div>
-              </div>
-            )}
+            <div class="entry-date">{m.date}</div>
+            <h3 class="entry-title">{m.title}</h3>
+            <p class="entry-story">{m.story}</p>
           </div>
         </div>
       ))}
@@ -105,38 +99,6 @@ import { chapters } from '../../data/timeline';
   color: var(--ink-600);
   max-width: 680px;
   font-style: italic;
-}
-
-/* Documentary mandate callout */
-.doc-mandate {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s-3);
-  background: var(--ink-900);
-  color: var(--surface-1);
-  padding: 20px 28px;
-  margin-bottom: var(--s-5);
-}
-.doc-mandate__rule {
-  width: 3px;
-  background: var(--gold-500);
-  flex-shrink: 0;
-  align-self: stretch;
-}
-.doc-mandate__heading {
-  font-family: var(--font-body);
-  font-size: var(--text-micro);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold-500);
-  font-weight: var(--weight-semibold);
-  margin-bottom: 6px;
-}
-.doc-mandate__body {
-  font-family: var(--font-body);
-  font-size: 12px;
-  line-height: 1.8;
-  color: var(--dark-muted, rgba(216, 210, 198, 0.85));
 }
 
 /* Editorial timeline */
@@ -186,88 +148,11 @@ import { chapters } from '../../data/timeline';
   color: var(--ink-900);
   margin-bottom: 6px;
 }
-.entry-subtitle {
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--ink-400);
-  font-style: italic;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--hairline-soft, #F0EBE0);
-}
 .entry-story {
   font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.85;
   color: var(--ink-600);
-  margin-bottom: var(--s-3);
-}
-
-/* Photo — editorial scale, not full-width */
-.entry-photo-wrap {
-  max-width: 480px;
-}
-.entry-photo-frame {
-  border: 1px solid var(--hairline);
-  overflow: hidden;
-}
-.entry-photo {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-.entry-photo-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-3);
-  background: var(--surface-1);
-  border: 1px solid var(--hairline);
-  border-top: none;
-  padding: 10px 14px;
-}
-.entry-photo-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--ink-400);
-  letter-spacing: 0.08em;
-  line-height: 1.6;
-}
-.entry-photo-credit {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-.entry-photo-credit__by {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ink-400);
-}
-.entry-photo-credit__name {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--gold-600);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-}
-
-/* Placeholder — no archival photo */
-.entry-placeholder {
-  max-width: 360px;
-  border: 1px solid var(--hairline);
-  padding: 20px 24px;
-  background: var(--surface-1);
-}
-.entry-placeholder__label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--ink-400);
-  line-height: 1.8;
 }
 
 /* Responsive */
@@ -289,9 +174,6 @@ import { chapters } from '../../data/timeline';
   }
   .entry-title {
     font-size: 20px;
-  }
-  .entry-photo-wrap {
-    max-width: 100%;
   }
 }
 </style>

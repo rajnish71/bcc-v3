@@ -5,37 +5,22 @@
  * module is implemented in the Admin Console.
  *
  * The final source of this data will be the Admin Console.
- * This file will eventually be replaced by:
- *
- * Admin Console
- * ↓
- * Database
- * ↓
- * API
- * ↓
- * About Page
- *
- * No changes will be required to the page components when this replacement occurs.
- * The page consumes this module and knows nothing about the underlying hardcoded structure.
  *
  * Ver2 spec: 6 Core Coordinators (3+3 grid) + 3 Mentors (3-col grid).
- * Positions pending real data are marked with _pending: true.
  */
 
 import { ikAvatarUrl } from '../lib/imagekit';
 
 export interface ProfileEntry {
-  name: string;
+  username?: string;
   role: string;
   since?: string;
-  bio: string;
-  avatar?: string;
-  /** Full URL for the profile link. Configuration controls the destination — the page does not invent routing. */
-  profileHref?: string;
-  /** Mentor-only optional extension. Omit for leadership cards. */
+  defaultName?: string;
+  defaultAvatar?: string;
+  defaultBio?: string;
+  defaultProfileHref?: string;
+  bioOverride?: string;
   contribution?: string;
-  /** Internal flag: position is unfilled — components should render a placeholder card. */
-  _pending?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -43,46 +28,56 @@ export interface ProfileEntry {
 // ---------------------------------------------------------------------------
 export const leaders: ProfileEntry[] = [
   {
-    name: 'Rajnish Khare',
+    defaultName: 'Rajnish Khare',
     role: 'Core Coordinator',
     since: '2015',
-    bio: 'Travel and wildlife photographer. Founder of Bhopal Camera Club. Steering the club since its earliest days, building the community and leading photowalks, workshops and exhibitions.',
-    avatar: ikAvatarUrl('avatars/1/51392d1b-bd2d-4e90-8358-1d7dc5bfeb56.jpg', 176),
-    profileHref: '/photographers/rajnishkhare/',
+    defaultBio: 'Travel and wildlife photographer. Founder of Bhopal Camera Club. Steering the club since its earliest days, building the community and leading photowalks, workshops and exhibitions.',
+    defaultAvatar: ikAvatarUrl('avatars/1/51392d1b-bd2d-4e90-8358-1d7dc5bfeb56.jpg', 176),
+    defaultProfileHref: '/photographers/rajnishkhare/',
   },
   {
-    name: 'Kshitij Patle',
+    username: 'kshitijpatle',
     role: 'Core Coordinator',
     since: '2016',
-    bio: 'Energetic travel storyteller documenting remote places, trails and local interactions.',
-    avatar: ikAvatarUrl('uploads/avatars/1781515190910-cb635096.jpg', 176),
-    profileHref: '/photographers/kshitijpatle/',
+    defaultName: 'Kshitij Patle',
+    defaultAvatar: ikAvatarUrl('uploads/avatars/1781515190910-cb635096.jpg', 176),
+    defaultBio: 'Energetic travel storyteller documenting remote places, trails and local interactions.',
+    defaultProfileHref: '/photographers/kshitijpatle/',
   },
   {
-    name: 'Rahil Khan',
+    defaultName: 'Rahil Khan',
     role: 'Core Coordinator',
     since: '2016',
-    bio: 'Contemporary street visual artist capturing dynamic urban moments and strong compositions.',
-    avatar: ikAvatarUrl('uploads/avatars/1781874918562-8ae28b6c.jpg', 176),
-    profileHref: '/photographers/rahilkhan/',
+    defaultBio: 'Contemporary street visual artist capturing dynamic urban moments and strong compositions.',
+    defaultAvatar: ikAvatarUrl('uploads/avatars/1781874918562-8ae28b6c.jpg', 176),
+    defaultProfileHref: '/photographers/rahilkhan/',
   },
   {
-    name: 'Bablu Khan',
+    username: 'imbablukhan',
     role: 'Social Media Coordinator',
     since: '2018',
-    bio: "Social Media Coordinator for BCC and one of Bhopal's leading digital creators. Drives the club's online presence.",
+    defaultName: 'Bablu Khan',
+    defaultAvatar: ikAvatarUrl('uploads/avatars/1781876547600-cfa5d487.jpg', 176),
+    defaultBio: "Social Media Coordinator for BCC and one of Bhopal's leading digital creators. Drives the club's online presence.",
+    defaultProfileHref: '/photographers/imbablukhan/',
   },
   {
-    name: 'Yogesh More',
+    username: 'yogiym',
     role: 'Bird Walk Leader',
     since: '2021',
-    bio: 'Head of the Birds of Bhopal Project. Naturalist and birding expert leading ethical bird walks and field activities.',
+    defaultName: 'Yogesh More',
+    defaultAvatar: ikAvatarUrl('uploads/avatars/1781876800762-cb078e4d.jpg', 176),
+    defaultBio: 'Head of the Birds of Bhopal Project. Naturalist and birding expert leading ethical bird walks and field activities.',
+    defaultProfileHref: '/photographers/yogiym/',
   },
   {
-    name: 'Vikas Gangpari',
+    username: 'gangparivikas',
     role: 'Workshop Coordinator',
     since: '2020',
-    bio: 'Coordinates workshop logistics and supports indoor learning programmes throughout the year.',
+    defaultName: 'Vikas Gangpari',
+    defaultAvatar: ikAvatarUrl('uploads/avatars/1781877028442-fbda284d.jpg', 176),
+    defaultBio: 'Coordinates workshop logistics and supports indoor learning programmes throughout the year.',
+    defaultProfileHref: '/photographers/gangparivikas/',
   },
 ];
 
@@ -91,30 +86,32 @@ export const leaders: ProfileEntry[] = [
 // ---------------------------------------------------------------------------
 export const mentors: ProfileEntry[] = [
   {
-    name: 'Dr. Anil Bhati',
+    defaultName: 'Dr. Anil Bhati',
     role: 'BCC Senior Mentor',
     since: '2015',
-    bio: "Dr. Bhati is a passionate travel and landscape photographer whose work spans Bhopal's lakes, architecture and surrounding wilderness. He has been the backbone of BCC's learning programme since the club's inception, bringing a methodical approach to both the field and the darkroom. His landscape photography — particularly his images of the Upper Lake and Bhopal's bridges — represents some of the finest technical work produced within the BCC community.",
-    avatar: ikAvatarUrl('uploads/avatars/1781581626973-a9db8ce9.jpg', 192),
-    profileHref: '/photographers/anilbhati/',
+    defaultBio: "Dr. Bhati is a passionate travel and landscape photographer whose work spans Bhopal's lakes, architecture and surrounding wilderness. He has been the backbone of BCC's learning programme since the club's inception, bringing a methodical approach to both the field and the darkroom. His landscape photography — particularly his images of the Upper Lake and Bhopal's bridges — represents some of the finest technical work produced within the BCC community.",
+    defaultAvatar: ikAvatarUrl('uploads/avatars/1781581626973-a9db8ce9.jpg', 192),
+    defaultProfileHref: '/photographers/anilbhati/',
     contribution: 'Conducted multiple workshops on composition, post-processing and editing that have shaped the visual vocabulary of nearly every active BCC member. Has mentored members at every stage of the craft — from beginners learning their first camera to practitioners developing a distinctive photographic voice.',
   },
   {
-    name: 'Sauvik Acharyya',
+    defaultName: 'Sauvik Acharyya',
     role: 'BCC Mentor',
     since: '2016',
-    bio: "Sauvik is one of those rare mentors who leads entirely from the front — he is always on the street, always shooting, and consistently among the first to spot a frame that others would walk past. His approach to street photography is instinctive but disciplined, and his ability to read a scene quickly has made him one of BCC's most sought-after guides for urban photography.",
-    avatar: ikAvatarUrl('avatars/31/36bb7e58-8fc1-4bab-abac-152b5de535ae.jpg', 192),
-    profileHref: '/photographers/sauvikacharyya/',
+    defaultBio: "Sauvik is one of those rare mentors who leads entirely from the front — he is always on the street, always shooting, and consistently among the first to spot a frame that others would walk past. His approach to street photography is instinctive but disciplined, and his ability to read a scene quickly has made him one of BCC's most sought-after guides for urban photography.",
+    defaultAvatar: ikAvatarUrl('avatars/31/36bb7e58-8fc1-4bab-abac-152b5de535ae.jpg', 192),
+    defaultProfileHref: '/photographers/sauvikacharyya/',
     contribution: "Has been steering BCC's Street Walks with regularity and dedication, leading impromptu walks and formal sessions that have introduced dozens of members to the art of working in public spaces. His workshops on the ethics and aesthetics of street photography have helped members develop a more considered approach to photographing people.",
   },
-  // TODO: Fill third mentor position when data is available. Ver2 spec: 3 mentors.
   {
-    name: 'BCC Mentor',
+    username: 'kshitijpatle',
     role: 'BCC Mentor',
-    since: '—',
-    bio: 'Profile coming soon.',
-    contribution: 'Contribution details to be added.',
-    _pending: true,
+    since: '2016',
+    bioOverride: `Kshitij is the go-to advisor for photographers across the club—whether a youngster, a new member, or a seasoned enthusiast. Always approachable and generous with his time, he is known for patiently guiding members both in the field and during club activities.
+
+Members regularly seek his advice on equipment selection, birding practices, fieldcraft and composition techniques. He has conducted numerous indoor sessions, field workshops and mentoring walks on a wide range of photography topics, making him one of BCC's most trusted mentors and a key contributor to its learning culture.`,
+    defaultName: 'Kshitij Patle',
+    defaultAvatar: ikAvatarUrl('uploads/avatars/1781515190910-cb635096.jpg', 192),
+    defaultProfileHref: '/photographers/kshitijpatle/',
   },
 ];

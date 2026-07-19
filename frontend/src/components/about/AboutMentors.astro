@@ -1,6 +1,12 @@
 ---
-import { mentors } from '../../data/aboutPeople';
+import type { PersonViewModel } from '../../lib/view-models/PersonViewModel';
 import PersonCard from '../ui/PersonCard.astro';
+
+interface Props {
+  mentors: PersonViewModel[];
+}
+
+const { mentors } = Astro.props;
 ---
 
 <section class="mentors-section" aria-labelledby="mentors-heading">
@@ -13,20 +19,20 @@ import PersonCard from '../ui/PersonCard.astro';
 
     <div class="mentors-grid" data-gsap="stagger">
       {mentors.map((mentor) => (
-        <div class:list={['mentor-card', mentor._pending && 'mentor-card--pending']}>
+        <div class="mentor-card">
           <PersonCard
             name={mentor.name}
-            eyebrow={mentor.role}
-            subtitle={mentor.since ? `Since ${mentor.since}` : undefined}
-            bio={mentor._pending ? undefined : mentor.bio}
+            eyebrow={mentor.eyebrow}
+            subtitle={mentor.subtitle}
+            bio={mentor.bio}
             avatar={mentor.avatar}
             avatarSize={80}
             layout="vertical"
             placeholderVariant="forest"
             profileHref={mentor.profileHref}
           >
-            {/* Contribution to BCC — mentor-specific extension, omitted when pending */}
-            {mentor.contribution && !mentor._pending && (
+            {/* Contribution to BCC — mentor-specific extension */}
+            {mentor.contribution && (
               <div class="mentor-contribution">
                 <div class="contribution-heading">Contribution to BCC</div>
                 <p class="contribution-body">{mentor.contribution}</p>

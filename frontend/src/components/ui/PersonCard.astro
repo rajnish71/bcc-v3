@@ -11,13 +11,9 @@
  * The default slot renders between bio and the profile link — use it for
  * section-specific extras (e.g. the mentor contribution block).
  */
-interface Props {
-  name: string;
-  eyebrow?: string;
-  subtitle?: string;
-  bio?: string;
-  avatar?: string;
-  profileHref?: string;
+import type { PersonViewModel } from '../../lib/view-models/PersonViewModel';
+
+interface Props extends PersonViewModel {
   avatarSize?: number;
   layout?: 'vertical' | 'horizontal';
   placeholderVariant?: 'forest' | 'gold';

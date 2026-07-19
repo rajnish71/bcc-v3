@@ -16,6 +16,11 @@ import AboutTrust from '../components/about/AboutTrust.astro';
 import AboutLeadership from '../components/about/AboutLeadership.astro';
 import AboutMentors from '../components/about/AboutMentors.astro';
 import AboutCommunityInvitation from '../components/about/AboutCommunityInvitation.astro';
+import { leaders as rawLeaders, mentors as rawMentors } from '../data/aboutPeople';
+import { resolvePeopleProfiles } from '../lib/resolvers/personResolver';
+
+const leaders = await resolvePeopleProfiles(rawLeaders);
+const mentors = await resolvePeopleProfiles(rawMentors);
 
 let membersCount: number | undefined = undefined;
 let activitiesCount: number | undefined = undefined;
@@ -149,10 +154,10 @@ const jsonLd = {
   <AboutTrust />
 
   <!-- 7. Leadership — coordinator profiles -->
-  <AboutLeadership />
+  <AboutLeadership leaders={leaders} />
 
   <!-- 8. Learning From Masters — mentor profiles -->
-  <AboutMentors />
+  <AboutMentors mentors={mentors} />
 
   <!-- 9. Community Invitation — photograph + CTAs -->
   <AboutCommunityInvitation />

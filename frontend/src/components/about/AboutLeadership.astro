@@ -1,6 +1,12 @@
 ---
-import { leaders } from '../../data/aboutPeople';
+import type { PersonViewModel } from '../../lib/view-models/PersonViewModel';
 import PersonCard from '../ui/PersonCard.astro';
+
+interface Props {
+  leaders: PersonViewModel[];
+}
+
+const { leaders } = Astro.props;
 ---
 
 <section class="leadership-section" aria-labelledby="leadership-heading">
@@ -13,12 +19,12 @@ import PersonCard from '../ui/PersonCard.astro';
 
     <div class="leadership-grid" data-gsap="stagger">
       {leaders.map((person) => (
-        <div class:list={['leader-card', person._pending && 'leader-card--pending']}>
+        <div class="leader-card">
           <PersonCard
             name={person.name}
-            eyebrow={person.role}
-            subtitle={person.since ? `Since ${person.since}` : undefined}
-            bio={person._pending ? undefined : person.bio}
+            eyebrow={person.eyebrow}
+            subtitle={person.subtitle}
+            bio={person.bio}
             avatar={person.avatar}
             avatarSize={80}
             layout="vertical"

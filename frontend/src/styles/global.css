@@ -97,9 +97,9 @@ svg { display: block; flex-shrink: 0; }
 }
 
 /* ── Section rhythm ── */
-.section { padding: var(--s-12) 0; }      /* 96px desktop */
-.section-sm { padding: var(--s-8) 0; }    /* 64px */
-.section-lg { padding: var(--s-16) 0; }   /* 128px */
+.section { padding: var(--s-8) 0; }       /* 64px desktop — editorial tighter rhythm */
+.section-sm { padding: var(--s-5) 0; }    /* 40px */
+.section-lg { padding: var(--s-12) 0; }   /* 96px */
 
 /* ── Alternating surface ── */
 .surface-alt { background: var(--surface-2); }
@@ -639,8 +639,9 @@ svg { display: block; flex-shrink: 0; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .section    { padding: var(--s-8) 0; }
-  .section-lg { padding: var(--s-12) 0; }
+  .section    { padding: var(--s-6) 0; }
+  .section-sm { padding: var(--s-4) 0; }
+  .section-lg { padding: var(--s-8) 0; }
   .container  { padding: 0 var(--gutter-mob); }
 }
 

@@ -117,7 +117,7 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
 
         <div class="stat">
           <div class="stat-value">
-            <span data-gsap="counter" data-target="4200" data-suffix="+">—</span>
+            <span data-gsap="counter" data-target="4200" data-suffix="+" id="stat-gallery-photos">—</span>
           </div>
           <div class="stat-label">Gallery Photos</div>
         </div>
@@ -158,6 +158,20 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
         </div>
       </div>
 
+      <!-- Collective Eye nav — editorial entry to Showcase -->
+      <div class="collective-nav" aria-label="Explore the complete showcase">
+        <div class="collective-nav__inner">
+          <a href="/showcase/" class="collective-nav__cta">
+            Explore the complete Showcase <span aria-hidden="true">→</span>
+          </a>
+          <div class="collective-nav__stats">
+            <span id="collective-photos">4,200+</span> Photographs
+            <span class="collective-nav__sep">·</span>
+            <span id="collective-photographers">250+</span> Photographers
+          </div>
+        </div>
+      </div>
+
       <p class="gallery-footnote auth-hide">
         Your frame could hang here —&nbsp;
         <a href="/join/" class="btn-text">Become a Member</a>
@@ -187,9 +201,14 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
 
         <!-- Right: community photograph -->
         <div class="about-club__photo-col">
-          <div class="about-club__photo-placeholder" aria-hidden="true"></div>
+          <img
+            src="/images/GroupPhotoafteraPhotoWalkatManavSanghralaya2018.jpeg"
+            alt="BCC members after a Photo Walk at Manav Sanghralaya, Bhopal — 2018"
+            class="about-club__group-photo"
+            loading="lazy"
+          />
           <div class="about-club__caption-bar">
-            <div class="about-club__caption-text">BCC members · Photowalk at Manav Sangralaya · 2018<br/>Photograph from the club archive</div>
+            <div class="about-club__caption-text">BCC members after a Photo Walk at Manav Sanghralaya (2018) · Club archive</div>
           </div>
         </div>
 
@@ -687,6 +706,14 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
   inset: 0;
   background: repeating-linear-gradient(135deg, #1A1816 0px, #1A1816 32px, #1E1C1A 32px, #1E1C1A 64px);
 }
+.about-club__group-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
 .about-club__caption-bar {
   position: relative;
   z-index: 1;
@@ -1110,10 +1137,45 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
 :global(.jrow) { display: flex; gap: 8px; margin-bottom: 8px; }
 :global(.jrow:last-child) { margin-bottom: 0; }
 .gallery-footnote {
-  margin-top: var(--s-4);
+  margin-top: var(--s-2);
   font-size: var(--text-small);
   color: var(--ink-400);
 }
+
+/* ── Collective Eye nav ── */
+.collective-nav {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--s-3);
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
+.collective-nav__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.collective-nav__cta {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink-900);
+  text-decoration: none;
+  transition: color var(--m-fast);
+}
+.collective-nav__cta:hover { color: var(--gold-600); }
+.collective-nav__stats {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.collective-nav__sep { color: var(--hairline-strong); }
 /* Real photo cards in grid */
 :global(.jrow .photo-card) {
   overflow: hidden;
@@ -2115,6 +2177,38 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
 
   /* ── 1. PageHero — Hero Assignment Architecture ── */
   loadHomeHero();
+
+  /* ── 1b. Dynamic stat wiring — gallery total + photographer count ── */
+  (async () => {
+    try {
+      const [feedRes, photogsRes] = await Promise.allSettled([
+        fetch('/api/v1/gallery/feed?limit=1&shuffle=false'),
+        fetch('/api/v1/photographers?limit=1&hasApprovedPhotos=true'),
+      ]);
+
+      if (feedRes.status === 'fulfilled' && feedRes.value.ok) {
+        const data = await feedRes.value.json();
+        if (typeof data.total === 'number' && data.total > 0) {
+          const statEl = document.getElementById('stat-gallery-photos');
+          if (statEl) {
+            statEl.setAttribute('data-target', String(data.total));
+            if (statEl.textContent === '—') statEl.textContent = data.total.toLocaleString('en-IN') + '+';
+          }
+          const photosEl = document.getElementById('collective-photos');
+          if (photosEl) photosEl.textContent = data.total.toLocaleString('en-IN') + '+';
+        }
+      }
+
+      if (photogsRes.status === 'fulfilled' && photogsRes.value.ok) {
+        const data = await photogsRes.value.json();
+        const total = data?.meta?.total_count;
+        if (typeof total === 'number' && total > 0) {
+          const el = document.getElementById('collective-photographers');
+          if (el) el.textContent = total + '+';
+        }
+      }
+    } catch { /* keep hardcoded fallbacks */ }
+  })();
 
   /* ── 1b. Club cards — dynamic genre photo backgrounds ── */
   (() => {

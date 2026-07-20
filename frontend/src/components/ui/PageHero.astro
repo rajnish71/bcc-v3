@@ -3,7 +3,14 @@ import { getPhotographerProfileUrl } from '../../data/photoRegistry';
 
 /**
  * PageHero.astro — Consolidated page hero for all BCC pages.
- * Supports standard text/banner, overlay (About page), and project (Special Projects) layouts.
+ *
+ * CANONICAL ARCHITECTURE:
+ * home, journal, and overlay (About) share one structural implementation.
+ * Shared classes: .ph-frame .ph-img .ph-gradient .ph-panel .ph-kicker .ph-heading .ph-body .ph-credit
+ * Variants differ ONLY in: outer wrapper spacing, content slots (CTAs, stats), credit placement.
+ * Responsive cascade is declared ONCE: 900 → 768 → 540px.
+ *
+ * project and standard use genuinely different layouts and remain independent.
  */
 interface StatItem {
   label: string;
@@ -51,24 +58,25 @@ const {
 } = Astro.props;
 ---
 
+{/* ── About (overlay) — static image, photo-credit bar below frame, stats band ── */}
 {variant === 'overlay' && (
   <div class="about-hero" id="page-hero-container">
     <div class="container">
-      <div class="hero-frame-wrap" data-gsap="image-reveal">
-        <div class="hero-frame">
+      <div class="ph-reveal" data-gsap="image-reveal">
+        <div class="ph-frame">
           <img
             id="page-hero-img"
             src={heroImage}
             alt={title}
-            class="hero-img"
+            class="ph-img"
             loading="eager"
             fetchpriority="high"
           />
-          <div class="hero-overlay" aria-hidden="true"></div>
-          <div class="hero-text">
-            <div class="hero-eyebrow">{eyebrow}</div>
-            <h1 class="hero-title" set:html={title}></h1>
-            <p class="hero-intro">{subtitle}</p>
+          <div class="ph-gradient" aria-hidden="true"></div>
+          <div class="ph-panel">
+            <div class="ph-kicker">{eyebrow}</div>
+            <h1 class="ph-heading" set:html={title}></h1>
+            <p class="ph-body">{subtitle}</p>
           </div>
         </div>
 
@@ -105,6 +113,7 @@ const {
   </div>
 )}
 
+{/* ── Projects — full-bleed, min-height based, no aspect-ratio ── */}
 {variant === 'project' && (
   <div class="ph-hero" id="page-hero-container" data-gsap="image-reveal">
     <img
@@ -118,12 +127,12 @@ const {
     />
     <div class="ph-hero-gradient" aria-hidden="true"></div>
     <div class="ph-hero-content">
-      <div class="ph-kicker">
-        <span class="ph-kicker-line" aria-hidden="true"></span>
+      <div class="ph-kicker-proj">
+        <span class="ph-kicker-proj-line" aria-hidden="true"></span>
         {eyebrow}
       </div>
-      <h1 class="ph-title">{title}</h1>
-      <p class="ph-desc">{subtitle}</p>
+      <h1 class="ph-title-proj">{title}</h1>
+      <p class="ph-desc-proj">{subtitle}</p>
     </div>
     <div class="hero-credit" id="page-hero-credit" style={heroCredit ? "position: absolute; bottom: 16px; right: 20px; display: flex; align-items: center; gap: 6px; z-index: 10;" : "display: none; position: absolute; bottom: 16px; right: 20px; align-items: center; gap: 6px; z-index: 10;"}>
       <span class="hero-credit__label" style="font-family: var(--font-mono); font-size: 9px; color: rgba(255, 255, 255, 0.4); letter-spacing: 0.08em; text-transform: uppercase;">Photo by</span>
@@ -132,73 +141,76 @@ const {
   </div>
 )}
 
+{/* ── Home — dynamic image, CTAs, floating credit ── */}
 {variant === 'home' && (
   <div class="home-hero" id="page-hero-container">
     <div class="container">
-      <div class="home-hero__frame" data-gsap="image-reveal">
-        <div class="home-hero__placeholder" id="home-hero-fallback" aria-hidden="true"></div>
+      <div class="ph-frame" data-gsap="image-reveal">
+        <div class="ph-placeholder" id="home-hero-fallback" aria-hidden="true"></div>
         <img
           id="home-hero-img"
           src=""
           alt=""
-          class="home-hero__photo"
+          class="ph-img"
           loading="eager"
           decoding="async"
           aria-hidden="true"
         />
-        <div class="home-hero__gradient" aria-hidden="true"></div>
-        <div class="home-hero__overlay">
-          <div class="home-hero__kicker" id="home-hero-kicker">
-            <span class="home-hero__kicker-line" aria-hidden="true"></span>
+        <div class="ph-gradient" aria-hidden="true"></div>
+        <div class="ph-panel">
+          <div class="ph-kicker" id="home-hero-kicker">
+            <span class="ph-kicker-line" aria-hidden="true"></span>
             <span id="home-hero-kicker-text">{eyebrow}</span>
           </div>
-          <h1 class="home-hero__title">{title}</h1>
-          <p class="home-hero__copy">{subtitle}</p>
-          <div class="home-hero__ctas">
-            <a href={primaryCtaHref} class="home-hero__cta-primary">{primaryCtaText}</a>
-            <a href={secondaryCtaHref} class="home-hero__cta-secondary">{secondaryCtaText}</a>
+          <h1 class="ph-heading">{title}</h1>
+          <p class="ph-body ph-body--home">{subtitle}</p>
+          <div class="ph-ctas">
+            <a href={primaryCtaHref} class="ph-cta-primary">{primaryCtaText}</a>
+            <a href={secondaryCtaHref} class="ph-cta-secondary">{secondaryCtaText}</a>
           </div>
         </div>
-        <div class="home-hero__credit" id="home-hero-credit" style="display: none;">
-          <span class="home-hero__credit-label">Photo by</span>
-          <span class="home-hero__credit-name" id="home-hero-credit-name"></span>
+        <div class="ph-credit" id="home-hero-credit" style="display: none;">
+          <span class="ph-credit-label">Photo by</span>
+          <span class="ph-credit-name" id="home-hero-credit-name"></span>
         </div>
       </div>
     </div>
   </div>
 )}
 
+{/* ── Journal — dynamic image, no CTAs, floating credit ── */}
 {variant === 'journal' && (
   <div class="journal-hero" id="page-hero-container">
     <div class="container">
-      <div class="journal-hero__frame" data-gsap="image-reveal">
-        <div class="journal-hero__placeholder" id="journal-hero-fallback" aria-hidden="true"></div>
+      <div class="ph-frame" data-gsap="image-reveal">
+        <div class="ph-placeholder" id="journal-hero-fallback" aria-hidden="true"></div>
         <img
           id="page-hero-img"
           src=""
           alt=""
-          class="journal-hero__photo"
+          class="ph-img"
           loading="eager"
           decoding="async"
         />
-        <div class="journal-hero__gradient" aria-hidden="true"></div>
-        <div class="journal-hero__overlay">
-          <div class="journal-hero__kicker">
-            <span class="journal-hero__kicker-line" aria-hidden="true"></span>
+        <div class="ph-gradient" aria-hidden="true"></div>
+        <div class="ph-panel">
+          <div class="ph-kicker">
+            <span class="ph-kicker-line" aria-hidden="true"></span>
             <span>{eyebrow}</span>
           </div>
-          <h1 class="journal-hero__title">{title}</h1>
-          <p class="journal-hero__copy">{subtitle}</p>
+          <h1 class="ph-heading">{title}</h1>
+          <p class="ph-body">{subtitle}</p>
         </div>
-        <div class="journal-hero__credit" id="page-hero-credit" style="display: none;">
-          <span class="journal-hero__credit-label">Photo by</span>
-          <span class="journal-hero__credit-name" id="page-hero-credit-name"></span>
+        <div class="ph-credit" id="page-hero-credit" style="display: none;">
+          <span class="ph-credit-label">Photo by</span>
+          <span class="ph-credit-name" id="page-hero-credit-name"></span>
         </div>
       </div>
     </div>
   </div>
 )}
 
+{/* ── Standard — text below image (Showcase, Activities, etc.) ── */}
 {variant === 'standard' && (
   <div class="page-hero surface-white" id="page-hero-container">
     <div class="container">
@@ -225,20 +237,46 @@ const {
 )}
 
 <style>
-/* ── Home Hero (variant="home") ── */
+/* ═══════════════════════════════════════════════════════════════
+   CANONICAL PHOTO-OVERLAY FRAME
+   Shared by: home, journal, overlay (About)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Variant wrappers — outer spacing ONLY. No layout rules here. */
 .home-hero {
   padding-top: var(--nav-h);
   background: var(--surface-1);
 }
-.home-hero__frame {
+.about-hero {
+  padding-top: var(--nav-h, 64px);
+  padding-bottom: var(--s-5);
+  background: var(--surface-0);
+}
+.journal-hero {
+  padding-top: var(--nav-h);
+  background: var(--surface-1);
+}
+
+/* About: outer clip container for GSAP reveal (wraps frame + credit bar + stats) */
+.ph-reveal {
+  overflow: hidden;
+}
+
+/* The single frame — aspect-ratio, overflow, border */
+.ph-frame {
   position: relative;
   aspect-ratio: 16 / 5;
   overflow: hidden;
   border: 1px solid var(--hairline);
   background: var(--dark-100);
-  margin-bottom: 0;
 }
-.home-hero__placeholder {
+/* About: ph-reveal provides the visual container; ph-frame needs no border of its own */
+.ph-reveal .ph-frame {
+  border: none;
+}
+
+/* Placeholder — visible until dynamic image loads (home, journal only) */
+.ph-placeholder {
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
@@ -247,38 +285,47 @@ const {
     #1E1C1A 32px, #1E1C1A 64px
   );
 }
-.home-hero__photo {
-  position: absolute;
-  inset: 0;
+
+/* The single image rule */
+.ph-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
+}
+/* Dynamic variants: image is injected by JS, fades in when loaded */
+.home-hero .ph-img,
+.journal-hero .ph-img {
+  position: absolute;
+  inset: 0;
   opacity: 0;
   transition: opacity 0.8s ease;
 }
-.home-hero__photo.loaded { opacity: 1; }
+.home-hero .ph-img.loaded,
+.journal-hero .ph-img.loaded {
+  opacity: 1;
+}
 
-/* Minimal depth gradient — editorial panel provides text contrast */
-.home-hero__gradient {
+/* Minimal depth gradient — panel provides the readability band */
+.ph-gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, transparent 55%, rgba(20, 18, 16, 0.12) 100%);
   pointer-events: none;
 }
 
-/* Editorial text panel — translucent, blurs photo through it (approved backdrop-filter for hero readability) */
-.home-hero__overlay {
+/* Editorial text panel — translucent band, NO blur (photo must remain sharp) */
+.ph-panel {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   padding: 22px 48px 28px;
   background: rgba(20, 18, 16, 0.26);
-  -webkit-backdrop-filter: blur(6px) saturate(1.1);
-  backdrop-filter: blur(6px) saturate(1.1);
 }
-.home-hero__kicker {
+
+.ph-kicker {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
@@ -290,14 +337,15 @@ const {
   align-items: center;
   gap: 10px;
 }
-.home-hero__kicker-line {
+.ph-kicker-line {
   display: block;
   width: 20px;
   height: 1px;
   background: var(--gold-light);
   flex-shrink: 0;
 }
-.home-hero__title {
+
+.ph-heading {
   font-family: var(--font-display);
   font-size: clamp(32px, 3.8vw, 52px);
   font-weight: 700;
@@ -308,21 +356,51 @@ const {
   text-wrap: pretty;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.30);
 }
-.home-hero__copy {
+
+.ph-body {
   font-size: 15px;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.82);
-  max-width: 520px;
   font-weight: 300;
+  max-width: 540px;
+}
+/* Home body needs margin below for CTAs */
+.ph-body--home {
   margin-bottom: 22px;
 }
-.home-hero__ctas {
+
+/* Floating photo credit — inside frame, bottom-right */
+.ph-credit {
+  position: absolute;
+  bottom: 14px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+}
+.ph-credit-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ph-credit-name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.06em;
+}
+
+/* Home CTAs */
+.ph-ctas {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
 }
-.home-hero__cta-primary {
+.ph-cta-primary {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -335,8 +413,8 @@ const {
   box-shadow: 0 2px 10px rgba(168, 132, 60, 0.30);
   transition: opacity var(--m-fast);
 }
-.home-hero__cta-primary:hover { opacity: 0.9; }
-.home-hero__cta-secondary {
+.ph-cta-primary:hover { opacity: 0.9; }
+.ph-cta-secondary {
   font-size: 12px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9) !important;
@@ -347,178 +425,115 @@ const {
   text-decoration: none;
   transition: background var(--m-fast);
 }
-.home-hero__cta-secondary:hover { background: rgba(255, 255, 255, 0.08); }
-.home-hero__credit {
-  position: absolute;
-  bottom: 14px;
-  right: 18px;
+.ph-cta-secondary:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ONE CANONICAL RESPONSIVE CASCADE — applies to ALL three variants
+   900 → 768 → 540px
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .ph-frame          { aspect-ratio: 16 / 7; min-height: 280px; }
+  .ph-panel          { padding: 18px 32px 22px; }
+  .ph-body           { font-size: 14px; max-width: 100%; }
+  .stats-band        { flex-wrap: wrap; }
+  .stat-item         { flex: 1 0 33.33%; min-width: 0; border-bottom: 1px solid var(--hairline); }
+  .stat-item--wide   { flex: 1 0 33.33%; }
+  .stat-item:nth-child(3n) { border-right: none; }
+}
+@media (max-width: 768px) {
+  .ph-frame          { aspect-ratio: 16 / 8; min-height: 300px; }
+  .ph-panel          { padding: 16px 24px 20px; }
+}
+@media (max-width: 540px) {
+  .ph-frame          { aspect-ratio: unset; min-height: 320px; }
+  .ph-img            { object-fit: contain; }
+  .ph-panel          { padding: 14px 16px 18px; }
+  .ph-heading        { font-size: clamp(28px, 7vw, 36px); }
+  .ph-body           { display: none; }
+  .ph-cta-secondary  { display: none; }
+  .stat-item         { flex: 1 0 50%; padding: 12px 16px; }
+  .stat-item:nth-child(3n)   { border-right: 1px solid var(--hairline); }
+  .stat-item:nth-child(even) { border-right: none; }
+  .stat-value        { font-size: 17px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ABOUT-SPECIFIC: photo credit bar + stats band below frame
+   ═══════════════════════════════════════════════════════════════ */
+.photo-credit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  background: var(--surface-1);
+  border-top: 1px solid var(--hairline);
+  padding: 12px 20px;
+}
+.photo-credit-bar__caption {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+  letter-spacing: 0.06em;
+}
+.photo-credit-bar__right {
   display: flex;
   align-items: center;
   gap: 6px;
-  z-index: 1;
-}
-.home-hero__credit-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.home-hero__credit-name {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: rgba(255, 255, 255, 0.65);
-  letter-spacing: 0.06em;
-}
-
-/* Unified responsive cascade — 900 → 768 → 540px (shared with journal and overlay) */
-@media (max-width: 900px) {
-  .home-hero__frame { aspect-ratio: 16 / 7; min-height: 280px; }
-  .home-hero__overlay { padding: 18px 32px 22px; }
-  .home-hero__copy { font-size: 14px; max-width: 100%; }
-}
-@media (max-width: 768px) {
-  .home-hero__frame { aspect-ratio: 16 / 8; min-height: 300px; }
-  .home-hero__overlay { padding: 16px 24px 20px; }
-}
-@media (max-width: 540px) {
-  .home-hero__frame { aspect-ratio: unset; min-height: 320px; }
-  .home-hero__photo { object-fit: contain; } /* preserve composition on portrait/square photos */
-  .home-hero__overlay { padding: 14px 16px 18px; }
-  .home-hero__copy { display: none; }
-  .home-hero__cta-secondary { display: none; }
-}
-
-/* ── Journal Hero (variant="journal") — 16:9, editorial overlay, no CTA ── */
-.journal-hero {
-  padding-top: var(--nav-h);
-  background: var(--surface-1);
-}
-.journal-hero__frame {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border: 1px solid var(--hairline);
-  background: var(--dark-100);
-}
-.journal-hero__placeholder {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    135deg,
-    #1A1816 0px, #1A1816 32px,
-    #141210 32px, #141210 64px
-  );
-}
-.journal-hero__photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-.journal-hero__photo.loaded { opacity: 1; }
-
-/* Minimal depth gradient — editorial panel provides text contrast */
-.journal-hero__gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 55%, rgba(20, 18, 16, 0.12) 100%);
-  pointer-events: none;
-}
-
-/* Editorial text panel */
-.journal-hero__overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 22px 48px 28px;
-  background: rgba(20, 18, 16, 0.26);
-  -webkit-backdrop-filter: blur(6px) saturate(1.1);
-  backdrop-filter: blur(6px) saturate(1.1);
-}
-.journal-hero__kicker {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold-light);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.journal-hero__kicker-line {
-  display: block;
-  width: 20px;
-  height: 1px;
-  background: var(--gold-light);
   flex-shrink: 0;
 }
-.journal-hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(32px, 4vw, 64px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: #FFFFFF;
-  line-height: 0.98;
-  margin-bottom: 16px;
-  text-wrap: pretty;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.30);
-}
-.journal-hero__copy {
-  font-size: 15px;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.82);
-  max-width: 580px;
-  font-weight: 300;
-}
-.journal-hero__credit {
-  position: absolute;
-  bottom: 14px;
-  right: 18px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 1;
-}
-.journal-hero__credit-label {
+.photo-credit-bar__by {
   font-family: var(--font-mono);
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.08em;
   text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-400);
 }
-.journal-hero__credit-name {
+.photo-credit-bar__name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-600);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+.photo-credit-bar__name:hover { text-decoration: underline; }
+@media (max-width: 480px) {
+  .photo-credit-bar { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+
+.stats-band {
+  display: flex;
+  background: var(--surface-1);
+  border-top: 1px solid var(--hairline);
+}
+.stat-item {
+  flex: 1;
+  padding: 18px 24px;
+  border-right: 1px solid var(--hairline);
+}
+.stat-item:last-child { border-right: none; }
+.stat-item--wide { flex: 2; }
+.stat-label {
   font-family: var(--font-mono);
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.60);
-  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-400);
+  margin-bottom: 5px;
 }
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+}
+.stat-value--gold { color: var(--gold-600); }
+.stat-pending { color: var(--ink-400); font-size: 18px; }
 
-/* Unified responsive cascade — 900 → 768 → 540px */
-@media (max-width: 900px) {
-  .journal-hero__frame { aspect-ratio: 16 / 9; min-height: 280px; }
-  .journal-hero__overlay { padding: 18px 32px 22px; }
-  .journal-hero__copy { font-size: 14px; max-width: 100%; }
-}
-@media (max-width: 768px) {
-  .journal-hero__frame { aspect-ratio: 16 / 9; min-height: 300px; }
-  .journal-hero__overlay { padding: 16px 24px 20px; }
-  .journal-hero__copy { display: none; }
-}
-@media (max-width: 540px) {
-  .journal-hero__frame { aspect-ratio: unset; min-height: 320px; }
-  .journal-hero__photo { object-fit: contain; } /* preserve composition on portrait/square photos */
-  .journal-hero__overlay { padding: 14px 16px 18px; }
-}
-
-/* Standard PageHero Styles */
+/* ═══════════════════════════════════════════════════════════════
+   STANDARD VARIANT (Showcase, Activities — text below image)
+   ═══════════════════════════════════════════════════════════════ */
 .page-hero {
   padding-top: calc(var(--nav-h) + var(--s-6));
   padding-bottom: var(--s-4);
@@ -569,76 +584,7 @@ const {
   letter-spacing: var(--ls-mono);
 }
 
-/* About Hero Styles (Overlay) */
-.about-hero {
-  padding-top: var(--nav-h, 64px);
-  padding-bottom: var(--s-5);
-  background: var(--surface-0);
-}
-.hero-frame-wrap {
-  border: 1px solid var(--hairline);
-  overflow: hidden;
-}
-.hero-frame {
-  position: relative;
-  aspect-ratio: 16 / 5;
-  overflow: hidden;
-}
-.hero-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-
-/* Minimal depth gradient — editorial panel provides text contrast */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 55%, rgba(20, 18, 16, 0.12) 100%);
-}
-
-/* Editorial text panel */
-.hero-text {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 22px 48px 28px;
-  background: rgba(20, 18, 16, 0.26);
-  -webkit-backdrop-filter: blur(6px) saturate(1.1);
-  backdrop-filter: blur(6px) saturate(1.1);
-}
-.hero-eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold-500);
-  font-weight: var(--weight-semibold);
-  margin-bottom: 12px;
-}
-.hero-title {
-  font-family: var(--font-display);
-  font-size: clamp(32px, 3.8vw, 52px);
-  font-weight: var(--weight-bold);
-  letter-spacing: -0.03em;
-  color: #ffffff;
-  line-height: 1.0;
-  margin-bottom: 14px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.30);
-}
-.hero-intro {
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.82);
-  max-width: 540px;
-  font-weight: 300;
-}
-
-/* Photographer attribution shared styles */
+/* Photographer credit shared by standard and project */
 .hero-credit {
   position: absolute;
   bottom: 16px;
@@ -661,96 +607,9 @@ const {
   letter-spacing: 0.06em;
 }
 
-/* Photo Credit Bar styles (when rendered below image) */
-.photo-credit-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-3);
-  background: var(--surface-1);
-  border-top: 1px solid var(--hairline);
-  padding: 12px 20px;
-}
-.photo-credit-bar__caption {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-400);
-  letter-spacing: 0.06em;
-}
-.photo-credit-bar__right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.photo-credit-bar__by {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ink-400);
-}
-.photo-credit-bar__name {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--gold-600);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-}
-.photo-credit-bar__name:hover {
-  text-decoration: underline;
-}
-
-@media (max-width: 480px) {
-  .photo-credit-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-}
-
-/* Stats band */
-.stats-band {
-  display: flex;
-  background: var(--surface-1);
-  border-top: 1px solid var(--hairline);
-}
-.stat-item {
-  flex: 1;
-  padding: 18px 24px;
-  border-right: 1px solid var(--hairline);
-}
-.stat-item:last-child {
-  border-right: none;
-}
-.stat-item--wide {
-  flex: 2;
-}
-.stat-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--ink-400);
-  margin-bottom: 5px;
-}
-.stat-value {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: var(--weight-bold);
-  color: var(--ink-900);
-  letter-spacing: -0.01em;
-}
-.stat-value--gold {
-  color: var(--gold-600);
-}
-.stat-pending {
-  color: var(--ink-400);
-  font-size: 18px;
-}
-
-/* Project Hero Styles (Full bleed) */
+/* ═══════════════════════════════════════════════════════════════
+   PROJECT VARIANT (full-bleed, min-height based)
+   ═══════════════════════════════════════════════════════════════ */
 .ph-hero {
   position: relative;
   width: 100%;
@@ -789,7 +648,7 @@ const {
   padding: 56px 64px;
   width: 100%;
 }
-.ph-kicker {
+.ph-kicker-proj {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.22em;
@@ -801,14 +660,14 @@ const {
   align-items: center;
   gap: 12px;
 }
-.ph-kicker-line {
+.ph-kicker-proj-line {
   display: block;
   width: 28px;
   height: 1px;
   background: var(--gold-500);
   flex-shrink: 0;
 }
-.ph-title {
+.ph-title-proj {
   font-family: var(--font-display);
   font-size: clamp(36px, 4.5vw, 64px);
   font-weight: 700;
@@ -818,59 +677,22 @@ const {
   margin-bottom: 16px;
   max-width: 720px;
 }
-.ph-desc {
+.ph-desc-proj {
   font-size: 16px;
   line-height: 1.7;
   color: rgba(250, 248, 244, 0.78);
   max-width: 600px;
   font-weight: 300;
 }
-
-/* Responsive adjustments */
 @media (max-width: 1024px) {
   .ph-hero-content { padding: 44px 40px; }
 }
-@media (max-width: 900px) {
-  .hero-frame { aspect-ratio: 16 / 7; min-height: 280px; }
-  .hero-text { padding: 18px 32px 22px; }
-  .hero-intro { font-size: 14px; max-width: 100%; }
-  .stats-band { flex-wrap: wrap; }
-  .stat-item {
-    flex: 1 0 33.33%;
-    min-width: 0;
-    border-bottom: 1px solid var(--hairline);
-  }
-  .stat-item--wide { flex: 1 0 33.33%; }
-  .stat-item:nth-child(3n) { border-right: none; }
-}
 @media (max-width: 768px) {
-  .ph-hero { min-height: 440px; }
-  .ph-hero-content { padding: 36px 24px; }
-  .hero-frame { aspect-ratio: 16 / 8; min-height: 300px; }
-  .hero-text { padding: 16px 24px 20px; }
-}
-@media (max-width: 540px) {
-  .hero-frame { aspect-ratio: unset; min-height: 320px; }
-  .hero-img { object-fit: contain; } /* preserve composition on portrait/square photos */
-  .hero-text { padding: 14px 16px 18px; }
-  .hero-title { font-size: clamp(28px, 7vw, 36px); }
-  .hero-intro { display: none; }
-  .stat-item {
-    flex: 1 0 50%;
-    padding: 12px 16px;
-  }
-  .stat-item:nth-child(3n) {
-    border-right: 1px solid var(--hairline);
-  }
-  .stat-item:nth-child(even) {
-    border-right: none;
-  }
-  .stat-value {
-    font-size: 17px;
-  }
+  .ph-hero          { min-height: 440px; }
+  .ph-hero-content  { padding: 36px 24px; }
 }
 @media (max-width: 480px) {
-  .ph-hero { min-height: 360px; }
-  .ph-desc { display: none; }
+  .ph-hero          { min-height: 360px; }
+  .ph-desc-proj     { display: none; }
 }
 </style>

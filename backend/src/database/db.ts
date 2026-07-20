@@ -754,6 +754,10 @@ export interface PhotosTable {
   exif_gps_lng:       Nullable<number>;
   gps_stripped:       Generated<boolean>;
   visibility:         Generated<PhotoVisibility>;
+  // show_in_portfolio — added by migration 0077.
+  // When false, photo is excluded from the photographer portfolio listing only.
+  // Has no effect on hero eligibility or any admin tool.
+  show_in_portfolio:  Generated<boolean>;
   source_event_id:    Nullable<number>;
   view_count:         Generated<number>;
   created_at:         Generated<ColumnType<Date, string | undefined, never>>;

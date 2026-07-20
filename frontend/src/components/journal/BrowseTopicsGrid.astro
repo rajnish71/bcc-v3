@@ -1,0 +1,103 @@
+---
+/**
+ * BrowseTopicsGrid.astro — Journal §08 (Browse by Topic)
+ * Subject tag grid — finer discovery layer, distinct from CategoryPivot.
+ * 3-column hairline grid. Each cell links to /journal/topic/[slug].
+ * Hover: background #FAF8F4. Topics are CMS-managed article tags.
+ * Wireframe authority: V6 07 Journal Home §08.
+ */
+
+interface Topic {
+  label: string;
+  slug: string;
+  count: number;
+}
+
+interface Props {
+  topics: Topic[];
+}
+
+const { topics } = Astro.props;
+---
+
+<div class="btg">
+  {topics.map((topic) => (
+    <a href={`/journal/topic/${topic.slug}/`} class="btg__cell">
+      <span class="btg__label">{topic.label}</span>
+      <div class="btg__count-wrap">
+        <span class="btg__count">{topic.count}</span>
+        <span class="btg__count-label">articles</span>
+      </div>
+    </a>
+  ))}
+</div>
+
+<style>
+.btg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+.btg__cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+  border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-0);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+.btg__cell:hover { background: var(--surface-1); }
+/* Remove right border from last column */
+.btg__cell:nth-child(3n) { border-right: none; }
+/* Remove bottom border from last row — handled by grid overflow hidden on parent */
+
+.btg__label {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
+}
+
+.btg__count-wrap {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+.btg__count {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink-200);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.btg__count-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .btg { grid-template-columns: repeat(2, 1fr); }
+  .btg__cell:nth-child(3n) { border-right: 1px solid var(--hairline); }
+  .btg__cell:nth-child(2n) { border-right: none; }
+}
+@media (max-width: 480px) {
+  .btg { grid-template-columns: 1fr; }
+  .btg__cell { border-right: none; }
+  .btg__cell:nth-child(2n) { border-right: none; }
+}
+</style>

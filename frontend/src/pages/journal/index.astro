@@ -1,111 +1,359 @@
 ---
 /**
- * journal/index.astro — Journal Index Page
+ * journal/index.astro — Journal Home
  * Route: /journal/
  *
- * Displays a list of guides, field reports, and tutorials.
- * Fetches dynamic content from the NestJS backend `/api/v1/journal`
- * and falls back to pre-seeded editorial logs.
+ * Phase J1: Shell & Layout.
+ * All sections rendered with mock data.
+ * API integration, search, sort, sticky pivot, and animations deferred to later phases.
  *
- * Uses EditorialCard (V6 62) for both featured and grid cards.
+ * Section order (frozen per wireframe V6 07):
+ *   SiteHeader (via BaseLayout)
+ *   PageHero (journal variant, 16:9)
+ *   FeaturedHeroArticle
+ *   JournalCategoryPivot
+ *   JournalEditorsPicks
+ *   FeaturedCategoryStories (conditional — hidden when empty)
+ *   LatestArticles
+ *   BrowseTopicsGrid
+ *   JournalContributors
+ *   JournalJoinCTA
+ *   SiteFooter (via BaseLayout)
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import SectionHeader from '../../components/ui/SectionHeader.astro';
-import EditorialCard from '../../components/ui/EditorialCard.astro';
+import FeaturedHeroArticle from '../../components/journal/FeaturedHeroArticle.astro';
+import JournalCategoryPivot from '../../components/journal/JournalCategoryPivot.astro';
+import JournalEditorsPicks from '../../components/journal/JournalEditorsPicks.astro';
+import FeaturedCategoryStories from '../../components/journal/FeaturedCategoryStories.astro';
+import LatestArticles from '../../components/journal/LatestArticles.astro';
+import BrowseTopicsGrid from '../../components/journal/BrowseTopicsGrid.astro';
+import JournalContributors from '../../components/journal/JournalContributors.astro';
+import JournalJoinCTA from '../../components/journal/JournalJoinCTA.astro';
 
-const fallbackPosts = [
-  {
-    id: 'old-city-heritage-walk-field-report',
-    slug: 'old-city-heritage-walk-field-report',
-    title: 'Old City Heritage Walk: A Field Report',
-    pubDate: '2026-06-23T10:00:00Z',
-    heroImage: '/images/Orchha-Reflection-Ankit-Tiwari-1024x737.jpeg',
-    category: 'Field Report',
-    readingTime: '4 min',
-    excerpt: 'Last weekend, over 25 photographers joined us in the narrow lanes of Chowk Bazaar to document the historic monuments and daily street life of Bhopal...'
-  },
-  {
-    id: 'golden-hour-photography-guide',
-    slug: 'golden-hour-photography-guide',
-    title: 'Mastering the Golden Hour',
-    pubDate: '2026-07-01T15:00:00Z',
-    heroImage: '/images/StreetLife-Rahil-Khan-1024x768.jpeg',
-    category: 'Guide',
-    readingTime: '6 min',
-    excerpt: 'Shooting during the golden hour presents unique opportunities and challenges. Learn how to manage high dynamic range, preserve highlight details, and capture warm compositions...'
-  }
+// ── Mock data (J1) — replaced by API in J2 ──────────────────────────────────
+
+const CATEGORIES = [
+  { label: 'ALL',          slug: 'all',           isActive: true  },
+  { label: 'Photo Essays', slug: 'photo-essays',  isActive: false },
+  { label: 'Field Reports',slug: 'field-reports', isActive: false },
+  { label: 'Trips',        slug: 'trips',         isActive: false },
+  { label: 'Nature',       slug: 'nature',        isActive: false },
+  { label: 'Heritage',     slug: 'heritage',      isActive: false },
+  { label: 'Archive',      slug: 'archive',       isActive: false },
 ];
 
-const featuredPost = fallbackPosts[0];
-const gridPosts = fallbackPosts.slice(1);
+const FEATURED_HERO = {
+  slug: 'walking-old-city-monsoon-photo-essay',
+  category: 'Photo Essays',
+  headline: "Walking the Old City: A Monsoon Photo Essay Through Bhopal's Heritage Quarter",
+  deck: "Three mornings. Forty-seven lanes. One photographer's quiet documentation of what Bhopal looks like when it rains — and what it has always looked like, behind new construction and the noise of the present.",
+  author: 'Raza Moosvi',
+  authorInitials: 'RM',
+  date: '12 Jul 2026',
+  readTime: '8 min',
+  photoCredit: 'Raza Moosvi',
+};
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  });
-}
+const EDITORS_PICKS = [
+  {
+    slug: 'walking-old-city-monsoon-photo-essay',
+    category: 'Photo Essays',
+    headline: "Walking the Old City: A Monsoon Photo Essay Through Bhopal's Heritage Quarter",
+    deck: "Three mornings. Forty-seven lanes. One photographer's quiet document of a city in rain.",
+    author: 'Raza Moosvi',
+    authorInitials: 'RM',
+    date: '12 Jul 2026',
+    readTime: '8 min',
+  },
+  {
+    slug: 'painted-stork-colony-hathaikheda-winter-field-report',
+    category: 'Field Reports',
+    headline: 'The Painted Stork Colony at Hathaikheda: A Winter Field Report',
+    deck: 'In December the fig trees fill. By February, the colony numbers eight hundred nests.',
+    author: 'Anil Bhati',
+    authorInitials: 'AB',
+    date: '3 Mar 2026',
+    readTime: '11 min',
+  },
+  {
+    slug: 'domes-of-bhopal-islamic-architecture-typology',
+    category: 'Heritage',
+    headline: 'The Domes of Bhopal: A Typological Study in Islamic Architecture',
+    deck: 'Every mosque in the old city has a different sky. A study of eighteen domes, four centuries.',
+    author: 'Kuldeep Lodhi',
+    authorInitials: 'KL',
+    date: '18 Jan 2026',
+    readTime: '14 min',
+  },
+];
+
+const FEATURED_STORIES = [
+  {
+    slug: 'leopards-of-raisen-three-seasons',
+    category: 'Nature',
+    headline: 'Leopards of Raisen: Three Seasons in a Forest Corridor',
+    deck: 'Fourteen months of night vigils, camera traps and patience near the Raisen Fort buffer zone.',
+    author: 'Priya Sharma',
+    authorInitials: 'PS',
+    date: '8 Jul 2026',
+    readTime: '16 min',
+  },
+  {
+    slug: 'chambal-river-expedition-2026',
+    category: 'Trips',
+    headline: "Chambal River Expedition 2026: Gharials, Dolphins and the Grammar of a Wild River",
+    deck: "Twelve photographers. Four days. One of India's last undisturbed river systems.",
+    author: 'Siddharth Jain',
+    authorInitials: 'SJ',
+    date: '29 Jun 2026',
+    readTime: '12 min',
+  },
+  {
+    slug: 'bhimbetka-first-light-rock-art',
+    category: 'Heritage',
+    headline: 'Bhimbetka at First Light: Photographing Rock Art in the Vindhya Hills',
+    deck: 'Some mornings the angle of early light makes paintings thirty thousand years old look freshly drawn.',
+    author: 'Neha Verma',
+    authorInitials: 'NV',
+    date: '15 Jun 2026',
+    readTime: '9 min',
+  },
+  {
+    slug: '1972-bcc-photographed-the-flood',
+    category: 'Archive',
+    headline: '1972: The Year BCC Photographed the Flood',
+    deck: 'Fifty years after the Upper Lake overflow, we found the negatives. What they show is extraordinary.',
+    author: 'R.K. Gupta',
+    authorInitials: 'RG',
+    date: '1 Jun 2026',
+    readTime: '7 min',
+  },
+];
+
+const LATEST_ARTICLES = [
+  {
+    slug: 'geometry-dragonfly-wings-macro',
+    category: 'Macro',
+    headline: 'The Geometry of Dragonfly Wings: A Macro Study',
+    deck: 'Three species, seventeen specimens, four months of patient fieldwork on the Kerwa bank.',
+    author: 'Deepika Rathore',
+    authorInitials: 'DR',
+    date: '18 Jul 2026',
+    readTime: '5 min',
+  },
+  {
+    slug: 'upper-lake-four-seasons-light-study',
+    category: 'Landscape',
+    headline: 'Upper Lake in Four Seasons: A Year-Long Study in Light',
+    deck: 'The same jetty. The same camera position. Fifty-two visits. One year.',
+    author: 'Anand Kumar',
+    authorInitials: 'AK',
+    date: '14 Jul 2026',
+    readTime: '6 min',
+  },
+  {
+    slug: 'hampi-last-light-vijayanagara',
+    category: 'Travel',
+    headline: 'Hampi: The Last Light on Vijayanagara',
+    deck: 'Evening approaches the boulder fields differently here. It always has.',
+    author: 'Faisal Iqbal',
+    authorInitials: 'FI',
+    date: '7 Jul 2026',
+    readTime: '8 min',
+  },
+  {
+    slug: 'marble-craftsmen-gyaraspur-portrait-series',
+    category: 'Portrait',
+    headline: 'The Marble Craftsmen of Gyaraspur: A Portrait Series',
+    deck: 'Three generations of one family. The same craft, the same light, the same patience.',
+    author: 'Sunita Tiwari',
+    authorInitials: 'ST',
+    date: '2 Jul 2026',
+    readTime: '6 min',
+  },
+  {
+    slug: 'night-herons-motia-talab-population-study',
+    category: 'Conservation',
+    headline: 'The Night Herons of Motia Talab: A Population Study',
+    deck: "An urban colony most residents don't know exists, photographed over two monsoon seasons.",
+    author: 'Rajesh Mishra',
+    authorInitials: 'RM',
+    date: '28 Jun 2026',
+    readTime: '9 min',
+  },
+  {
+    slug: 'bhopal-after-midnight-photo-essay',
+    category: 'Photo Essays',
+    headline: "Bhopal After Midnight: The City That Doesn't Sleep",
+    deck: 'Three photographers, three nights, one city that refuses to stop moving.',
+    author: 'Vivek Sahu',
+    authorInitials: 'VS',
+    date: '22 Jun 2026',
+    readTime: '7 min',
+  },
+];
+
+const TOPICS = [
+  { label: 'Birds',         slug: 'birds',         count: 14 },
+  { label: 'Butterflies',   slug: 'butterflies',   count: 8  },
+  { label: 'Wildlife',      slug: 'wildlife',      count: 23 },
+  { label: 'Macro',         slug: 'macro',         count: 11 },
+  { label: 'Landscape',     slug: 'landscape',     count: 31 },
+  { label: 'Travel',        slug: 'travel',        count: 19 },
+  { label: 'Portrait',      slug: 'portrait',      count: 7  },
+  { label: 'Architecture',  slug: 'architecture',  count: 16 },
+  { label: 'Conservation',  slug: 'conservation',  count: 12 },
+];
+
+const CONTRIBUTORS = [
+  {
+    name: 'Raza Moosvi',
+    initials: 'RM',
+    slug: 'raza-moosvi',
+    role: 'Member',
+    specialties: 'Heritage · Street · Documentary',
+    articleCount: 7,
+    photoCount: 142,
+  },
+  {
+    name: 'Anil Bhati',
+    initials: 'AB',
+    slug: 'anil-bhati',
+    role: 'Member',
+    specialties: 'Wildlife · Birds · Field Reports',
+    articleCount: 12,
+    photoCount: 318,
+  },
+  {
+    name: 'Kuldeep Lodhi',
+    initials: 'KL',
+    slug: 'kuldeep-lodhi',
+    role: 'Member',
+    specialties: 'Heritage · Architecture · Night',
+    articleCount: 9,
+    photoCount: 267,
+  },
+];
+
+const SEO_INTRO = "The editorial publication of Bhopal Camera Club — photography, nature, heritage, conservation and the stories that only a club of this age can tell. Photo essays, field reports, expedition accounts and institutional memory since 1965.";
 ---
 
 <BaseLayout
   title="Journal"
-  description="Guides, tutorials, field reports, and perspectives written by the Bhopal Camera Club community."
+  description="The editorial publication of Bhopal Camera Club — photography, nature, heritage and the stories that only a club of this age can tell."
 >
-  <div class="journal-wrapper">
+  <div class="journal-page">
 
-    <!-- Header -->
+    <!-- §01 PageHero — 16:9, editorial overlay, no CTA -->
     <PageHero
-      eyebrow="Stories & Craft"
-      title="The Journal"
-      subtitle="Guides, tutorial logs, event field reports, and artistic perspectives written by the Bhopal Camera Club community."
+      variant="journal"
+      eyebrow="BCC Journal · Editorial Publication"
+      title="The BCC Journal"
+      subtitle={SEO_INTRO}
     />
 
-    <!-- Featured Post -->
-    {featuredPost && (
-      <section class="section featured-section" aria-label="Featured article">
-        <div class="container">
-          <div id="featured-wrap">
-            <EditorialCard
-              variant="featured"
-              href={`/journal/${featuredPost.slug}/`}
-              image={featuredPost.heroImage}
-              imageAlt={featuredPost.title}
-              category={featuredPost.category}
-              title={featuredPost.title}
-              excerpt={featuredPost.excerpt}
-              date={formatDate(featuredPost.pubDate)}
-              readingTime={featuredPost.readingTime}
-              headingLevel="h2"
-            />
-          </div>
+    <!-- SEO editorial intro (crawlable, below hero) -->
+    <section class="journal-seo-intro" aria-label="About the Journal">
+      <div class="journal-container">
+        <p class="journal-seo-intro__copy">
+          The Journal is not a blog. It is the editorial publication of Bhopal Camera Club —
+          a record of what we see, where we go, and what we find worth documenting.
+          It exists to preserve the photographic practice of our members: the planning behind
+          a dawn shoot at the Upper Lake, the patience required to photograph a Painted Stork
+          colony in winter, the history of a haveli that will not exist in ten years. You will
+          find photo essays here, field reports from wildlife corridors and heritage sites,
+          accounts of club expeditions to the Chambal, the Pench and the Western Ghats, and
+          essays on the nature of light, the ethics of street photography, and the relationship
+          between a photographer and a place photographed over twenty years. Every essay that
+          appears in this publication becomes part of the permanent record of Bhopal Camera
+          Club. We have been photographing this city since 1965. This is what we have seen.
+        </p>
+      </div>
+    </section>
+
+    <!-- §03 Featured Hero Article -->
+    <section class="journal-section" aria-label="Featured article">
+      <div class="journal-container">
+        <FeaturedHeroArticle {...FEATURED_HERO} />
+      </div>
+    </section>
+
+    <!-- §04 Category Pivot — sticky behavior deferred to J2 -->
+    <JournalCategoryPivot categories={CATEGORIES} />
+
+    <!-- §05 Editor's Picks -->
+    <section class="journal-section" aria-label="Editor's Picks">
+      <div class="journal-container">
+        <SectionHeader
+          title="Editor's Picks"
+          align="left"
+          spacing="md"
+          cta={{ label: "All Picks", href: "/journal/picks/" }}
+        />
+        <JournalEditorsPicks picks={EDITORS_PICKS} />
+      </div>
+    </section>
+
+    <!-- §06 Featured Category Stories (conditional) -->
+    {FEATURED_STORIES.length > 0 && (
+      <section class="journal-section" aria-label="Featured stories">
+        <div class="journal-container">
+          <SectionHeader
+            title="Featured Stories"
+            align="left"
+            spacing="md"
+            cta={{ label: "View All", href: "/journal/" }}
+          />
+          <FeaturedCategoryStories stories={FEATURED_STORIES} />
         </div>
       </section>
     )}
 
-    <!-- Grid List -->
-    <section class="section archive-section" aria-label="Latest articles">
-      <div class="container">
+    <!-- §07 Latest Articles -->
+    <section class="journal-section" aria-label="Latest articles">
+      <div class="journal-container">
         <SectionHeader
-          eyebrow="Archive Logs"
           title="Latest Articles"
+          subtitle="Chronological feed — most recent first. Featured Hero article excluded."
           align="left"
+          spacing="md"
         />
+        <LatestArticles articles={LATEST_ARTICLES} totalCount={47} />
+      </div>
+    </section>
 
-        <div id="journal-grid" class="journal-index-grid" data-gsap="stagger">
-          {gridPosts.map(post => (
-            <EditorialCard
-              variant="card"
-              href={`/journal/${post.slug}/`}
-              image={post.heroImage}
-              imageAlt={post.title}
-              category={post.category}
-              title={post.title}
-              excerpt={post.excerpt}
-              date={formatDate(post.pubDate)}
-              readingTime={post.readingTime}
-            />
-          ))}
-        </div>
+    <!-- §08 Browse by Topic -->
+    <section class="journal-section" aria-label="Browse by topic">
+      <div class="journal-container">
+        <SectionHeader
+          title="Browse by Topic"
+          subtitle="Subject tags — a finer layer of discovery and internal linking."
+          align="left"
+          spacing="md"
+        />
+        <BrowseTopicsGrid topics={TOPICS} />
+      </div>
+    </section>
+
+    <!-- §09 Meet Our Contributors -->
+    <section class="journal-section" aria-label="Meet our contributors">
+      <div class="journal-container">
+        <SectionHeader
+          title="Meet Our Contributors"
+          align="left"
+          spacing="md"
+          cta={{ label: "All Photographers", href: "/photographers/" }}
+        />
+        <JournalContributors contributors={CONTRIBUTORS} />
+      </div>
+    </section>
+
+    <!-- §10 Join / Subscribe CTA -->
+    <section class="journal-section journal-section--cta" aria-label="Join the journal community">
+      <div class="journal-container">
+        <JournalJoinCTA />
       </div>
     </section>
 
@@ -113,119 +361,59 @@ function formatDate(iso: string) {
 </BaseLayout>
 
 <style>
-.journal-wrapper {
-  background-color: var(--surface-1);
+.journal-page {
+  background: var(--surface-bg);
   min-height: 100vh;
 }
-.journal-header {
-  padding-top: calc(var(--nav-h) + var(--s-8));
-  padding-bottom: var(--s-6);
+
+/* Journal content container — 1140px per wireframe */
+.journal-container {
+  width: 100%;
+  max-width: var(--container-content);
+  margin: 0 auto;
+  padding: 0 var(--gutter, 48px);
 }
-.featured-section {
-  padding-top: 0;
+
+/* Standard section rhythm — 120px top padding matches wireframe sections */
+.journal-section {
+  padding-top: var(--s-15);
 }
-.archive-section {
-  padding-top: var(--s-8);
-  padding-bottom: var(--s-12);
+.journal-section--cta {
+  padding-bottom: var(--s-15);
 }
-.journal-index-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--s-3);
-  margin-top: var(--s-6);
+
+/* SEO intro — below hero, before FeaturedHeroArticle */
+.journal-seo-intro {
+  padding-top: var(--s-5);
+  padding-bottom: 0;
 }
-@media (max-width: 640px) {
-  .journal-index-grid {
-    grid-template-columns: 1fr;
-  }
+.journal-seo-intro__copy {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  max-width: var(--container-text);
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .journal-section { padding-top: var(--s-10); }
+  .journal-container { padding: 0 var(--s-4); }
+}
+@media (max-width: 768px) {
+  .journal-section { padding-top: var(--s-8); }
+  .journal-section--cta { padding-bottom: var(--s-8); }
+  .journal-container { padding: 0 var(--gutter-mob, 20px); }
 }
 </style>
 
 <script>
-  async function loadJournalIndex() {
-    try {
-      const res = await fetch('/api/v1/journal?limit=20');
-      if (!res.ok) throw new Error('API error');
-      const { data } = await res.json();
-      const posts = Array.isArray(data) ? data : [];
-      if (posts.length > 0) {
-        renderFeatured(posts[0]);
-        if (posts.length > 1) {
-          renderGrid(posts.slice(1));
-        }
-      }
-    } catch {
-      // Keep static pre-seeded fallback
-    }
-  }
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-IN', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-  }
-
-  function renderFeatured(post: any) {
-    const wrap = document.getElementById('featured-wrap');
-    if (!wrap) return;
-    const date = formatDate(post.pubDate);
-    const readingTime = post.readingTime || '5 min';
-    wrap.innerHTML = `
-      <a href="/journal/${post.slug}/" class="editorial-card editorial-card--featured">
-        <div class="editorial-card__img-wrap">
-          ${post.heroImage
-            ? `<img src="${post.heroImage}" alt="${post.title}" class="editorial-card__img" loading="lazy" decoding="async" />`
-            : `<div class="editorial-card__img-placeholder" aria-hidden="true"></div>`
-          }
-        </div>
-        <div class="editorial-card__body">
-          ${post.category ? `<span class="editorial-card__category">${post.category}</span>` : ''}
-          <h2 class="editorial-card__title">${post.title}</h2>
-          ${post.excerpt ? `<p class="editorial-card__excerpt">${post.excerpt}</p>` : ''}
-          <div class="editorial-card__meta">
-            <span>${date}</span>
-            <span class="editorial-card__sep" aria-hidden="true">·</span>
-            <span>${readingTime} read</span>
-          </div>
-        </div>
-      </a>
-    `;
-  }
-
-  function renderGrid(posts: any[]) {
-    const grid = document.getElementById('journal-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    posts.forEach((post: any) => {
-      const date = formatDate(post.pubDate);
-      const readingTime = post.readingTime || '5 min';
-      const card = document.createElement('a');
-      card.href = `/journal/${post.slug}/`;
-      card.className = 'editorial-card editorial-card--card';
-      card.innerHTML = `
-        <div class="editorial-card__img-wrap">
-          ${post.heroImage
-            ? `<img src="${post.heroImage}" alt="${post.title}" class="editorial-card__img" loading="lazy" decoding="async" />`
-            : `<div class="editorial-card__img-placeholder" aria-hidden="true"></div>`
-          }
-        </div>
-        <div class="editorial-card__body">
-          ${post.category ? `<span class="editorial-card__category">${post.category}</span>` : ''}
-          <h3 class="editorial-card__title">${post.title}</h3>
-          ${post.excerpt ? `<p class="editorial-card__excerpt">${post.excerpt}</p>` : ''}
-          <div class="editorial-card__meta">
-            <span>${date}</span>
-            <span class="editorial-card__sep" aria-hidden="true">·</span>
-            <span>${readingTime} read</span>
-          </div>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-  }
-
   import { loadPageHero } from '../../lib/hero-loader';
-  loadPageHero('journal');
-
-  loadJournalIndex();
+  // Loads hero image from heroManager.location("journal") — API-backed, graceful fallback
+  loadPageHero('journal').then(() => {
+    const img = document.getElementById('page-hero-img') as HTMLImageElement | null;
+    if (img && img.src) {
+      img.onload = () => img.classList.add('loaded');
+      if (img.complete) img.classList.add('loaded');
+    }
+  });
 </script>

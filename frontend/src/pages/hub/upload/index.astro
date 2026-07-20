@@ -171,6 +171,14 @@ import HubLayout from '../../../layouts/HubLayout.astro';
         <p class="insp-hint">Defaulted from Member Profile — override anytime</p>
       </div>
 
+      <div class="insp-field">
+        <label class="insp-toggle-row" for="meta-hide-portfolio">
+          <input type="checkbox" id="meta-hide-portfolio" class="insp-toggle-check" />
+          <span class="insp-toggle-label">Hide from my Portfolio</span>
+        </label>
+        <p class="insp-hint">The photograph stays in your library and can still be used as a Hero image — it just won't appear in your public portfolio.</p>
+      </div>
+
       <div class="insp-field" id="exif-section" hidden>
         <div class="insp-label-row">
           <div class="insp-label" id="exif-heading">EXIF</div>
@@ -351,6 +359,12 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .exif-chip{font-family:var(--font-mono);font-size:10px;background:var(--surface-2);padding:4px 8px;color:var(--ink-600)}
 .exif-chip--missing{color:var(--ink-400);font-style:italic}
 .exif-auto{font-family:var(--font-mono);font-size:9px;color:var(--forest-600)}
+
+/* Portfolio hide toggle */
+.insp-toggle-row{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.insp-toggle-check{width:14px;height:14px;accent-color:var(--gold-600);cursor:pointer;flex-shrink:0}
+.insp-toggle-label{font-size:13px;color:var(--ink-900)}
+
 
 /* Publication control */
 .pub-control{display:flex;gap:10px;padding:16px 28px 0;flex-shrink:0}
@@ -1068,6 +1082,9 @@ async function confirmItems(
   const description = (qid('meta-description') as HTMLTextAreaElement).value.trim() || null;
   const exhibLabel  = (qid('meta-exh-label')   as HTMLInputElement).value.trim() || null;
   const location    = (qid('meta-location')    as HTMLInputElement).value.trim();
+  // show_in_portfolio: true by default; false when the checkbox is checked.
+  const hidePortfolio = (qid('meta-hide-portfolio') as HTMLInputElement).checked;
+  const showInPortfolio = !hidePortfolio;
 
   let confirmed = 0;
   let errorMsg: string | null = null;
@@ -1087,6 +1104,7 @@ async function confirmItems(
       description: description || undefined,
       exhibition_label: exhibLabel || undefined,
       visibility,
+      show_in_portfolio: showInPortfolio,
       exif: {
         width_px:      item.exif?.widthPx,
         height_px:     item.exif?.heightPx,

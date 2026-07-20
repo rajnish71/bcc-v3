@@ -1,0 +1,178 @@
+---
+/**
+ * JournalContributors.astro — Journal §09 (Meet Our Contributors)
+ * Contributors are existing Photographer Profiles — not a separate author system.
+ * Cards link directly to /photographers/[slug].
+ * Stats-focused card (articleCount + photoCount) distinct from PersonCard (V6 61).
+ * Smart display: shows complete rows of 3 only (1–3 show all, 4–5 show 3, 6+ show 6, 9+ show 9).
+ * Rotation logic (seeded by date) is deferred to J2.
+ * Wireframe authority: V6 07 Journal Home §09.
+ */
+
+interface Contributor {
+  name: string;
+  initials: string;
+  slug: string;
+  role: string;
+  specialties: string;
+  articleCount: number;
+  photoCount: number;
+  avatarUrl?: string;
+}
+
+interface Props {
+  contributors: Contributor[];
+}
+
+const { contributors } = Astro.props;
+
+// Smart display count: complete rows of 3 only
+function getDisplayCount(total: number): number {
+  if (total <= 3) return total;
+  if (total <= 5) return 3;
+  if (total <= 8) return 6;
+  return Math.min(total, 9);
+}
+
+const displayed = contributors.slice(0, getDisplayCount(contributors.length));
+---
+
+<div class="jc__grid">
+  {displayed.map((person) => (
+    <a href={`/photographers/${person.slug}/`} class="jc__card">
+      <div class="jc__avatar-wrap" aria-hidden="true">
+        {person.avatarUrl
+          ? <img src={person.avatarUrl} alt={person.name} class="jc__avatar-img" loading="lazy" />
+          : (
+            <div class="jc__avatar-placeholder">
+              <span class="jc__avatar-initials">{person.initials}</span>
+            </div>
+          )
+        }
+      </div>
+      <div class="jc__name">{person.name}</div>
+      <div class="jc__role">{person.role}</div>
+      <div class="jc__specialties">{person.specialties}</div>
+      <footer class="jc__stats">
+        <div class="jc__stat">
+          <span class="jc__stat-value">{person.articleCount}</span>
+          <span class="jc__stat-label">articles</span>
+        </div>
+        <div class="jc__stat">
+          <span class="jc__stat-value">{person.photoCount}</span>
+          <span class="jc__stat-label">photos</span>
+        </div>
+      </footer>
+    </a>
+  ))}
+</div>
+
+<style>
+.jc__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.jc__card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s;
+}
+.jc__card:hover { box-shadow: 0 4px 16px rgba(20, 18, 16, 0.08); }
+
+.jc__avatar-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--r-full);
+  overflow: hidden;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+.jc__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.jc__avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--forest-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jc__avatar-initials {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: #FFFFFF;
+  letter-spacing: 0.04em;
+}
+
+.jc__name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin-bottom: 4px;
+}
+
+.jc__role {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 10px;
+}
+
+.jc__specialties {
+  font-size: 13px;
+  color: var(--ink-600);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.jc__stats {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline-soft);
+  width: 100%;
+}
+
+.jc__stat { text-align: center; }
+.jc__stat-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.jc__stat-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .jc__grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .jc__grid { grid-template-columns: 1fr; }
+}
+</style>

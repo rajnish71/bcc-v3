@@ -849,17 +849,107 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   cursor: pointer;
 }
 
-/* Confirm modal side by side */
+/* Confirm replace modal (sits on top of the assign modal at z-index 2010) */
 .admin-modal--confirm {
-  background: rgba(20, 18, 16, 0.3);
+  background: rgba(20, 18, 16, 0.45);
   z-index: 2010;
 }
 .admin-modal__content--confirm {
   max-width: 640px;
   width: 100%;
-  height: 108px;
-  object-fit: cover;
+  /* No height constraint — let content determine height. */
 }
+/* Hero replace preview grid */
+.hero-replace-preview-grid {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 8px;
+}
+.replace-preview-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.replace-preview-header {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-400);
+}
+.replace-preview-card {
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.replace-preview-img {
+  width: 100%;
+  aspect-ratio: 16 / 5;
+  object-fit: cover;
+  display: block;
+  background: var(--surface-2);
+}
+.replace-preview-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-900);
+  padding: 6px 8px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.replace-preview-credit {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-400);
+  padding: 0 8px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.replace-preview-divider {
+  font-size: 22px;
+  color: var(--ink-300);
+  align-self: center;
+  flex-shrink: 0;
+  padding-top: 20px; /* optical alignment with the images */
+}
+.replace-warning-text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-700);
+  margin: 0;
+  line-height: 1.6;
+}
+/* Generic btn classes for the modal footers */
+.btn {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 20px;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--m-fast);
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-600);
+}
+.btn-outline:hover { color: var(--ink-900); border-color: var(--ink-400); }
+.btn-dark {
+  background: var(--ink-900);
+  color: var(--surface-0);
+}
+.btn-dark:hover { opacity: 0.85; }
+.btn-md { padding: 9px 20px; font-size: 13px; }
+/* Body scroll lock: applied by JS when any modal is open */
+body.modal-open { overflow: hidden; }
 .spotlight-photo-card__title {
   font-family: var(--font-body);
   font-size: 11px;
@@ -1373,6 +1463,17 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     });
   }
 
+  function closeAssignModal() {
+    hide(document.getElementById('hero-assign-modal'));
+    document.body.classList.remove('modal-open');
+  }
+
+  function closeReplaceModal() {
+    hide(document.getElementById('hero-replace-modal'));
+    // Caller is responsible for deciding whether to re-open the assign modal
+    // or to fully unlock scroll (commitAssignments handles that).
+  }
+
   function openAssignModal(uuid: string) {
     selectedPhotoUuid = uuid;
     const p = eligiblePhotos.find(photo => photo.uuid === uuid);
@@ -1440,6 +1541,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     }
 
     show(document.getElementById('hero-assign-modal'));
+    document.body.classList.add('modal-open');
   }
 
   async function saveAssignmentsFlow() {
@@ -1512,6 +1614,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   async function commitAssignments() {
     hide(document.getElementById('hero-assign-modal'));
     hide(document.getElementById('hero-replace-modal'));
+    document.body.classList.remove('modal-open');
 
     const p = eligiblePhotos.find(photo => photo.uuid === selectedPhotoUuid);
     if (!p) return;
@@ -1593,29 +1696,55 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     renderEligiblePhotos();
   });
 
-  // Close modals listeners
+  // Close assign modal handlers
   document.getElementById('hero-assign-modal-close')?.addEventListener('click', () => {
-    hide(document.getElementById('hero-assign-modal'));
+    closeAssignModal();
   });
   document.getElementById('hero-assign-cancel')?.addEventListener('click', () => {
-    hide(document.getElementById('hero-assign-modal'));
+    closeAssignModal();
   });
   document.getElementById('hero-assign-save')?.addEventListener('click', () => {
     saveAssignmentsFlow();
   });
 
   document.getElementById('hero-replace-cancel')?.addEventListener('click', () => {
-    hide(document.getElementById('hero-replace-modal'));
+    closeReplaceModal();
     show(document.getElementById('hero-assign-modal'));
+    document.body.classList.add('modal-open');
   });
 
   document.getElementById('hero-replace-confirm')?.addEventListener('click', () => {
-    hide(document.getElementById('hero-replace-modal'));
+    closeReplaceModal();
     currentReplacementIndex++;
     if (currentReplacementIndex >= pendingReplacements.length) {
       commitAssignments();
     } else {
       showReplacementConfirmation();
+    }
+  });
+
+  // Click-outside-to-close for assign modal
+  document.getElementById('hero-assign-modal-overlay')?.addEventListener('click', () => {
+    closeAssignModal();
+  });
+  // Click-outside-to-close for replace modal
+  document.getElementById('hero-replace-modal-overlay')?.addEventListener('click', () => {
+    closeReplaceModal();
+    show(document.getElementById('hero-assign-modal'));
+    document.body.classList.add('modal-open');
+  });
+
+  // ESC key: close whichever modal is topmost
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const replaceModal = document.getElementById('hero-replace-modal');
+    const assignModal  = document.getElementById('hero-assign-modal');
+    if (replaceModal && !replaceModal.hidden) {
+      closeReplaceModal();
+      show(assignModal);
+      document.body.classList.add('modal-open');
+    } else if (assignModal && !assignModal.hidden) {
+      closeAssignModal();
     }
   });
 

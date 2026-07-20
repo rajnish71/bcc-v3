@@ -1,0 +1,297 @@
+---
+/**
+ * LatestArticles.astro — Journal §07
+ * Chronological article feed. 3-column grid.
+ * Search + sort bar are rendered as static structure for J1 (no JS interaction).
+ * Load More button is static for J1.
+ * Featured Hero Article is excluded from this feed (handled by parent page).
+ * Wireframe authority: V6 07 Journal Home §07.
+ */
+
+interface Article {
+  slug: string;
+  category: string;
+  headline: string;
+  deck: string;
+  author: string;
+  authorInitials: string;
+  date: string;
+  readTime: string;
+  imageUrl?: string;
+}
+
+interface Props {
+  articles: Article[];
+  totalCount?: number;
+}
+
+const { articles, totalCount = 47 } = Astro.props;
+---
+
+<div class="la">
+  <!-- Search + Sort bar — static for J1 -->
+  <div class="la__controls" aria-label="Search and sort controls">
+    <div class="la__search" role="search">
+      <svg class="la__search-icon" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+        <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.2"/>
+        <line x1="8.7" y1="8.7" x2="11.5" y2="11.5" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+      <span class="la__search-placeholder">Search articles...</span>
+    </div>
+    <div class="la__sort" aria-label="Sort order">
+      <span class="la__sort-label">Newest First</span>
+      <span class="la__sort-caret" aria-hidden="true">▾</span>
+    </div>
+  </div>
+
+  <!-- Article grid -->
+  <div class="la__grid" data-gsap="stagger">
+    {articles.map((article) => (
+      <a href={`/journal/${article.slug}/`} class="la__card">
+        <div class="la__img-wrap" aria-hidden="true">
+          {article.imageUrl
+            ? <img src={article.imageUrl} alt={article.headline} class="la__img" loading="lazy" decoding="async" />
+            : <div class="la__placeholder"></div>
+          }
+        </div>
+        <div class="la__body">
+          <div class="la__kicker">
+            <span class="la__kicker-line" aria-hidden="true"></span>
+            {article.category}
+          </div>
+          <h3 class="la__headline">{article.headline}</h3>
+          <p class="la__deck">{article.deck}</p>
+          <footer class="la__footer">
+            <div class="la__avatar" aria-hidden="true">
+              <span class="la__avatar-initials">{article.authorInitials}</span>
+            </div>
+            <span class="la__author-name">{article.author}</span>
+            <span class="la__sep" aria-hidden="true">·</span>
+            <span class="la__meta">{article.date}</span>
+            <span class="la__sep" aria-hidden="true">·</span>
+            <span class="la__meta">{article.readTime} read</span>
+          </footer>
+        </div>
+      </a>
+    ))}
+  </div>
+
+  <!-- Load More — static for J1 -->
+  <div class="la__load-more">
+    <button class="la__load-btn" type="button">Load More Articles</button>
+    <span class="la__load-count">Showing {articles.length} of {totalCount} articles</span>
+  </div>
+</div>
+
+<style>
+.la__controls {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.la__search {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  padding: 10px 16px;
+  background: var(--surface-0);
+}
+.la__search-icon {
+  color: var(--ink-400);
+  flex-shrink: 0;
+}
+.la__search-placeholder {
+  font-size: 13px;
+  color: var(--ink-400);
+  font-family: var(--font-body);
+}
+.la__sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  padding: 10px 16px;
+  background: var(--surface-0);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.la__sort-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-600);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.la__sort-caret { font-size: 10px; color: var(--ink-400); }
+
+.la__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.la__card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s;
+}
+.la__card:hover { box-shadow: 0 4px 16px rgba(20, 18, 16, 0.08); }
+
+.la__img-wrap {
+  height: 190px;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.la__placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    #1A1816 0px, #1A1816 28px,
+    #141210 28px, #141210 56px
+  );
+}
+.la__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.la__body {
+  padding: 22px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.la__kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.la__kicker-line {
+  display: block;
+  width: 12px;
+  height: 1px;
+  background: var(--gold-600);
+  flex-shrink: 0;
+}
+
+.la__headline {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--ink-900);
+  margin-bottom: 8px;
+  text-wrap: pretty;
+  flex: 1;
+}
+
+.la__deck {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink-600);
+  margin-bottom: 14px;
+}
+
+.la__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline-soft);
+  flex-wrap: wrap;
+}
+.la__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-full);
+  background: var(--forest-gradient);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.la__avatar-initials {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+.la__author-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-700);
+}
+.la__sep { font-size: 11px; color: var(--ink-200); }
+.la__meta { font-size: 11px; color: var(--ink-400); }
+
+/* Load More */
+.la__load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+}
+.la__load-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-600);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  padding: 14px 48px;
+  background: var(--surface-0);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.la__load-btn:hover {
+  border-color: var(--ink-200);
+  color: var(--ink-900);
+}
+.la__load-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--ink-400);
+  letter-spacing: 0.06em;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .la__grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .la__grid { grid-template-columns: 1fr; }
+  .la__controls { flex-direction: column; align-items: stretch; }
+  .la__search { min-width: 0; }
+}
+</style>

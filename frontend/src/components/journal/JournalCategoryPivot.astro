@@ -1,0 +1,84 @@
+---
+/**
+ * JournalCategoryPivot.astro — Journal §03 (page architecture index) / §04 (wireframe section)
+ * Static tab strip for J1. Sticky CSS behavior deferred to J2.
+ * Only non-empty categories are rendered (suppressed server-side in future phases).
+ * Wireframe authority: V6 07 Journal Home §04.
+ */
+
+interface Category {
+  label: string;
+  slug: string;
+  isActive?: boolean;
+}
+
+interface Props {
+  categories: Category[];
+}
+
+const { categories } = Astro.props;
+---
+
+<div class="cat-pivot" id="journal-category-pivot">
+  <div class="cat-pivot__inner container">
+    <div class="cat-pivot__scroll" role="tablist" aria-label="Browse by category">
+      {categories.map((cat) => (
+        <button
+          role="tab"
+          aria-selected={cat.isActive ? 'true' : 'false'}
+          class:list={['cat-pivot__tab', cat.isActive && 'cat-pivot__tab--active']}
+          data-slug={cat.slug}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+.cat-pivot {
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline);
+  /* Phase J2: position: sticky; top: var(--nav-h-min, 64px); z-index: 40; */
+}
+.cat-pivot__inner {
+  /* override container padding to keep tabs flush with content */
+}
+.cat-pivot__scroll {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  min-width: max-content;
+  padding: 0 var(--gutter, 48px);
+}
+.cat-pivot__scroll::-webkit-scrollbar { display: none; }
+
+.cat-pivot__tab {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+  padding: 18px 22px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 400;
+  transition: color 0.15s;
+}
+.cat-pivot__tab:hover { color: var(--ink-900); }
+.cat-pivot__tab--active {
+  color: var(--ink-900);
+  border-bottom-color: var(--gold-600);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .cat-pivot__scroll { padding: 0 var(--gutter-mob, 20px); }
+}
+</style>

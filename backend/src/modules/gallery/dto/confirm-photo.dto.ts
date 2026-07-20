@@ -46,4 +46,8 @@ export interface ConfirmPhotoDto {
   sha256_hash?: string;
   /** Whether to strip GPS from public EXIF display. Defaults to false. */
   gps_stripped?: boolean;
+  /** When false, photo is excluded from the photographer portfolio listing only.
+   *  Has no effect on visibility gating, Hero eligibility, or any admin tool.
+   *  Defaults to true (visible in portfolio). */
+  show_in_portfolio?: boolean;
 }

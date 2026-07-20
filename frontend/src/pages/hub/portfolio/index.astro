@@ -219,6 +219,14 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       </select>
     </div>
 
+    <div class="insp-field">
+      <label class="insp-toggle-row" for="insp-hide-portfolio">
+        <input type="checkbox" id="insp-hide-portfolio" class="insp-toggle-check" />
+        <span class="insp-toggle-label">Hide from my Portfolio</span>
+      </label>
+      <p class="insp-toggle-hint">The photograph stays in your library and can still be used as a Hero image — it just won’t appear in your public portfolio.</p>
+    </div>
+
     <div class="insp-focal-row">
       <div>
         <div class="insp-label">Focal Point</div>
@@ -776,6 +784,12 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 }
 .insp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
 
+/* Portfolio hide toggle (reused in upload studio and inspector) */
+.insp-toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.insp-toggle-check { width: 14px; height: 14px; accent-color: var(--gold-600); cursor: pointer; flex-shrink: 0; }
+.insp-toggle-label { font-size: 13px; color: var(--ink-900); font-family: var(--font-body); }
+.insp-toggle-hint { font-size: 11px; color: var(--ink-400); margin: 0; font-family: var(--font-body); line-height: 1.5; }
+
 .btn-save {
   font-size: 13px; font-weight: 600; color: #FFFFFF;
   background: var(--gold-gradient); border: none;
@@ -1268,6 +1282,8 @@ function populateInspector(p: Photo) {
   (document.getElementById('insp-description') as HTMLTextAreaElement).value = p.description ?? '';
   (document.getElementById('insp-exh-label') as HTMLInputElement).value = p.exhibition_label ?? '';
   (document.getElementById('insp-visibility') as HTMLSelectElement).value = p.visibility ?? 'PUBLIC';
+  // show_in_portfolio: true by default; checkbox is CHECKED when hidden (inverted).
+  (document.getElementById('insp-hide-portfolio') as HTMLInputElement).checked = !(p as any).show_in_portfolio;
 
   const exifEl = document.getElementById('insp-exif')!;
   const exif = p.exif;
@@ -1448,11 +1464,14 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
   const description      = (document.getElementById('insp-description') as HTMLTextAreaElement).value.trim() || null;
   const exhibition_label = (document.getElementById('insp-exh-label') as HTMLInputElement).value.trim() || null;
   const visibility       = (document.getElementById('insp-visibility') as HTMLSelectElement).value;
+  // show_in_portfolio: checkbox is CHECKED when hidden, so invert.
+  const hidePortfolio    = (document.getElementById('insp-hide-portfolio') as HTMLInputElement).checked;
+  const show_in_portfolio = !hidePortfolio;
 
   const res = await apiFetch(`${API}/gallery/photos/${inspectorUuid}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description, exhibition_label, visibility }),
+    body: JSON.stringify({ title, description, exhibition_label, visibility, show_in_portfolio }),
   });
 
   saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
@@ -1463,7 +1482,7 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
     // Update local cache
     const updated = await res.json() as Photo;
     const idx = allPhotos.findIndex(p => p.uuid === inspectorUuid);
-    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, visibility };
+    if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, visibility, show_in_portfolio } as any;
     closeInspector();
     applyFilters();
   } else {

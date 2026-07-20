@@ -102,7 +102,9 @@ function formatPhoto(row: Record<string, unknown>) {
       gps_lat:       row.gps_stripped ? null : (row.exif_gps_lat ?? null),
       gps_lng:       row.gps_stripped ? null : (row.exif_gps_lng ?? null),
     },
-    gps_stripped:    !!row.gps_stripped,
+    gps_stripped:       !!row.gps_stripped,
+    // show_in_portfolio — migration 0077. Defaults to true on all existing rows.
+    show_in_portfolio:  row.show_in_portfolio !== undefined ? !!row.show_in_portfolio : true,
     owner_user_id:   row.owner_user_id,
     source_event_id: row.source_event_id ?? null,
     urls:            variants,
@@ -310,6 +312,8 @@ export class GalleryService {
         sha256_hash:        dto.sha256_hash ?? null,
         // gps_stripped: Generated<boolean> -- update type expects boolean
         gps_stripped:       !!dto.gps_stripped,
+        // show_in_portfolio: defaults TRUE. Client may opt-out during upload.
+        show_in_portfolio:  dto.show_in_portfolio !== false,
         // Use R2 HEAD size as the authoritative value
         file_size_bytes:    head.sizeBytes ?? (photo.file_size_bytes as number | null),
         // EXIF fields
@@ -428,6 +432,7 @@ export class GalleryService {
       tag?: string;
       limit?: number;
       offset?: number;
+      exclude_hidden?: boolean;
     },
   ): Promise<{ photos: ReturnType<typeof formatPhoto>[]; total: number }> {
     const limit  = Math.min(opts.limit ?? 20, 100);
@@ -461,6 +466,10 @@ export class GalleryService {
       } else {
         query = query.where('visibility', '=', 'PUBLIC');
       }
+    }
+
+    if (opts.exclude_hidden) {
+      query = query.where('show_in_portfolio', '=', true as any);
     }
 
     if (opts.genre) {
@@ -527,7 +536,9 @@ export class GalleryService {
     if (dto.exhibition_label !== undefined) updates.exhibition_label = dto.exhibition_label;
     if (dto.visibility       !== undefined) updates.visibility       = dto.visibility;
     // gps_stripped is Generated<boolean>: update type is boolean.
-    if (dto.gps_stripped     !== undefined) updates.gps_stripped     = !!dto.gps_stripped;
+    if (dto.gps_stripped       !== undefined) updates.gps_stripped       = !!dto.gps_stripped;
+    // show_in_portfolio: Generated<boolean>: allow owner to hide from portfolio.
+    if (dto.show_in_portfolio  !== undefined) updates.show_in_portfolio  = !!dto.show_in_portfolio;
 
     await db
       .updateTable('photos')
@@ -1054,7 +1065,8 @@ export class GalleryService {
         'users.username as photographer_username',
       ] as any)
       .where('photos.status', '=', 'ACTIVE')
-      .where('photos.visibility', '=', 'PUBLIC');
+      .where('photos.visibility', '=', 'PUBLIC')
+      .where('photos.show_in_portfolio', '=', true as any);
 
     if (opts.genre) {
       const genre = opts.genre;
@@ -1211,6 +1223,7 @@ export class GalleryService {
       tag:           opts.tag,
       limit:         opts.limit,
       offset:        opts.offset,
+      exclude_hidden: true,
     });
   }
 

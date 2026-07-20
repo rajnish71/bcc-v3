@@ -1,0 +1,256 @@
+---
+/**
+ * FeaturedHeroArticle.astro — Journal §03
+ * 60/40 split editorial layout. Large image left, article metadata right.
+ * Gold CTA "Read Story →" is the first and only gold action in the upper scroll zone.
+ * Image is admin-curated, independent of PageHero CMS pool.
+ * Wireframe authority: V6 07 Journal Home §03.
+ */
+
+interface Props {
+  slug: string;
+  category: string;
+  headline: string;
+  deck: string;
+  author: string;
+  authorInitials: string;
+  date: string;
+  readTime: string;
+  imageUrl?: string;
+  photoCredit?: string;
+}
+
+const {
+  slug,
+  category,
+  headline,
+  deck,
+  author,
+  authorInitials,
+  date,
+  readTime,
+  imageUrl,
+  photoCredit,
+} = Astro.props;
+---
+
+<div class="fha">
+  <a href={`/journal/${slug}/`} class="fha__image-col">
+    {imageUrl
+      ? <img src={imageUrl} alt={headline} class="fha__img" loading="eager" decoding="async" />
+      : <div class="fha__placeholder" aria-hidden="true"></div>
+    }
+    {photoCredit && (
+      <div class="fha__credit">
+        <span class="fha__credit-label">Photo by</span>
+        <span class="fha__credit-name">{photoCredit}</span>
+      </div>
+    )}
+  </a>
+
+  <div class="fha__body">
+    <div class="fha__kicker">
+      <span class="fha__kicker-line" aria-hidden="true"></span>
+      {category}
+    </div>
+    <h2 class="fha__headline">{headline}</h2>
+    <p class="fha__deck">{deck}</p>
+    <div class="fha__author-row">
+      <div class="fha__avatar" aria-hidden="true">
+        <span class="fha__avatar-initials">{authorInitials}</span>
+      </div>
+      <div class="fha__author-meta">
+        <div class="fha__author-name">{author}</div>
+        <div class="fha__author-sub">
+          <span>{date}</span>
+          <span class="fha__dot" aria-hidden="true">·</span>
+          <span>{readTime} read</span>
+        </div>
+      </div>
+    </div>
+    <a href={`/journal/${slug}/`} class="fha__cta">Read Story →</a>
+  </div>
+</div>
+
+<style>
+.fha {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  align-items: stretch;
+  min-height: 480px;
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+/* Left — editorial image */
+.fha__image-col {
+  position: relative;
+  background: var(--dark-100);
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+}
+.fha__placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    #1A1816 0px, #1A1816 28px,
+    #141210 28px, #141210 56px
+  );
+}
+.fha__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.fha__credit {
+  position: absolute;
+  bottom: 16px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.fha__credit-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.30);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.fha__credit-name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.50);
+  letter-spacing: 0.06em;
+}
+
+/* Right — metadata panel */
+.fha__body {
+  background: var(--surface-0);
+  padding: 52px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fha__kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.20em;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fha__kicker-line {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--gold-600);
+  flex-shrink: 0;
+}
+
+.fha__headline {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ink-900);
+  margin-bottom: 20px;
+  text-wrap: pretty;
+}
+
+.fha__deck {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  margin-bottom: 32px;
+  font-weight: 300;
+}
+
+.fha__author-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+.fha__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-full);
+  background: var(--forest-gradient);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fha__avatar-initials {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+.fha__author-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.fha__author-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-400);
+}
+.fha__dot { color: var(--ink-200); }
+
+.fha__cta {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-900);
+  background: var(--gold-gradient);
+  padding: 14px 32px;
+  display: inline-block;
+  border-radius: var(--r-1);
+  text-decoration: none;
+  box-shadow: var(--gold-gradient-glow);
+  align-self: flex-start;
+  transition: opacity var(--m-fast, 0.15s);
+}
+.fha__cta:hover { opacity: 0.9; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .fha { grid-template-columns: 55fr 45fr; }
+  .fha__body { padding: 40px 36px; }
+}
+@media (max-width: 768px) {
+  .fha {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .fha__image-col {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    height: auto;
+  }
+  .fha__placeholder { position: absolute; }
+  .fha__body { padding: 32px 28px; }
+}
+@media (max-width: 480px) {
+  .fha__body { padding: 24px 20px; }
+  .fha__headline { font-size: 22px; }
+}
+</style>

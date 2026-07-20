@@ -1,0 +1,147 @@
+---
+/**
+ * JournalJoinCTA.astro — Journal §10 (Join / Subscribe CTA)
+ * Dark surface editorial CTA panel. Left-aligned content — distinct from CTASection (centered).
+ * Two CTAs: gold "Become a Member →" + outline "Contribution Guidelines".
+ * Gold CTA is below-fold — never co-visible with §03 FeaturedHeroArticle gold CTA.
+ * Wireframe authority: V6 07 Journal Home §10.
+ */
+---
+
+<div class="jjcta">
+  <div class="jjcta__band">
+    <div class="jjcta__gold-line" aria-hidden="true"></div>
+    <div class="jjcta__content">
+      <div class="jjcta__eyebrow">
+        <span class="jjcta__eyebrow-line" aria-hidden="true"></span>
+        The BCC Journal Community
+      </div>
+      <h2 class="jjcta__heading">Write for the Journal.<br />Photograph the city.</h2>
+      <p class="jjcta__body">
+        Every member has something worth documenting. A bird, a place, a technique, a memory.
+        The Journal exists to preserve it — and to make the photographic knowledge of Bhopal
+        Camera Club permanently available to anyone who needs it.
+      </p>
+      <p class="jjcta__body jjcta__body--muted">
+        Members in good standing may submit photo essays, field reports and club histories for
+        editorial review. Join BCC to become part of the record.
+      </p>
+      <div class="jjcta__actions">
+        <a href="/join/" class="jjcta__cta-primary">Become a Member →</a>
+        <a href="/journal/contribute/" class="jjcta__cta-outline">Contribution Guidelines</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.jjcta__band {
+  background: var(--dark-100);
+  padding: 72px 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+.jjcta__gold-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-light) 30%, var(--gold-light) 70%, transparent);
+  pointer-events: none;
+}
+
+.jjcta__content {
+  max-width: 640px;
+}
+
+.jjcta__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold-light);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.jjcta__eyebrow-line {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.jjcta__heading {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #FFFFFF;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+.jjcta__body {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #C4BDB3;
+  margin-bottom: 12px;
+  font-weight: 300;
+}
+.jjcta__body--muted {
+  color: var(--ink-400);
+  font-size: 14px;
+  margin-bottom: 36px;
+}
+
+.jjcta__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.jjcta__cta-primary {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-900);
+  background: var(--gold-gradient);
+  padding: 14px 32px;
+  display: inline-block;
+  border-radius: var(--r-1);
+  text-decoration: none;
+  box-shadow: var(--gold-gradient-glow);
+  transition: opacity 0.15s;
+}
+.jjcta__cta-primary:hover { opacity: 0.9; }
+
+.jjcta__cta-outline {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.70);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  padding: 13px 28px;
+  display: inline-block;
+  border-radius: var(--r-1);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.jjcta__cta-outline:hover {
+  border-color: rgba(255, 255, 255, 0.40);
+  color: #FFFFFF;
+}
+
+@media (max-width: 768px) {
+  .jjcta__band { padding: 48px 32px; }
+}
+@media (max-width: 480px) {
+  .jjcta__band { padding: 40px 24px; }
+  .jjcta__cta-primary,
+  .jjcta__cta-outline { width: 100%; text-align: center; }
+}
+</style>

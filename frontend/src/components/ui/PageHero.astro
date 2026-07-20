@@ -308,31 +308,33 @@ const {
 }
 
 /* Atmospheric editorial veil — covers 100% of frame, photograph primary.
-   Very low opacity at top; gently builds toward text area only.
-   Text legibility handled by text-shadow, not by a dark band. */
+   Top zone: barely-there atmosphere (2–4%). Photo breathes.
+   Bottom zone: guaranteed legibility for any text colour on any photograph.
+   The long transition (32%→70%) reads as editorial gradient, not a dark band.
+   Text-shadow on type elements carries the final legibility layer. */
 .ph-gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    180deg,
-    rgba(20, 18, 16, 0.06) 0%,
-    rgba(20, 18, 16, 0.03) 28%,
-    rgba(20, 18, 16, 0.14) 68%,
-    rgba(20, 18, 16, 0.24) 100%
+    to bottom,
+    rgba(20, 18, 16, 0.04) 0%,
+    rgba(20, 18, 16, 0.02) 32%,
+    rgba(20, 18, 16, 0.42) 70%,
+    rgba(20, 18, 16, 0.62) 100%
   );
   pointer-events: none;
 }
 
-/* Editorial text panel — no background: photograph shows through fully.
-   The atmospheric gradient above provides the dimensional layer.
-   Text legibility is entirely carried by text-shadow. */
+/* Editorial text panel — additive certainty layer for the text zone.
+   Gradient handles the atmospheric effect. Panel adds the baseline
+   that ensures gold text is readable on any photograph colour. */
 .ph-panel {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   padding: 22px 48px 28px;
-  background: transparent;
+  background: rgba(20, 18, 16, 0.14);
 }
 
 .ph-kicker {
@@ -346,7 +348,7 @@ const {
   display: flex;
   align-items: center;
   gap: 10px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.50);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.80), 0 1px 3px rgba(0, 0, 0, 0.60);
 }
 .ph-kicker-line {
   display: block;

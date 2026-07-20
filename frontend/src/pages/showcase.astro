@@ -16,9 +16,13 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
 
   <PageHero
     eyebrow="Member Showcase · /showcase"
-    title="Our members,<br/>on the wall."
+    title="Our members, on the wall."
     subtitle="Every approved photograph from every member, displayed at its natural proportions. No cropping. No ranking. Photography as it was taken."
-  />
+  >
+    <Fragment slot="title">
+      Our members,<br />on the wall.
+    </Fragment>
+  </PageHero>
 
   <!-- Gallery Wall: justified grid in unified container -->
   <div class="container">

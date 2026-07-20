@@ -40,6 +40,7 @@ const { categories } = Astro.props;
 .cat-pivot {
   background: var(--surface-0);
   border-bottom: 1px solid var(--hairline);
+  overflow: hidden; /* contain the min-width:max-content scroll child — prevents document-level overflow */
   /* Phase J2: position: sticky; top: var(--nav-h-min, 64px); z-index: 40; */
 }
 .cat-pivot__inner {
@@ -51,7 +52,10 @@ const { categories } = Astro.props;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  min-width: max-content;
+  /* min-width: max-content removed — it caused the element to expand beyond its
+     parent into document space, triggering body-level horizontal overflow that
+     broke position:fixed elements (nav/drawer) on Safari/iOS. Flex nowrap +
+     white-space:nowrap on tabs already prevents wrapping without this. */
   padding: 0 var(--gutter, 48px);
 }
 .cat-pivot__scroll::-webkit-scrollbar { display: none; }

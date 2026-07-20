@@ -14,6 +14,10 @@ html {
   /* Custom scrollbar */
   scrollbar-width: thin;
   scrollbar-color: var(--hairline-strong) var(--surface-1);
+  /* overflow-x on html (not body) — prevents body becoming a scroll container
+     in Safari/iOS, which would cause position:fixed elements (nav, drawer) to
+     scroll with the page rather than stay fixed to the viewport. */
+  overflow-x: hidden;
 }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--surface-1); }
@@ -27,7 +31,6 @@ body {
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
 }
 
 /* ── Typography ── */

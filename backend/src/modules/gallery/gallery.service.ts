@@ -104,7 +104,7 @@ function formatPhoto(row: Record<string, unknown>) {
     },
     gps_stripped:       !!row.gps_stripped,
     // show_in_portfolio — migration 0077. Defaults to true on all existing rows.
-    show_in_portfolio:  row.show_in_portfolio !== undefined ? !!row.show_in_portfolio : true,
+    show_in_portfolio:  row.show_in_portfolio !== undefined && row.show_in_portfolio !== null ? !!row.show_in_portfolio : true,
     owner_user_id:   row.owner_user_id,
     source_event_id: row.source_event_id ?? null,
     urls:            variants,
@@ -1065,8 +1065,7 @@ export class GalleryService {
         'users.username as photographer_username',
       ] as any)
       .where('photos.status', '=', 'ACTIVE')
-      .where('photos.visibility', '=', 'PUBLIC')
-      .where('photos.show_in_portfolio', '=', true as any);
+      .where('photos.visibility', '=', 'PUBLIC');
 
     if (opts.genre) {
       const genre = opts.genre;

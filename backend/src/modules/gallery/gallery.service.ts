@@ -1065,7 +1065,8 @@ export class GalleryService {
         'users.username as photographer_username',
       ] as any)
       .where('photos.status', '=', 'ACTIVE')
-      .where('photos.visibility', '=', 'PUBLIC');
+      .where('photos.visibility', '=', 'PUBLIC')
+      .where('photos.show_in_portfolio', '=', true as any);
 
     if (opts.genre) {
       const genre = opts.genre;
@@ -1102,7 +1103,8 @@ export class GalleryService {
       let countQ = db
         .selectFrom('photos')
         .where('photos.status', '=', 'ACTIVE')
-        .where('photos.visibility', '=', 'PUBLIC');
+        .where('photos.visibility', '=', 'PUBLIC')
+        .where('photos.show_in_portfolio', '=', true as any);
       if (opts.genre) {
         const genre = opts.genre;
         countQ = countQ.where('photos.id', 'in', eb =>
@@ -1748,6 +1750,7 @@ export class GalleryService {
       .where('photos.owner_user_id', '=', photo.owner_user_id as number)
       .where('photos.status', '=', 'ACTIVE')
       .where('photos.visibility', '=', 'PUBLIC')
+      .where('photos.show_in_portfolio', '=', true as any)
       .where('photos.id', '!=', photo.id as number)
       .selectAll('photos')
       .select(['users.full_name as photographer_name', 'users.username as photographer_username'] as any)

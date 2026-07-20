@@ -78,6 +78,7 @@ async function batchPhotoCounts(userIds: number[]): Promise<Record<number, numbe
     .where('owner_user_id', 'in', userIds)
     .where('status', '=', 'ACTIVE')
     .where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
+    .where('show_in_portfolio', '=', true as any)
     .groupBy('owner_user_id')
     .select(['owner_user_id'])
     .select(eb => eb.fn.count<number>('id').as('cnt'))
@@ -128,6 +129,7 @@ export class PhotographerProfilesService {
             .whereRef('photos.owner_user_id', '=', 'u.id')
             .where('photos.status', '=', 'ACTIVE')
             .where('photos.visibility', '=', 'PUBLIC')
+            .where('photos.show_in_portfolio', '=', true as any)
             .select('photos.id')
         )
       );
@@ -173,6 +175,7 @@ export class PhotographerProfilesService {
             .whereRef('photos.owner_user_id', '=', 'u.id')
             .where('photos.status', '=', 'ACTIVE')
             .where('photos.visibility', '=', 'PUBLIC')
+            .where('photos.show_in_portfolio', '=', true as any)
             .select('photos.id')
         )
       );
@@ -224,6 +227,7 @@ export class PhotographerProfilesService {
         .where('pt.tag_key', '=', genre)
         .where('pt.category', '=', 'GENRE')
         .where('photos.visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
+        .where('photos.show_in_portfolio', '=', true as any)
         .select('photos.owner_user_id')
         .execute();
       genreSet = new Set(genreRows.map(r => r.owner_user_id as number));
@@ -363,6 +367,7 @@ export class PhotographerProfilesService {
       .where('owner_user_id', '=', user.id)
       .where('status', '=', 'ACTIVE')
       .where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
+      .where('show_in_portfolio', '=', true as any)
       .select(eb => eb.fn.count<number>('id').as('cnt'))
       .executeTakeFirst();
 

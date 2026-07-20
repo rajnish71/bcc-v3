@@ -171,7 +171,7 @@ const {
         </div>
         <div class="ph-credit" id="home-hero-credit" style="display: none;">
           <span class="ph-credit-label">Photo by</span>
-          <span class="ph-credit-name" id="home-hero-credit-name"></span>
+          <a class="ph-credit-name" id="home-hero-credit-name" href="#"></a>
         </div>
       </div>
     </div>
@@ -203,7 +203,7 @@ const {
         </div>
         <div class="ph-credit" id="page-hero-credit" style="display: none;">
           <span class="ph-credit-label">Photo by</span>
-          <span class="ph-credit-name" id="page-hero-credit-name"></span>
+          <a class="ph-credit-name" id="page-hero-credit-name" href="#"></a>
         </div>
       </div>
     </div>
@@ -307,22 +307,32 @@ const {
   opacity: 1;
 }
 
-/* Minimal depth gradient — panel provides the readability band */
+/* Atmospheric editorial veil — covers 100% of frame, photograph primary.
+   Very low opacity at top; gently builds toward text area only.
+   Text legibility handled by text-shadow, not by a dark band. */
 .ph-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 55%, rgba(20, 18, 16, 0.12) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(20, 18, 16, 0.06) 0%,
+    rgba(20, 18, 16, 0.03) 28%,
+    rgba(20, 18, 16, 0.14) 68%,
+    rgba(20, 18, 16, 0.24) 100%
+  );
   pointer-events: none;
 }
 
-/* Editorial text panel — translucent band, NO blur (photo must remain sharp) */
+/* Editorial text panel — no background: photograph shows through fully.
+   The atmospheric gradient above provides the dimensional layer.
+   Text legibility is entirely carried by text-shadow. */
 .ph-panel {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   padding: 22px 48px 28px;
-  background: rgba(20, 18, 16, 0.26);
+  background: transparent;
 }
 
 .ph-kicker {
@@ -336,6 +346,7 @@ const {
   display: flex;
   align-items: center;
   gap: 10px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.50);
 }
 .ph-kicker-line {
   display: block;
@@ -354,15 +365,16 @@ const {
   line-height: 1.0;
   margin-bottom: 14px;
   text-wrap: pretty;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.30);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.60), 0 2px 20px rgba(0, 0, 0, 0.35);
 }
 
 .ph-body {
   font-size: 15px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.92);
   font-weight: 300;
   max-width: 540px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 /* Home body needs margin below for CTAs */
 .ph-body--home {
@@ -391,6 +403,11 @@ const {
   font-size: 9px;
   color: rgba(255, 255, 255, 0.65);
   letter-spacing: 0.06em;
+  text-decoration: none;
+}
+a.ph-credit-name:hover {
+  color: var(--gold-light);
+  text-decoration: underline;
 }
 
 /* Home CTAs */
@@ -444,13 +461,129 @@ const {
   .ph-frame          { aspect-ratio: 16 / 8; min-height: 300px; }
   .ph-panel          { padding: 16px 24px 20px; }
 }
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE EDITORIAL FRAME — ≤540px
+   Architecture: stacked layout.
+   Desktop: photograph as background, editorial text overlaid.
+   Mobile:  photograph at full natural width, editorial band below.
+   Same component. Same image. Same data model. Different frame.
+   The interface adapts. The photograph does not.
+   ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 540px) {
-  .ph-frame          { aspect-ratio: unset; min-height: 320px; }
-  .ph-img            { object-fit: contain; }
-  .ph-panel          { padding: 14px 16px 18px; }
-  .ph-heading        { font-size: clamp(28px, 7vw, 36px); }
-  .ph-body           { display: none; }
-  .ph-cta-secondary  { display: none; }
+
+  /* Frame becomes a flex column: photograph then editorial band */
+  .ph-frame {
+    aspect-ratio: unset;
+    min-height: unset;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ph-reveal (About variant) must not clip the stacked panel below the frame */
+  .ph-reveal {
+    overflow: visible;
+  }
+
+  /* ── PHOTOGRAPH ───────────────────────────────────────────────
+     Show at natural proportions. No crop. No recomposition.
+     The photograph dictates its own height on mobile.
+  ────────────────────────────────────────────────────────────── */
+
+  /* Overlay / About variant: image is statically positioned by default.
+     Reset height and object-fit to natural proportions. */
+  .about-hero .ph-img {
+    height: auto;
+    object-fit: unset;
+    object-position: unset;
+    flex-shrink: 0;
+  }
+
+  /* Home / Journal: image is position:absolute by default (JS-loaded).
+     Pull into normal flex flow and present at natural proportions. */
+  .home-hero .ph-img,
+  .journal-hero .ph-img {
+    position: static;
+    inset: auto;
+    opacity: 1;
+    transition: none;
+    height: auto;
+    object-fit: unset;
+    flex-shrink: 0;
+  }
+
+  /* Placeholder: pull into flex flow. Provides loading-state height
+     before the dynamic image arrives. Removed by JS on image load. */
+  .home-hero .ph-placeholder,
+  .journal-hero .ph-placeholder {
+    position: static;
+    height: 220px;
+    flex-shrink: 0;
+  }
+
+  /* Gradient: no semantic meaning on a stacked layout — suppress. */
+  .ph-gradient { display: none; }
+
+  /* Attribution bar — Principle 4 compliance.
+     Appears between photograph and editorial band.
+     Display is JS-controlled; position and style are set here.
+     order: 5 places it between photo (order:0) and panel (order:10). */
+  .ph-credit {
+    position: static;
+    inset: auto;
+    order: 5;
+    padding: 10px 16px;
+    background: rgba(14, 12, 10, 0.90);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: auto;
+  }
+  .ph-credit-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.10em;
+  }
+  .ph-credit-name {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.80);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── EDITORIAL BAND ───────────────────────────────────────────
+     Pulled from absolute overlay to a static band below the photograph.
+     This is the mobile editorial frame — not a degraded desktop frame.
+  ────────────────────────═───────────────────────────────────── */
+
+  .ph-panel {
+    position: static;
+    padding: 18px 20px 22px;
+    background: var(--dark-100);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    order: 10; /* ensure panel appears after photograph in flex order */
+  }
+
+  .ph-heading {
+    font-size: clamp(24px, 6.5vw, 32px);
+    margin-bottom: 10px;
+  }
+
+  /* Body: visible but bounded to 2 lines — mobile context demands brevity */
+  .ph-body {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.72);
+    margin-bottom: 0;
+  }
+  .ph-body--home { margin-bottom: 16px; }
+
+  /* CTAs: both restored — the editorial band has room for them */
+  .ph-cta-secondary { display: inline-block; font-size: 11px; padding: 10px 20px; }
+  .ph-cta-primary   { font-size: 11px; padding: 11px 22px; }
+
+  /* ── STATS BAND (About variant) ──────────────────────────────── */
   .stat-item         { flex: 1 0 50%; padding: 12px 16px; }
   .stat-item:nth-child(3n)   { border-right: 1px solid var(--hairline); }
   .stat-item:nth-child(even) { border-right: none; }

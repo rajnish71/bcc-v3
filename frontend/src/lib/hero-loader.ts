@@ -1,6 +1,11 @@
 /**
  * Client-side loader to fetch and render dynamic hero assignments.
  * Keeps PageHero component completely decoupled from page discovery and fetching logic.
+ *
+ * Handles:
+ *   • Image injection
+ *   • Placeholder removal after load (Principle 4 — photographer attribution link)
+ *   • Navigable credit link (Principle 4 — photographer attribution)
  */
 export async function loadPageHero(locationKey: string) {
   try {
@@ -16,11 +21,24 @@ export async function loadPageHero(locationKey: string) {
         if (imgEl) {
           imgEl.src = photo.urls.original || photo.urls.medium || '';
           imgEl.alt = photo.title || 'Page Hero';
+          // Remove the loading placeholder once the photograph arrives.
+          // Covers journal (‘journal-hero-fallback’) and any other location keyed variant.
+          imgEl.addEventListener('load', () => {
+            const fallback = document.getElementById(locationKey + '-hero-fallback');
+            if (fallback) fallback.remove();
+          }, { once: true });
           if (banner) banner.style.display = 'block';
         }
+
         if (creditNameEl) {
-          creditNameEl.textContent = photo.photographer ? photo.photographer.name : 'BCC Member';
+          const photographerName = photo.photographer ? photo.photographer.name : 'BCC Member';
+          creditNameEl.textContent = photographerName;
+          // Principle 4: credit element is an <a> — wire up the navigable profile link.
+          if (creditNameEl.tagName === 'A' && photo.photographer?.username) {
+            (creditNameEl as HTMLAnchorElement).href = `/photographers/${photo.photographer.username}/`;
+          }
         }
+
         if (creditContainer) {
           creditContainer.style.display = 'flex';
         }
@@ -40,6 +58,7 @@ export async function loadPageHero(locationKey: string) {
 export async function loadHomeHero() {
   let photoUrl = '';
   let photographerName = '';
+  let photographerUsername = '';
 
   try {
     const res = await fetch('/api/v1/gallery/hero/location/home');
@@ -48,6 +67,7 @@ export async function loadHomeHero() {
       if (photo && photo.urls) {
         photoUrl = photo.urls.original || photo.urls.medium || '';
         photographerName = photo.photographer?.name || '';
+        photographerUsername = photo.photographer?.username || '';
       }
     }
   } catch { /* fall through to spotlight */ }
@@ -60,6 +80,7 @@ export async function loadHomeHero() {
         if (photo && photo.urls) {
           photoUrl = photo.urls.original || photo.urls.medium || '';
           photographerName = photo.photographer?.name || '';
+          photographerUsername = photo.photographer?.username || '';
         }
       }
     } catch { /* keep placeholder */ }
@@ -87,7 +108,13 @@ export async function loadHomeHero() {
   if (photographerName) {
     const creditNameEl = document.getElementById('home-hero-credit-name');
     const creditContainer = document.getElementById('home-hero-credit');
-    if (creditNameEl) creditNameEl.textContent = photographerName;
+    if (creditNameEl) {
+      creditNameEl.textContent = photographerName;
+      // Principle 4: credit element is an <a> — wire up the navigable profile link.
+      if (creditNameEl.tagName === 'A' && photographerUsername) {
+        (creditNameEl as HTMLAnchorElement).href = `/photographers/${photographerUsername}/`;
+      }
+    }
     if (creditContainer) creditContainer.style.display = 'flex';
   }
 }

@@ -273,6 +273,69 @@ photographic assets.
 
 ---
 
+## EDITORIAL PRESENTATION GOVERNANCE
+
+Photography remains the primary editorial asset of the BCC Unified Platform.
+
+Presentation layers exist to frame, contextualise and attribute photographs without altering their identity or creating alternate photographic assets.
+
+Accordingly, the following principles apply to all editorial presentations, including Homepage Heroes, Journal Heroes, Activity Covers, Project Covers and future editorial features.
+
+### Principle 1 — Single Editorial Asset
+
+Editorial presentation shall always reference the Canonical Photo.
+
+No alternate image, device-specific crop, duplicate upload or platform-specific derivative shall be created for editorial presentation.
+
+All editorial presentations reference the same Canonical Photo.
+
+### Principle 2 — Editorial Frames
+
+Presentation layouts may employ different editorial compositions across desktop, tablet and mobile devices.
+
+These editorial frames exist to adapt the surrounding interface—not to create alternate versions of the photograph.
+
+Different layouts may present the same Canonical Photo differently while preserving its identity.
+
+### Principle 3 — Hero Selection
+
+Editorial Hero images are selected through the Editorial Hero Manager.
+
+Hero assignment is an editorial responsibility.
+
+Only landscape-oriented photographs suitable for the platform's canonical editorial composition are eligible for Hero assignment.
+
+Portrait-oriented photographs shall not be assigned as Hero images.
+
+Validation of Hero eligibility belongs to the editorial workflow rather than the rendering layer.
+
+### Principle 4 — Photographer Attribution
+
+Every editorial presentation shall include photographer attribution.
+
+For Hero presentations, attribution shall appear immediately below the photograph and provide a navigable link to the photographer's public profile.
+
+Attribution is considered part of the editorial presentation and shall remain available across all supported breakpoints.
+
+### Principle 5 — Separation of Responsibilities
+
+Editorial systems determine:
+
+Hero selection
+Editorial ordering
+Editorial framing
+Attribution
+
+The Canonical Photo continues to own:
+
+photographic identity
+metadata
+copyright
+licensing
+permanent URL
+
+Editorial presentation shall never modify Canonical Photo ownership.
+
 ## CANONICAL PHOTO
 
 The Canonical Photo is the single authoritative representation of a

@@ -5,14 +5,12 @@
 // merged/removed/bypassed states: PENDING, APPROVED, ACTIVE, SUSPENDED,
 // EXPIRED, TERMINATED, REJECTED.
 //
-// MEM-007 Amendment 001-B: activate() issues a BCCTempXXXXX temporary
-// identifier -- NOT a permanent membership number. Permanent numbers are
-// assigned manually by the Super Admin via the batch spreadsheet process
-// (Amendment 001-C) and imported in a single administrative operation AFTER
-// the batch closes. Sequential auto-allocation (assignPermanentNumber) begins
-// ONLY after the batch import is verified and the pool pointer is updated.
-// No other method in this service ever touches number_serial/
-// membership_number -- that's MembershipNumberingService's job exclusively.
+// MEM-007: activate() assigns a permanent membership number immediately at
+// APPROVED → ACTIVE via MembershipNumberingService.assignPermanentNumber().
+// Historical members (serials 1–52) received their numbers via migration 0078.
+// All future activations draw sequentially from the pool (serial 53+).
+// No other method in this service ever touches number_serial /
+// membership_number — that is MembershipNumberingService's exclusive domain.
 //
 // OPEN GAP, not silently resolved: renewal-period-per-class and
 // grace-period-per-class (spec 02.8) aren't configured anywhere in the
@@ -330,12 +328,10 @@ export class MembershipLifecycleService {
   // ======================================================================
   // APPROVED -> ACTIVE
   //
-  // Per MEM-007 Amendment 001-B: issues a BCCTempXXXXX temporary identifier,
-  // NOT a permanent membership number. Permanent numbers are assigned manually
-  // via the Super Admin batch process (Amendment 001-C).
-  //
-  // joinYear / joinMonth are accepted but currently unused; they will be
-  // relevant once sequential auto-allocation resumes after the batch closes.
+  // MEM-007 MP-004: assigns a permanent sequential membership number
+  // atomically within the same transaction as the lifecycle transition.
+  // joinYear / joinMonth default to the current calendar date when not
+  // supplied; callers may override for administrative back-dating.
   // ======================================================================
   async activate(
     membershipId: number,
@@ -345,10 +341,12 @@ export class MembershipLifecycleService {
     const membership = await this.requireState(membershipId, ['APPROVED']);
 
     const now = new Date();
+    const joinYear  = opts?.joinYear  ?? now.getFullYear();
+    const joinMonth = opts?.joinMonth ?? (now.getMonth() + 1);
 
     const expiresAt = await this.computeExpiry(membership, now);
 
-    const tempIdentifier = await db.transaction().execute(async (trx) => {
+    const { membershipNumber } = await db.transaction().execute(async (trx) => {
       await trx
         .updateTable('memberships')
         .set({
@@ -361,8 +359,7 @@ export class MembershipLifecycleService {
         .where('id', '=', membershipId)
         .execute();
 
-      // Amendment 001-B: temp identifier, not a permanent number
-      return this.numberingService.issueTemporaryIdentifier(trx, membershipId);
+      return this.numberingService.assignPermanentNumber(trx, membershipId, joinYear, joinMonth);
     });
 
     await logMembershipAudit({
@@ -371,20 +368,19 @@ export class MembershipLifecycleService {
       actorType: actor.type,
       actorUserId: actor.userId ?? null,
       oldValue: { state: membership.lifecycle_state },
-      newValue: { state: 'ACTIVE', tempIdentifier },
+      newValue: { state: 'ACTIVE', membershipNumber },
     });
 
     const refreshed = await this.getOrThrow(membershipId);
     await this.notifyMember(refreshed, 'MEMBERSHIP_ACTIVATED', {
-      membership_number: tempIdentifier,
+      membership_number: membershipNumber,
       expiry_date: refreshed.expires_at
         ? new Date(refreshed.expires_at as unknown as string)
             .toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         : 'see member portal',
     }, { actionUrl: '/member' });
 
-    // Return under the existing key name for caller compatibility
-    return { membershipNumber: tempIdentifier };
+    return { membershipNumber };
   }
 
   // ======================================================================

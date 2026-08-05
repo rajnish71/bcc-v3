@@ -116,10 +116,9 @@ export class MembershipCardService {
         `Membership card requires ACTIVE state; current state is ${row.lifecycle_state}`,
       );
     }
-    if (!row.membership_number || row.membership_number.startsWith('BCCTemp')) {
+    if (!row.membership_number) {
       throw new ConflictException(
-        'Membership card requires a permanent membership number. ' +
-        'Temp identifiers are not accepted (MEM-007 MP-001).',
+        'Membership card requires a permanent membership number (MEM-007 MP-001).',
       );
     }
 

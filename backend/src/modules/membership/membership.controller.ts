@@ -1,7 +1,6 @@
 // backend/src/modules/membership/membership.controller.ts
 //
-// HTTP surface: application intake (self + on-behalf) + seven-state lifecycle
-// + migration-only reserved-number assignment.
+// HTTP surface: application intake (self + on-behalf) + seven-state lifecycle.
 //
 // Batch 3: POST /:id/approve and /:id/reject route through
 // ApplicationWorkflowService.recordStageDecision() -- a coordinator approval
@@ -19,20 +18,17 @@ import type { AccessTokenPayload } from '../identity/auth/token.util';
 import { RbacGuard } from '../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../identity/rbac/permissions.decorator';
 import { MembershipLifecycleService } from './lifecycle/membership-lifecycle.service';
-import { MembershipNumberingService } from './numbering/membership-numbering.service';
 import { ApplicationWorkflowService } from './application/application-workflow.service';
 import { ApplyMembershipDto } from './dto/apply-membership.dto';
 import { ApplyOnBehalfDto } from './dto/apply-on-behalf.dto';
 import { RejectMembershipDto } from './dto/reject-membership.dto';
 import { SuspendMembershipDto } from './dto/suspend-membership.dto';
 import { TerminateMembershipDto } from './dto/terminate-membership.dto';
-import { AssignReservedNumberDto } from './dto/assign-reserved-number.dto';
 
 @Controller('api/v1/membership')
 export class MembershipController {
   constructor(
     private readonly lifecycle: MembershipLifecycleService,
-    private readonly numbering: MembershipNumberingService,
     private readonly workflow: ApplicationWorkflowService,
   ) {}
 
@@ -245,30 +241,4 @@ export class MembershipController {
     return this.lifecycle.getOrThrow(id);
   }
 
-  // -- Migration-only numbering (Super Admin only) -----------------------
-  // MEM-007 §7: one-time allocation for Founding (00001-00007) and
-  // Historical Block (00008-00020). Runs inside a transaction.
-
-  @Post('migration/:id/assign-reserved-number')
-  @HttpCode(200)
-  @UseGuards(AccessTokenGuard, RbacGuard)
-  @RequirePermissions('membership.numbering.assign_reserved')
-  async assignReservedNumber(
-    @CurrentUser() actor: AccessTokenPayload,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: AssignReservedNumberDto,
-  ) {
-    return db.transaction().execute((trx) =>
-      this.numbering.assignReservedNumber(
-        trx,
-        id,
-        dto.serial,
-        dto.assignmentType,
-        dto.joinYear,
-        dto.joinMonth,
-        actor.sub,
-        dto.notes ?? undefined,
-      ),
-    );
-  }
 }

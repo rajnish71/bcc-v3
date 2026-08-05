@@ -74,30 +74,22 @@ export class HubProfileService {
       .where('is_active', '=', true)
       .executeTakeFirst();
 
-    // Active membership
+    // Active membership — all ACTIVE members have a permanent number (post-0078)
     const membership = await db
       .selectFrom('memberships')
       .leftJoin('membership_classes', 'membership_classes.id', 'memberships.membership_class_id')
-      .leftJoin('membership_temp_identifiers', 'membership_temp_identifiers.membership_id', 'memberships.id')
       .select([
         'memberships.id as membership_id',
         'memberships.membership_number',
         'memberships.activated_at',
         'membership_classes.name as class_name',
         'membership_classes.code as class_code',
-        'membership_temp_identifiers.temp_identifier',
       ])
       .where('memberships.user_id', '=', userId)
       .where('memberships.lifecycle_state', '=', 'ACTIVE')
       .executeTakeFirst();
 
-    // MEM-007 §6 temporary onboarding identifier (item 46). Displayed only
-    // until permanent numbering is run; NOT persisted here and possessing no
-    // constitutional authority. Retrieves the actual allocated temp identifier
-    // from membership_temp_identifiers.
-    const temporaryNumber = membership?.temp_identifier ?? null;
-    const isTemporaryNumber = !!membership && !membership.membership_number;
-    const membershipNumberDisplay = membership?.membership_number ?? temporaryNumber;
+    const membershipNumberDisplay = membership?.membership_number ?? null;
 
     // Social handles
     const socialRows = await db
@@ -183,7 +175,6 @@ export class HubProfileService {
       membershipTier: membership?.class_code ?? null,
       membershipNumber: membership?.membership_number ?? null,
       membershipNumberDisplay,
-      isTemporaryNumber,
       memberSince: membership?.activated_at ?? null,
 
       // Personal — name fields read-only

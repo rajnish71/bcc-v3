@@ -1,30 +1,32 @@
 // backend/src/modules/membership/numbering/membership-numbering.service.ts
 //
-// MEM-007 MEMBERSHIP NUMBERING CONSTITUTION -- the only file in this
-// codebase that is allowed to touch membership_number_pool,
-// membership_number_log, or memberships.number_serial/membership_number.
+// MEM-007 MEMBERSHIP NUMBERING CONSTITUTION — the only file allowed to touch
+// membership_number_pool, membership_number_log, or
+// memberships.number_serial / membership_number.
 //
-// issueTemporaryIdentifier() is called from EXACTLY one place:
-// MembershipLifecycleService.activate(), inside its transaction, as the
-// final step of APPROVED -> ACTIVE. Per MEM-007 Amendment 001-B, all
-// non-Founding member activations receive a BCCTempXXXXX identifier at
-// this point. Permanent numbers are NOT issued at activation.
+// assignPermanentNumber() is the SOLE permanent numbering workflow (MP-004).
+// It must be called from inside an existing transaction (the caller's
+// activate() transaction) — it does not open its own.
 //
-// assignPermanentNumber() is the sequential auto-allocation path (MP-004).
-// Per Amendment 001-C it is NOT yet wired into the standard lifecycle --
-// sequential auto-allocation begins only AFTER the Super Admin closes the
-// manual batch spreadsheet and updates membership_number_pool.
-// last_allocated_serial. No caller should invoke it until that point.
-//
-// assignReservedNumber() is the one-time migration path (MEM-007 §7) for
-// Founding (00001-00007) and manual-batch serials. Gated behind
-// Super-Admin-only RBAC at the controller.
+// Allocation guarantee:
+//   • Row-locks membership_number_pool FOR UPDATE, so two concurrent
+//     APPROVED → ACTIVE transitions can never draw the same serial.
+//   • Increments next_operational_serial atomically.
+//   • Guards against double-assignment via WHERE number_serial IS NULL.
+//   • Writes an immutable log entry to membership_number_log.
+//   • Retires any outstanding temp identifier for the membership.
+//   • Rolls back entirely on any failure (caller's transaction).
 //
 // Membership number format (MEM-007 §5):
-//   'BCC' || join_year || LPAD(join_month, 2, '0') || LPAD(serial, 5, '0')
-//   e.g. BCC20260600021
+//   'BCC' || joinYear || LPAD(joinMonth, 2, '0') || LPAD(serial, 5, '0')
+//   e.g. BCC20260800053  (serial 53, activated August 2026)
+//
+// Historical migration note:
+//   Serials 1–52 were bulk-assigned by migration 0078. The pool counter
+//   starts at 53. Serials 18, 19, and 28 are permanently unallocated gaps
+//   (MP-003: no reuse).
 
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import type { Transaction } from 'kysely';
 import { DB } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
@@ -35,13 +37,11 @@ export class MembershipNumberingService {
     return `BCC${joinYear}${String(joinMonth).padStart(2, '0')}${String(serial).padStart(5, '0')}`;
   }
 
-  // --------------------------------------------------------------------
-  // Operational path -- next_operational_serial, starts at 21 (MP-004).
-  // Row-locked via FOR UPDATE so two concurrent activations can never draw
-  // the same serial twice. MUST be called from inside an existing
-  // transaction (the caller's activate() transaction) -- this method does
-  // not open its own.
-  // --------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Single permanent-number allocation path (MP-004).
+  // Called from MembershipLifecycleService.activate() only.
+  // MUST be called inside an existing transaction — does not open its own.
+  // -------------------------------------------------------------------------
   async assignPermanentNumber(
     trx: Transaction<DB>,
     membershipId: number,
@@ -64,11 +64,10 @@ export class MembershipNumberingService {
       .where('id', '=', 1)
       .execute();
 
-    // number_serial IS NULL guard: belt-and-braces idempotency. The
-    // constitutional trigger (0009) already blocks changing a non-null
-    // number, but that trigger fires as a hard SQL error mid-transaction --
-    // this WHERE clause means a mistaken double-call instead just updates
-    // zero rows, which we detect and turn into a clean application error.
+    // WHERE number_serial IS NULL: belt-and-braces idempotency guard.
+    // The constitutional trigger (0009/0078) already blocks changing a non-null
+    // serial — this guard converts a mistaken double-call into a clean error
+    // rather than a hard SQL trigger signal mid-transaction.
     const updateResult = await trx
       .updateTable('memberships')
       .set({
@@ -84,7 +83,7 @@ export class MembershipNumberingService {
 
     if (!updateResult.numUpdatedRows || Number(updateResult.numUpdatedRows) === 0) {
       throw new ConflictException(
-        `Membership ${membershipId} already has a permanent number assigned -- refusing to allocate a second one (MEM-007 MP-001).`,
+        `Membership ${membershipId} already has a permanent number assigned — refusing to allocate a second one (MEM-007 MP-001).`,
       );
     }
 
@@ -100,142 +99,6 @@ export class MembershipNumberingService {
       })
       .execute();
 
-    // No-op for the overwhelming majority of memberships (which never had a
-    // temp identifier issued in the first place) -- harmless, and correct
-    // for the eventual migration-import path where they did.
-    await trx
-      .updateTable('membership_temp_identifiers')
-      .set({ status: 'RETIRED', retired_at: toMysqlDatetime(new Date()) })
-      .where('membership_id', '=', membershipId)
-      .where('status', '=', 'ACTIVE')
-      .execute();
-
     return { serial, membershipNumber };
-  }
-
-  // --------------------------------------------------------------------
-  // Migration-only path -- direct assignment of a Founding (1-7) or
-  // Historical Block (8-20) serial. Bypasses membership_number_pool
-  // entirely, per migration 0008's design ("NOT drawn from this pool").
-  // Uniqueness is enforced by membership_number_log's UNIQUE KEY on
-  // number_serial -- a duplicate serial throws here, not silently no-ops.
-  // --------------------------------------------------------------------
-  async assignReservedNumber(
-    trx: Transaction<DB>,
-    membershipId: number,
-    serial: number,
-    assignmentType: 'FOUNDING_RESERVED' | 'HISTORICAL_RESERVED',
-    joinYear: number,
-    joinMonth: number,
-    actorUserId: number,
-    notes?: string,
-  ): Promise<{ serial: number; membershipNumber: string }> {
-    if (assignmentType === 'FOUNDING_RESERVED' && (serial < 1 || serial > 7)) {
-      throw new BadRequestException('FOUNDING_RESERVED serials must be in range 00001-00007 (MEM-007 §4).');
-    }
-    if (assignmentType === 'HISTORICAL_RESERVED' && (serial < 8 || serial > 20)) {
-      throw new BadRequestException('HISTORICAL_RESERVED serials must be in range 00008-00020 (MEM-007 §4).');
-    }
-
-    const membershipNumber = this.composeMembershipNumber(joinYear, joinMonth, serial);
-
-    const updateResult = await trx
-      .updateTable('memberships')
-      .set({
-        number_serial: serial,
-        membership_number: membershipNumber,
-        number_assigned_at: toMysqlDatetime(new Date()),
-        join_year: joinYear,
-        join_month: joinMonth,
-      })
-      .where('id', '=', membershipId)
-      .where('number_serial', 'is', null)
-      .executeTakeFirst();
-
-    if (!updateResult.numUpdatedRows || Number(updateResult.numUpdatedRows) === 0) {
-      throw new ConflictException(`Membership ${membershipId} already has a permanent number assigned, or does not exist.`);
-    }
-
-    // Duplicate-serial protection: uq_number_log_serial throws here if this
-    // exact serial was ever assigned before -- exactly what MP-002/MP-003
-    // require, enforced at the DB layer, not just by the range check above.
-    await trx
-      .insertInto('membership_number_log')
-      .values({
-        membership_id: membershipId,
-        number_serial: serial,
-        membership_number: membershipNumber,
-        assignment_type: assignmentType,
-        assigned_by_user_id: actorUserId,
-        notes: notes ?? 'One-time migration allocation (MEM-007 §7).',
-      })
-      .execute();
-
-    return { serial, membershipNumber };
-  }
-
-  // --------------------------------------------------------------------
-  // MEM-007 §6 specifies the format ("BCCTempXXXXX") and purpose of
-  // temporary onboarding identifiers, but does NOT prescribe an allocation
-  // algorithm. The project intentionally uses a monotonic, non-reusing 
-  // sequential allocator where the next temporary identifier is generated 
-  // as MAX(existing) + 1. This is an implementation decision made to 
-  // guarantee uniqueness, operational simplicity, and collision resistance 
-  // (with locking and retries). Future developers must NOT assume this 
-  // sequential allocation strategy is constitutionally mandated.
-  // See: ProjectDocs/Architecture/ADR-001_TEMP_IDENTIFIER_ALLOCATION.md
-  // --------------------------------------------------------------------
-  async issueTemporaryIdentifier(trx: Transaction<DB>, membershipId: number): Promise<string> {
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (attempts < maxAttempts) {
-      attempts++;
-
-      // Query the lexicographically highest temp_identifier to find the maximum serial.
-      // Use FOR UPDATE to lock the selected row and serialize concurrent executions.
-      const lastTemp = await trx
-        .selectFrom('membership_temp_identifiers')
-        .select('temp_identifier')
-        .orderBy('temp_identifier', 'desc')
-        .limit(1)
-        .forUpdate()
-        .executeTakeFirst();
-
-      let nextSerial = 1;
-      if (lastTemp) {
-        const match = lastTemp.temp_identifier.match(/^BCCTemp(\d+)$/);
-        if (match) {
-          nextSerial = parseInt(match[1], 10) + 1;
-        }
-      }
-
-      const tempIdentifier = `BCCTemp${String(nextSerial).padStart(5, '0')}`;
-
-      try {
-        await trx
-          .insertInto('membership_temp_identifiers')
-          .values({ membership_id: membershipId, temp_identifier: tempIdentifier, status: 'ACTIVE' })
-          .execute();
-        return tempIdentifier;
-      } catch (error: any) {
-        const isDuplicate =
-          error.code === 'ER_DUP_ENTRY' ||
-          error.errno === 1062 ||
-          String(error).includes('Duplicate entry') ||
-          String(error.message).includes('Duplicate entry');
-
-        if (isDuplicate && attempts < maxAttempts) {
-          // If we hit a duplicate key (e.g. from concurrent execution), loop again to fetch the updated highest serial and retry
-          continue;
-        }
-        // Otherwise, throw a meaningful domain error (ConflictException)
-        throw new ConflictException(
-          `Failed to allocate a unique temporary identifier: ${error.message}`
-        );
-      }
-    }
-
-    throw new ConflictException(`Failed to allocate a unique temporary identifier: Max retry attempts reached.`);
   }
 }

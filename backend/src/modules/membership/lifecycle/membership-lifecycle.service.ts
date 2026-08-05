@@ -574,6 +574,28 @@ export class MembershipLifecycleService {
   }
 
   // ======================================================================
+  // Admin: resend activation notification for SQL-activated memberships
+  // Used when a membership was activated via direct SQL migration (e.g. 0080)
+  // rather than through the lifecycle.activate() API path, which means the
+  // MEMBERSHIP_ACTIVATED notification was never dispatched automatically.
+  // ======================================================================
+  async resendActivationNotification(membershipId: number): Promise<void> {
+    const membership = await this.requireState(membershipId, ['ACTIVE']);
+    if (!membership.membership_number) {
+      throw new ConflictException(
+        'Cannot send activation notification: membership has no permanent number assigned.',
+      );
+    }
+    await this.notifyMember(membership, 'MEMBERSHIP_ACTIVATED', {
+      membership_number: membership.membership_number,
+      expiry_date: membership.expires_at
+        ? new Date(membership.expires_at as unknown as string)
+            .toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+        : 'see member portal',
+    }, { actionUrl: '/member' });
+  }
+
+  // ======================================================================
   // Reads
   // ======================================================================
   async getOrThrow(membershipId: number): Promise<MembershipRow> {

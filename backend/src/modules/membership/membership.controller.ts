@@ -100,6 +100,15 @@ export class MembershipController {
     return this.lifecycle.activate(id, { type: 'ADMIN', userId: actor.sub });
   }
 
+  @Post(':id/resend-activation-email')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.lifecycle.activate')
+  async resendActivationEmail(@Param('id', ParseIntPipe) id: number) {
+    await this.lifecycle.resendActivationNotification(id);
+    return { ok: true };
+  }
+
   @Post(':id/payment-failure')
   @HttpCode(200)
   @UseGuards(AccessTokenGuard, RbacGuard)

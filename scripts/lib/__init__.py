@@ -1,3 +1,0 @@
-"""
-Scripts shared helper library.
-"""

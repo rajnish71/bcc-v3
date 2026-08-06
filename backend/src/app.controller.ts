@@ -40,14 +40,14 @@ export class AppController {
         .where('state', 'in', ['PUBLISHED', 'COMPLETED'])
         .executeTakeFirst(),
       db.selectFrom('photos')
-        .select(sql<number>`COUNT(DISTINCT user_id)`.as('cnt'))
+        .select(sql<number>`COUNT(DISTINCT owner_user_id)`.as('cnt'))
         .where('status', '=', 'ACTIVE')
         .where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'])
         .executeTakeFirst(),
       db.selectFrom('events')
         .select(eb => eb.fn.count<number>('id').as('cnt'))
         .where('state', 'in', ['PUBLISHED', 'COMPLETED'])
-        .where(sql<boolean>`LOWER(category) LIKE '%photowalk%'`)
+        .where('event_type', 'in', ['PHOTOWALK', 'BIRD_WALK'])
         .executeTakeFirst(),
     ]);
     return {

@@ -1,0 +1,738 @@
+---
+/**
+ * hub/admin/membership/index.astro — Membership Admin Console
+ * Route: /hub/admin/membership/
+ *
+ * Sections:
+ *   1. Dashboard stats (counts by state & class, expiring count)
+ *   2. Membership classes + configurable entitlements
+ *   3. Senior status eligible members + batch assign
+ *   4. Members expiring soon
+ *   5. Recent lifecycle audit events
+ *   6. Notification types catalogue
+ */
+import HubLayout from '../../../../layouts/HubLayout.astro';
+---
+
+<HubLayout title="Membership Admin" description="MEM-008 membership management console.">
+
+  <div class="mem-admin">
+
+    <!-- ① DASHBOARD STATS ──────────────────────────────────────────────────── -->
+    <section class="admin-section" id="section-stats">
+      <div class="section-kicker"><span class="kicker-rule"></span>Membership Admin</div>
+      <h2 class="section-title">Membership Dashboard</h2>
+
+      <div id="stats-loading" class="state-loading">Loading statistics…</div>
+      <div id="stats-error"   class="state-error"   hidden></div>
+
+      <div id="stats-grid" class="stats-grid" hidden>
+        <!-- Populated by JS -->
+      </div>
+
+      <div id="state-breakdown" class="breakdown-row" hidden></div>
+      <div id="class-breakdown" class="breakdown-row" hidden></div>
+    </section>
+
+    <!-- ② MEMBERSHIP CLASSES & ENTITLEMENTS ─────────────────────────────────── -->
+    <section class="admin-section" id="section-classes">
+      <div class="section-kicker"><span class="kicker-rule"></span>Configuration</div>
+      <h2 class="section-title">Membership Classes &amp; Entitlements</h2>
+      <p class="section-hint">All benefit values are configurable without code changes via the entitlement engine (MEM-006). Use the Entitlements API to modify individual keys.</p>
+
+      <div id="classes-loading" class="state-loading">Loading classes…</div>
+      <div id="classes-error"   class="state-error"   hidden></div>
+
+      <div id="classes-list" class="classes-list" hidden></div>
+    </section>
+
+    <!-- ③ SENIOR STATUS ─────────────────────────────────────────────────────── -->
+    <section class="admin-section" id="section-senior">
+      <div class="section-kicker"><span class="kicker-rule"></span>Recognition Management</div>
+      <h2 class="section-title">Senior Member Eligibility</h2>
+      <p class="section-hint">
+        Auto-calculated per MEM-008: age ≥ 60 <strong>OR</strong> (age ≥ 50 &amp; tenure ≥ 5 yr) <strong>OR</strong> tenure ≥ 10 yr.
+        Members already holding SENIOR_MEMBER recognition are excluded.
+      </p>
+
+      <div class="senior-actions-bar">
+        <button type="button" id="btn-check-senior" class="btn-action">Check Eligibility</button>
+        <button type="button" id="btn-assign-senior" class="btn-action btn-action--gold" hidden>
+          Assign Senior Status to All Eligible
+        </button>
+      </div>
+
+      <div id="senior-loading" class="state-loading" hidden>Evaluating…</div>
+      <div id="senior-empty"   class="state-empty"   hidden>No eligible members found.</div>
+      <div id="senior-error"   class="state-error"   hidden></div>
+      <div id="senior-feedback" class="assign-feedback" hidden></div>
+
+      <div id="senior-list" class="data-table-wrap" hidden></div>
+    </section>
+
+    <!-- ④ EXPIRING SOON ─────────────────────────────────────────────────────── -->
+    <section class="admin-section" id="section-expiring">
+      <div class="section-kicker"><span class="kicker-rule"></span>Renewals</div>
+      <h2 class="section-title">Expiring Within 30 Days</h2>
+
+      <div id="expiring-loading" class="state-loading">Loading…</div>
+      <div id="expiring-empty"   class="state-empty"   hidden>No memberships expiring within 30 days.</div>
+      <div id="expiring-error"   class="state-error"   hidden></div>
+      <div id="expiring-list"    class="data-table-wrap" hidden></div>
+    </section>
+
+    <!-- ⑤ RECENT LIFECYCLE EVENTS ──────────────────────────────────────────── -->
+    <section class="admin-section" id="section-events">
+      <div class="section-kicker"><span class="kicker-rule"></span>Audit Trail</div>
+      <h2 class="section-title">Recent Lifecycle Events</h2>
+
+      <div id="events-loading" class="state-loading">Loading events…</div>
+      <div id="events-empty"   class="state-empty"   hidden>No events recorded.</div>
+      <div id="events-error"   class="state-error"   hidden></div>
+      <div id="events-list"    class="data-table-wrap" hidden></div>
+    </section>
+
+    <!-- ⑥ NOTIFICATION TYPES ─────────────────────────────────────────────────── -->
+    <section class="admin-section" id="section-notifs">
+      <div class="section-kicker"><span class="kicker-rule"></span>Email Automation</div>
+      <h2 class="section-title">Notification Types</h2>
+      <p class="section-hint">Membership and renewal notification catalogue. Email templates are managed via the notification_templates table.</p>
+
+      <div id="notifs-loading" class="state-loading">Loading notification types…</div>
+      <div id="notifs-empty"   class="state-empty"   hidden>No notification types found.</div>
+      <div id="notifs-error"   class="state-error"   hidden></div>
+      <div id="notifs-list"    class="data-table-wrap" hidden></div>
+    </section>
+
+  </div>
+
+</HubLayout>
+
+<style>
+/* ── Layout ───────────────────────────────────────────────────────── */
+.mem-admin {
+  padding: 32px 0 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+/* ── Section ──────────────────────────────────────────────────────── */
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+}
+.kicker-rule {
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--gold-600);
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0;
+  line-height: 1.3;
+}
+.section-hint {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-400);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── State messages ───────────────────────────────────────────────── */
+.state-loading, .state-empty {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-400);
+  padding: 12px 0;
+}
+.state-error {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--input-error, #b91c1c);
+  padding: 12px 0;
+}
+
+/* ── Stats grid ───────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.stat-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-card__value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1;
+}
+.stat-card__value--gold { color: var(--gold-600); }
+.stat-card__value--warn { color: #b45309; }
+.stat-card__label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+}
+.breakdown-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.breakdown-pill {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-600);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.breakdown-pill strong {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-900);
+}
+
+/* ── Classes list ─────────────────────────────────────────────────── */
+.classes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.class-card {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 16px 20px;
+}
+.class-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.class-card__name {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.class-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.class-badge--operational { border-color: #0891b2; color: #0891b2; }
+.class-badge--constitutional { border-color: var(--gold-600); color: var(--gold-600); }
+.class-badge--recognition { border-color: #7c3aed; color: #7c3aed; }
+.class-badge--status { border-color: #059669; color: #059669; }
+.class-badge--closed { border-color: var(--ink-300); color: var(--ink-300); background: var(--surface-2); }
+.class-card__entitlements {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 12px;
+}
+.entitlement-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-600);
+  padding: 3px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.entitlement-row__key {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-500);
+}
+.entitlement-row__value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-900);
+  font-weight: 600;
+}
+.no-entitlements {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-300);
+  font-style: italic;
+}
+
+/* ── Senior actions bar ───────────────────────────────────────────── */
+.senior-actions-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.btn-action {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 20px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+  color: var(--ink-800);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-action:hover { background: var(--surface-2); }
+.btn-action--gold {
+  background: var(--gold-600);
+  color: var(--surface-0);
+  border-color: var(--gold-600);
+}
+.btn-action--gold:hover { opacity: 0.87; background: var(--gold-600); }
+.btn-action:disabled { opacity: 0.45; cursor: not-allowed; }
+.assign-feedback {
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 10px 14px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--ink-700);
+}
+
+/* ── Data tables ──────────────────────────────────────────────────── */
+.data-table-wrap { overflow-x: auto; }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.data-table th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 10px 12px;
+  color: var(--ink-800);
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface-2); }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.tag-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--ink-600);
+  white-space: nowrap;
+  margin-right: 3px;
+}
+.tag-pill--green  { border-color: #10b981; color: #059669; background: #f0fdf4; }
+.tag-pill--red    { border-color: #f87171; color: #b91c1c; background: #fef2f2; }
+.tag-pill--gold   { border-color: var(--gold-600); color: var(--gold-600); }
+.tag-pill--blue   { border-color: #60a5fa; color: #1d4ed8; background: #eff6ff; }
+.tag-pill--purple { border-color: #a78bfa; color: #6d28d9; background: #f5f3ff; }
+.notif-active   { color: #059669; font-weight: 600; }
+.notif-inactive { color: var(--ink-300); }
+</style>
+
+<script>
+(function () {
+  const API = '';  // same-origin — all requests go to /api/v1/...
+
+  // ── helpers ──────────────────────────────────────────────────────────
+  function show(id) { const el = document.getElementById(id); if (el) el.hidden = false; }
+  function hide(id) { const el = document.getElementById(id); if (el) el.hidden = true; }
+  function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
+  function setHtml(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
+  function authHeaders() {
+    const at = localStorage.getItem('bcc_at');
+    return { 'Content-Type': 'application/json', ...(at ? { Authorization: `Bearer ${at}` } : {}) };
+  }
+
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(path, { headers: authHeaders(), ...opts });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  }
+
+  function fmtDate(val) {
+    if (!val) return '—';
+    try { return new Date(val).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
+    catch { return val; }
+  }
+  function fmtDateTime(val) {
+    if (!val) return '—';
+    try {
+      return new Date(val).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch { return val; }
+  }
+
+  function typeBadge(type) {
+    const map = {
+      OPERATIONAL: 'class-badge--operational',
+      CONSTITUTIONAL: 'class-badge--constitutional',
+      RECOGNITION: 'class-badge--recognition',
+      STATUS_OVERLAY: 'class-badge--status',
+    };
+    const cls = map[type] || '';
+    return `<span class="class-badge ${cls}">${type}</span>`;
+  }
+
+  // ── ① DASHBOARD STATS ──────────────────────────────────────────────
+  async function loadStats() {
+    hide('stats-error');
+    show('stats-loading');
+    hide('stats-grid');
+    hide('state-breakdown');
+    hide('class-breakdown');
+    try {
+      const data = await apiFetch('/api/v1/membership/admin/stats');
+      hide('stats-loading');
+
+      const totalActive = data.byState['ACTIVE'] || 0;
+      const totalPending = data.byState['PENDING'] || 0;
+      const totalSuspended = data.byState['SUSPENDED'] || 0;
+      const totalExpired = data.byState['EXPIRED'] || 0;
+      const totalAll = Object.values(data.byState).reduce((a, b) => a + b, 0);
+
+      const grid = document.getElementById('stats-grid');
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-card__value">${totalAll}</div>
+          <div class="stat-card__label">Total Memberships</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value stat-card__value--gold">${totalActive}</div>
+          <div class="stat-card__label">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value">${totalPending}</div>
+          <div class="stat-card__label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value stat-card__value--warn">${data.expiringIn30Days}</div>
+          <div class="stat-card__label">Expiring ≤ 30 Days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value">${totalSuspended}</div>
+          <div class="stat-card__label">Suspended</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value">${totalExpired}</div>
+          <div class="stat-card__label">Expired</div>
+        </div>
+      `;
+      show('stats-grid');
+
+      // State breakdown pills
+      const stateEl = document.getElementById('state-breakdown');
+      stateEl.innerHTML = Object.entries(data.byState)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, v]) => `<span class="breakdown-pill"><strong>${v}</strong> ${k}</span>`)
+        .join('');
+      show('state-breakdown');
+
+      // Class breakdown pills
+      const classEl = document.getElementById('class-breakdown');
+      classEl.innerHTML = Object.entries(data.byClass)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, v]) => `<span class="breakdown-pill"><strong>${v}</strong> ${k}</span>`)
+        .join('');
+      show('class-breakdown');
+    } catch (e) {
+      hide('stats-loading');
+      setText('stats-error', e.message);
+      show('stats-error');
+    }
+  }
+
+  // ── ② MEMBERSHIP CLASSES ───────────────────────────────────────────
+  async function loadClasses() {
+    hide('classes-error');
+    show('classes-loading');
+    hide('classes-list');
+    try {
+      const classes = await apiFetch('/api/v1/membership/admin/classes');
+      hide('classes-loading');
+
+      const list = document.getElementById('classes-list');
+      if (!classes.length) {
+        list.innerHTML = '<p class="state-empty">No classes found.</p>';
+      } else {
+        list.innerHTML = classes.map(cls => {
+          const closedBadge = cls.is_closed ? `<span class="class-badge class-badge--closed">Closed</span>` : '';
+          const renewBadge = cls.is_renewable === false ? '' : `<span class="class-badge" style="border-color:var(--ink-300);color:var(--ink-500)">Renewable</span>`;
+          const ents = cls.entitlements || {};
+          const entKeys = Object.keys(ents);
+          const entsHtml = entKeys.length
+            ? `<div class="class-card__entitlements">` +
+              entKeys.map(k => `
+                <div class="entitlement-row">
+                  <span class="entitlement-row__key">${k}</span>
+                  <span class="entitlement-row__value">${ents[k]}</span>
+                </div>`).join('') +
+              `</div>`
+            : `<p class="no-entitlements">No entitlements configured.</p>`;
+          return `
+            <div class="class-card">
+              <div class="class-card__header">
+                <span class="class-card__name">${cls.display_name || cls.name}</span>
+                ${typeBadge(cls.type)}
+                ${closedBadge}
+                ${renewBadge}
+              </div>
+              ${entsHtml}
+            </div>`;
+        }).join('');
+      }
+      show('classes-list');
+    } catch (e) {
+      hide('classes-loading');
+      setText('classes-error', e.message);
+      show('classes-error');
+    }
+  }
+
+  // ── ③ SENIOR STATUS ─────────────────────────────────────────────────
+  let seniorEligible = [];
+
+  document.getElementById('btn-check-senior').addEventListener('click', async () => {
+    hide('senior-error');
+    hide('senior-empty');
+    hide('senior-list');
+    hide('senior-feedback');
+    hide('btn-assign-senior');
+    show('senior-loading');
+    try {
+      seniorEligible = await apiFetch('/api/v1/membership/admin/senior-status/eligible');
+      hide('senior-loading');
+      if (!seniorEligible.length) {
+        show('senior-empty');
+        return;
+      }
+      const wrap = document.getElementById('senior-list');
+      wrap.innerHTML = buildSeniorTable(seniorEligible);
+      show('senior-list');
+      show('btn-assign-senior');
+    } catch (e) {
+      hide('senior-loading');
+      setText('senior-error', e.message);
+      show('senior-error');
+    }
+  });
+
+  document.getElementById('btn-assign-senior').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-assign-senior');
+    btn.disabled = true;
+    hide('senior-feedback');
+    try {
+      const result = await apiFetch('/api/v1/membership/admin/senior-status/evaluate', { method: 'POST' });
+      const fb = document.getElementById('senior-feedback');
+      fb.textContent = `Done — ${result.assigned} Senior Member recognition(s) assigned.`;
+      show('senior-feedback');
+      hide('btn-assign-senior');
+      hide('senior-list');
+    } catch (e) {
+      const fb = document.getElementById('senior-feedback');
+      fb.textContent = `Error: ${e.message}`;
+      show('senior-feedback');
+      btn.disabled = false;
+    }
+  });
+
+  function buildSeniorTable(rows) {
+    const ruleLabel = { age_60_plus: 'Age ≥ 60', age_50_tenure_5: 'Age ≥ 50 + Tenure ≥ 5yr', tenure_10_years: 'Tenure ≥ 10yr' };
+    return `<table class="data-table">
+      <thead><tr>
+        <th>Member</th>
+        <th>Join Year</th>
+        <th>Tenure</th>
+        <th>Age</th>
+        <th>Qualifying Rules</th>
+      </tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td>
+          <div style="font-weight:600">${r.fullName || '—'}</div>
+          <div class="mono" style="color:var(--ink-400)">${r.username || ''}</div>
+        </td>
+        <td class="mono">${r.joinYear || '—'}</td>
+        <td class="mono">${r.tenureYears} yr</td>
+        <td class="mono">${r.ageYears != null ? r.ageYears + ' yr' : '—'}</td>
+        <td>${r.qualifyingRules.map(rule => `<span class="tag-pill tag-pill--green">${ruleLabel[rule] || rule}</span>`).join('')}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  // ── ④ EXPIRING SOON ─────────────────────────────────────────────────
+  async function loadExpiring() {
+    hide('expiring-error');
+    show('expiring-loading');
+    hide('expiring-list');
+    hide('expiring-empty');
+    try {
+      const rows = await apiFetch('/api/v1/membership/admin/expiring?days=30');
+      hide('expiring-loading');
+      if (!rows.length) { show('expiring-empty'); return; }
+      const wrap = document.getElementById('expiring-list');
+      wrap.innerHTML = `<table class="data-table">
+        <thead><tr>
+          <th>Member</th>
+          <th>Membership No.</th>
+          <th>Class</th>
+          <th>Expires</th>
+          <th>State</th>
+        </tr></thead>
+        <tbody>${rows.map(r => {
+          const expiresDate = new Date(r.expires_at);
+          const daysLeft = Math.ceil((expiresDate - Date.now()) / 86400000);
+          const urgency = daysLeft <= 7 ? 'tag-pill--red' : daysLeft <= 14 ? 'tag-pill--gold' : '';
+          return `<tr>
+            <td>
+              <div style="font-weight:600">${r.full_name || '—'}</div>
+              <div class="mono" style="color:var(--ink-400)">${r.email || r.username || ''}</div>
+            </td>
+            <td class="mono">${r.membership_number || '—'}</td>
+            <td>${r.class_name || '—'}</td>
+            <td>
+              <div class="mono">${fmtDate(r.expires_at)}</div>
+              <span class="tag-pill ${urgency}">${daysLeft}d</span>
+            </td>
+            <td><span class="tag-pill">${r.lifecycle_state}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+      show('expiring-list');
+    } catch (e) {
+      hide('expiring-loading');
+      setText('expiring-error', e.message);
+      show('expiring-error');
+    }
+  }
+
+  // ── ⑤ RECENT EVENTS ────────────────────────────────────────────────
+  async function loadEvents() {
+    hide('events-error');
+    show('events-loading');
+    hide('events-list');
+    hide('events-empty');
+    try {
+      const rows = await apiFetch('/api/v1/membership/admin/events?limit=40');
+      hide('events-loading');
+      if (!rows.length) { show('events-empty'); return; }
+      const wrap = document.getElementById('events-list');
+      wrap.innerHTML = `<table class="data-table">
+        <thead><tr>
+          <th>When</th>
+          <th>Event</th>
+          <th>Member</th>
+          <th>Actor</th>
+          <th>Notes</th>
+        </tr></thead>
+        <tbody>${rows.map(r => `<tr>
+          <td class="mono" style="white-space:nowrap;font-size:11px">${fmtDateTime(r.created_at)}</td>
+          <td><span class="tag-pill tag-pill--blue">${r.event_type}</span></td>
+          <td>
+            <div style="font-weight:600">${r.member_name || '—'}</div>
+            <div class="mono" style="color:var(--ink-400)">${r.member_username || ''}</div>
+          </td>
+          <td class="mono" style="color:var(--ink-500)">${r.actor_name || r.actor_type || '—'}</td>
+          <td style="color:var(--ink-500);font-size:12px;max-width:240px">${r.notes || '—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+      show('events-list');
+    } catch (e) {
+      hide('events-loading');
+      setText('events-error', e.message);
+      show('events-error');
+    }
+  }
+
+  // ── ⑥ NOTIFICATION TYPES ───────────────────────────────────────────
+  async function loadNotifTypes() {
+    hide('notifs-error');
+    show('notifs-loading');
+    hide('notifs-list');
+    hide('notifs-empty');
+    try {
+      const rows = await apiFetch('/api/v1/membership/admin/notification-types');
+      hide('notifs-loading');
+      if (!rows.length) { show('notifs-empty'); return; }
+      const wrap = document.getElementById('notifs-list');
+      wrap.innerHTML = `<table class="data-table">
+        <thead><tr>
+          <th>Type Key</th>
+          <th>Module</th>
+          <th>Description</th>
+          <th>Channels</th>
+          <th>Active</th>
+        </tr></thead>
+        <tbody>${rows.map(r => `<tr>
+          <td class="mono" style="white-space:nowrap">${r.type_key}</td>
+          <td><span class="tag-pill">${r.module}</span></td>
+          <td style="font-size:12px;color:var(--ink-600)">${r.description || '—'}</td>
+          <td>${(r.channels || '').split(',').map(c => `<span class="tag-pill tag-pill--purple">${c.trim()}</span>`).join('')}</td>
+          <td class="${r.is_active ? 'notif-active' : 'notif-inactive'}">${r.is_active ? 'Yes' : 'No'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+      show('notifs-list');
+    } catch (e) {
+      hide('notifs-loading');
+      setText('notifs-error', e.message);
+      show('notifs-error');
+    }
+  }
+
+  // ── Bootstrap ─────────────────────────────────────────────────────
+  loadStats();
+  loadClasses();
+  loadExpiring();
+  loadEvents();
+  loadNotifTypes();
+})();
+</script>

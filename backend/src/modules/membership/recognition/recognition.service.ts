@@ -24,6 +24,7 @@
 
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../../../database/db';
+import { CommunicationService } from '../../shared/communication/communication.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 
 type RecognitionCode =
@@ -33,8 +34,16 @@ type RecognitionCode =
   | 'HONORARY_MENTOR'
   | 'HONORARY_GRANDMASTER';
 
+const HONORARY_CODES: ReadonlyArray<RecognitionCode> = [
+  'HONORARY_MEMBER',
+  'HONORARY_MENTOR',
+  'HONORARY_GRANDMASTER',
+];
+
 @Injectable()
 export class RecognitionService {
+  constructor(private readonly communicationService: CommunicationService) {}
+
   async listForMembership(membershipId: number) {
     return db
       .selectFrom('member_recognitions')
@@ -95,6 +104,28 @@ export class RecognitionService {
       newValue: { recognitionCode, track },
       notes: reason,
     });
+
+    // Honorary recognitions dispatch RECOGNITION_AWARDED notification.
+    // Existing RECOGNITION_AWARDED type (seed_0005) covers all honorary codes.
+    if (HONORARY_CODES.includes(recognitionCode)) {
+      const mem = await db
+        .selectFrom('memberships')
+        .select('user_id')
+        .where('id', '=', membershipId)
+        .executeTakeFirst();
+      if (mem?.user_id) {
+        const user = await db
+          .selectFrom('users')
+          .select('full_name')
+          .where('id', '=', mem.user_id)
+          .executeTakeFirst();
+        await this.communicationService.dispatch('RECOGNITION_AWARDED', mem.user_id, {
+          full_name: user?.full_name ?? '',
+          recognition_class: recognitionCode.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+          portal_link: 'https://v3bcc.bhopal.info/hub/',
+        });
+      }
+    }
   }
 
   async revoke(membershipId: number, reason: string, actorUserId: number): Promise<void> {

@@ -372,13 +372,38 @@ export class MembershipLifecycleService {
     });
 
     const refreshed = await this.getOrThrow(membershipId);
-    await this.notifyMember(refreshed, 'MEMBERSHIP_ACTIVATED', {
+
+    // Constitutional classes (voting_eligible = true: Full/Life/Patron/Founding)
+    // receive CONSTITUTIONAL_MEMBERSHIP_APPROVED which includes voting-rights
+    // context; all others receive the standard MEMBERSHIP_ACTIVATED.
+    let notifyTypeKey = 'MEMBERSHIP_ACTIVATED';
+    let extraNotifyVars: Record<string, string> = {
       membership_number: membershipNumber,
       expiry_date: refreshed.expires_at
         ? new Date(refreshed.expires_at as unknown as string)
             .toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         : 'see member portal',
-    }, { actionUrl: '/member' });
+    };
+
+    if (refreshed.membership_class_id != null) {
+      const cls = await db
+        .selectFrom('membership_classes')
+        .select(['voting_eligible', 'name'])
+        .where('id', '=', refreshed.membership_class_id)
+        .executeTakeFirst();
+      if (cls?.voting_eligible) {
+        notifyTypeKey = 'CONSTITUTIONAL_MEMBERSHIP_APPROVED';
+        extraNotifyVars = {
+          membership_type: cls.name,
+          membership_number: membershipNumber,
+          valid_from: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+          benefits: 'Voting rights, governance participation, all member benefits',
+          portal_link: 'https://v3bcc.bhopal.info/hub/',
+        };
+      }
+    }
+
+    await this.notifyMember(refreshed, notifyTypeKey, extraNotifyVars, { actionUrl: '/member' });
 
     return { membershipNumber };
   }
@@ -593,6 +618,100 @@ export class MembershipLifecycleService {
             .toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         : 'see member portal',
     }, { actionUrl: '/member' });
+  }
+
+  // ======================================================================
+  // ACTIVE: class change (upgrade / downgrade)
+  //
+  // Both operations mutate membership_class_id on an ACTIVE individual
+  // membership. The entitlement engine re-resolves from the new class
+  // automatically at next read -- no entitlement rows need touching.
+  //
+  // expires_at is recomputed from the new class's renewal_term_months so
+  // a class change to Biennial correctly extends the validity window.
+  // The old expiry is preserved in the audit log.
+  //
+  // Constitutional protection: FOUNDING_MEMBER is is_closed=TRUE so
+  // downgrading INTO it is blocked by the same is_closed guard used in
+  // apply(). Downgrading FROM a constitutional class is allowed; admins
+  // own that governance decision.
+  // ======================================================================
+  async changeClass(
+    membershipId: number,
+    newClassId: number,
+    direction: 'UPGRADE' | 'DOWNGRADE',
+    reason: string,
+    actorUserId: number,
+  ): Promise<void> {
+    const membership = await this.requireState(membershipId, ['ACTIVE']);
+
+    if (membership.owner_type !== 'INDIVIDUAL') {
+      throw new BadRequestException('Class change is only supported for INDIVIDUAL memberships.');
+    }
+    if (membership.membership_class_id === newClassId) {
+      throw new ConflictException('The membership is already in the requested class.');
+    }
+
+    const newClass = await db
+      .selectFrom('membership_classes')
+      .select(['id', 'code', 'name', 'is_closed', 'is_lifetime', 'is_renewable'])
+      .where('id', '=', newClassId)
+      .executeTakeFirst();
+    if (!newClass) throw new NotFoundException('Target membership class not found.');
+    if (newClass.is_closed) {
+      throw new ForbiddenException(`${newClass.name} is a closed class; no members can be moved into it.`);
+    }
+
+    const oldClass = await db
+      .selectFrom('membership_classes')
+      .select('name')
+      .where('id', '=', membership.membership_class_id!)
+      .executeTakeFirst();
+    const oldClassName = oldClass?.name ?? '';
+
+    // Recompute expiry for the new class so biennial upgrades extend correctly.
+    const newExpiry = await this.computeExpiry(
+      { ...membership, membership_class_id: newClassId },
+      new Date(),
+    );
+
+    await db
+      .updateTable('memberships')
+      .set({ membership_class_id: newClassId, expires_at: newExpiry })
+      .where('id', '=', membershipId)
+      .execute();
+
+    await logMembershipAudit({
+      membershipId,
+      eventType: 'CLASS_CHANGED',
+      actorType: 'ADMIN',
+      actorUserId,
+      oldValue: { classId: membership.membership_class_id, className: oldClassName },
+      newValue: { classId: newClassId, className: newClass.name, direction },
+      notes: reason || undefined,
+    });
+
+    // LEGACY_MEMBER class change dispatches LEGACY_STATUS_GRANTED instead of
+    // MEMBERSHIP_UPGRADED/DOWNGRADED -- the semantic is recognition, not tier movement.
+    let typeKey: string;
+    if (newClass.code === 'LEGACY_MEMBER') {
+      typeKey = 'LEGACY_STATUS_GRANTED';
+    } else {
+      typeKey = direction === 'UPGRADE' ? 'MEMBERSHIP_UPGRADED' : 'MEMBERSHIP_DOWNGRADED';
+    }
+
+    const updatedMembership = await this.getOrThrow(membershipId);
+    const notifyVars: Record<string, string> = {
+      previous_membership: oldClassName,
+      membership_type: newClass.name,
+      membership_number: updatedMembership.membership_number ?? '',
+      valid_to: updatedMembership.expires_at
+        ? new Date(updatedMembership.expires_at as unknown as string)
+            .toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+        : 'lifetime',
+      portal_link: 'https://v3bcc.bhopal.info/hub/',
+    };
+    await this.notifyMember(updatedMembership, typeKey, notifyVars);
   }
 
   // ======================================================================

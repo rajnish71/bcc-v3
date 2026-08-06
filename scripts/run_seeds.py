@@ -1,28 +1,31 @@
-import os
-import subprocess
 import glob
+import os
 import sys
 
-DB_HOST = "127.0.0.1"
-DB_PORT = "3307"
-DB_USER = "bcc_v3_app"
-DB_PASSWORD = "zAkuexH3yylvsguMNXwfeFXf"
-DB_NAME = "bcc_v3"
+# Ensure parent directory is in Python path for importing lib
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
 
-os.environ["MYSQL_PWD"] = DB_PASSWORD
+from lib.db_connection import execute_sql_file
 
-seed_files = sorted(glob.glob("database/seeds/*.sql"))
 
-print("=== Running seeds ===")
-for filepath in seed_files:
-    filename = os.path.basename(filepath)
-    print(f"RUNNING {filename}...")
-    run_cmd = f'mysql -h {DB_HOST} -P {DB_PORT} -u {DB_USER} {DB_NAME} < "{filepath}"'
-    res = subprocess.run(run_cmd, shell=True, capture_output=True, text=True)
-    if res.returncode != 0:
-        print(f"ERROR running {filename}:")
-        print(res.stderr)
-        sys.exit(1)
-    print(f"OK      {filename}\n")
+def main():
+    seed_files = sorted(glob.glob("database/seeds/*.sql"))
 
-print("=== Seeds run complete ===")
+    print("=== Running seeds ===")
+    for filepath in seed_files:
+        filename = os.path.basename(filepath)
+        print(f"RUNNING {filename}...")
+        res = execute_sql_file(filepath)
+        if res.returncode != 0:
+            print(f"ERROR running {filename}:")
+            print(res.stderr)
+            sys.exit(1)
+        print(f"OK      {filename}\n")
+
+    print("=== Seeds run complete ===")
+
+
+if __name__ == "__main__":
+    main()

@@ -159,8 +159,8 @@ UPDATE memberships m
 SET
   m.join_year  = h.join_year,
   m.join_month = h.join_month
-WHERE m.join_year  IS DISTINCT FROM h.join_year
-   OR m.join_month IS DISTINCT FROM h.join_month;
+WHERE NOT (m.join_year  <=> h.join_year)
+   OR NOT (m.join_month <=> h.join_month);
 
 -- ============================================================================
 -- STEP 6: Advance any non-ACTIVE historical member to ACTIVE

@@ -1,0 +1,125 @@
+---
+/**
+ * BenefitPillarGrid — V6 15 Join · Section 03 Why Become a Member
+ *
+ * Five editorial benefit pillars on parchment surface.
+ * Ordinal number (Outfit 48px ghost) + H4 title + Inter prose.
+ * No icons. No price. Community before commerce.
+ *
+ * Desktop:  5-column grid
+ * Tablet:   3+2 grid (≤900px)
+ * Mobile:   1-column stack (≤480px)
+ *
+ * New Component — §12 specification.
+ */
+
+interface Pillar {
+  number: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  pillars: Pillar[];
+}
+
+const { pillars } = Astro.props;
+---
+
+<div class="bpg">
+  {pillars.map((pillar, i) => (
+    <div class:list={['bpg__card', i % 2 === 0 ? 'bpg__card--white' : 'bpg__card--ivory']}>
+      <div class="bpg__ordinal" aria-hidden="true">{pillar.number}</div>
+      <h4 class="bpg__title">{pillar.title}</h4>
+      <p class="bpg__body">{pillar.body}</p>
+    </div>
+  ))}
+</div>
+
+<style>
+.bpg {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 1px solid var(--hairline);
+}
+
+.bpg__card {
+  padding: 32px 28px;
+  border-right: 1px solid var(--hairline);
+}
+.bpg__card:last-child {
+  border-right: none;
+}
+
+.bpg__card--white { background: var(--surface-0); }
+.bpg__card--ivory { background: var(--surface-1); }
+
+.bpg__ordinal {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--hairline);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.bpg__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
+  margin-bottom: 12px;
+}
+
+.bpg__body {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  max-width: 280px;
+}
+
+/* Tablet: 3+2 grid */
+@media (max-width: 900px) and (min-width: 481px) {
+  .bpg {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .bpg__card {
+    padding: 28px 24px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .bpg__card:nth-child(3) {
+    border-right: none;
+  }
+  .bpg__card:nth-child(4),
+  .bpg__card:nth-child(5) {
+    border-bottom: none;
+  }
+  .bpg__card:nth-child(4) {
+    border-right: 1px solid var(--hairline);
+  }
+}
+
+/* Mobile: 1-column */
+@media (max-width: 480px) {
+  .bpg {
+    grid-template-columns: 1fr;
+  }
+  .bpg__card {
+    padding: 24px 20px;
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .bpg__card:last-child {
+    border-bottom: none;
+  }
+  .bpg__ordinal {
+    font-size: 36px;
+  }
+  .bpg__body {
+    max-width: 100%;
+  }
+}
+</style>

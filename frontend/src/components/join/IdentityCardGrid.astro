@@ -1,0 +1,185 @@
+---
+/**
+ * IdentityCardGrid — V6 15 Join · Section 04 Choose Your Membership
+ *
+ * Four identity-question cards in 2×2 grid.
+ * Identity-first framing: "which best describes you?" before tier names.
+ * Click scrolls to corresponding tier row in MembershipComparisonBlock.
+ *
+ * Card anatomy: kicker label + italic H3 question + body + "Recommended:" footer
+ * Hover: elevation e-2, border-color gold-600, cursor pointer
+ * Gold top-border strip (2px gradient) at rest — marks as interactive
+ *
+ * Desktop:  2×2 grid
+ * Mobile:   1-column stack (≤480px)
+ *
+ * New Component — §12 specification.
+ */
+
+interface IdentityCard {
+  id: string;       /* must match the tier id in MembershipComparisonBlock */
+  kicker: string;
+  question: string;
+  body: string;
+  recommendedLabel: string;
+}
+
+interface Props {
+  cards: IdentityCard[];
+}
+
+const { cards } = Astro.props;
+---
+
+<div class="icg">
+  {cards.map(card => (
+    <button
+      class="icg__card"
+      data-tier-target={card.id}
+      aria-label={`${card.question} — Recommended: ${card.recommendedLabel}`}
+    >
+      <div class="icg__gold-strip" aria-hidden="true"></div>
+      <div class="icg__kicker">{card.kicker}</div>
+      <h3 class="icg__question">{card.question}</h3>
+      <p class="icg__body">{card.body}</p>
+      <div class="icg__footer">
+        <div class="icg__footer-left">
+          <div class="icg__rec-label">Recommended</div>
+          <div class="icg__rec-tier">{card.recommendedLabel}</div>
+        </div>
+        <span class="icg__arrow" aria-hidden="true">→</span>
+      </div>
+    </button>
+  ))}
+</div>
+
+<style>
+.icg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.icg__card {
+  border: 1px solid var(--hairline);
+  padding: 36px 36px 28px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  background: var(--surface-0);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+.icg__card:hover {
+  box-shadow: var(--e-2, 0 4px 24px rgba(20,18,16,0.12));
+  border-color: var(--gold-600);
+  transform: translateY(-1px);
+}
+.icg__card:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 2px;
+}
+
+.icg__gold-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gold-gradient);
+}
+
+.icg__kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 16px;
+}
+
+.icg__question {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+  font-style: italic;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.icg__body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  margin-bottom: 28px;
+  flex: 1;
+}
+
+.icg__footer {
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.icg__rec-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-400);
+  margin-bottom: 4px;
+}
+
+.icg__rec-tier {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.icg__arrow {
+  font-size: 14px;
+  color: var(--gold-600);
+  flex-shrink: 0;
+}
+
+/* Mobile: 1-column */
+@media (max-width: 480px) {
+  .icg {
+    grid-template-columns: 1fr;
+  }
+  .icg__card {
+    padding: 28px 24px 20px;
+  }
+  .icg__question {
+    font-size: 22px;
+  }
+}
+</style>
+
+<script>
+  /* Smooth scroll to the corresponding tier row in MembershipComparisonBlock */
+  document.querySelectorAll<HTMLElement>('.icg__card[data-tier-target]').forEach(card => {
+    card.addEventListener('click', () => {
+      const tierId = card.dataset.tierTarget;
+      if (!tierId) return;
+      const target = document.getElementById('tier-' + tierId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        /* Trigger expansion after scroll settles */
+        setTimeout(() => {
+          target.dispatchEvent(new CustomEvent('bcc:tier-activate', { bubbles: true }));
+        }, 400);
+      }
+    });
+  });
+</script>

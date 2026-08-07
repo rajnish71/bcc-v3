@@ -1,0 +1,344 @@
+---
+/**
+ * MembershipComparisonBlock — V6 15 Join · Section 05 Membership Comparison
+ *
+ * Row-per-tier editorial comparison. Leads with "Who is this for?" not price.
+ * Expand-on-click: reveals benefits panel and Select button.
+ * Active row: background surface-0, left border 3px gold-600.
+ * One row expanded at a time.
+ *
+ * Desktop:  3-column grid (180px tier | 1fr who/eligibility | 140px contribution)
+ * Tablet:   2-column (tier+who stacked on left, contribution right)
+ * Mobile:   card-per-tier stack, contribution always visible
+ *
+ * Recognition classes EXCLUDED per MEM-006.
+ * Annual amounts are placeholder — wire to CMS/DB API when available.
+ *
+ * New Component — §12 specification.
+ */
+
+interface Tier {
+  id: string;
+  name: string;
+  badge: string;
+  badgeVariant?: 'forest' | 'blue' | 'violet';
+  who: string;
+  eligibility: string;
+  annual: string;
+  period: string;
+  benefits: string[];
+  ctaHref?: string;
+}
+
+interface Props {
+  tiers: Tier[];
+}
+
+const { tiers } = Astro.props;
+---
+
+<div class="mcb">
+  <!-- Table header -->
+  <div class="mcb__header">
+    <div class="mcb__col-tier">Membership</div>
+    <div class="mcb__col-who">Who it's for · Eligibility</div>
+    <div class="mcb__col-annual">Annual Contribution</div>
+  </div>
+
+  <!-- Tier rows -->
+  {tiers.map(tier => (
+    <div
+      class="mcb__row"
+      id={`tier-${tier.id}`}
+      data-tier-id={tier.id}
+      role="button"
+      tabindex="0"
+      aria-expanded="false"
+      aria-label={`${tier.name} membership — ${tier.who}`}
+    >
+      <div class="mcb__col-tier">
+        <div class="mcb__tier-name">{tier.name}</div>
+        <div class="mcb__badge">{tier.badge}</div>
+      </div>
+      <div class="mcb__col-who">
+        <div class="mcb__who">{tier.who}</div>
+        <div class="mcb__eligibility">{tier.eligibility}</div>
+        <div class="mcb__benefits-panel" aria-hidden="true">
+          <div class="mcb__benefits-label">Key Benefits</div>
+          <div class="mcb__benefits-text">{tier.benefits.join(' · ')}</div>
+        </div>
+      </div>
+      <div class="mcb__col-annual">
+        <div class="mcb__annual">{tier.annual}</div>
+        <div class="mcb__period">{tier.period}</div>
+        <a
+          href={tier.ctaHref || '/auth/register/'}
+          class="mcb__select-btn"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          Become a Member
+        </a>
+      </div>
+    </div>
+  ))}
+
+  <div class="mcb__footnote">
+    Click any row to see benefits · Actual amounts may vary ·
+    Full · Life · Patron · Founding memberships are not shown on this page (MEM-006)
+  </div>
+</div>
+
+<style>
+.mcb {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+/* Header */
+.mcb__header {
+  display: grid;
+  grid-template-columns: 180px 1fr 160px;
+  gap: 24px;
+  padding: 12px 48px;
+  background: var(--hairline);
+}
+.mcb__header > div {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-400);
+  font-weight: 600;
+}
+
+/* Row */
+.mcb__row {
+  display: grid;
+  grid-template-columns: 180px 1fr 160px;
+  gap: 24px;
+  padding: 28px 48px;
+  border-bottom: 1px solid var(--hairline);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  background: var(--surface-1);
+  transition: background 0.2s ease, border-left-color 0.2s ease;
+  align-items: start;
+}
+.mcb__row:last-of-type {
+  border-bottom: none;
+}
+.mcb__row:hover {
+  background: var(--surface-0);
+}
+.mcb__row.is-active {
+  background: var(--surface-0);
+  border-left-color: var(--gold-600);
+}
+.mcb__row:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: -2px;
+}
+
+/* Tier column */
+.mcb__tier-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: 6px;
+}
+.mcb__badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  background: #E8EFE9;
+  color: var(--forest-600);
+  border-radius: 2px;
+}
+
+/* Who column */
+.mcb__who {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-900);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.mcb__eligibility {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-400);
+}
+
+/* Benefits panel — hidden by default, revealed when row is active */
+.mcb__benefits-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, margin-top 0.3s ease;
+  margin-top: 0;
+}
+.mcb__row.is-active .mcb__benefits-panel {
+  max-height: 200px;
+  margin-top: 12px;
+}
+.mcb__benefits-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gold-600);
+  font-weight: 600;
+  margin-bottom: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+.mcb__benefits-text {
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--ink-600);
+}
+
+/* Annual column */
+.mcb__annual {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: 2px;
+}
+.mcb__period {
+  font-size: 11px;
+  color: var(--ink-400);
+}
+
+/* Select button — hidden at rest, visible when active */
+.mcb__select-btn {
+  display: block;
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--gold-gradient);
+  color: #FFFFFF;
+  padding: 12px 20px;
+  border-radius: 2px;
+  text-decoration: none;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.mcb__row.is-active .mcb__select-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Footnote */
+.mcb__footnote {
+  padding: 16px 48px 24px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-400);
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+}
+
+/* Tablet */
+@media (max-width: 900px) and (min-width: 481px) {
+  .mcb__header {
+    grid-template-columns: 1fr 140px;
+    padding: 12px 32px;
+  }
+  .mcb__header > div:first-child {
+    display: none;
+  }
+  .mcb__row {
+    grid-template-columns: 1fr 140px;
+    padding: 24px 32px;
+  }
+  .mcb__col-tier {
+    display: contents;
+  }
+  .mcb__tier-name {
+    font-size: 15px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .mcb__header {
+    display: none;
+  }
+  .mcb__row {
+    grid-template-columns: 1fr;
+    padding: 20px 20px;
+    gap: 12px;
+  }
+  .mcb__col-annual {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .mcb__annual {
+    font-size: 20px;
+  }
+  .mcb__select-btn {
+    margin-top: 8px;
+    width: 100%;
+  }
+  .mcb__footnote {
+    padding: 16px 20px 20px;
+  }
+}
+</style>
+
+<script>
+  /* Accordion row expand/collapse — one at a time */
+  const rows = document.querySelectorAll<HTMLElement>('.mcb__row[data-tier-id]');
+
+  function activateRow(row: HTMLElement) {
+    rows.forEach(r => {
+      const isTarget = r === row;
+      r.classList.toggle('is-active', isTarget);
+      r.setAttribute('aria-expanded', isTarget ? 'true' : 'false');
+      const benefitsPanel = r.querySelector<HTMLElement>('.mcb__benefits-panel');
+      if (benefitsPanel) benefitsPanel.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
+      const btn = r.querySelector<HTMLAnchorElement>('.mcb__select-btn');
+      if (btn) btn.setAttribute('tabindex', isTarget ? '0' : '-1');
+      if (btn) btn.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
+    });
+  }
+
+  rows.forEach(row => {
+    row.addEventListener('click', (e) => {
+      /* Prevent click on select button from toggling the row */
+      if ((e.target as HTMLElement).closest('.mcb__select-btn')) return;
+      const isActive = row.classList.contains('is-active');
+      if (isActive) {
+        row.classList.remove('is-active');
+        row.setAttribute('aria-expanded', 'false');
+        const panel = row.querySelector<HTMLElement>('.mcb__benefits-panel');
+        if (panel) panel.setAttribute('aria-hidden', 'true');
+        const btn = row.querySelector<HTMLAnchorElement>('.mcb__select-btn');
+        if (btn) { btn.setAttribute('tabindex', '-1'); btn.setAttribute('aria-hidden', 'true'); }
+      } else {
+        activateRow(row);
+      }
+    });
+
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        row.click();
+      }
+    });
+
+    /* Activated by IdentityCardGrid scroll */
+    row.addEventListener('bcc:tier-activate', () => {
+      if (!row.classList.contains('is-active')) activateRow(row);
+    });
+  });
+</script>

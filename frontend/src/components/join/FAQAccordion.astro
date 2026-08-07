@@ -1,0 +1,175 @@
+---
+/**
+ * FAQAccordion — V6 15 Join · Section 06 Frequently Asked Questions
+ *
+ * Editorial accordion. One answer visible at a time.
+ * Opening a new question closes the previous.
+ * +/− indicator, not chevron.
+ * Outfit H4 question · Inter body answer · 1px hairline dividers.
+ *
+ * Desktop/Tablet/Mobile: single full-width column, width adapts.
+ * 0.2s ease transition.
+ *
+ * New Component — §12 specification.
+ * Reuse potential: high — canonical FAQ pattern for future pages.
+ */
+
+interface Question {
+  q: string;
+  a: string;
+}
+
+interface Props {
+  questions: Question[];
+}
+
+const { questions } = Astro.props;
+---
+
+<div class="faq-acc" role="list">
+  {questions.map((item, i) => (
+    <div class="faq-acc__item" role="listitem">
+      <button
+        class="faq-acc__q"
+        aria-expanded="false"
+        aria-controls={`faq-a-${i}`}
+        id={`faq-q-${i}`}
+      >
+        <span class="faq-acc__q-text">{item.q}</span>
+        <span class="faq-acc__indicator" aria-hidden="true">+</span>
+      </button>
+      <div
+        class="faq-acc__a-wrap"
+        id={`faq-a-${i}`}
+        role="region"
+        aria-labelledby={`faq-q-${i}`}
+        aria-hidden="true"
+      >
+        <p class="faq-acc__a">{item.a}</p>
+      </div>
+    </div>
+  ))}
+  <div class="faq-acc__bottom-rule" aria-hidden="true"></div>
+</div>
+
+<style>
+.faq-acc {
+  /* max-width 800px per spec — achieved by parent section padding */
+}
+
+.faq-acc__item {
+  border-top: 1px solid var(--hairline);
+}
+
+.faq-acc__q {
+  width: 100%;
+  text-align: left;
+  padding: 22px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+.faq-acc__q:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.faq-acc__q-text {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
+  line-height: 1.3;
+  text-wrap: pretty;
+  transition: color 0.2s ease;
+}
+.faq-acc__item.is-open .faq-acc__q-text {
+  color: var(--gold-600);
+}
+
+.faq-acc__indicator {
+  font-size: 20px;
+  color: var(--gold-600);
+  flex-shrink: 0;
+  font-weight: 300;
+  line-height: 1;
+  width: 24px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+/* Answer wrapper — height animated via max-height */
+.faq-acc__a-wrap {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+.faq-acc__item.is-open .faq-acc__a-wrap {
+  max-height: 400px; /* generous ceiling */
+}
+
+.faq-acc__a {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink-600);
+  max-width: 680px;
+  padding-bottom: 24px;
+}
+
+.faq-acc__bottom-rule {
+  border-top: 1px solid var(--hairline);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .faq-acc__q-text {
+    font-size: 15px;
+  }
+  .faq-acc__q {
+    padding: 18px 0;
+  }
+}
+</style>
+
+<script>
+  const items = document.querySelectorAll<HTMLElement>('.faq-acc__item');
+
+  function closeAll() {
+    items.forEach(item => {
+      item.classList.remove('is-open');
+      const btn = item.querySelector<HTMLButtonElement>('.faq-acc__q');
+      const ans = item.querySelector<HTMLElement>('.faq-acc__a-wrap');
+      const ind = item.querySelector<HTMLElement>('.faq-acc__indicator');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+      if (ans) ans.setAttribute('aria-hidden', 'true');
+      if (ind) ind.textContent = '+';
+    });
+  }
+
+  items.forEach(item => {
+    const btn = item.querySelector<HTMLButtonElement>('.faq-acc__q');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      const isOpen = item.classList.contains('is-open');
+      closeAll();
+      if (!isOpen) {
+        item.classList.add('is-open');
+        const ans = item.querySelector<HTMLElement>('.faq-acc__a-wrap');
+        const ind = item.querySelector<HTMLElement>('.faq-acc__indicator');
+        btn.setAttribute('aria-expanded', 'true');
+        if (ans) ans.setAttribute('aria-hidden', 'false');
+        if (ind) ind.textContent = '−';
+      }
+    });
+  });
+</script>

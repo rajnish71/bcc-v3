@@ -32,8 +32,14 @@ interface Props {
   // Stats band (optional, for About style pages)
   stats?: StatItem[];
 
-  // Layout variants: 'standard' | 'overlay' | 'project' | 'home' | 'journal'
-  variant?: 'standard' | 'overlay' | 'project' | 'home' | 'journal';
+  // Layout variants: 'standard' | 'overlay' | 'project' | 'home' | 'journal' | 'join'
+  variant?: 'standard' | 'overlay' | 'project' | 'home' | 'journal' | 'join';
+
+  // Join variant CTAs
+  joinPrimaryText?: string;
+  joinPrimaryHref?: string;
+  joinSecondaryText?: string;
+  joinSecondaryHref?: string;
 
   // Home variant CTAs
   primaryCtaText?: string;
@@ -55,6 +61,10 @@ const {
   primaryCtaHref = '/join/',
   secondaryCtaText = 'Browse the Gallery',
   secondaryCtaHref = '/showcase/',
+  joinPrimaryText = 'Explore Memberships',
+  joinPrimaryHref = '#choose-membership',
+  joinSecondaryText = 'See Membership Options',
+  joinSecondaryHref = '#compare',
 } = Astro.props;
 ---
 
@@ -204,6 +214,49 @@ const {
         <div class="ph-credit" id="page-hero-credit" style="display: none;">
           <span class="ph-credit-label">Photo by</span>
           <a class="ph-credit-name" id="page-hero-credit-name" href="#"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* ── Join — dark split: text left 56%, photo right 44% ── */}
+{variant === 'join' && (
+  <div class="join-hero" id="page-hero-container">
+    <div class="join-hero__split">
+      <div class="join-hero__accent-line" aria-hidden="true"></div>
+      {/* Text panel */}
+      <div class="join-hero__text">
+        <div class="join-hero__kicker">
+          <span class="join-hero__kicker-line" aria-hidden="true"></span>
+          <span>Bhopal Camera Club · Membership</span>
+        </div>
+        <h1 class="join-hero__heading">{title}</h1>
+        <p class="join-hero__body">{subtitle}</p>
+        <div class="join-hero__ctas">
+          <a href={joinPrimaryHref} class="join-hero__cta-primary">{joinPrimaryText}</a>
+          <a href={joinSecondaryHref} class="join-hero__cta-secondary">{joinSecondaryText}</a>
+        </div>
+        <div class="join-hero__credit-bar">
+          <div class="join-hero__credit" id="join-hero-credit" style="display:none;">
+            <span class="join-hero__credit-label">Photo ·</span>
+            <a class="join-hero__credit-name" id="join-hero-credit-name" href="#"></a>
+          </div>
+        </div>
+      </div>
+      {/* Photo panel */}
+      <div class="join-hero__photo" aria-hidden="true">
+        <div class="join-hero__photo-placeholder" id="join-hero-fallback"></div>
+        <img
+          id="join-hero-img"
+          src=""
+          alt="BCC community photography"
+          class="join-hero__img"
+          loading="eager"
+          decoding="async"
+        />
+        <div class="join-hero__photo-annotation">
+          <span>PageHero · Join variant · Hero Assignment Architecture</span>
         </div>
       </div>
     </div>
@@ -840,5 +893,247 @@ a.ph-credit-name:hover {
 @media (max-width: 480px) {
   .ph-hero          { min-height: 360px; }
   .ph-desc-proj     { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   JOIN VARIANT — dark split: text left 56%, photo right 44%
+   ═══════════════════════════════════════════════════════════════ */
+.join-hero {
+  padding-top: var(--nav-h);
+  background: #141210;
+}
+
+.join-hero__split {
+  display: flex;
+  min-height: 520px;
+  position: relative;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+.join-hero__accent-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C9A961, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Text panel — 56% */
+.join-hero__text {
+  flex: 0 0 56%;
+  padding: 80px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.join-hero__kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 600;
+}
+.join-hero__kicker-line {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--gold-600);
+  flex-shrink: 0;
+}
+
+.join-hero__heading {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 5.5vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+  color: #FAF8F4;
+  margin-bottom: 28px;
+}
+
+.join-hero__body {
+  font-size: 18px;
+  line-height: 1.75;
+  color: #C8C0B8;
+  font-weight: 300;
+  max-width: 420px;
+  margin-bottom: 40px;
+}
+
+.join-hero__ctas {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.join-hero__cta-primary {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--gold-gradient);
+  color: #FFFFFF;
+  padding: 16px 32px;
+  border-radius: 2px;
+  text-decoration: none;
+  box-shadow: var(--gold-gradient-glow);
+  transition: opacity 0.2s ease;
+}
+.join-hero__cta-primary:hover { opacity: 0.9; color: #FFFFFF; }
+
+.join-hero__cta-secondary {
+  font-size: 13px;
+  font-weight: 500;
+  color: #C8C0B8;
+  padding: 16px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+.join-hero__cta-secondary:hover { background: rgba(255, 255, 255, 0.08); color: #FAF8F4; }
+
+.join-hero__credit-bar {
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.join-hero__credit {
+  align-items: center;
+  gap: 6px;
+}
+.join-hero__credit-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.join-hero__credit-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  letter-spacing: 0.06em;
+}
+.join-hero__credit-name:hover { color: var(--gold-light); }
+
+/* Photo panel — 44% */
+.join-hero__photo {
+  flex: 1;
+  position: relative;
+  border-left: 1px solid rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.join-hero__photo-placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    #1E1C1A 0px, #1E1C1A 2px,
+    #141210 2px, #141210 14px
+  );
+}
+
+.join-hero__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.join-hero__img.loaded {
+  opacity: 1;
+}
+
+.join-hero__photo-annotation {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  display: none; /* hidden in production */
+}
+
+/* Tablet (≤900px): photo above, text below */
+@media (max-width: 900px) {
+  .join-hero__split {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .join-hero__photo {
+    height: 240px;
+    flex: none;
+    border-left: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .join-hero__photo-placeholder {
+    position: absolute; /* stays absolute inside fixed-height container */
+  }
+  .join-hero__text {
+    flex: none;
+    padding: 48px 40px 56px;
+  }
+  .join-hero__heading {
+    font-size: clamp(40px, 6vw, 52px);
+    line-height: 0.95;
+  }
+  .join-hero__body {
+    font-size: 16px;
+    max-width: 100%;
+    margin-bottom: 32px;
+  }
+  .join-hero__ctas {
+    gap: 12px;
+  }
+}
+
+/* Mobile (≤480px): full-width stacked, full-width CTAs */
+@media (max-width: 480px) {
+  .join-hero__photo {
+    height: 200px;
+  }
+  .join-hero__text {
+    padding: 32px 20px 40px;
+  }
+  .join-hero__kicker {
+    margin-bottom: 20px;
+  }
+  .join-hero__heading {
+    font-size: 40px;
+    margin-bottom: 16px;
+  }
+  .join-hero__body {
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+  .join-hero__cta-primary,
+  .join-hero__cta-secondary {
+    width: 100%;
+    text-align: center;
+    display: block;
+  }
+  .join-hero__ctas {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .join-hero__credit-bar {
+    margin-top: 32px;
+    padding-top: 20px;
+  }
 }
 </style>

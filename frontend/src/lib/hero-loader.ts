@@ -50,6 +50,44 @@ export async function loadPageHero(locationKey: string) {
 }
 
 /**
+ * Join page hero loader — uses Hero Assignment Architecture.
+ * Canonical destination key: 'membership' (registered in hero-destinations.config.ts).
+ * Loads a community photography image into the right panel of the join split hero.
+ */
+export async function loadJoinHero() {
+  try {
+    const res = await fetch('/api/v1/gallery/hero/location/membership');
+    if (!res.ok) return;
+    const photo = await res.json();
+    if (!photo?.urls) return;
+
+    const img = document.getElementById('join-hero-img') as HTMLImageElement | null;
+    if (img) {
+      img.src = photo.urls.original || photo.urls.medium || '';
+      img.alt = photo.title || 'BCC Community Photography';
+      img.addEventListener('load', () => {
+        img.classList.add('loaded');
+        document.getElementById('join-hero-fallback')?.remove();
+      }, { once: true });
+    }
+
+    if (photo.photographer?.name) {
+      const creditContainer = document.getElementById('join-hero-credit');
+      const creditName = document.getElementById('join-hero-credit-name') as HTMLAnchorElement | null;
+      if (creditName) {
+        creditName.textContent = photo.photographer.name;
+        if (photo.photographer.username) {
+          creditName.href = `/photographers/${photo.photographer.username}/`;
+        }
+      }
+      if (creditContainer) creditContainer.style.display = 'flex';
+    }
+  } catch (e) {
+    console.error('Failed to load join hero', e);
+  }
+}
+
+/**
  * Home page hero loader — uses Hero Assignment Architecture (heroManager.location("home")).
  * Tries /api/v1/gallery/hero/location/home first, falls back to /api/v1/gallery/spotlight.
  * Populates: home-hero-img, home-hero-kicker-text, home-hero-credit-name, home-hero-credit.

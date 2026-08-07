@@ -1,0 +1,167 @@
+---
+/**
+ * CommunityPhotoGrid — V6 15 Join · Section 02 Community in Action
+ *
+ * Justified editorial photo grid: 2 rows × 3 photographs.
+ * Extends JustifiedGrid (Showcase) pattern without lightbox trigger.
+ * Caption-bar only labelling. Slide-up caption on hover (0.4s cubic).
+ *
+ * Desktop:  2 rows × 3 photos, target height 220px / 200px, 2px dark gap
+ * Tablet:   2-column justified stack
+ * Mobile:   1-column photo stack
+ *
+ * New Component (minor) — §12 specification.
+ */
+
+interface Photo {
+  src?: string;
+  alt?: string;
+  label: string;
+  aspectRatio?: number; /* width / height, e.g. 3/2=1.5, 4/5=0.8, 16/9=1.78 */
+  destination?: string; /* canonical hero destination key for client-side loading */
+}
+
+interface Props {
+  row1: [Photo, Photo, Photo];
+  row2: [Photo, Photo, Photo];
+}
+
+const { row1, row2 } = Astro.props;
+---
+
+<div class="cpg">
+  <div class="cpg__row">
+    {row1.map(photo => (
+      <div
+        class="cpg__cell"
+        style={photo.aspectRatio ? `flex: ${photo.aspectRatio}` : ''}
+        data-destination={photo.destination || null}
+      >
+        {photo.src
+          ? <img src={photo.src} alt={photo.alt || photo.label} class="cpg__img" loading="lazy" decoding="async" />
+          : <div class="cpg__placeholder" aria-hidden="true"></div>
+        }
+        <div class="cpg__caption">
+          <span class="cpg__caption-label">{photo.label}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+  <div class="cpg__row cpg__row--2">
+    {row2.map(photo => (
+      <div
+        class="cpg__cell"
+        style={photo.aspectRatio ? `flex: ${photo.aspectRatio}` : ''}
+        data-destination={photo.destination || null}
+      >
+        {photo.src
+          ? <img src={photo.src} alt={photo.alt || photo.label} class="cpg__img" loading="lazy" decoding="async" />
+          : <div class="cpg__placeholder" aria-hidden="true"></div>
+        }
+        <div class="cpg__caption">
+          <span class="cpg__caption-label">{photo.label}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+.cpg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cpg__row {
+  display: flex;
+  gap: 2px;
+  height: 220px;
+}
+.cpg__row--2 {
+  height: 200px;
+}
+
+.cpg__cell {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #141210;
+  min-width: 0;
+}
+
+.cpg__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.cpg__cell:hover .cpg__img {
+  transform: scale(1.03);
+}
+
+.cpg__placeholder {
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    135deg,
+    #1E1C1A 0px,
+    #1E1C1A 2px,
+    #141210 2px,
+    #141210 12px
+  );
+}
+
+.cpg__caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(20, 18, 16, 0.75));
+  padding: 28px 16px 14px;
+  transform: translateY(0);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.cpg__caption-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+/* Tablet: 2-column */
+@media (max-width: 900px) and (min-width: 481px) {
+  .cpg__row {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 2px;
+  }
+  .cpg__row--2 {
+    height: auto;
+  }
+  .cpg__cell {
+    flex: 1 0 calc(50% - 1px) !important;
+    height: 180px;
+  }
+}
+
+/* Mobile: 1-column */
+@media (max-width: 480px) {
+  .cpg__row {
+    flex-direction: column;
+    height: auto;
+  }
+  .cpg__row--2 {
+    height: auto;
+  }
+  .cpg__cell {
+    flex: none !important;
+    width: 100%;
+    height: 200px;
+  }
+}
+</style>

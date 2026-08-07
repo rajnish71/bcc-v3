@@ -124,6 +124,41 @@ export class MembershipAdminController {
     return this.adminService.dispatchRenewalReminders();
   }
 
+  // ── Memberships by user (for admin assignment flows) ─────────────────────
+
+  @Get('admin/users/:userId/memberships')
+  @HttpCode(200)
+  @RequirePermissions('membership.record.view')
+  async membershipsByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.lifecycle.listForUser(userId);
+  }
+
+  // ── Expiry processing ─────────────────────────────────────────────────────
+
+  @Get('admin/expire-due')
+  @HttpCode(200)
+  @RequirePermissions('membership.record.view')
+  async listDueForExpiry() {
+    return this.lifecycle.listDueForExpiry();
+  }
+
+  @Post('admin/process-expiry')
+  @HttpCode(200)
+  @RequirePermissions('membership.lifecycle.activate')
+  async processExpiry(@CurrentUser() actor: AccessTokenPayload) {
+    const due = await this.lifecycle.listDueForExpiry();
+    const results: Array<{ id: number; status: string; message?: string }> = [];
+    for (const m of due) {
+      try {
+        await this.lifecycle.markExpired(Number(m.id), { type: 'ADMIN', userId: actor.sub });
+        results.push({ id: Number(m.id), status: 'expired' });
+      } catch (e: unknown) {
+        results.push({ id: Number(m.id), status: 'error', message: (e as Error).message });
+      }
+    }
+    return { processed: results.length, results };
+  }
+
   // ── Class change (upgrade / downgrade) ───────────────────────────────────
 
   @Post(':id/upgrade')

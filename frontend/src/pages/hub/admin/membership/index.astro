@@ -104,6 +104,114 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
       <div id="notifs-list"    class="data-table-wrap" hidden></div>
     </section>
 
+    <!-- 7: RENEWAL REMINDERS -->
+    <section class="admin-section" id="section-reminders">
+      <div class="section-kicker"><span class="kicker-rule"></span>Email Automation</div>
+      <h2 class="section-title">Renewal Reminders</h2>
+      <p class="section-hint">
+        Dispatches RENEWAL_REMINDER_30/_15/_7/_1 notifications to members expiring within
+        that many days. A 2-day dedup window prevents duplicate sends. Safe to run daily.
+      </p>
+
+      <div class="senior-actions-bar">
+        <button type="button" id="btn-send-reminders" class="btn-action">Dispatch Renewal Reminders</button>
+      </div>
+
+      <div id="reminders-loading"  class="state-loading"   hidden>Dispatching...</div>
+      <div id="reminders-error"    class="state-error"     hidden></div>
+      <div id="reminders-feedback" class="assign-feedback" hidden></div>
+    </section>
+
+    <!-- 8: EXPIRY PROCESSING -->
+    <section class="admin-section" id="section-expiry">
+      <div class="section-kicker"><span class="kicker-rule"></span>Lifecycle Management</div>
+      <h2 class="section-title">Expiry Processing</h2>
+      <p class="section-hint">
+        Marks overdue ACTIVE memberships as EXPIRED. Load the list to review before processing.
+      </p>
+
+      <div class="senior-actions-bar">
+        <button type="button" id="btn-load-due" class="btn-action">Load Overdue Memberships</button>
+        <button type="button" id="btn-process-expiry" class="btn-action btn-action--gold" hidden>Process All Expired</button>
+      </div>
+
+      <div id="expiry-loading"  class="state-loading"   hidden>Loading...</div>
+      <div id="expiry-empty"    class="state-empty"     hidden>No overdue memberships found.</div>
+      <div id="expiry-error"    class="state-error"     hidden></div>
+      <div id="expiry-feedback" class="assign-feedback" hidden></div>
+      <div id="expiry-list"     class="data-table-wrap" hidden></div>
+    </section>
+
+    <!-- 9: LEGACY STATUS ASSIGNMENT -->
+    <section class="admin-section" id="section-legacy">
+      <div class="section-kicker"><span class="kicker-rule"></span>Class Management</div>
+      <h2 class="section-title">Assign Legacy Status</h2>
+      <p class="section-hint">
+        Grandfathers an existing member into LEGACY_MEMBER class. LEGACY_MEMBER is a closed
+        class -- this admin pathway is the only route in.
+      </p>
+
+      <div class="member-search-box">
+        <input type="text" id="legacy-search-input" class="member-search-input"
+               placeholder="Search member by name or username..." autocomplete="off" />
+      </div>
+      <div id="legacy-search-results" class="search-results-list" hidden></div>
+
+      <div id="legacy-member-card" class="selected-member-card" hidden>
+        <div id="legacy-member-info"     class="selected-member-info"></div>
+        <div id="legacy-membership-info" class="selected-membership-info"></div>
+        <div class="assign-form-row">
+          <input type="text" id="legacy-reason" class="member-search-input"
+                 placeholder="Reason for legacy status assignment..." />
+          <button type="button" id="btn-assign-legacy" class="btn-action btn-action--gold">Assign Legacy Status</button>
+        </div>
+      </div>
+
+      <div id="legacy-error"    class="state-error"     hidden></div>
+      <div id="legacy-feedback" class="assign-feedback" hidden></div>
+    </section>
+
+    <!-- 10: HONORARY RECOGNITION ASSIGNMENT -->
+    <section class="admin-section" id="section-recog">
+      <div class="section-kicker"><span class="kicker-rule"></span>Recognition Management</div>
+      <h2 class="section-title">Assign Honorary Recognition</h2>
+      <p class="section-hint">
+        Assigns an honorary recognition to a member's active membership. Activates recognition
+        modifiers granting Legacy-equivalent entitlements per MEM-008.
+      </p>
+
+      <div class="member-search-box">
+        <input type="text" id="recog-search-input" class="member-search-input"
+               placeholder="Search member by name or username..." autocomplete="off" />
+      </div>
+      <div id="recog-search-results" class="search-results-list" hidden></div>
+
+      <div id="recog-member-card" class="selected-member-card" hidden>
+        <div id="recog-member-info"     class="selected-member-info"></div>
+        <div id="recog-membership-info" class="selected-membership-info"></div>
+        <div class="assign-form-col">
+          <label class="form-label">Recognition</label>
+          <select id="recog-code-select" class="recog-select">
+            <option value="HONORARY_MEMBER">HONORARY_MEMBER -- Legacy Benefits + Honorary Recognition</option>
+            <option value="HONORARY_MENTOR">HONORARY_MENTOR -- Legacy Benefits + Honorary Mentor Recognition</option>
+            <option value="HONORARY_GRANDMASTER">HONORARY_GRANDMASTER -- Legacy Benefits + Grandmaster Recognition</option>
+            <option value="HONORARY_SENIOR_MEMBER">HONORARY_SENIOR_MEMBER -- Senior Member Badge + Recognition</option>
+          </select>
+        </div>
+        <div class="assign-form-col">
+          <label class="form-label">Reason</label>
+          <input type="text" id="recog-reason" class="member-search-input"
+                 placeholder="Reason for honorary recognition..." />
+        </div>
+        <div class="assign-form-row">
+          <button type="button" id="btn-assign-recog" class="btn-action btn-action--gold">Assign Recognition</button>
+        </div>
+      </div>
+
+      <div id="recog-error"    class="state-error"     hidden></div>
+      <div id="recog-feedback" class="assign-feedback" hidden></div>
+    </section>
+
   </div>
 
 </HubLayout>
@@ -375,6 +483,105 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
 .tag-pill--purple { border-color: #a78bfa; color: #6d28d9; background: #f5f3ff; }
 .notif-active   { color: #059669; font-weight: 600; }
 .notif-inactive { color: var(--ink-300); }
+
+/* -- Member search + assignment forms -------------------------------- */
+.member-search-box {
+  display: flex;
+  align-items: center;
+}
+.member-search-input {
+  width: 100%;
+  max-width: 480px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 9px 14px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  outline: none;
+}
+.member-search-input:focus { border-color: var(--gold-600); }
+.search-results-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+  max-width: 480px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.search-result-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--surface-2); }
+.search-result-item__name {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.search-result-item__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-400);
+}
+.selected-member-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+  padding: 16px 20px;
+  max-width: 640px;
+}
+.selected-member-info {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-900);
+  font-weight: 600;
+}
+.selected-membership-info {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-600);
+  line-height: 1.7;
+}
+.assign-form-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.assign-form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+}
+.recog-select {
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  max-width: 520px;
+  outline: none;
+}
+.recog-select:focus { border-color: var(--gold-600); }
 </style>
 
 <script>
@@ -501,6 +708,9 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
       const classes = await apiFetch('/api/v1/membership/admin/classes');
       hide('classes-loading');
 
+      const legacyCls = classes.find(function(c) { return c.code === 'LEGACY_MEMBER'; });
+      if (legacyCls) legacyClassId = legacyCls.id;
+
       const list = document.getElementById('classes-list');
       if (!classes.length) {
         list.innerHTML = '<p class="state-empty">No classes found.</p>';
@@ -538,6 +748,9 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
       show('classes-error');
     }
   }
+
+  // legacyClassId captured when classes load — used by section ⑨
+  let legacyClassId = null;
 
   // ── ③ SENIOR STATUS ─────────────────────────────────────────────────
   let seniorEligible = [];
@@ -727,6 +940,255 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
       show('notifs-error');
     }
   }
+
+  // ── 7: RENEWAL REMINDERS ─────────────────────────────────────────
+  document.getElementById('btn-send-reminders').addEventListener('click', async function() {
+    var btn = document.getElementById('btn-send-reminders');
+    btn.disabled = true;
+    hide('reminders-error');
+    hide('reminders-feedback');
+    show('reminders-loading');
+    try {
+      var result = await apiFetch('/api/v1/membership/admin/renewal-reminders', { method: 'POST' });
+      hide('reminders-loading');
+      var fb = document.getElementById('reminders-feedback');
+      fb.innerHTML =
+        'Reminders dispatched: ' +
+        '<strong>' + (result.sent30 || 0) + '</strong> at 30d &nbsp; ' +
+        '<strong>' + (result.sent15 || 0) + '</strong> at 15d &nbsp; ' +
+        '<strong>' + (result.sent7  || 0) + '</strong> at 7d &nbsp; ' +
+        '<strong>' + (result.sent1  || 0) + '</strong> at 1d';
+      show('reminders-feedback');
+    } catch (e) {
+      hide('reminders-loading');
+      setText('reminders-error', e.message);
+      show('reminders-error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ── 8: EXPIRY PROCESSING ─────────────────────────────────────────
+  var dueForExpiry = [];
+
+  document.getElementById('btn-load-due').addEventListener('click', async function() {
+    hide('expiry-error');
+    hide('expiry-empty');
+    hide('expiry-list');
+    hide('expiry-feedback');
+    hide('btn-process-expiry');
+    show('expiry-loading');
+    try {
+      dueForExpiry = await apiFetch('/api/v1/membership/admin/expire-due');
+      hide('expiry-loading');
+      if (!dueForExpiry.length) { show('expiry-empty'); return; }
+      var wrap = document.getElementById('expiry-list');
+      wrap.innerHTML = '<table class="data-table">' +
+        '<thead><tr>' +
+          '<th>Member</th><th>Membership No.</th><th>Class</th><th>Expired</th>' +
+        '</tr></thead>' +
+        '<tbody>' + dueForExpiry.map(function(r) {
+          return '<tr>' +
+            '<td><div style="font-weight:600">' + (r.full_name || r.display_name || r.username || '') + '</div>' +
+            '<div class="mono" style="color:var(--ink-400)">' + (r.username || '') + '</div></td>' +
+            '<td class="mono">' + (r.membership_number || r.temp_number || '—') + '</td>' +
+            '<td>' + (r.class_name || r.class_code || '—') + '</td>' +
+            '<td class="mono">' + fmtDate(r.expires_at) + '</td>' +
+          '</tr>';
+        }).join('') + '</tbody></table>';
+      show('expiry-list');
+      show('btn-process-expiry');
+    } catch (e) {
+      hide('expiry-loading');
+      setText('expiry-error', e.message);
+      show('expiry-error');
+    }
+  });
+
+  document.getElementById('btn-process-expiry').addEventListener('click', async function() {
+    var btn = document.getElementById('btn-process-expiry');
+    btn.disabled = true;
+    hide('expiry-feedback');
+    hide('expiry-error');
+    try {
+      var result = await apiFetch('/api/v1/membership/admin/process-expiry', { method: 'POST' });
+      hide('expiry-list');
+      var fb = document.getElementById('expiry-feedback');
+      var ok = (result.results || []).filter(function(r) { return r.status === 'expired'; }).length;
+      var errs = (result.results || []).filter(function(r) { return r.status === 'error'; }).length;
+      fb.textContent = 'Processed ' + result.processed + ' membership(s): ' + ok + ' expired' + (errs ? ', ' + errs + ' error(s).' : '.');
+      show('expiry-feedback');
+      hide('btn-process-expiry');
+    } catch (e) {
+      setText('expiry-error', e.message);
+      show('expiry-error');
+      btn.disabled = false;
+    }
+  });
+
+  // ── 9 & 10: MEMBER SEARCH helper ─────────────────────────────────
+  function debounce(fn, ms) {
+    var timer;
+    return function() {
+      var args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(function() { fn.apply(null, args); }, ms);
+    };
+  }
+
+  function buildMemberSearchHandler(inputId, resultsId, onSelect) {
+    var input = document.getElementById(inputId);
+    var results = document.getElementById(resultsId);
+
+    input.addEventListener('input', debounce(async function() {
+      var q = input.value.trim();
+      if (q.length < 2) { results.hidden = true; results.innerHTML = ''; return; }
+      try {
+        var rows = await apiFetch('/api/v1/users/admin/search?q=' + encodeURIComponent(q));
+        if (!rows.length) { results.hidden = true; return; }
+        results.innerHTML = rows.map(function(u) {
+          return '<div class="search-result-item" data-user-id="' + u.id + '">' +
+            '<span class="search-result-item__name">' + (u.display_name || u.username) + '</span>' +
+            '<span class="search-result-item__meta">' + u.username + ' &middot; ' + (u.email || '') + '</span>' +
+          '</div>';
+        }).join('');
+        results.hidden = false;
+        results.querySelectorAll('.search-result-item').forEach(function(item) {
+          item.addEventListener('click', function() {
+            var userId = parseInt(item.getAttribute('data-user-id'), 10);
+            results.hidden = true;
+            input.value = item.querySelector('.search-result-item__name').textContent;
+            onSelect(userId, item);
+          });
+        });
+      } catch (e) {
+        results.hidden = true;
+      }
+    }, 350));
+
+    document.addEventListener('click', function(e) {
+      if (!results.contains(e.target) && e.target !== input) results.hidden = true;
+    });
+  }
+
+  async function loadMemberMemberships(userId) {
+    return apiFetch('/api/v1/membership/admin/users/' + userId + '/memberships');
+  }
+
+  function activeMembership(memberships) {
+    return (memberships || []).find(function(m) { return m.lifecycle_state === 'ACTIVE'; }) || null;
+  }
+
+  function membershipInfoHtml(m) {
+    if (!m) return '<span style="color:var(--input-error,#b91c1c)">No ACTIVE membership found for this member.</span>';
+    return [
+      'Membership #: <strong>' + (m.membership_number || m.temp_membership_number || '—') + '</strong>',
+      'Class: <strong>' + (m.class_name || m.class_code || '—') + '</strong>',
+      'State: <strong>' + m.lifecycle_state + '</strong>',
+      m.expires_at ? 'Expires: <strong>' + fmtDate(m.expires_at) + '</strong>' : '',
+    ].filter(Boolean).join(' &nbsp;&nbsp; ');
+  }
+
+  // ── 9: LEGACY STATUS ASSIGNMENT ──────────────────────────────────
+  var legacySelectedMembershipId = null;
+
+  buildMemberSearchHandler('legacy-search-input', 'legacy-search-results', async function(userId) {
+    hide('legacy-error');
+    hide('legacy-feedback');
+    legacySelectedMembershipId = null;
+    try {
+      var memberships = await loadMemberMemberships(userId);
+      var active = activeMembership(memberships);
+      legacySelectedMembershipId = active ? Number(active.id) : null;
+
+      setHtml('legacy-member-info', 'Selected member — user ID ' + userId);
+      setHtml('legacy-membership-info', membershipInfoHtml(active));
+      document.getElementById('btn-assign-legacy').disabled = !active;
+      show('legacy-member-card');
+    } catch (e) {
+      setText('legacy-error', 'Could not load memberships: ' + e.message);
+      show('legacy-error');
+    }
+  });
+
+  document.getElementById('btn-assign-legacy').addEventListener('click', async function() {
+    if (!legacySelectedMembershipId) return;
+    if (!legacyClassId) {
+      setText('legacy-error', 'LEGACY_MEMBER class not loaded yet — reload the page and try again.');
+      show('legacy-error');
+      return;
+    }
+    var btn = document.getElementById('btn-assign-legacy');
+    btn.disabled = true;
+    hide('legacy-error');
+    hide('legacy-feedback');
+    var reason = document.getElementById('legacy-reason').value.trim() || 'Legacy status assignment via admin console';
+    try {
+      await apiFetch('/api/v1/membership/' + legacySelectedMembershipId + '/upgrade', {
+        method: 'POST',
+        body: JSON.stringify({ newClassId: legacyClassId, reason: reason }),
+      });
+      var fb = document.getElementById('legacy-feedback');
+      fb.textContent = 'Legacy status assigned successfully.';
+      show('legacy-feedback');
+      hide('legacy-member-card');
+      legacySelectedMembershipId = null;
+      document.getElementById('legacy-search-input').value = '';
+    } catch (e) {
+      setText('legacy-error', 'Assignment failed: ' + e.message);
+      show('legacy-error');
+      btn.disabled = false;
+    }
+  });
+
+  // ── 10: HONORARY RECOGNITION ASSIGNMENT ──────────────────────────
+  var recogSelectedMembershipId = null;
+
+  buildMemberSearchHandler('recog-search-input', 'recog-search-results', async function(userId) {
+    hide('recog-error');
+    hide('recog-feedback');
+    recogSelectedMembershipId = null;
+    try {
+      var memberships = await loadMemberMemberships(userId);
+      var active = activeMembership(memberships);
+      recogSelectedMembershipId = active ? Number(active.id) : null;
+
+      setHtml('recog-member-info', 'Selected member — user ID ' + userId);
+      setHtml('recog-membership-info', membershipInfoHtml(active));
+      document.getElementById('btn-assign-recog').disabled = !active;
+      show('recog-member-card');
+    } catch (e) {
+      setText('recog-error', 'Could not load memberships: ' + e.message);
+      show('recog-error');
+    }
+  });
+
+  document.getElementById('btn-assign-recog').addEventListener('click', async function() {
+    if (!recogSelectedMembershipId) return;
+    var btn = document.getElementById('btn-assign-recog');
+    btn.disabled = true;
+    hide('recog-error');
+    hide('recog-feedback');
+    var recognitionCode = document.getElementById('recog-code-select').value;
+    var reason = document.getElementById('recog-reason').value.trim() || 'Honorary recognition assignment via admin console';
+    try {
+      await apiFetch('/api/v1/membership/recognitions/' + recogSelectedMembershipId + '/assign', {
+        method: 'POST',
+        body: JSON.stringify({ recognitionCode: recognitionCode, track: 'MANUAL', reason: reason }),
+      });
+      var fb = document.getElementById('recog-feedback');
+      fb.textContent = recognitionCode + ' assigned successfully.';
+      show('recog-feedback');
+      hide('recog-member-card');
+      recogSelectedMembershipId = null;
+      document.getElementById('recog-search-input').value = '';
+      document.getElementById('recog-reason').value = '';
+    } catch (e) {
+      setText('recog-error', 'Assignment failed: ' + e.message);
+      show('recog-error');
+      btn.disabled = false;
+    }
+  });
 
   // ── Bootstrap ─────────────────────────────────────────────────────
   loadStats();

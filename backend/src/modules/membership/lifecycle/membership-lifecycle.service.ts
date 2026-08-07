@@ -658,8 +658,11 @@ export class MembershipLifecycleService {
       .where('id', '=', newClassId)
       .executeTakeFirst();
     if (!newClass) throw new NotFoundException('Target membership class not found.');
-    if (newClass.is_closed) {
-      throw new ForbiddenException(`${newClass.name} is a closed class; no members can be moved into it.`);
+    // LEGACY_MEMBER is is_closed=TRUE to block self-apply, but admin class-change
+    // IS the canonical path for grandfathering existing members as Legacy. All
+    // other closed classes (FOUNDING_MEMBER) remain unconditionally blocked.
+    if (newClass.is_closed && newClass.code !== 'LEGACY_MEMBER') {
+      throw new ForbiddenException(`${newClass.name} is a closed constitutional class; no members can be moved into it.`);
     }
 
     const oldClass = await db

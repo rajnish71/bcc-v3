@@ -63,10 +63,13 @@ BEGIN
   DECLARE dup_number_count INT DEFAULT 0;
   DECLARE serial_suffix_mismatch_count INT DEFAULT 0;
 
-  -- Gate 1: Check prefix alignment against join_year and join_month
+  -- Gate 1: Check prefix alignment against join_year and join_month.
+  -- Founding members (serials 1-7) are exempt: their physical join dates may
+  -- predate the November 2019 batch in which their numbers were formally assigned.
   SELECT COUNT(*) INTO mismatch_count
   FROM memberships
   WHERE membership_number IS NOT NULL
+    AND number_serial > 7
     AND LEFT(SUBSTRING(membership_number, 4), 6)
         <> CONCAT(
               join_year,

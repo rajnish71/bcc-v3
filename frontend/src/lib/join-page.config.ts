@@ -138,7 +138,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Monthly newsletter',
       'Community forum access',
     ],
-    ctaHref: '/auth/register/',
+    ctaHref: '/membership',
   },
   {
     id: 'student',
@@ -155,7 +155,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Mentorship programme',
       'Digital membership card',
     ],
-    ctaHref: '/auth/register/',
+    ctaHref: '/membership',
   },
   {
     id: 'individual',
@@ -173,7 +173,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Priority workshop booking',
       'Digital + physical membership card',
     ],
-    ctaHref: '/auth/register/',
+    ctaHref: '/membership',
   },
   {
     id: 'family',
@@ -189,7 +189,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Joint activity registrations',
       'Family photowalk priority',
     ],
-    ctaHref: '/auth/register/',
+    ctaHref: '/membership',
   },
   {
     id: 'corporate',
@@ -206,7 +206,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Event sponsorship priority',
       'Annual impact report',
     ],
-    ctaHref: '/auth/register/',
+    ctaHref: '/membership',
   },
 ];
 

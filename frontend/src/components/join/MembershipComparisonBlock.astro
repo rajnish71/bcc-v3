@@ -32,9 +32,10 @@ interface Tier {
 
 interface Props {
   tiers: Tier[];
+  ctaLabel?: string;
 }
 
-const { tiers } = Astro.props;
+const { tiers, ctaLabel = 'Become a Member' } = Astro.props;
 ---
 
 <div class="mcb">
@@ -77,7 +78,7 @@ const { tiers } = Astro.props;
           tabindex="-1"
           aria-hidden="true"
         >
-          Become a Member
+          {ctaLabel}
         </a>
       </div>
     </div>

@@ -1,0 +1,152 @@
+---
+/**
+ * membership.astro — Public membership acquisition entry point · /membership
+ *
+ * Orchestration step between /join (discovery) and /auth/register (identity creation).
+ * Visitors select a plan here; the selected plan is passed as ?plan= to /auth/register.
+ *
+ * MEM-006 PUBLIC DOMAIN POLICY:
+ * Only operational classes are shown: Basic · Student · Individual · Family · Corporate.
+ * Full · Life · Patron · Founding NEVER appear on this page.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MembershipComparisonBlock from '../components/join/MembershipComparisonBlock.astro';
+import { PUBLIC_TIERS } from '../lib/join-page.config';
+
+const acquisitionTiers = PUBLIC_TIERS.map(tier => ({
+  ...tier,
+  ctaHref: `/auth/register?plan=${tier.id}`,
+}));
+---
+
+<BaseLayout
+  title="Choose Your Membership — Bhopal Camera Club"
+  description="Select the membership that suits you. Basic, Student, Individual, Family, and Corporate memberships available. Photography is richer when shared."
+>
+
+  <!-- Page intro -->
+  <section class="mem-intro">
+    <div class="mem-container">
+      <div class="mem-eyebrow-row">
+        <span class="mem-eyebrow-line" aria-hidden="true"></span>
+        <span class="mem-eyebrow">Bhopal Camera Club · Membership</span>
+      </div>
+      <h1 class="mem-heading">Choose Your Membership</h1>
+      <p class="mem-body">
+        Select the membership that suits you. Click any row to see the benefits,
+        then continue to create your account.
+      </p>
+    </div>
+  </section>
+
+  <!-- Plan comparison -->
+  <section class="mem-plans" aria-label="Membership Plans">
+    <div class="mem-container">
+      <MembershipComparisonBlock tiers={acquisitionTiers} ctaLabel="Continue →" />
+      <p class="mem-note">
+        Already have an account?
+        <a href="/auth/signin" class="mem-note__link">Sign in</a>
+      </p>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+.mem-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.mem-intro {
+  padding: 72px 0 48px;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.mem-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+.mem-eyebrow-line {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--gold-600);
+  flex-shrink: 0;
+}
+.mem-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+}
+
+.mem-heading {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink-900);
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.mem-body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink-600);
+  font-weight: 300;
+  max-width: 540px;
+}
+
+.mem-plans {
+  padding: 64px 0 96px;
+  background: var(--surface-1);
+}
+
+.mem-note {
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--ink-400);
+  text-align: center;
+}
+.mem-note__link {
+  color: var(--gold-600);
+  text-decoration: none;
+  font-weight: 500;
+}
+.mem-note__link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .mem-container {
+    padding: 0 40px;
+  }
+  .mem-intro {
+    padding: 56px 0 40px;
+  }
+  .mem-plans {
+    padding: 48px 0 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mem-container {
+    padding: 0 20px;
+  }
+  .mem-intro {
+    padding: 40px 0 32px;
+  }
+  .mem-plans {
+    padding: 40px 0 56px;
+  }
+}
+</style>

@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "description": "PLATFORM-BOOT-001 category manifest — governs bootstrap runner modes",
+  "categories": {
+    "A": "Schema — structural migrations safe for fresh installation",
+    "B": "Canonical Seeds — core operational data required for platform operation",
+    "C": "Reference Seeds — reference and sample data",
+    "D": "Historical Data — legacy imports, corrections, backfills (production import only)",
+    "E": "Verification — read-only audit queries, never modifies data"
+  },
+  "migrations": {
+    "D": [
+      "0042_populate_users_tagline.sql",
+      "0043_populate_user_cover_photos.sql",
+      "0044_populate_photo_titles_and_awards.sql",
+      "0050_populate_name_parts_from_legacy.sql",
+      "0054_seed_demo_activities.sql",
+      "0055_backfill_photo_dimensions.sql",
+      "0074_canonicalize_phone_numbers.sql",
+      "0078_historical_membership_number_migration.sql",
+      "0079_fix_0078_complete_skipped_steps.sql",
+      "0079_revision_2_permanent_membership_number_reconciliation.sql",
+      "0080_activate_ashok_khalid_prashant.sql",
+      "0080_legacy_member_upgrade.sql",
+      "0081_fix_ashok_prashant_missing_memberships.sql"
+    ],
+    "E": [
+      "0078_verification_queries.sql"
+    ]
+  },
+  "verification": {
+    "E": [
+      "database/migrations/0078_verification_queries.sql",
+      "scripts/audit.sql",
+      "scripts/validation.sql",
+      "scripts/stats.sql"
+    ]
+  }
+}

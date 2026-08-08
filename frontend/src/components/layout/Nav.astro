@@ -20,7 +20,7 @@
  *   localStorage 'bcc_token' = JWT access token string               -- set on sign-in
  *   Auth pages must write BOTH keys on successful authentication.
  *
- * MEM-006 P1 note: "Become a Member" -> /join -> that page explains the Register ->
+ * MEM-006 P1 note: "Become a Member" -> /membership -> that page explains the Register ->
  * Apply distinction. The nav CTA is the top-of-funnel entry point; it does not
  * collapse the two steps into one.
  */
@@ -160,7 +160,7 @@ const NAV_LINKS = [
         <!-- Guest state (default, server-rendered) -->
         <div id="nav-guest" class="nav-auth__guest">
           <a href="/auth/signin/" class="nav-signin">Sign In</a>
-          <a href="/join/" class="btn btn-gold btn-md">Become a Member</a>
+          <a href="/membership/" class="btn btn-gold btn-md">Become a Member</a>
         </div>
 
         <!-- Member state (hidden until client confirms JWT) -->
@@ -235,7 +235,7 @@ const NAV_LINKS = [
         <!-- Mobile Right Rail Auth Elements (visible only on mobile breakpoint) -->
         <div class="nav-mobile-auth" id="nav-mobile-auth">
           <!-- Mobile Guest: Join Chip -->
-          <a href="/join/" class="mobile-join-chip" id="mobile-join-chip" hidden>Join</a>
+          <a href="/membership/" class="mobile-join-chip" id="mobile-join-chip" hidden>Join</a>
 
           <!-- Mobile Admin: Console Chip -->
           <span class="mobile-console-chip" id="mobile-console-chip" hidden>Console</span>
@@ -313,7 +313,7 @@ const NAV_LINKS = [
 
       <div id="drawer-guest" class="drawer__auth-guest">
         <a href="/auth/signin/" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;">Sign In</a>
-        <a href="/join/" class="btn btn-gold btn-lg" style="width:100%;justify-content:center;margin-top:8px;">Become a Member</a>
+        <a href="/membership/" class="btn btn-gold btn-lg" style="width:100%;justify-content:center;margin-top:8px;">Become a Member</a>
       </div>
 
       <div id="drawer-member" class="drawer__auth-member" hidden>

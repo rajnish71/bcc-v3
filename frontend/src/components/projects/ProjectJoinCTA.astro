@@ -4,7 +4,7 @@
  * V6 40 §10 — Join This Project
  * Always rendered. Content changes based on visitor auth/membership state.
  *
- * Guest   → "Become a Member" — gold gradient → /join
+ * Guest   → "Become a Member" — gold gradient → /membership
  * User    → "Apply for Membership" — dark button → /hub/membership/apply
  * Member  → "Upload a Photograph" — gold gradient → /hub/upload?project={slug}
  *
@@ -26,7 +26,7 @@ const { slug } = Astro.props;
   bodyId="pjcta-desc"
   ariaLabel="Join this project"
 >
-  <a class="pjcta-btn" id="pjcta-btn" href="/join">Become a Member</a>
+  <a class="pjcta-btn" id="pjcta-btn" href="/membership/">Become a Member</a>
 </CTASection>
 
 <script define:vars={{ slug }}>

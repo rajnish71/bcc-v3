@@ -1320,3 +1320,36 @@ describe('Zero-value contributions cannot reach markSettlementAttemptFailed() (S
     expect(body).not.toContain('this.provider.createOrder');
   });
 });
+
+// ── financial_event_outbox.metadata JSON serialization (Step 22B) ─────────
+//
+// Same defect class as razorpay-webhook.service.ts claimInboxRow(): mysql2
+// does not auto-serialize a bound JS object parameter, so an un-stringified
+// metadata object becomes the literal string "[object Object]" and fails
+// this JSON column's validation on INSERT. Discovered live when replaying
+// the Step 22B captured-payment webhook: issueReceipt() -> insertOutboxRow()
+// crashed with ER_INVALID_JSON_TEXT on financial_event_outbox.metadata,
+// rolling back the whole recordSettlementOutcome() transaction (Financial
+// Transaction + Receipt never persisted -- confirmed no partial write).
+
+describe('insertOutboxRow() JSON metadata serialization (Step 22B)', () => {
+  it('stringifies a non-undefined metadata object before insertInto', () => {
+    const methodStart = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('private async insertOutboxRow(');
+    const methodBody = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(
+      methodStart,
+      FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('.executeTakeFirstOrThrow();', methodStart),
+    );
+    expect(methodBody).toMatch(/metadata:\s*args\.metadata\s*!==\s*undefined\s*\?\s*JSON\.stringify\(args\.metadata\)\s*:\s*null/);
+  });
+
+  it('the in-process FinancialEventBus payload still receives the raw (unstringified) metadata object, not the DB string', () => {
+    const methodStart = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('private async insertOutboxRow(');
+    const methodEnd = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('private async publishPending(');
+    const methodBody = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(methodStart, methodEnd);
+    expect(methodBody).toMatch(/metadata:\s*args\.metadata,/);
+  });
+
+  it('issueReceipt() calls insertOutboxRow() with a real metadata object (the exact call that crashed pre-fix)', () => {
+    expect(FINANCIAL_CONTRIBUTION_SERVICE_SRC).toContain('metadata: { receiptId, receiptNumber }');
+  });
+});

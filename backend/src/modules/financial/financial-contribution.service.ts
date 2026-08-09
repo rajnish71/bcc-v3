@@ -1043,7 +1043,11 @@ export class FinancialContributionService {
         amount_paise: args.amountPaise,
         currency: args.currency,
         contribution_state: args.contributionState,
-        metadata: args.metadata ?? null,
+        // mysql2 does not auto-serialize a bound JS object parameter -- an
+        // un-stringified object becomes the literal string "[object Object]",
+        // which fails this JSON column's validation (CLAUDE.md §5.7 / same
+        // fix as razorpay-webhook.service.ts claimInboxRow()).
+        metadata: args.metadata !== undefined ? JSON.stringify(args.metadata) : null,
         occurred_at: toMysqlDatetime(occurredAt),
       })
       .executeTakeFirstOrThrow();

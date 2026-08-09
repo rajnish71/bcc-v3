@@ -33,6 +33,7 @@ import { randomUUID } from 'crypto';
 import type { Selectable } from 'kysely';
 import { db, MembershipsTable } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
+import { FinancialContributionService } from '../../financial/financial-contribution.service';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
@@ -58,6 +59,7 @@ export class MembershipLifecycleService {
     private readonly numberingService: MembershipNumberingService,
     private readonly communicationService: CommunicationService,
     private readonly entitlementService: EntitlementService,
+    private readonly financialService: FinancialContributionService,
   ) {}
 
   // Renewal policy (confirmed this session): renewable classes carry
@@ -296,6 +298,48 @@ export class MembershipLifecycleService {
         await this.activate(membershipId, { type: 'SYSTEM' });
         return { finalState: 'ACTIVE' };
       }
+
+      if (cls?.activation_mode === 'PAYMENT_REQUIRED') {
+        // Authoritative membership fee from class_entitlements.fee_inr (layer 1 only).
+        // Administrators change this at runtime via the entitlements API; no code
+        // change required. Missing fee_inr is treated as ₹0 (waived).
+        const feeInrRaw = await this.entitlementService.getClassConfigValue(
+          membership.membership_class_id,
+          'fee_inr',
+        );
+        const amountPaise = feeInrRaw ? Math.round(parseFloat(feeInrRaw) * 100) : 0;
+
+        const idempotencyKey = `MEMBERSHIP-${membershipId}-CONTRIBUTION`;
+        const { id: contributionId } = await this.financialService.createContribution({
+          payerUserId: Number(membership.user_id!),
+          businessModule: 'MEMBERSHIP',
+          businessReferenceId: membershipId,
+          purpose: 'Membership fee',
+          amountPaise,
+          idempotencyKey,
+        });
+
+        await db
+          .updateTable('memberships')
+          .set({ pending_contribution_id: contributionId })
+          .where('id', '=', membershipId)
+          .execute();
+
+        if (amountPaise === 0) {
+          // Zero-value path (PAY-001 §12): completes immediately without a
+          // Settlement Provider. MembershipFinancialListener receives
+          // CONTRIBUTION_COMPLETED and calls activate(). Approval email
+          // suppressed here to avoid double notification on immediate-completion path.
+          await this.financialService.processZeroValueContribution(contributionId);
+        } else {
+          // Positive-value path: contribution awaits a Settlement Provider.
+          // Razorpay integration is implemented in a future step; the contribution
+          // moves to AWAITING_SETTLEMENT and stays until the gateway resolves.
+          await this.financialService.transitionContribution(contributionId, 'AWAITING_SETTLEMENT');
+        }
+
+        return { finalState: 'APPROVED' };
+      }
     }
 
     await this.notifyMember(membership, 'MEMBERSHIP_APPLICATION_APPROVED');
@@ -354,7 +398,7 @@ export class MembershipLifecycleService {
           activated_at: toMysqlDatetime(now),
           expires_at: expiresAt,
           last_payment_status: opts?.paymentId ? 'SUCCEEDED' : 'NONE',
-          pending_payment_id: null,
+          pending_contribution_id: null,
         })
         .where('id', '=', membershipId)
         .execute();
@@ -411,13 +455,18 @@ export class MembershipLifecycleService {
   // ======================================================================
   // APPROVED -- payment failure (stays APPROVED; MEM-007: no number
   // assignment happens on this path)
+  //
+  // failedAmountPaise: supplied by MembershipFinancialListener from the
+  // Financial Engine event payload (no direct financial table query needed).
+  // When called from the admin endpoint without an amount, the notification
+  // omits the amount variable.
   // ======================================================================
-  async recordPaymentFailure(membershipId: number, notes?: string): Promise<void> {
+  async recordPaymentFailure(membershipId: number, failedAmountPaise?: number, notes?: string): Promise<void> {
     const membership = await this.requireState(membershipId, ['APPROVED']);
 
     await db
       .updateTable('memberships')
-      .set({ last_payment_status: 'FAILED', pending_payment_id: null })
+      .set({ last_payment_status: 'FAILED', pending_contribution_id: null })
       .where('id', '=', membershipId)
       .execute();
 
@@ -428,7 +477,9 @@ export class MembershipLifecycleService {
       notes: notes ?? null,
     });
 
-    const failedAmount = await this.resolvePaymentAmount(membership.pending_payment_id);
+    const failedAmount = failedAmountPaise != null
+      ? String(Math.round(failedAmountPaise / 100))
+      : '';
     await this.notifyMember(membership, 'PAYMENT_FAILED', {
       amount: failedAmount,
     });
@@ -798,17 +849,6 @@ export class MembershipLifecycleService {
       { full_name: fullName, membership_class: membershipClass, ...extraVars },
       options,
     );
-  }
-
-  // Looks up amount_paise from the payments table for PAYMENT_FAILED variables.
-  private async resolvePaymentAmount(paymentId: number | null): Promise<string> {
-    if (!paymentId) return '';
-    const payment = await db
-      .selectFrom('payments')
-      .select('amount_paise')
-      .where('id', '=', paymentId)
-      .executeTakeFirst();
-    return payment ? String(Math.round(payment.amount_paise / 100)) : '';
   }
 
   private async groupPrimaryContact(groupEntityId: number | null): Promise<number | null> {

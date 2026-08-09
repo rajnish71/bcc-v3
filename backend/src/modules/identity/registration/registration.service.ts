@@ -346,6 +346,8 @@ export class RegistrationService {
       return { user: this.rowToPublicUser(existingByEmail), tokens, wasNewUser: false };
     }
 
+    // Wrap user creation + identity link in a transaction so a partial failure
+    // does not leave an orphaned user row with no auth_identity.
     const { id, uuid } = await this.createBaselineUser({
       email: dto.email,
       phone: null,
@@ -357,10 +359,16 @@ export class RegistrationService {
       phoneVerifiedNow: false,
     });
 
-    await db
-      .insertInto('auth_identities')
-      .values({ user_id: id, provider: dto.provider, provider_user_id: dto.providerUserId })
-      .execute();
+    try {
+      await db
+        .insertInto('auth_identities')
+        .values({ user_id: id, provider: dto.provider, provider_user_id: dto.providerUserId })
+        .execute();
+    } catch (err) {
+      // auth_identity insert failed — remove the just-created user to prevent an orphan.
+      await db.deleteFrom('users').where('id', '=', id).execute().catch(() => {});
+      throw err;
+    }
 
     const tokens = await this.authService.issueSessionForUser(id, uuid, 'ACTIVE', device);
     return { user: await this.toPublicUser(id), tokens, wasNewUser: true };

@@ -9,6 +9,11 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({ trustProxy: true }),
+    // rawBody: true exposes req.rawBody (Buffer) alongside normal JSON body
+    // parsing -- required by the Razorpay webhook route (PAY-001 Step 19
+    // Part 3) to verify X-Razorpay-Signature against the exact bytes
+    // Razorpay signed. Every other route is unaffected.
+    { rawBody: true },
   );
   // NOTE: setGlobalPrefix is intentionally NOT set here.
   // All controllers declare their own full path including 'api/v1/...'

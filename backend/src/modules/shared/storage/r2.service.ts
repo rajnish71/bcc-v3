@@ -14,10 +14,15 @@
 // configured yet; only document upload endpoints hard-require it.
 
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const PRESIGN_TTL_SECONDS = 15 * 60;
+
+// Read URLs are for a human to open a private object in a browser tab right
+// now, not to hand out a durable link -- kept short deliberately, well below
+// the 15-minute upload TTL above.
+const PRESIGN_READ_TTL_SECONDS = 5 * 60;
 
 @Injectable()
 export class R2Service {
@@ -59,6 +64,15 @@ export class R2Service {
       ContentLength: contentLength,
     });
     return getSignedUrl(client, command, { expiresIn: PRESIGN_TTL_SECONDS });
+  }
+
+  // Presigned GET: a short-lived signed URL for reading a private object
+  // directly from R2. Callers resolve their own objectKey server-side --
+  // this method never trusts a client-supplied key.
+  async presignRead(objectKey: string, expiresInSeconds: number = PRESIGN_READ_TTL_SECONDS): Promise<string> {
+    const client = this.ensureClient();
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: objectKey });
+    return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
   }
 
   // HEAD after client-side upload: confirms the object actually exists and

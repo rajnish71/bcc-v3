@@ -4,6 +4,8 @@ import { AuthModule } from '../identity/auth/auth.module';
 import { RbacModule } from '../identity/rbac/rbac.module';
 import { CommunicationModule } from '../shared/communication/communication.module';
 import { StorageModule } from '../shared/storage/storage.module';
+import { FinancialModule } from '../financial/financial.module';
+import { MembershipFinancialListener } from './financial/membership-financial.listener';
 import { MembershipNumberingService } from './numbering/membership-numbering.service';
 import { MembershipLifecycleService } from './lifecycle/membership-lifecycle.service';
 import { EntitlementService } from './entitlements/entitlement.service';
@@ -26,7 +28,7 @@ import { MembershipAdminService } from './admin/membership-admin.service';
 import { MembershipAdminController } from './admin/membership-admin.controller';
 
 @Module({
-  imports: [AuthModule, RbacModule, CommunicationModule, StorageModule],
+  imports: [AuthModule, RbacModule, CommunicationModule, StorageModule, FinancialModule],
   controllers: [
     EntitlementController,
     RecognitionController,
@@ -40,6 +42,7 @@ import { MembershipAdminController } from './admin/membership-admin.controller';
     MembershipAdminController,
   ],
   providers: [
+    MembershipFinancialListener,
     MembershipNumberingService,
     MembershipLifecycleService,
     EntitlementService,

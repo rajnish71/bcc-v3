@@ -1,5 +1,9 @@
 import { Kysely, MysqlDialect, Generated, ColumnType } from 'kysely';
 import { createPool } from 'mysql2';
+import type {
+  ContributionState,
+  TransactionOutcome,
+} from '../modules/financial/financial.types';
 
 // ---------------------------------------------------------------------------
 // Helper: nullable column with no DB DEFAULT (NULL is the implicit default).
@@ -336,7 +340,7 @@ export interface MembershipsTable {
   card_verify_token: string | null;
   number_assigned_at: ColumnType<Date | null, string | null, string | null>;
   last_payment_status: Generated<'NONE' | 'PENDING' | 'FAILED' | 'SUCCEEDED'>;
-  pending_payment_id: number | null;
+  pending_contribution_id: number | null;
   applied_at: ColumnType<Date | null, string | null, string | null>;
   approved_at: ColumnType<Date | null, string | null, string | null>;
   activated_at: ColumnType<Date | null, string | null, string | null>;
@@ -451,21 +455,129 @@ export interface MembershipTempIdentifiersTable {
   retired_at: ColumnType<Date | null, string | null, string | null>;
 }
 
-export interface PaymentsTable {
+// ============================================================================
+// Financial Engine (PAY-001) — migration 0088
+// ContributionState and TransactionOutcome are imported from
+// modules/financial/financial.types.ts (single source of truth for values).
+// Re-exported here so callers can import DB types from a single location.
+// ============================================================================
+
+export type { ContributionState, TransactionOutcome };
+
+export interface FinancialContributionsTable {
   id: Generated<number>;
   uuid: string;
-  membership_id: number;
-  purpose: Generated<'MEMBERSHIP_FEE' | 'RENEWAL_FEE'>;
+  payer_user_id: number;
+  business_module: string;
+  business_reference_id: number;
+  purpose: string;
   amount_paise: number;
   currency: Generated<string>;
-  provider: 'RAZORPAY' | 'MANUAL';
-  provider_order_id: string | null;
-  provider_payment_id: string | null;
-  idempotency_key: string | null;
-  status: Generated<'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED'>;
-  recorded_by_user_id: number | null;
+  state: Generated<ContributionState>;
+  idempotency_key: string;
+  expires_at: ColumnType<Date | null, string | null, string | null>;
+  cancellation_reason: string | null;
+  // Migration 0091 (PAY-001 Step 18) -- the current settlement attempt's
+  // Settlement Provider order reference (e.g. a Razorpay order id).
+  // Meaningful only while state = 'SETTLEMENT_IN_PROGRESS'; NULL otherwise.
+  active_settlement_reference: Nullable<string>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
   updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface FinancialTransactionsTable {
+  id: Generated<number>;
+  uuid: string;
+  contribution_id: number;
+  provider: string;
+  provider_reference: string | null;
+  amount_paise: number;
+  currency: Generated<string>;
+  outcome: Generated<TransactionOutcome>;
+  failure_reason: string | null;
+  // No updated_at — Financial Transactions are immutable (PAY-001 Principle 10).
+  // Application code must never UPDATE rows in this table.
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+export interface ReceiptsTable {
+  id: Generated<number>;
+  uuid: string;
+  contribution_id: number;
+  receipt_number: string;
+  amount_paise: number;
+  currency: Generated<string>;
+  issued_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+// ============================================================================
+// Financial Settlement Evidence (PAY-001 Manual Settlement Foundation) --
+// migration 0089. Sub-canonical: represents a member's claim that payment
+// occurred, NOT an authoritative Financial Transaction. Mutable until
+// reviewed; append-only across resubmissions (a rejected row is never
+// reused -- a retry creates a new row).
+// ============================================================================
+
+// ============================================================================
+// Financial Event Outbox (PAY-001 Step 17 -- durable Business Event delivery)
+// -- migration 0090. NOT an audit log: a delivery/recovery mechanism only.
+// See financial-contribution.service.ts for the transactional write pattern
+// and the exact dispatched_at semantics.
+// ============================================================================
+
+export interface FinancialEventOutboxTable {
+  id: Generated<number>;
+  event_uuid: string;
+  event_type: string;
+  contribution_id: number;
+  business_module: string;
+  business_reference_id: number;
+  amount_paise: number;
+  currency: Generated<string>;
+  contribution_state: ContributionState;
+  metadata: Nullable<unknown>;
+  occurred_at: ColumnType<Date, string, string>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  dispatched_at: ColumnType<Date | null, string | null, string | null>;
+}
+
+// ============================================================================
+// Settlement Webhook Inbox (PAY-001 Step 19 -- durable INBOUND webhook
+// ingestion) -- migration 0092. The inbound counterpart to
+// FinancialEventOutboxTable (outbound); the two are never combined. See
+// razorpay-webhook.service.ts for the claim/dedup/processing pattern.
+// ============================================================================
+
+export interface SettlementWebhookInboxTable {
+  id: Generated<number>;
+  provider: string;
+  provider_event_id: string;
+  event_type: string;
+  payload: unknown;
+  contribution_id: Nullable<number>;
+  status: Generated<'RECEIVED' | 'PROCESSED' | 'FAILED'>;
+  processing_error: string | null;
+  received_at: Generated<ColumnType<Date, string | undefined, never>>;
+  processed_at: ColumnType<Date | null, string | null, string | null>;
+}
+
+export interface FinancialSettlementEvidenceTable {
+  id: Generated<number>;
+  uuid: string;
+  financial_contribution_id: number;
+  reference_identifier: string;
+  payment_date: ColumnType<Date, string, string>;
+  claimed_amount_paise: number;
+  proof_object_key: string | null;
+  proof_mime_type: string | null;
+  proof_size_bytes: number | null;
+  submitted_by_user_id: number;
+  submitted_at: Generated<ColumnType<Date, string | undefined, never>>;
+  review_status: Generated<'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'>;
+  review_note: string | null;
+  reviewed_by_user_id: number | null;
+  reviewed_at: ColumnType<Date | null, string | null, string | null>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
 
 // ============================================================================
@@ -968,7 +1080,12 @@ export interface DB {
   membership_number_pool: MembershipNumberPoolTable;
   membership_number_log: MembershipNumberLogTable;
   membership_temp_identifiers: MembershipTempIdentifiersTable;
-  payments: PaymentsTable;
+  financial_contributions: FinancialContributionsTable;
+  financial_transactions: FinancialTransactionsTable;
+  receipts: ReceiptsTable;
+  financial_settlement_evidence: FinancialSettlementEvidenceTable;
+  financial_event_outbox: FinancialEventOutboxTable;
+  settlement_webhook_inbox: SettlementWebhookInboxTable;
   membership_application_documents: MembershipApplicationDocumentsTable;
   membership_application_messages: MembershipApplicationMessagesTable;
   membership_approval_stages: MembershipApprovalStagesTable;

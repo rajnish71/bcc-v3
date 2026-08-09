@@ -261,9 +261,22 @@ import CheckboxField from '../../components/forms/CheckboxField.astro';
     }
   });
 
+  /* -- Persist selected plan from ?plan= param (localStorage so it
+       survives email verification links opening in new tabs) ----------- */
+  (function persistPlan(): void {
+    const allowed = new Set(['basic', 'student', 'individual']);
+    const planParam = new URLSearchParams(window.location.search).get('plan') ?? '';
+    const plan = allowed.has(planParam) ? planParam : '';
+    if (plan) {
+      localStorage.setItem('bcc_pending_plan', plan);
+    }
+  })();
+
   /* -- Social login ----------------------------------------------------- */
   async function startSocialLogin(provider: 'google' | 'facebook'): Promise<void> {
     hideError();
+    // Plan is already in sessionStorage (persisted above); it survives the
+    // OAuth redirect round-trip because sessionStorage is per-origin tab.
     try {
       const res = await fetch(`${API}/registration/social/${provider}/authorize-url`);
       if (!res.ok) throw new Error('Could not start social login.');

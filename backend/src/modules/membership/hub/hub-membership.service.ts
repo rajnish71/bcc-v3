@@ -22,21 +22,47 @@ import { randomUUID } from 'crypto';
 import { db } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import type { SubmitMembershipFormDto } from '../dto/submit-membership-form.dto';
+import { SELF_SERVICE_CLASS_CODES } from '../dto/submit-membership-form.dto';
 import { normalize, validate } from '../../shared/phone.util';
+import { FinancialContributionService } from '../../financial/financial-contribution.service';
 
 const BASIC_MEMBER_CODE = 'BASIC_MEMBER';
+const MEMBERSHIP_BUSINESS_MODULE = 'MEMBERSHIP';
+
+// A membership row can only be APPROVED-with-a-Contribution while that
+// Contribution is unresolved: activate() (fired by
+// MembershipFinancialListener on CONTRIBUTION_COMPLETED) flips the
+// membership row to ACTIVE in the same step that would otherwise mark the
+// Contribution COMPLETED, so a still-APPROVED row can never coexist with a
+// COMPLETED/REFUNDED Contribution. Any Contribution found here -- whatever
+// its state (AWAITING_SETTLEMENT / SETTLEMENT_IN_PROGRESS / FAILED /
+// ABANDONED / CANCELLED / EXPIRED) -- therefore means payment is still
+// outstanding for this membership.
+type PrefillApplicationStatus = 'NONE' | 'PENDING' | 'PAYMENT_REQUIRED' | 'ACTIVE';
 
 @Injectable()
 export class HubMembershipService {
+  constructor(private readonly financialService: FinancialContributionService) {}
 
   private async getBasicMemberClassId(): Promise<number> {
+    return this.getClassIdByCode(BASIC_MEMBER_CODE);
+  }
+
+  private async getClassIdByCode(code: string): Promise<number> {
     const cls = await db
       .selectFrom('membership_classes')
       .select('id')
-      .where('code', '=', BASIC_MEMBER_CODE)
+      .where('code', '=', code)
       .executeTakeFirst();
-    if (!cls) throw new NotFoundException('BASIC_MEMBER class not found in membership_classes');
+    if (!cls) throw new NotFoundException(`${code} class not found in membership_classes`);
     return cls.id;
+  }
+
+  private resolveClassCode(requestedCode: string | undefined): string {
+    if (requestedCode && (SELF_SERVICE_CLASS_CODES as readonly string[]).includes(requestedCode)) {
+      return requestedCode;
+    }
+    return BASIC_MEMBER_CODE;
   }
 
   private async getUserPrefill(userId: number) {
@@ -79,11 +105,15 @@ export class HubMembershipService {
       this.getActiveMembership(userId),
     ]);
 
-    let applicationStatus: 'NONE' | 'PENDING' | 'ACTIVE' = 'NONE';
+    let applicationStatus: PrefillApplicationStatus = 'NONE';
     let submittedAt: string | null = null;
+    let payment: Awaited<ReturnType<typeof this.getPendingPayment>> = null;
 
     if (existing) {
-      if (existing.lifecycle_state === 'ACTIVE' || existing.lifecycle_state === 'APPROVED') {
+      if (existing.lifecycle_state === 'APPROVED') {
+        payment = await this.getPendingPayment(existing.id);
+        applicationStatus = payment ? 'PAYMENT_REQUIRED' : 'ACTIVE';
+      } else if (existing.lifecycle_state === 'ACTIVE') {
         applicationStatus = 'ACTIVE';
       } else if (existing.lifecycle_state === 'PENDING') {
         applicationStatus = 'PENDING';
@@ -106,6 +136,30 @@ export class HubMembershipService {
       gender: user.gender ?? null,
       applicationStatus,
       submittedAt,
+      pendingContributionId: payment?.contributionId ?? null,
+      pendingContributionState: payment?.state ?? null,
+      pendingAmountPaise: payment?.amountPaise ?? null,
+      pendingCurrency: payment?.currency ?? null,
+    };
+  }
+
+  // Step 20: resolves the outstanding Financial Contribution (if any) for a
+  // membership row that is currently APPROVED. Looks the Contribution up by
+  // (business_module, business_reference_id) rather than trusting
+  // memberships.pending_contribution_id, which membership-lifecycle.service
+  // .ts's recordPaymentFailure() already nulls out on SETTLEMENT_FAILED even
+  // though the Contribution remains retryable (PAY-001 §6).
+  private async getPendingPayment(membershipId: number) {
+    const contribution = await this.financialService.findLatestForBusinessReference(
+      MEMBERSHIP_BUSINESS_MODULE,
+      membershipId,
+    );
+    if (!contribution) return null;
+    return {
+      contributionId: contribution.id,
+      state: contribution.state,
+      amountPaise: Number(contribution.amount_paise),
+      currency: contribution.currency,
     };
   }
 
@@ -133,7 +187,8 @@ export class HubMembershipService {
       throw new ConflictException('This phone number is already registered to another account');
     }
 
-    const classId = await this.getBasicMemberClassId();
+    const classCode = this.resolveClassCode(dto.membershipClassCode);
+    const classId = await this.getClassIdByCode(classCode);
     const membershipUuid = randomUUID();
     const now = toMysqlDatetime(new Date());
 
@@ -221,6 +276,26 @@ export class HubMembershipService {
 
     const user = await this.getUserPrefill(userId);
 
+    // A renewal in flight lives on its OWN membership row (submitRenewal()
+    // inserts a new PENDING row rather than mutating activeMembership above)
+    // -- same APPROVED-with-a-Contribution signal as the application flow,
+    // just queried against the most recent PENDING/APPROVED row instead.
+    const latestOwnRow = await db
+      .selectFrom('memberships')
+      .select(['id', 'lifecycle_state'])
+      .where('user_id', '=', userId)
+      .where('owner_type', '=', 'INDIVIDUAL')
+      .where('lifecycle_state', 'in', ['PENDING', 'APPROVED'])
+      .orderBy('created_at', 'desc')
+      .executeTakeFirst();
+
+    let applicationStatus: string = activeMembership.lifecycle_state as string;
+    let payment: Awaited<ReturnType<typeof this.getPendingPayment>> = null;
+    if (latestOwnRow && latestOwnRow.lifecycle_state === 'APPROVED') {
+      payment = await this.getPendingPayment(latestOwnRow.id);
+      if (payment) applicationStatus = 'PAYMENT_REQUIRED';
+    }
+
     return {
       fullName: user.full_name,
       email: user.email,
@@ -234,10 +309,14 @@ export class HubMembershipService {
         ? (user.date_of_birth as unknown as Date).toISOString().slice(0, 10)
         : null,
       gender: user.gender ?? null,
-      applicationStatus: activeMembership.lifecycle_state as string,
+      applicationStatus,
       expiresAt: expiresAt ? expiresAt.toISOString().slice(0, 10) : null,
       renewalEligible,
       projectedNewExpiry,
+      pendingContributionId: payment?.contributionId ?? null,
+      pendingContributionState: payment?.state ?? null,
+      pendingAmountPaise: payment?.amountPaise ?? null,
+      pendingCurrency: payment?.currency ?? null,
     };
   }
 
@@ -281,7 +360,8 @@ export class HubMembershipService {
       throw new ConflictException('This phone number is already registered to another account');
     }
 
-    const classId = await this.getBasicMemberClassId();
+    const classCode = this.resolveClassCode(dto.membershipClassCode);
+    const classId = await this.getClassIdByCode(classCode);
     const membershipUuid = randomUUID();
     const now = toMysqlDatetime(new Date());
 

@@ -1,5 +1,8 @@
 import { IsDateString, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
+export const SELF_SERVICE_CLASS_CODES = ['BASIC_MEMBER', 'STUDENT_MEMBER', 'INDIVIDUAL_MEMBER'] as const;
+export type SelfServiceClassCode = (typeof SELF_SERVICE_CLASS_CODES)[number];
+
 export class SubmitMembershipFormDto {
   @IsDateString()
   dateOfBirth: string;
@@ -39,4 +42,9 @@ export class SubmitMembershipFormDto {
   @MinLength(1)
   @MaxLength(20)
   termsVersion: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(SELF_SERVICE_CLASS_CODES)
+  membershipClassCode?: SelfServiceClassCode;
 }

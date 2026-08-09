@@ -63,6 +63,64 @@ const { variant } = Astro.props;
     </div>
   </div>
 
+  <!-- PaymentScreen (Step 20 — Razorpay Checkout integration) -->
+  <div id="maf-payment-screen" class="maf-screen" style="display:none">
+    <div class="maf-pending">
+      <div class="maf-pending__header">
+        <span class="maf-pending__icon">💳</span>
+        <div>
+          <div class="maf-pending__title">Payment Required</div>
+          <div class="maf-pending__sub">Your application has been approved — complete payment to activate your membership.</div>
+        </div>
+      </div>
+      <div class="maf-pending__body">
+        <div class="maf-pending__meta">
+          <div class="maf-pending__meta-card">
+            <div class="maf-meta-label">Amount Due</div>
+            <div id="maf-payment-amount" class="maf-meta-value maf-mono">—</div>
+          </div>
+          <div class="maf-pending__meta-card">
+            <div class="maf-meta-label">Status</div>
+            <div id="maf-payment-status-badge" class="maf-meta-value maf-status-pending">
+              <span class="maf-status-dot"></span><span id="maf-payment-status-text">Ready to Pay</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ready-to-pay -->
+        <div id="maf-payment-ready">
+          <p class="maf-pending__note">Payment is processed securely via Razorpay. Your membership activates automatically once payment is confirmed.</p>
+          <div id="maf-payment-error" class="maf-error-banner" style="display:none" role="alert"></div>
+          <button id="maf-payment-pay-btn" class="btn btn-gold btn-md maf-submit-btn">
+            <span id="maf-payment-pay-label">Pay Now</span>
+            <span id="maf-payment-pay-spinner" style="display:none" aria-hidden="true">◐</span>
+          </button>
+        </div>
+
+        <!-- Verification in progress (post-checkout, pre-webhook) -->
+        <div id="maf-payment-verifying" style="display:none">
+          <div class="maf-loading" aria-live="polite">
+            <span class="maf-loading__dot"></span>
+            <span class="maf-loading__dot"></span>
+            <span class="maf-loading__dot"></span>
+          </div>
+          <p class="maf-pending__note">Payment received by the gateway — confirming with our server. This usually takes a few seconds.</p>
+        </div>
+
+        <!-- Not completed / failed -->
+        <div id="maf-payment-not-done" style="display:none">
+          <p id="maf-payment-not-done-msg" class="maf-pending__note">Payment was not completed.</p>
+          <button id="maf-payment-retry-btn" class="btn btn-gold btn-md">Try Again</button>
+        </div>
+
+        <div class="maf-pending__actions">
+          <a href="/hub/" class="btn btn-outline btn-md">← Back to Hub Home</a>
+          <span class="maf-contact">Questions? <a href="mailto:membership@bcc.bhopal.info">membership@bcc.bhopal.info</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Variant B: pre-fill banner -->
   <div id="maf-prefill-banner" class="maf-prefill-banner" style="display:none">
     <span class="maf-prefill-banner__icon">ℹ</span>
@@ -613,6 +671,10 @@ const { variant } = Astro.props;
 .maf-contact { font-size: 13px; color: var(--ink-400); }
 .maf-contact a { color: var(--gold-600); }
 
+/* ── Payment screen (Step 20) ── */
+#maf-payment-verifying .maf-loading { padding: var(--s-4) 0 var(--s-3); }
+#maf-payment-not-done-msg { color: #B91C1C; }
+
 /* ── Prefill banner ── */
 .maf-prefill-banner { display: flex; align-items: flex-start; gap: 12px; background: #F0F5F2; border: 1px solid #C4D8CB; border-radius: var(--r-2); padding: 14px 18px; margin-bottom: var(--s-4); }
 .maf-prefill-banner__icon { font-size: 16px; color: var(--forest-600); flex-shrink: 0; margin-top: 1px; }
@@ -655,10 +717,23 @@ const { variant } = Astro.props;
 </style>
 
 <script>
+  // Razorpay Checkout SDK loads its own global `Razorpay` constructor at
+  // runtime (checkout.js) — see loadRazorpayScript() below.
+  declare const Razorpay: any;
+
   (function() {
     const root = document.getElementById('maf-root') as HTMLElement;
     const variant = root.dataset.variant as 'apply' | 'renew';
     const API = '/api/v1';
+
+    // ── Plan selection (read + clear from localStorage) ───────────────────
+    const PLAN_MAP: Record<string, { classCode: string; displayName: string; badgeText: string; term: string }> = {
+      student:    { classCode: 'STUDENT_MEMBER',    displayName: 'Student Membership',    badgeText: 'Student Membership · 1 Year',    term: '1 Year · Effective from date of activation' },
+      individual: { classCode: 'INDIVIDUAL_MEMBER', displayName: 'Individual Membership', badgeText: 'Individual Membership · 1 Year', term: '1 Year · Effective from date of activation' },
+      basic:      { classCode: 'BASIC_MEMBER',      displayName: 'Basic Membership',      badgeText: 'Basic Membership · 1 Year',      term: '1 Year · Effective from date of activation' },
+    };
+    const storedPlan = localStorage.getItem('bcc_pending_plan') ?? 'basic';
+    const selectedPlan = PLAN_MAP[storedPlan] ?? PLAN_MAP['basic'];
 
     // ── State ──────────────────────────────────────────────────────────────
     let currentStep = 1;
@@ -671,6 +746,7 @@ const { variant } = Astro.props;
     const loading      = document.getElementById('maf-loading') as HTMLElement;
     const steps        = document.getElementById('maf-steps') as HTMLElement;
     const pendingScreen= document.getElementById('maf-pending-screen') as HTMLElement;
+    const paymentScreen= document.getElementById('maf-payment-screen') as HTMLElement;
     const successScreen= document.getElementById('maf-success-screen') as HTMLElement;
     const prefillBanner= document.getElementById('maf-prefill-banner') as HTMLElement;
     const step1        = document.getElementById('maf-step1') as HTMLElement;
@@ -715,6 +791,7 @@ const { variant } = Astro.props;
       loading.style.display = 'none';
       steps.style.display   = 'flex';
       pendingScreen.style.display = 'none';
+      paymentScreen.style.display = 'none';
       successScreen.style.display = 'none';
       step1.style.display   = n === 1 ? '' : 'none';
       step2.style.display   = n === 2 ? '' : 'none';
@@ -730,6 +807,7 @@ const { variant } = Astro.props;
       step1.style.display    = 'none';
       step2.style.display    = 'none';
       step3.style.display    = 'none';
+      paymentScreen.style.display = 'none';
       pendingScreen.style.display = '';
       const dateEl = document.getElementById('maf-pending-date') as HTMLElement;
       dateEl.textContent = submittedAt
@@ -745,6 +823,7 @@ const { variant } = Astro.props;
       step3.style.display    = 'none';
       successScreen.style.display = '';
       pendingScreen.style.display = 'none';
+      paymentScreen.style.display = 'none';
 
       const heading = document.getElementById('maf-success-heading') as HTMLElement;
       const body    = document.getElementById('maf-success-body') as HTMLElement;
@@ -761,6 +840,225 @@ const { variant } = Astro.props;
         returnLink.textContent = '← Return to Home';
         returnLink.href = '/';
       }
+    }
+
+    // ── Payment screen (Step 20 — Razorpay Checkout integration) ───────────
+    //
+    // ARCHITECTURAL RULE: the browser is never authoritative for payment
+    // success. Checkout's own success handler only means "Checkout reports
+    // success" — the UI moves to a "verifying" state and polls the backend's
+    // Financial Contribution status until the signed Razorpay webhook has
+    // resolved it server-side (see PART 5/6 in the Step 20 spec). No
+    // Membership activation, Financial Transaction, or Receipt is ever
+    // created from this script.
+
+    let paymentPollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function formatRupees(amountPaise: number, currency: string): string {
+      const amount = amountPaise / 100;
+      return `${currency === 'INR' ? '₹' : currency + ' '}${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function setPaymentSubState(mode: 'ready' | 'verifying' | 'not-done') {
+      (document.getElementById('maf-payment-ready') as HTMLElement).style.display = mode === 'ready' ? '' : 'none';
+      (document.getElementById('maf-payment-verifying') as HTMLElement).style.display = mode === 'verifying' ? '' : 'none';
+      (document.getElementById('maf-payment-not-done') as HTMLElement).style.display = mode === 'not-done' ? '' : 'none';
+      const statusText = document.getElementById('maf-payment-status-text') as HTMLElement;
+      if (mode === 'ready') statusText.textContent = 'Ready to Pay';
+      else if (mode === 'verifying') statusText.textContent = 'Verifying Payment';
+      else statusText.textContent = 'Payment Incomplete';
+    }
+
+    function showPaymentScreen(data: Record<string, any>) {
+      loading.style.display  = 'none';
+      steps.style.display    = 'none';
+      step1.style.display    = 'none';
+      step2.style.display    = 'none';
+      step3.style.display    = 'none';
+      pendingScreen.style.display = 'none';
+      successScreen.style.display = 'none';
+      paymentScreen.style.display = '';
+
+      const contributionId: number = data.pendingContributionId;
+      const contributionState: string = data.pendingContributionState;
+      const amountPaise: number = data.pendingAmountPaise ?? 0;
+      const currency: string = data.pendingCurrency ?? 'INR';
+
+      (document.getElementById('maf-payment-amount') as HTMLElement).textContent = formatRupees(amountPaise, currency);
+
+      const payBtn   = document.getElementById('maf-payment-pay-btn') as HTMLButtonElement;
+      const payLabel = document.getElementById('maf-payment-pay-label') as HTMLElement;
+      const paySpin  = document.getElementById('maf-payment-pay-spinner') as HTMLElement;
+      const retryBtn = document.getElementById('maf-payment-retry-btn') as HTMLButtonElement;
+      const payError = document.getElementById('maf-payment-error') as HTMLElement;
+
+      // Terminal states the payer cannot retry from client-side (mirrors
+      // FinancialController.retrySettlement()'s FAILED/ABANDONED-only
+      // precondition) — direct them to support instead of a dead-end retry.
+      if (contributionState === 'CANCELLED' || contributionState === 'EXPIRED') {
+        setPaymentSubState('not-done');
+        (document.getElementById('maf-payment-not-done-msg') as HTMLElement).textContent =
+          'This payment window has closed. Please contact the membership team to proceed.';
+        retryBtn.style.display = 'none';
+        return;
+      }
+      retryBtn.style.display = '';
+      setPaymentSubState('ready');
+
+      async function beginCheckout() {
+        payBtn.disabled = true;
+        payLabel.style.opacity = '0.6';
+        paySpin.style.display = 'inline';
+        payError.style.display = 'none';
+
+        try {
+          // PART 8: zero-value contributions are never routed to this screen
+          // by the backend (they complete and activate synchronously — see
+          // MembershipLifecycleService.approve()) — this is a defensive
+          // guard only, never expected to trigger in practice.
+          if (amountPaise === 0) {
+            window.location.reload();
+            return;
+          }
+
+          // Retryable states must reopen the Contribution before a fresh
+          // order can be created (FinancialContributionService
+          // .initiateProviderSettlement() requires AWAITING_SETTLEMENT).
+          if (contributionState === 'FAILED' || contributionState === 'ABANDONED') {
+            const retryRes = await fetch(`${API}/financial/contributions/${contributionId}/settlement/retry`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token() ?? ''}` },
+            });
+            if (!retryRes.ok) throw new Error('retry-failed');
+          }
+
+          const orderRes = await fetch(`${API}/financial/contributions/${contributionId}/settlement/razorpay-order`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token() ?? ''}` },
+          });
+          if (!orderRes.ok) throw new Error('order-failed');
+          const order = await orderRes.json() as {
+            orderReference: string;
+            amountPaise: number;
+            currency: string;
+            providerPublicKeyId: string | null;
+          };
+
+          if (!order.providerPublicKeyId) throw new Error('order-failed');
+
+          await loadRazorpayScript();
+
+          const rzp = new Razorpay({
+            key: order.providerPublicKeyId,
+            order_id: order.orderReference,
+            amount: order.amountPaise,
+            currency: order.currency,
+            name: 'Bhopal Camera Club',
+            description: variant === 'renew' ? 'Membership Renewal Fee' : 'Membership Fee',
+            prefill: {
+              name: prefill.fullName ?? undefined,
+              email: prefill.email ?? undefined,
+              contact: prefill.phone ?? undefined,
+            },
+            theme: { color: '#A8843C' },
+            // Checkout reports success client-side ONLY — never authoritative.
+            // The webhook is what actually resolves the Contribution.
+            handler: function () {
+              setPaymentSubState('verifying');
+              pollContributionStatus(contributionId);
+            },
+            modal: {
+              ondismiss: function () {
+                payBtn.disabled = false;
+                payLabel.style.opacity = '';
+                paySpin.style.display = 'none';
+              },
+            },
+          });
+          rzp.on('payment.failed', function () {
+            setPaymentSubState('not-done');
+            (document.getElementById('maf-payment-not-done-msg') as HTMLElement).textContent =
+              'Payment was not completed.';
+          });
+          rzp.open();
+
+          payBtn.disabled = false;
+          payLabel.style.opacity = '';
+          paySpin.style.display = 'none';
+        } catch {
+          payError.textContent = 'Could not start payment. Please try again.';
+          payError.style.display = '';
+          payBtn.disabled = false;
+          payLabel.style.opacity = '';
+          paySpin.style.display = 'none';
+        }
+      }
+
+      payBtn.onclick = beginCheckout;
+      retryBtn.onclick = () => { setPaymentSubState('ready'); beginCheckout(); };
+    }
+
+    function loadRazorpayScript(): Promise<void> {
+      if (typeof Razorpay !== 'undefined') return Promise.resolve();
+      const existing = document.getElementById('maf-razorpay-sdk');
+      if (existing) {
+        return new Promise((resolve, reject) => {
+          existing.addEventListener('load', () => resolve());
+          existing.addEventListener('error', () => reject(new Error('razorpay-sdk-load-failed')));
+        });
+      }
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.id = 'maf-razorpay-sdk';
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('razorpay-sdk-load-failed'));
+        document.head.appendChild(script);
+      });
+    }
+
+    // Bounded polling only — PART 5 explicitly rules out inventing a large
+    // polling system. 10 attempts x 3s = 30s covers ordinary webhook
+    // latency; beyond that the member is told to check back rather than
+    // spinning indefinitely.
+    function pollContributionStatus(contributionId: number, attempt = 0) {
+      if (paymentPollTimer) clearTimeout(paymentPollTimer);
+      const MAX_ATTEMPTS = 10;
+
+      fetch(`${API}/financial/contributions/${contributionId}`, {
+        headers: { Authorization: `Bearer ${token() ?? ''}` },
+      })
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error('status-check-failed'))))
+        .then((data: { state: string }) => {
+          if (data.state === 'COMPLETED') {
+            window.location.href = '/hub/';
+            return;
+          }
+          if (data.state === 'FAILED' || data.state === 'ABANDONED') {
+            setPaymentSubState('not-done');
+            (document.getElementById('maf-payment-not-done-msg') as HTMLElement).textContent =
+              'Payment could not be confirmed. You can try again below.';
+            return;
+          }
+          if (attempt + 1 >= MAX_ATTEMPTS) {
+            setPaymentSubState('not-done');
+            (document.getElementById('maf-payment-not-done-msg') as HTMLElement).textContent =
+              'Still confirming your payment with our server — this can take a little longer than usual. Please check back shortly, or refresh this page.';
+            (document.getElementById('maf-payment-retry-btn') as HTMLButtonElement).style.display = 'none';
+            return;
+          }
+          paymentPollTimer = setTimeout(() => pollContributionStatus(contributionId, attempt + 1), 3000);
+        })
+        .catch(() => {
+          if (attempt + 1 >= MAX_ATTEMPTS) {
+            setPaymentSubState('not-done');
+            (document.getElementById('maf-payment-not-done-msg') as HTMLElement).textContent =
+              'Could not confirm payment status. Please refresh this page.';
+            (document.getElementById('maf-payment-retry-btn') as HTMLButtonElement).style.display = 'none';
+            return;
+          }
+          paymentPollTimer = setTimeout(() => pollContributionStatus(contributionId, attempt + 1), 3000);
+        });
     }
 
     // ── Pre-populate fields ────────────────────────────────────────────────
@@ -826,6 +1124,14 @@ const { variant } = Astro.props;
       (document.getElementById('maf-rev-city') as HTMLElement).textContent = city || '—';
       (document.getElementById('maf-rev-state') as HTMLElement).textContent = state || '—';
       (document.getElementById('maf-rev-pin') as HTMLElement).textContent = pin || '—';
+
+      // Populate membership badge with selected plan
+      const badgeNameEl = document.querySelector('.maf-membership-badge__name') as HTMLElement | null;
+      const badgeTermEl = document.querySelector('.maf-membership-badge__term') as HTMLElement | null;
+      const badgeTagEl  = document.querySelector('.maf-membership-badge__tag') as HTMLElement | null;
+      if (badgeNameEl) badgeNameEl.textContent = selectedPlan.displayName;
+      if (badgeTermEl) badgeTermEl.textContent = selectedPlan.term;
+      if (badgeTagEl)  badgeTagEl.textContent  = selectedPlan.badgeText;
 
       // Submit button label
       submitLabel.textContent = variant === 'renew' ? 'Submit Renewal Request' : 'Submit Application';
@@ -948,6 +1254,7 @@ const { variant } = Astro.props;
             state,
             pinCode: pin,
             termsVersion: 'v1.0',
+            membershipClassCode: selectedPlan.classCode,
           }),
         });
 
@@ -970,6 +1277,7 @@ const { variant } = Astro.props;
           return;
         }
 
+        localStorage.removeItem('bcc_pending_plan');
         showSuccessScreen(prefill.email ?? '');
       } catch {
         submitError.textContent = 'A network error occurred. Please check your connection and try again.';
@@ -1014,6 +1322,11 @@ const { variant } = Astro.props;
 
         // Variant A: check application status
         if (variant === 'apply') {
+          if (data.applicationStatus === 'PAYMENT_REQUIRED') {
+            populateFields(data);
+            showPaymentScreen(data);
+            return;
+          }
           if (data.applicationStatus === 'ACTIVE') {
             window.location.replace('/hub/');
             return;
@@ -1023,6 +1336,13 @@ const { variant } = Astro.props;
             showPendingScreen(data.submittedAt);
             return;
           }
+        }
+
+        // Variant B: payment required takes priority over the renewal-eligibility redirect
+        if (variant === 'renew' && data.applicationStatus === 'PAYMENT_REQUIRED') {
+          populateFields(data);
+          showPaymentScreen(data);
+          return;
         }
 
         // Variant B: check renewal eligibility

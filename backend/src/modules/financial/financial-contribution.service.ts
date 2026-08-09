@@ -289,6 +289,154 @@ export class FinancialContributionService {
     // CANCELLED has no PAY-001 canonical Business Event; no emit.
   }
 
+  // ── Refund (minimum generic PAY-001 refund foundation) ──────────────────────
+  //
+  // Business Modules decide a refund is owed (PAY-001 §OWNERSHIP MATRIX:
+  // "Refund Decision" belongs to the Business Module); this method is where
+  // the Financial Engine actually processes it. Generic: no Membership (or
+  // any other Business Module) field appears here — the caller supplies
+  // only a contribution id, a human-readable reason, and the actor who
+  // decided the refund is owed.
+  //
+  // Idempotency (PAY-001 Principle 7, same discipline as createContribution()):
+  // financial_refunds.uq_refund_contribution permits at most one refund row
+  // per Contribution ever. A duplicate call (e.g. a duplicate admin
+  // rejection) returns the existing row rather than creating a second one
+  // or re-contacting the Settlement Provider.
+  //
+  // The original SUCCEEDED Financial Transaction is never touched — this
+  // method only ever INSERTs a new financial_refunds row (PAY-001
+  // Principle 10: immutable financial history).
+  //
+  // Provider contact is conditional: only attempted when the Contribution's
+  // successful settlement was recorded against THIS service's injected
+  // Settlement Provider (i.e. provider matches financial_transactions
+  // .provider for the SUCCEEDED attempt). A manually-settled (e.g. bank
+  // transfer/UPI evidence) Contribution has no online reversal path here —
+  // the refund row is left at REQUESTED for offline handling, which is
+  // itself the "explicit refund-pending mechanism" this method is required
+  // to provide rather than pretending an unsupported refund succeeded.
+  //
+  // Never marks a refund COMPLETED merely because the provider accepted the
+  // request — only a provider response of definitively completed reversal
+  // does that; anything else is recorded as PROCESSING (see
+  // the concrete Settlement Provider adapter's refund() implementation). A provider call failure is caught
+  // and recorded as FAILED rather than thrown, so a Business Module's
+  // rejection/cancellation flow is never blocked by a transient provider
+  // outage — the FAILED row remains visible for manual follow-up, which
+  // satisfies "never end up with payment captured and no refund path."
+  async requestRefund(
+    contributionId: number,
+    reason: string,
+    requestedByUserId: number,
+  ): Promise<{ refundId: number; status: string; alreadyRequested: boolean }> {
+    const contribution = await this.getContribution(contributionId);
+    if (contribution.state !== 'COMPLETED') {
+      throw new ConflictException(
+        `Contribution ${contributionId} is in state '${contribution.state}'; only a COMPLETED contribution can be refunded.`,
+      );
+    }
+
+    const existing = await db
+      .selectFrom('financial_refunds')
+      .selectAll()
+      .where('contribution_id', '=', contributionId)
+      .executeTakeFirst();
+    if (existing) {
+      return { refundId: Number(existing.id), status: existing.status, alreadyRequested: true };
+    }
+
+    const uuid = randomUUID();
+    let refundId: number;
+    try {
+      const inserted = await db
+        .insertInto('financial_refunds')
+        .values({
+          uuid,
+          contribution_id: contributionId,
+          amount_paise: contribution.amount_paise,
+          currency: contribution.currency,
+          status: 'REQUESTED',
+          reason,
+          requested_by_user_id: requestedByUserId,
+        })
+        .executeTakeFirstOrThrow();
+      refundId = Number(inserted.insertId);
+    } catch (err) {
+      // Lost a race against a concurrent requestRefund() call for the same
+      // Contribution (uq_refund_contribution) — the winner's row is authoritative.
+      const winner = await db
+        .selectFrom('financial_refunds')
+        .selectAll()
+        .where('contribution_id', '=', contributionId)
+        .executeTakeFirst();
+      if (winner) return { refundId: Number(winner.id), status: winner.status, alreadyRequested: true };
+      throw err;
+    }
+
+    const succeededTxn = await db
+      .selectFrom('financial_transactions')
+      .select(['provider', 'provider_reference'])
+      .where('contribution_id', '=', contributionId)
+      .where('outcome', '=', 'SUCCEEDED')
+      .orderBy('created_at', 'desc')
+      .executeTakeFirst();
+
+    if (!succeededTxn || succeededTxn.provider !== this.provider.providerName || !succeededTxn.provider_reference) {
+      // Not settled via this service's Settlement Provider (e.g. MANUAL) —
+      // no automatic online reversal available. Left at REQUESTED.
+      return { refundId, status: 'REQUESTED', alreadyRequested: false };
+    }
+
+    try {
+      const result = await this.provider.refund({
+        contributionId,
+        providerPaymentReference: succeededTxn.provider_reference,
+        amountPaise: Number(contribution.amount_paise),
+        reason,
+      });
+      const newStatus = result.status === 'COMPLETED' ? 'COMPLETED' : 'PROCESSING';
+
+      await db
+        .updateTable('financial_refunds')
+        .set({
+          provider: this.provider.providerName,
+          provider_reference: result.providerRefundReference,
+          status: newStatus,
+          resolved_at: newStatus === 'COMPLETED' ? toMysqlDatetime(new Date()) : null,
+        })
+        .where('id', '=', refundId)
+        .execute();
+
+      // COMPLETED -> REFUNDED (existing ALLOWED_TRANSITIONS entry) is only
+      // recorded once the reversal is CONFIRMED, not merely accepted --
+      // same "never claim an unobserved outcome" discipline as everywhere
+      // else in this file. While the refund is still PROCESSING (provider
+      // accepted it but bank-side crediting is unconfirmed), the
+      // Contribution deliberately stays COMPLETED; financial_refunds.status
+      // is the authoritative "a reversal is in flight" signal in the
+      // meantime. Promoting a PROCESSING refund to COMPLETED (and only then
+      // to REFUNDED) once the provider confirms is a known, explicitly
+      // out-of-scope follow-up (would need a refund webhook route) -- not
+      // invented here per the minimum-foundation instruction.
+      if (newStatus === 'COMPLETED') {
+        await this.transitionContribution(contributionId, 'REFUNDED');
+      }
+
+      return { refundId, status: newStatus, alreadyRequested: false };
+    } catch (err) {
+      await db
+        .updateTable('financial_refunds')
+        .set({
+          status: 'FAILED',
+          failure_reason: (err instanceof Error ? err.message : 'Unknown refund error').slice(0, 500),
+        })
+        .where('id', '=', refundId)
+        .execute();
+      return { refundId, status: 'FAILED', alreadyRequested: false };
+    }
+  }
+
   // ── Zero-value path ───────────────────────────────────────────────────────
 
   // Processes a zero-value contribution to Completed without any Settlement

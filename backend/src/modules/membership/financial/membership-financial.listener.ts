@@ -37,15 +37,20 @@ export class MembershipFinancialListener implements OnModuleInit {
     });
   }
 
+  // Workflow-ordering fix: financial completion no longer activates
+  // Membership. Administrative approval is the final admission decision
+  // (MembershipLifecycleService.approve() checks the Contribution is
+  // COMPLETED before allowing PENDING -> APPROVED -> ACTIVE). This handler
+  // only records that payment has been received; recordPaymentReceived() is
+  // async and errors are caught so a failure here never crashes the event
+  // emitter loop.
   private handleContributionCompleted(payload: FinancialEngineEventPayload): void {
     const membershipId = payload.businessReferenceId;
-    // activate() is async; errors are caught so a failed activation
-    // does not crash the event emitter loop.
     this.lifecycle
-      .activate(membershipId, { type: 'SYSTEM' })
+      .recordPaymentReceived(membershipId)
       .catch((err: Error) =>
         this.logger.error(
-          `activate(${membershipId}) failed after CONTRIBUTION_COMPLETED: ${err.message}`,
+          `recordPaymentReceived(${membershipId}) failed after CONTRIBUTION_COMPLETED: ${err.message}`,
         ),
       );
   }

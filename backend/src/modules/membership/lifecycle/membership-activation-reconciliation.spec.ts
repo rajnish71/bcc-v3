@@ -78,49 +78,16 @@ describe('0093 migration: activation_mode reconciliation', () => {
 
 // ── Lifecycle service: unchanged branching, unchanged changeClass() ────────
 
-describe('MembershipLifecycleService.approve(): unchanged PAYMENT_REQUIRED branch', () => {
+// Superseded by the STEP 23 payment/approval workflow-ordering reconciliation:
+// contribution creation moved OUT of approve() and into
+// createApplicationContribution() (called at application/renewal submission
+// time); approve() now only VERIFIES the Contribution is already COMPLETED.
+// See the "STEP 23" describe blocks further below for the full set of
+// assertions covering the corrected approve()/reject()/listener behaviour.
+describe('MembershipLifecycleService.createApplicationContribution(): fee sourcing', () => {
   it('reads fee_inr from class_entitlements via EntitlementService -- never hard-coded', () => {
     expect(LIFECYCLE_SRC).toContain("this.entitlementService.getClassConfigValue(");
     expect(LIFECYCLE_SRC).toContain("'fee_inr'");
-  });
-
-  it('creates a Financial Contribution through FinancialContributionService for PAYMENT_REQUIRED classes', () => {
-    const paymentRequiredIdx = LIFECYCLE_SRC.indexOf("cls?.activation_mode === 'PAYMENT_REQUIRED'");
-    const branch = LIFECYCLE_SRC.slice(
-      paymentRequiredIdx,
-      LIFECYCLE_SRC.indexOf('return { finalState:', paymentRequiredIdx),
-    );
-    expect(branch).toContain('this.financialService.createContribution(');
-    expect(branch).toContain('businessModule: ');
-    expect(branch).toContain("'MEMBERSHIP'");
-  });
-
-  it('AUTO_AFTER_APPROVAL branch activates immediately -- still reserved for zero-fee classes', () => {
-    const branch = LIFECYCLE_SRC.slice(
-      LIFECYCLE_SRC.indexOf("cls?.activation_mode === 'AUTO_AFTER_APPROVAL'"),
-      LIFECYCLE_SRC.indexOf("cls?.activation_mode === 'PAYMENT_REQUIRED'"),
-    );
-    expect(branch).toContain('this.activate(membershipId');
-    expect(branch).not.toContain('createContribution');
-  });
-
-  it('zero-value fee_inr bypasses settlement via processZeroValueContribution()', () => {
-    expect(LIFECYCLE_SRC).toContain('if (amountPaise === 0)');
-    expect(LIFECYCLE_SRC).toContain('this.financialService.processZeroValueContribution(contributionId)');
-  });
-
-  it('positive fee_inr moves the contribution to AWAITING_SETTLEMENT, membership stays APPROVED (not ACTIVE)', () => {
-    const branch = LIFECYCLE_SRC.slice(
-      LIFECYCLE_SRC.indexOf("cls?.activation_mode === 'PAYMENT_REQUIRED'"),
-      LIFECYCLE_SRC.indexOf('return { finalState:', LIFECYCLE_SRC.indexOf("cls?.activation_mode === 'PAYMENT_REQUIRED'")),
-    );
-    expect(branch).toContain("this.financialService.transitionContribution(contributionId, 'AWAITING_SETTLEMENT')");
-    // The return value for this branch is 'APPROVED', proving approve() alone never reaches ACTIVE for a paid class.
-    const returnStatement = LIFECYCLE_SRC.slice(
-      LIFECYCLE_SRC.indexOf('return { finalState:', LIFECYCLE_SRC.indexOf("cls?.activation_mode === 'PAYMENT_REQUIRED'")),
-      LIFECYCLE_SRC.indexOf('}', LIFECYCLE_SRC.indexOf('return { finalState:', LIFECYCLE_SRC.indexOf("cls?.activation_mode === 'PAYMENT_REQUIRED'"))) + 1,
-    );
-    expect(returnStatement).toContain("finalState: 'APPROVED'");
   });
 });
 
@@ -262,8 +229,12 @@ describe('Settlement outcome -> membership state (class-agnostic wiring, applies
     });
     expect(listenerSrc).toContain('CONTRIBUTION_COMPLETED');
     expect(listenerSrc).toContain('SETTLEMENT_FAILED');
-    expect(listenerSrc).toContain('this.lifecycle\n      .activate(');
   });
+
+  // Superseded by the STEP 23 payment/approval reconciliation (workflow-
+  // ordering fix): CONTRIBUTION_COMPLETED no longer activates Membership --
+  // see the dedicated "workflow-ordering reconciliation" describe block
+  // below for the full set of assertions covering the corrected behaviour.
 
   it('recordPaymentFailure() does not assign a membership number or set ACTIVE (source-verified)', () => {
     const failureFn = LIFECYCLE_SRC.slice(
@@ -275,12 +246,15 @@ describe('Settlement outcome -> membership state (class-agnostic wiring, applies
     expect(failureFn).not.toContain('assignPermanentNumber');
   });
 
-  it('retry remains reachable: recordPaymentFailure() requires APPROVED (not a terminal state)', () => {
+  it('retry remains reachable: recordPaymentFailure() requires PENDING (not a terminal state)', () => {
+    // Workflow-ordering fix: payment now resolves while the application is
+    // still PENDING (before admin approval), so a settlement failure is
+    // always observed against a PENDING membership, not an APPROVED one.
     const failureFn = LIFECYCLE_SRC.slice(
       LIFECYCLE_SRC.indexOf('async recordPaymentFailure('),
       LIFECYCLE_SRC.indexOf('// ==', LIFECYCLE_SRC.indexOf('async recordPaymentFailure(') + 50),
     );
-    expect(failureFn).toContain("this.requireState(membershipId, ['APPROVED'])");
+    expect(failureFn).toContain("this.requireState(membershipId, ['PENDING'])");
   });
 });
 

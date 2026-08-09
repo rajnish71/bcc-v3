@@ -246,21 +246,121 @@ export class MembershipLifecycleService {
       newValue: { state: 'PENDING' },
     });
 
+    // Financial reconciliation (workflow-ordering fix): for a PAYMENT_REQUIRED
+    // class, the financial obligation is created NOW, while the application is
+    // still PENDING -- not at approval time. Administrative approval is the
+    // FINAL admission decision and must happen only once payment is already
+    // COMPLETED (see approve() below). AUTO_AFTER_APPROVAL/MANUAL classes and
+    // GROUP applications are untouched -- see createApplicationContribution().
+    if (params.ownerType === 'INDIVIDUAL' && params.membershipClassId != null) {
+      await this.createApplicationContribution(id, params.membershipClassId, params.userId!);
+    }
+
     return { id, uuid };
   }
 
   // ======================================================================
-  // PENDING -> APPROVED  (and possibly straight on to ACTIVE)
+  // Creates the Financial Contribution for a freshly-PENDING INDIVIDUAL
+  // application/renewal, if (and only if) its class is PAYMENT_REQUIRED.
+  // Called once, right after the PENDING row is inserted -- by apply() above
+  // and by HubMembershipService's self-service submitApplication()/
+  // submitRenewal() (which insert their own PENDING row directly).
   //
-  // The final settled state depends on membership_classes.activation_mode:
+  // AUTO_AFTER_APPROVAL and MANUAL classes get no Contribution here -- that
+  // preserves their existing legitimate behaviour (activation happens at
+  // admin approval with no financial obligation involved at all).
+  //
+  // Mirrors the amount computation that used to live in approve(): fee_inr
+  // is the sole authoritative pricing source (class_entitlements, via
+  // EntitlementService) -- never hard-coded here or anywhere else.
+  //
+  // Does NOT call startSettlement()/initiateProviderSettlement() -- a
+  // positive-value Contribution is left at AWAITING_SETTLEMENT; the member
+  // must explicitly initiate payment from the Hub payment screen (PART 3).
+  // A zero-value Contribution completes immediately via the existing PAY-001
+  // §12 zero-value path, exactly as it already did inside the old approve().
+  async createApplicationContribution(
+    membershipId: number,
+    membershipClassId: number,
+    payerUserId: number,
+  ): Promise<void> {
+    const cls = await db
+      .selectFrom('membership_classes')
+      .select('activation_mode')
+      .where('id', '=', membershipClassId)
+      .executeTakeFirst();
+
+    if (cls?.activation_mode !== 'PAYMENT_REQUIRED') return;
+
+    const feeInrRaw = await this.entitlementService.getClassConfigValue(membershipClassId, 'fee_inr');
+    const amountPaise = feeInrRaw ? Math.round(parseFloat(feeInrRaw) * 100) : 0;
+
+    const idempotencyKey = `MEMBERSHIP-${membershipId}-CONTRIBUTION`;
+    const { id: contributionId } = await this.financialService.createContribution({
+      payerUserId,
+      businessModule: 'MEMBERSHIP',
+      businessReferenceId: membershipId,
+      purpose: 'Membership fee',
+      amountPaise,
+      idempotencyKey,
+    });
+
+    await db
+      .updateTable('memberships')
+      .set({ pending_contribution_id: contributionId })
+      .where('id', '=', membershipId)
+      .execute();
+
+    if (amountPaise === 0) {
+      // Zero-value path (PAY-001 §12): completes immediately without a
+      // Settlement Provider. The Contribution reaches COMPLETED, but the
+      // Membership itself remains PENDING until an administrator approves
+      // it -- financial completion never activates Membership (PART 4).
+      await this.financialService.processZeroValueContribution(contributionId);
+    } else {
+      // Positive-value path: made payable, but NOT yet SETTLEMENT_IN_PROGRESS
+      // -- a Razorpay order is only ever created when the member explicitly
+      // clicks "Pay" on the payment screen (PART 3), never automatically here.
+      await this.financialService.transitionContribution(contributionId, 'AWAITING_SETTLEMENT');
+    }
+  }
+
+  // ======================================================================
+  // Resolves the Financial Contribution associated with a membership
+  // application, if any -- used by approve() to verify the financial
+  // precondition and by reject() to decide whether a refund/cancellation is
+  // owed. Looked up by (business_module, business_reference_id) rather than
+  // trusting the nullable pending_contribution_id column, which
+  // recordPaymentFailure() clears on SETTLEMENT_FAILED even though the
+  // Contribution itself remains valid (same reasoning as
+  // HubMembershipService.getPendingPayment(), Step 20).
+  private async getMembershipContribution(membershipId: number) {
+    return this.financialService.findLatestForBusinessReference('MEMBERSHIP', membershipId);
+  }
+
+  // ======================================================================
+  // PENDING -> APPROVED -> ACTIVE
+  //
+  // Administrative approval is the FINAL membership admission decision
+  // (workflow-ordering fix). The final settled state depends on
+  // membership_classes.activation_mode:
   //   AUTO_AFTER_APPROVAL  -> APPROVED is transient; activate() fires
   //                           immediately and this method returns 'ACTIVE'.
-  //                           MEMBERSHIP_APPLICATION_APPROVED is suppressed
-  //                           (the member is already active; "pay now" copy
-  //                           would be wrong). MEMBERSHIP_ACTIVATED fires via
-  //                           activate().
-  //   PAYMENT_REQUIRED     -> stays APPROVED; MEMBERSHIP_APPLICATION_APPROVED
-  //                           is sent; payment webhook triggers activate().
+  //                           No financial obligation is involved at all.
+  //   PAYMENT_REQUIRED     -> the Financial Contribution was already created
+  //                           at application/renewal submission time (see
+  //                           createApplicationContribution()). Approval is
+  //                           REFUSED unless that Contribution has already
+  //                           reached COMPLETED -- checked and enforced
+  //                           BEFORE any state is written, so a rejected
+  //                           precondition never leaves the membership
+  //                           stranded mid-transition. Once COMPLETED is
+  //                           confirmed, APPROVED -> ACTIVE happens in the
+  //                           same operation, exactly like AUTO_AFTER_APPROVAL.
+  //                           Settlement-method agnostic: this only ever
+  //                           checks contribution.state, never which
+  //                           Settlement Provider (or manual evidence path)
+  //                           produced it (PART 8).
   //   MANUAL               -> stays APPROVED; MEMBERSHIP_APPLICATION_APPROVED
   //                           is sent; admin explicitly calls activate().
   //   GROUP / no class     -> stays APPROVED (no activation_mode defined for
@@ -271,6 +371,27 @@ export class MembershipLifecycleService {
     actorUserId: number,
   ): Promise<{ finalState: 'APPROVED' | 'ACTIVE' }> {
     const membership = await this.requireState(membershipId, ['PENDING']);
+
+    const cls = membership.membership_class_id != null
+      ? await db
+          .selectFrom('membership_classes')
+          .select('activation_mode')
+          .where('id', '=', membership.membership_class_id)
+          .executeTakeFirst()
+      : null;
+
+    // Financial precondition checked and enforced BEFORE any state write --
+    // an unpaid/incomplete application must never be moved to APPROVED at
+    // all, not even transiently (PART 5: "reject the approval operation").
+    if (cls?.activation_mode === 'PAYMENT_REQUIRED') {
+      const contribution = await this.getMembershipContribution(membershipId);
+      if (!contribution || contribution.state !== 'COMPLETED') {
+        throw new ConflictException(
+          `Membership ${membershipId} cannot be approved: its Financial Contribution is ` +
+          `${contribution ? `in state '${contribution.state}'` : 'missing'}; approval requires COMPLETED.`,
+        );
+      }
+    }
 
     await db
       .updateTable('memberships')
@@ -287,59 +408,15 @@ export class MembershipLifecycleService {
       newValue: { state: 'APPROVED' },
     });
 
-    if (membership.membership_class_id != null) {
-      const cls = await db
-        .selectFrom('membership_classes')
-        .select('activation_mode')
-        .where('id', '=', membership.membership_class_id)
-        .executeTakeFirst();
-
-      if (cls?.activation_mode === 'AUTO_AFTER_APPROVAL') {
-        await this.activate(membershipId, { type: 'SYSTEM' });
-        return { finalState: 'ACTIVE' };
-      }
-
-      if (cls?.activation_mode === 'PAYMENT_REQUIRED') {
-        // Authoritative membership fee from class_entitlements.fee_inr (layer 1 only).
-        // Administrators change this at runtime via the entitlements API; no code
-        // change required. Missing fee_inr is treated as ₹0 (waived).
-        const feeInrRaw = await this.entitlementService.getClassConfigValue(
-          membership.membership_class_id,
-          'fee_inr',
-        );
-        const amountPaise = feeInrRaw ? Math.round(parseFloat(feeInrRaw) * 100) : 0;
-
-        const idempotencyKey = `MEMBERSHIP-${membershipId}-CONTRIBUTION`;
-        const { id: contributionId } = await this.financialService.createContribution({
-          payerUserId: Number(membership.user_id!),
-          businessModule: 'MEMBERSHIP',
-          businessReferenceId: membershipId,
-          purpose: 'Membership fee',
-          amountPaise,
-          idempotencyKey,
-        });
-
-        await db
-          .updateTable('memberships')
-          .set({ pending_contribution_id: contributionId })
-          .where('id', '=', membershipId)
-          .execute();
-
-        if (amountPaise === 0) {
-          // Zero-value path (PAY-001 §12): completes immediately without a
-          // Settlement Provider. MembershipFinancialListener receives
-          // CONTRIBUTION_COMPLETED and calls activate(). Approval email
-          // suppressed here to avoid double notification on immediate-completion path.
-          await this.financialService.processZeroValueContribution(contributionId);
-        } else {
-          // Positive-value path: contribution awaits a Settlement Provider.
-          // Razorpay integration is implemented in a future step; the contribution
-          // moves to AWAITING_SETTLEMENT and stays until the gateway resolves.
-          await this.financialService.transitionContribution(contributionId, 'AWAITING_SETTLEMENT');
-        }
-
-        return { finalState: 'APPROVED' };
-      }
+    if (cls?.activation_mode === 'AUTO_AFTER_APPROVAL' || cls?.activation_mode === 'PAYMENT_REQUIRED') {
+      // Both branches activate immediately from here: AUTO_AFTER_APPROVAL
+      // because there was never a financial obligation, PAYMENT_REQUIRED
+      // because the financial precondition above already confirmed COMPLETED.
+      // MEMBERSHIP_APPLICATION_APPROVED is suppressed for both -- the member
+      // is activated in the same operation, so "pending review" copy would
+      // be wrong; MEMBERSHIP_ACTIVATED fires via activate().
+      await this.activate(membershipId, { type: 'ADMIN', userId: actorUserId });
+      return { finalState: 'ACTIVE' };
     }
 
     await this.notifyMember(membership, 'MEMBERSHIP_APPLICATION_APPROVED');
@@ -348,9 +425,46 @@ export class MembershipLifecycleService {
 
   // ======================================================================
   // PENDING -> REJECTED
+  //
+  // If a Financial Contribution exists for this application (PAYMENT_REQUIRED
+  // class), its resolution depends on how far payment progressed:
+  //   COMPLETED                    -> a refund is owed (PART 6/7). Membership
+  //                                   decides the refund is owed; the
+  //                                   Financial Engine processes it
+  //                                   (requestRefund() is itself idempotent --
+  //                                   a duplicate rejection never double-refunds).
+  //   CREATED / AWAITING_SETTLEMENT -> no money has moved; the Contribution is
+  //                                   cancelled so it can never be paid
+  //                                   against a REJECTED application.
+  //   anything else                 -> left as-is (e.g. SETTLEMENT_IN_PROGRESS
+  //                                   mid-checkout, or already FAILED/ABANDONED)
+  //                                   -- no new capability is invented here for
+  //                                   those narrower cases.
+  // The Contribution is resolved BEFORE the membership is flipped to
+  // REJECTED so a crash between the two never leaves the rejection recorded
+  // with an un-actioned Contribution silently forgotten.
   // ======================================================================
   async reject(membershipId: number, actorUserId: number, reason: string): Promise<void> {
     const membership = await this.requireState(membershipId, ['PENDING']);
+
+    const contribution = await this.getMembershipContribution(membershipId);
+    if (contribution) {
+      if (contribution.state === 'COMPLETED') {
+        await this.financialService
+          .requestRefund(Number(contribution.id), reason, actorUserId)
+          .catch(() => {
+            // requestRefund() already records its own FAILED refund row on a
+            // provider error rather than throwing; this guards only against
+            // a genuinely unexpected failure so rejection always completes
+            // (PART 7: rejection must never be blocked by a transient
+            // provider outage -- the refund row remains for follow-up).
+          });
+      } else if (contribution.state === 'CREATED' || contribution.state === 'AWAITING_SETTLEMENT') {
+        await this.financialService
+          .cancelContribution(Number(contribution.id), `Membership application rejected: ${reason}`)
+          .catch(() => {});
+      }
+    }
 
     await db.updateTable('memberships').set({ lifecycle_state: 'REJECTED' }).where('id', '=', membershipId).execute();
 
@@ -453,8 +567,11 @@ export class MembershipLifecycleService {
   }
 
   // ======================================================================
-  // APPROVED -- payment failure (stays APPROVED; MEM-007: no number
-  // assignment happens on this path)
+  // PENDING -- payment failure (stays PENDING; MEM-007: no number assignment
+  // happens on this path). Under the reconciled workflow, the Financial
+  // Contribution is created and settled while the application is still
+  // PENDING (before admin approval) -- so a settlement failure is now always
+  // observed against a PENDING membership, not an APPROVED one.
   //
   // failedAmountPaise: supplied by MembershipFinancialListener from the
   // Financial Engine event payload (no direct financial table query needed).
@@ -462,7 +579,7 @@ export class MembershipLifecycleService {
   // omits the amount variable.
   // ======================================================================
   async recordPaymentFailure(membershipId: number, failedAmountPaise?: number, notes?: string): Promise<void> {
-    const membership = await this.requireState(membershipId, ['APPROVED']);
+    const membership = await this.requireState(membershipId, ['PENDING']);
 
     await db
       .updateTable('memberships')
@@ -483,6 +600,28 @@ export class MembershipLifecycleService {
     await this.notifyMember(membership, 'PAYMENT_FAILED', {
       amount: failedAmount,
     });
+  }
+
+  // ======================================================================
+  // PENDING -- payment received (stays PENDING; workflow-ordering fix, PART 4)
+  //
+  // Called by MembershipFinancialListener on CONTRIBUTION_COMPLETED. This
+  // method MUST NOT activate the membership, allocate a membership number,
+  // or transition lifecycle_state in any way -- financial completion is no
+  // longer sufficient for admission; only administrative approve() is. It
+  // exists purely to record the payment-received milestone and let the
+  // member/admin know the application is now eligible for final review.
+  // ======================================================================
+  async recordPaymentReceived(membershipId: number): Promise<void> {
+    const membership = await this.requireState(membershipId, ['PENDING']);
+
+    await logMembershipAudit({
+      membershipId,
+      eventType: 'PAYMENT_RECEIVED',
+      actorType: 'SYSTEM',
+    });
+
+    await this.notifyMember(membership, 'MEMBERSHIP_PAYMENT_RECEIVED');
   }
 
   // ======================================================================

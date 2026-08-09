@@ -25,24 +25,33 @@ import type { SubmitMembershipFormDto } from '../dto/submit-membership-form.dto'
 import { SELF_SERVICE_CLASS_CODES } from '../dto/submit-membership-form.dto';
 import { normalize, validate } from '../../shared/phone.util';
 import { FinancialContributionService } from '../../financial/financial-contribution.service';
+import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 
 const BASIC_MEMBER_CODE = 'BASIC_MEMBER';
 const MEMBERSHIP_BUSINESS_MODULE = 'MEMBERSHIP';
 
-// A membership row can only be APPROVED-with-a-Contribution while that
-// Contribution is unresolved: activate() (fired by
-// MembershipFinancialListener on CONTRIBUTION_COMPLETED) flips the
-// membership row to ACTIVE in the same step that would otherwise mark the
-// Contribution COMPLETED, so a still-APPROVED row can never coexist with a
-// COMPLETED/REFUNDED Contribution. Any Contribution found here -- whatever
-// its state (AWAITING_SETTLEMENT / SETTLEMENT_IN_PROGRESS / FAILED /
-// ABANDONED / CANCELLED / EXPIRED) -- therefore means payment is still
-// outstanding for this membership.
-type PrefillApplicationStatus = 'NONE' | 'PENDING' | 'PAYMENT_REQUIRED' | 'ACTIVE';
+// Workflow-ordering fix: the Financial Contribution for a PAYMENT_REQUIRED
+// class is now created at submission time, while the membership is still
+// PENDING -- not at admin-approval time. So a PENDING row may now carry an
+// outstanding OR completed Contribution:
+//   PAYMENT_REQUIRED -- a Contribution exists and has not reached COMPLETED
+//                        (AWAITING_SETTLEMENT / SETTLEMENT_IN_PROGRESS /
+//                        FAILED / ABANDONED / CANCELLED / EXPIRED) --
+//                        payment is still outstanding.
+//   AWAITING_APPROVAL -- the Contribution has reached COMPLETED, but
+//                        Membership itself remains PENDING until an
+//                        administrator makes the final approve/reject
+//                        decision (PART 4/5). This is a UI-facing derived
+//                        label only -- lifecycle_state is still PENDING; no
+//                        new Membership lifecycle state is introduced.
+type PrefillApplicationStatus = 'NONE' | 'PENDING' | 'PAYMENT_REQUIRED' | 'AWAITING_APPROVAL' | 'ACTIVE';
 
 @Injectable()
 export class HubMembershipService {
-  constructor(private readonly financialService: FinancialContributionService) {}
+  constructor(
+    private readonly financialService: FinancialContributionService,
+    private readonly lifecycle: MembershipLifecycleService,
+  ) {}
 
   private async getBasicMemberClassId(): Promise<number> {
     return this.getClassIdByCode(BASIC_MEMBER_CODE);
@@ -111,13 +120,23 @@ export class HubMembershipService {
 
     if (existing) {
       if (existing.lifecycle_state === 'APPROVED') {
-        payment = await this.getPendingPayment(existing.id);
-        applicationStatus = payment ? 'PAYMENT_REQUIRED' : 'ACTIVE';
+        // Legacy fallback: under the reconciled workflow, a PAYMENT_REQUIRED
+        // class no longer reaches APPROVED with a still-outstanding
+        // Contribution (approve() now refuses that precondition) -- an
+        // APPROVED row observed here has no financial angle left to check.
+        applicationStatus = 'ACTIVE';
       } else if (existing.lifecycle_state === 'ACTIVE') {
         applicationStatus = 'ACTIVE';
       } else if (existing.lifecycle_state === 'PENDING') {
-        applicationStatus = 'PENDING';
-        submittedAt = existing.applied_at ? toMysqlDatetime(new Date(existing.applied_at as unknown as string)) : null;
+        payment = await this.getPendingPayment(existing.id);
+        if (payment && payment.state !== 'COMPLETED') {
+          applicationStatus = 'PAYMENT_REQUIRED';
+        } else if (payment && payment.state === 'COMPLETED') {
+          applicationStatus = 'AWAITING_APPROVAL';
+        } else {
+          applicationStatus = 'PENDING';
+          submittedAt = existing.applied_at ? toMysqlDatetime(new Date(existing.applied_at as unknown as string)) : null;
+        }
       }
     }
 
@@ -192,9 +211,9 @@ export class HubMembershipService {
     const membershipUuid = randomUUID();
     const now = toMysqlDatetime(new Date());
 
-    await db.transaction().execute(async (trx) => {
+    const membershipId = await db.transaction().execute(async (trx) => {
       // 1. INSERT membership row (PENDING)
-      await trx
+      const inserted = await trx
         .insertInto('memberships')
         .values({
           uuid: membershipUuid,
@@ -204,7 +223,7 @@ export class HubMembershipService {
           lifecycle_state: 'PENDING',
           applied_at: now,
         })
-        .execute();
+        .executeTakeFirstOrThrow();
 
       // 2. UPDATE users — Step 1 editable fields only
       // year_joined_bcc is NEVER updated here (constitutional guard)
@@ -234,7 +253,17 @@ export class HubMembershipService {
           user_agent: userAgent,
         })
         .execute();
+
+      return Number(inserted.insertId);
     });
+
+    // Workflow-ordering fix (PART 2): the Financial Contribution for a
+    // PAYMENT_REQUIRED class is created now, while the membership is still
+    // PENDING -- not at admin-approval time. Runs after the transaction
+    // above commits (FinancialContributionService.createContribution() opens
+    // its own transaction; see MembershipLifecycleService.apply() for the
+    // same pattern). No-ops for AUTO_AFTER_APPROVAL/MANUAL classes.
+    await this.lifecycle.createApplicationContribution(membershipId, classId, userId);
 
     return { success: true, submittedAt: now };
   }
@@ -291,9 +320,15 @@ export class HubMembershipService {
 
     let applicationStatus: string = activeMembership.lifecycle_state as string;
     let payment: Awaited<ReturnType<typeof this.getPendingPayment>> = null;
-    if (latestOwnRow && latestOwnRow.lifecycle_state === 'APPROVED') {
+    // Workflow-ordering fix: the renewal's Contribution now exists while the
+    // new row is still PENDING (created at submission time), not APPROVED.
+    if (latestOwnRow && latestOwnRow.lifecycle_state === 'PENDING') {
       payment = await this.getPendingPayment(latestOwnRow.id);
-      if (payment) applicationStatus = 'PAYMENT_REQUIRED';
+      if (payment && payment.state !== 'COMPLETED') {
+        applicationStatus = 'PAYMENT_REQUIRED';
+      } else if (payment && payment.state === 'COMPLETED') {
+        applicationStatus = 'AWAITING_APPROVAL';
+      }
     }
 
     return {
@@ -365,9 +400,9 @@ export class HubMembershipService {
     const membershipUuid = randomUUID();
     const now = toMysqlDatetime(new Date());
 
-    await db.transaction().execute(async (trx) => {
+    const membershipId = await db.transaction().execute(async (trx) => {
       // 1. INSERT new membership row (PENDING renewal)
-      await trx
+      const inserted = await trx
         .insertInto('memberships')
         .values({
           uuid: membershipUuid,
@@ -377,7 +412,7 @@ export class HubMembershipService {
           lifecycle_state: 'PENDING',
           applied_at: now,
         })
-        .execute();
+        .executeTakeFirstOrThrow();
 
       // 2. UPDATE users — Step 1 editable fields only
       // year_joined_bcc is NEVER updated here (constitutional guard)
@@ -407,7 +442,13 @@ export class HubMembershipService {
           user_agent: userAgent,
         })
         .execute();
+
+      return Number(inserted.insertId);
     });
+
+    // Workflow-ordering fix (PART 2) -- see submitApplication() for the
+    // identical pattern and rationale.
+    await this.lifecycle.createApplicationContribution(membershipId, classId, userId);
 
     return { success: true, submittedAt: now };
   }

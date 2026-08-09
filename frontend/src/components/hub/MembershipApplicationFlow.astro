@@ -70,7 +70,7 @@ const { variant } = Astro.props;
         <span class="maf-pending__icon">💳</span>
         <div>
           <div class="maf-pending__title">Payment Required</div>
-          <div class="maf-pending__sub">Your application has been approved — complete payment to activate your membership.</div>
+          <div class="maf-pending__sub">Complete payment to submit your application for final committee review.</div>
         </div>
       </div>
       <div class="maf-pending__body">
@@ -89,7 +89,7 @@ const { variant } = Astro.props;
 
         <!-- Ready-to-pay -->
         <div id="maf-payment-ready">
-          <p class="maf-pending__note">Payment is processed securely via Razorpay. Your membership activates automatically once payment is confirmed.</p>
+          <p class="maf-pending__note">Payment is processed securely via Razorpay. Once payment is confirmed, your application moves to the BCC committee for final approval — membership does not activate automatically from payment alone.</p>
           <div id="maf-payment-error" class="maf-error-banner" style="display:none" role="alert"></div>
           <button id="maf-payment-pay-btn" class="btn btn-gold btn-md maf-submit-btn">
             <span id="maf-payment-pay-label">Pay Now</span>
@@ -115,6 +115,26 @@ const { variant } = Astro.props;
 
         <div class="maf-pending__actions">
           <a href="/hub/" class="btn btn-outline btn-md">← Back to Hub Home</a>
+          <span class="maf-contact">Questions? <a href="mailto:membership@bcc.bhopal.info">membership@bcc.bhopal.info</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AwaitingApprovalScreen — payment confirmed, awaiting the committee's final decision -->
+  <div id="maf-awaiting-approval-screen" class="maf-screen" style="display:none">
+    <div class="maf-pending">
+      <div class="maf-pending__header">
+        <span class="maf-pending__icon">✅</span>
+        <div>
+          <div class="maf-pending__title">Payment Received</div>
+          <div class="maf-pending__sub">Your application is now awaiting final approval.</div>
+        </div>
+      </div>
+      <div class="maf-pending__body">
+        <p class="maf-pending__note">Thank you — your payment has been confirmed. The BCC membership committee will now review your application. You'll be notified by email once a final decision is made; no membership number is issued until then.</p>
+        <div class="maf-pending__actions">
+          <a href="/hub/" class="btn btn-gold btn-md">← Back to Hub Home</a>
           <span class="maf-contact">Questions? <a href="mailto:membership@bcc.bhopal.info">membership@bcc.bhopal.info</a></span>
         </div>
       </div>
@@ -747,6 +767,7 @@ const { variant } = Astro.props;
     const steps        = document.getElementById('maf-steps') as HTMLElement;
     const pendingScreen= document.getElementById('maf-pending-screen') as HTMLElement;
     const paymentScreen= document.getElementById('maf-payment-screen') as HTMLElement;
+    const awaitingApprovalScreen = document.getElementById('maf-awaiting-approval-screen') as HTMLElement;
     const successScreen= document.getElementById('maf-success-screen') as HTMLElement;
     const prefillBanner= document.getElementById('maf-prefill-banner') as HTMLElement;
     const step1        = document.getElementById('maf-step1') as HTMLElement;
@@ -792,6 +813,7 @@ const { variant } = Astro.props;
       steps.style.display   = 'flex';
       pendingScreen.style.display = 'none';
       paymentScreen.style.display = 'none';
+      awaitingApprovalScreen.style.display = 'none';
       successScreen.style.display = 'none';
       step1.style.display   = n === 1 ? '' : 'none';
       step2.style.display   = n === 2 ? '' : 'none';
@@ -808,11 +830,27 @@ const { variant } = Astro.props;
       step2.style.display    = 'none';
       step3.style.display    = 'none';
       paymentScreen.style.display = 'none';
+      awaitingApprovalScreen.style.display = 'none';
       pendingScreen.style.display = '';
       const dateEl = document.getElementById('maf-pending-date') as HTMLElement;
       dateEl.textContent = submittedAt
         ? new Date(submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         : '—';
+    }
+
+    // Payment confirmed (Contribution COMPLETED); Membership stays PENDING
+    // until the committee's final approve/reject decision (PART 4/5/10) --
+    // this screen never claims the membership is active.
+    function showAwaitingApprovalScreen() {
+      loading.style.display  = 'none';
+      steps.style.display    = 'none';
+      step1.style.display    = 'none';
+      step2.style.display    = 'none';
+      step3.style.display    = 'none';
+      pendingScreen.style.display = 'none';
+      paymentScreen.style.display = 'none';
+      successScreen.style.display = 'none';
+      awaitingApprovalScreen.style.display = '';
     }
 
     function showSuccessScreen(email: string) {
@@ -824,6 +862,7 @@ const { variant } = Astro.props;
       successScreen.style.display = '';
       pendingScreen.style.display = 'none';
       paymentScreen.style.display = 'none';
+      awaitingApprovalScreen.style.display = 'none';
 
       const heading = document.getElementById('maf-success-heading') as HTMLElement;
       const body    = document.getElementById('maf-success-body') as HTMLElement;
@@ -877,6 +916,7 @@ const { variant } = Astro.props;
       step3.style.display    = 'none';
       pendingScreen.style.display = 'none';
       successScreen.style.display = 'none';
+      awaitingApprovalScreen.style.display = 'none';
       paymentScreen.style.display = '';
 
       const contributionId: number = data.pendingContributionId;
@@ -1031,7 +1071,10 @@ const { variant } = Astro.props;
         .then((res) => (res.ok ? res.json() : Promise.reject(new Error('status-check-failed'))))
         .then((data: { state: string }) => {
           if (data.state === 'COMPLETED') {
-            window.location.href = '/hub/';
+            // PART 4/10: payment completion never activates Membership and
+            // never claims activation in the UI -- show the awaiting-
+            // approval state in place, no redirect to an "active" experience.
+            showAwaitingApprovalScreen();
             return;
           }
           if (data.state === 'FAILED' || data.state === 'ABANDONED') {
@@ -1278,6 +1321,28 @@ const { variant } = Astro.props;
         }
 
         localStorage.removeItem('bcc_pending_plan');
+
+        // PART 10: a paid class now carries a Financial Contribution the
+        // instant submission succeeds -- send the member straight to the
+        // payment screen instead of the generic "submitted" screen. A
+        // free class (no Contribution created) keeps the original
+        // success screen unchanged. Reuses the same GET/POST endpoint
+        // declared above.
+        try {
+          const statusRes = await fetch(endpoint, { headers: { Authorization: `Bearer ${token() ?? ''}` } });
+          if (statusRes.ok) {
+            const statusData = await statusRes.json() as Record<string, any>;
+            if (statusData.applicationStatus === 'PAYMENT_REQUIRED') {
+              populateFields(statusData);
+              showPaymentScreen(statusData);
+              return;
+            }
+          }
+        } catch {
+          // Fall through to the generic success screen -- the application
+          // was still submitted successfully even if this status re-check failed.
+        }
+
         showSuccessScreen(prefill.email ?? '');
       } catch {
         submitError.textContent = 'A network error occurred. Please check your connection and try again.';
@@ -1327,6 +1392,10 @@ const { variant } = Astro.props;
             showPaymentScreen(data);
             return;
           }
+          if (data.applicationStatus === 'AWAITING_APPROVAL') {
+            showAwaitingApprovalScreen();
+            return;
+          }
           if (data.applicationStatus === 'ACTIVE') {
             window.location.replace('/hub/');
             return;
@@ -1338,10 +1407,14 @@ const { variant } = Astro.props;
           }
         }
 
-        // Variant B: payment required takes priority over the renewal-eligibility redirect
+        // Variant B: payment status takes priority over the renewal-eligibility redirect
         if (variant === 'renew' && data.applicationStatus === 'PAYMENT_REQUIRED') {
           populateFields(data);
           showPaymentScreen(data);
+          return;
+        }
+        if (variant === 'renew' && data.applicationStatus === 'AWAITING_APPROVAL') {
+          showAwaitingApprovalScreen();
           return;
         }
 

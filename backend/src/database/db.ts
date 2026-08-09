@@ -510,6 +510,26 @@ export interface ReceiptsTable {
   issued_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
 
+// Migration 0094 -- minimum generic PAY-001 refund foundation. Business-
+// module-agnostic, same as the tables above: no membership-specific column.
+export type FinancialRefundStatus = 'REQUESTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+export interface FinancialRefundsTable {
+  id: Generated<number>;
+  uuid: string;
+  contribution_id: number;
+  amount_paise: number;
+  currency: Generated<string>;
+  provider: string | null;
+  provider_reference: string | null;
+  status: Generated<FinancialRefundStatus>;
+  reason: string | null;
+  failure_reason: string | null;
+  requested_by_user_id: number;
+  requested_at: Generated<ColumnType<Date, string | undefined, never>>;
+  resolved_at: ColumnType<Date | null, string | null, string | null>;
+}
+
 // ============================================================================
 // Financial Settlement Evidence (PAY-001 Manual Settlement Foundation) --
 // migration 0089. Sub-canonical: represents a member's claim that payment
@@ -1083,6 +1103,7 @@ export interface DB {
   financial_contributions: FinancialContributionsTable;
   financial_transactions: FinancialTransactionsTable;
   receipts: ReceiptsTable;
+  financial_refunds: FinancialRefundsTable;
   financial_settlement_evidence: FinancialSettlementEvidenceTable;
   financial_event_outbox: FinancialEventOutboxTable;
   settlement_webhook_inbox: SettlementWebhookInboxTable;

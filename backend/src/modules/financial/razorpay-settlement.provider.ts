@@ -21,6 +21,8 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import Razorpay from 'razorpay';
 import type {
+  RefundInput,
+  RefundResult,
   SettlementOrderInput,
   SettlementOrderResult,
   SettlementProvider,
@@ -73,6 +75,27 @@ export class RazorpaySettlementProvider implements SettlementProvider {
       amountPaise: input.amountPaise,
       currency: input.currency,
       providerPublicKeyId: this.keyId,
+    };
+  }
+
+  // Translates the Financial Engine's generic refund-initiation input into
+  // a Razorpay Payment Refund API request. Razorpay's refund response
+  // carries its own `status`: 'processed' means the reversal is confirmed
+  // (typically instant-refund-eligible methods, e.g. UPI); anything else
+  // ('pending' -- bank-side crediting not yet confirmed) is surfaced as
+  // 'PROCESSING' rather than claimed as done (PAY-001 §10/§12 discipline —
+  // same rule createOrder() already follows: never fabricate an outcome).
+  async refund(input: RefundInput): Promise<RefundResult> {
+    const client = this.ensureClient();
+
+    const refund = await client.payments.refund(input.providerPaymentReference, {
+      amount: input.amountPaise,
+      notes: input.reason ? { reason: input.reason } : undefined,
+    });
+
+    return {
+      providerRefundReference: refund.id,
+      status: refund.status === 'processed' ? 'COMPLETED' : 'PROCESSING',
     };
   }
 }

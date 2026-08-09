@@ -987,19 +987,25 @@ describe('Settlement Provider boundary (Step 18 Part 1/5/6)', () => {
     expect(FINANCIAL_CONTRIBUTION_SERVICE_SRC).not.toContain('RazorpaySettlementProvider');
   });
 
-  it('the provider interface exposes only order initiation -- no refund/dispute/subscription/payout/webhook METHODS', () => {
+  it('the provider interface exposes only order initiation + refund -- no dispute/subscription/payout/webhook/reconciliation METHODS', () => {
     // Strip comments first -- the file's own prose explains why those
     // capabilities are deliberately absent, which would otherwise trip a
     // naive substring check. This asserts no such method/property exists
     // in the actual interface body.
+    //
+    // 'refund' was removed from the forbidden list by the membership
+    // payment/approval reconciliation (PART 6): a minimum generic refund
+    // capability is now a deliberate, required part of this interface --
+    // see RefundInput/RefundResult/SettlementProvider.refund() below.
     const codeOnly = SETTLEMENT_PROVIDER_INTERFACE_SRC
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/^\s*\/\/.*$/gm, '');
     const loweredCode = codeOnly.toLowerCase();
-    ['refund', 'dispute', 'subscription', 'payout', 'reconcil', 'webhook'].forEach((forbidden) => {
+    ['dispute', 'subscription', 'payout', 'reconcil', 'webhook'].forEach((forbidden) => {
       expect(loweredCode).not.toContain(forbidden);
     });
     expect(SETTLEMENT_PROVIDER_INTERFACE_SRC).toContain('createOrder(');
+    expect(SETTLEMENT_PROVIDER_INTERFACE_SRC).toContain('refund(input: RefundInput): Promise<RefundResult>');
   });
 
   it('financial.module.ts binds SETTLEMENT_PROVIDER to RazorpaySettlementProvider (the only provider-specific wiring point)', () => {

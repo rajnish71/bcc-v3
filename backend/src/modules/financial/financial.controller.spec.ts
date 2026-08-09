@@ -35,7 +35,7 @@ describe('FinancialController routes (Step 11, real source inspection)', () => {
   });
 
   it('no route path contains /membership/, /event/, or /contest/', () => {
-    const routeDecorators = CONTROLLER_SRC.match(/@(Get|Post)\('[^']*'\)/g) ?? [];
+    const routeDecorators: string[] = CONTROLLER_SRC.match(/@(Get|Post)\('[^']*'\)/g) ?? [];
     expect(routeDecorators.length).toBeGreaterThan(0);
     routeDecorators.forEach((decorator) => {
       expect(decorator.toLowerCase()).not.toContain('membership');

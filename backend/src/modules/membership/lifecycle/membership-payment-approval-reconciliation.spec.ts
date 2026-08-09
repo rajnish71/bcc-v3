@@ -21,20 +21,24 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-const LIFECYCLE_SRC = readFileSync(join(__dirname, 'membership-lifecycle.service.ts'), 'utf8');
-const LISTENER_SRC = readFileSync(join(__dirname, '../financial/membership-financial.listener.ts'), 'utf8');
-const HUB_SERVICE_SRC = readFileSync(join(__dirname, '../hub/hub-membership.service.ts'), 'utf8');
-const FINANCIAL_CONTRIBUTION_SERVICE_SRC = readFileSync(
+// Normalize CRLF -> LF so the marker-based slice()/indexOf() inspection below
+// is independent of the checkout's line-ending config (Windows core.autocrlf
+// checks these files out with CRLF; the marker strings are written with LF).
+function readSourceNormalized(path: string): string {
+  return readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
+}
+
+const LIFECYCLE_SRC = readSourceNormalized(join(__dirname, 'membership-lifecycle.service.ts'));
+const LISTENER_SRC = readSourceNormalized(join(__dirname, '../financial/membership-financial.listener.ts'));
+const HUB_SERVICE_SRC = readSourceNormalized(join(__dirname, '../hub/hub-membership.service.ts'));
+const FINANCIAL_CONTRIBUTION_SERVICE_SRC = readSourceNormalized(
   join(__dirname, '../../financial/financial-contribution.service.ts'),
-  'utf8',
 );
-const SETTLEMENT_PROVIDER_INTERFACE_SRC = readFileSync(
+const SETTLEMENT_PROVIDER_INTERFACE_SRC = readSourceNormalized(
   join(__dirname, '../../financial/settlement-provider.interface.ts'),
-  'utf8',
 );
-const FRONTEND_FLOW_SRC = readFileSync(
+const FRONTEND_FLOW_SRC = readSourceNormalized(
   join(__dirname, '../../../../../frontend/src/components/hub/MembershipApplicationFlow.astro'),
-  'utf8',
 );
 
 function slice(src: string, startMarker: string, endMarker: string, fromIndex = 0): string {

@@ -316,3 +316,103 @@ describe('N. Scope discipline (Step 19 §O/26/28)', () => {
     expect(FINANCIAL_MODULE_SRC).toContain('RazorpayWebhookService');
   });
 });
+
+// ── O. JSON payload serialization (Step 22B — inbox insert crash fix) ──────
+//
+// Root cause: mysql2 does not auto-serialize a bound JS object parameter --
+// an un-stringified object becomes the literal string "[object Object]",
+// which is not valid JSON and fails the column's JSON validation on INSERT,
+// before the inbox row (and therefore any settlement processing) can ever
+// exist. The fix is JSON.stringify() at the insert site, same pattern as
+// events.service.ts / journal.service.ts (CLAUDE.md §5.7).
+
+describe('O. JSON payload serialization (Step 22B)', () => {
+  it('claimInboxRow() stringifies the payload before insertInto', () => {
+    const claimBody = WEBHOOK_SERVICE_SRC.slice(
+      WEBHOOK_SERVICE_SRC.indexOf('private async claimInboxRow'),
+      WEBHOOK_SERVICE_SRC.indexOf('} catch (err) {', WEBHOOK_SERVICE_SRC.indexOf('private async claimInboxRow')),
+    );
+    expect(claimBody).toMatch(/payload:\s*JSON\.stringify\(payload\)/);
+  });
+
+  it('an unserialized JS object would previously have produced the literal string "[object Object]" (regression proof)', () => {
+    const payload = { event: 'payment.captured', payload: { payment: { entity: { id: 'pay_1' } } } };
+    // String(obj) / template coercion is what mysql2 does to a non-Buffer,
+    // non-primitive bound parameter -- this is the exact failure mode fixed.
+    expect(`${payload}`).toBe('[object Object]');
+    expect(() => JSON.parse(`${payload}`)).toThrow();
+  });
+
+  it('JSON.stringify(payload) always round-trips to valid, semantically-identical JSON', () => {
+    const payload = {
+      event: 'payment.captured',
+      payload: { payment: { entity: { id: 'pay_TNjMycYTQgAN5x', order_id: 'order_TNjL9dCkthlNap', amount: 120000, currency: 'INR' } } },
+    };
+    const serialized = JSON.stringify(payload);
+    expect(() => JSON.parse(serialized)).not.toThrow();
+    expect(JSON.parse(serialized)).toEqual(payload);
+  });
+
+  it('the fix does not touch signature verification, dedup key, or event-selection logic', () => {
+    // Guards against the fix being combined with unrelated architectural changes.
+    expect(WEBHOOK_SERVICE_SRC).toContain('verifyRazorpaySignature');
+    expect(WEBHOOK_SERVICE_SRC).toContain("where('provider_event_id', '=', eventId)");
+    expect(WEBHOOK_SERVICE_SRC).toContain("'payment.captured'");
+  });
+
+  it('a claimInboxRow() failure (e.g. malformed JSON) is still caught and does not throw past claimInboxRow without consulting the existing row', () => {
+    const claimBody = WEBHOOK_SERVICE_SRC.slice(
+      WEBHOOK_SERVICE_SRC.indexOf('private async claimInboxRow'),
+      WEBHOOK_SERVICE_SRC.indexOf('// ── Processing'),
+    );
+    expect(claimBody).toMatch(/catch\s*\(err\)\s*\{/);
+    expect(claimBody).toMatch(/if\s*\(!existing\)\s*throw err;/);
+  });
+});
+
+// ── P. Membership is never auto-activated by CONTRIBUTION_COMPLETED ────────
+//
+// PAY-001 workflow-ordering fix: financial completion must only make an
+// application eligible for final admin approval, never activate it directly.
+// Verified by inspecting membership-financial.listener.ts and
+// membership-lifecycle.service.ts, mirroring the pattern already used for
+// razorpay-webhook.spec.ts (Kysely ESM prevents direct instantiation here).
+
+describe('P. Payment completion never activates Membership (Step 22B / workflow-ordering)', () => {
+  const LISTENER_SRC = readFileSync(
+    join(__dirname, '..', 'membership', 'financial', 'membership-financial.listener.ts'),
+    'utf8',
+  );
+  const LIFECYCLE_SRC = readFileSync(
+    join(__dirname, '..', 'membership', 'lifecycle', 'membership-lifecycle.service.ts'),
+    'utf8',
+  );
+
+  it('MembershipFinancialListener routes CONTRIBUTION_COMPLETED to recordPaymentReceived(), not approve()/activate()', () => {
+    const handlerBody = LISTENER_SRC.slice(
+      LISTENER_SRC.indexOf('private handleContributionCompleted'),
+      LISTENER_SRC.indexOf('private handleSettlementFailed'),
+    );
+    expect(handlerBody).toContain('recordPaymentReceived');
+    expect(handlerBody).not.toMatch(/\.activate\(/);
+    expect(handlerBody).not.toMatch(/\.approve\(/);
+  });
+
+  it('recordPaymentReceived() only accepts a PENDING membership and never sets lifecycle_state', () => {
+    const methodBody = LIFECYCLE_SRC.slice(
+      LIFECYCLE_SRC.indexOf('async recordPaymentReceived'),
+      LIFECYCLE_SRC.indexOf('async suspend'),
+    );
+    expect(methodBody).toMatch(/requireState\(membershipId,\s*\['PENDING'\]\)/);
+    expect(methodBody).not.toMatch(/lifecycle_state:/);
+  });
+
+  it('a membership already past PENDING (e.g. APPROVED) is rejected by requireState(), not silently advanced', () => {
+    const requireStateBody = LIFECYCLE_SRC.slice(
+      LIFECYCLE_SRC.indexOf('private async requireState'),
+      LIFECYCLE_SRC.indexOf('private async requireState') + 600,
+    );
+    expect(requireStateBody).toMatch(/if\s*\(!allowed\.includes\(membership\.lifecycle_state\)\)\s*\{/);
+    expect(requireStateBody).toMatch(/throw/);
+  });
+});

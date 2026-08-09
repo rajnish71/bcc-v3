@@ -121,7 +121,11 @@ export class RazorpayWebhookService {
           provider: RAZORPAY_PROVIDER_NAME,
           provider_event_id: eventId,
           event_type: eventType,
-          payload: payload as never,
+          // mysql2 does not auto-serialize JS objects bound as query
+          // parameters -- an unserialized object becomes the literal string
+          // "[object Object]" in the JSON column. Must stringify explicitly
+          // (CLAUDE.md §5.7 / same pattern as events.service.ts tags).
+          payload: JSON.stringify(payload) as never,
         })
         .executeTakeFirstOrThrow();
       return { id: Number(result.insertId) };

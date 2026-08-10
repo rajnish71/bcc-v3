@@ -264,7 +264,7 @@ import CheckboxField from '../../components/forms/CheckboxField.astro';
   /* -- Persist selected plan from ?plan= param (localStorage so it
        survives email verification links opening in new tabs) ----------- */
   (function persistPlan(): void {
-    const allowed = new Set(['basic', 'student', 'individual']);
+    const allowed = new Set(['basic', 'student', 'individual', 'individual-biennial']);
     const planParam = new URLSearchParams(window.location.search).get('plan') ?? '';
     const plan = allowed.has(planParam) ? planParam : '';
     if (plan) {

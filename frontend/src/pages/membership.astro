@@ -41,6 +41,36 @@ import {
   COMMUNITY_ROW_1,
   COMMUNITY_ROW_2,
 } from '../lib/join-page.config';
+
+// Live pricing/term override: class_entitlements.fee_inr is the sole
+// authoritative pricing source (see membership-lifecycle.service.ts).
+// PUBLIC_TIERS carries editorial copy (who/eligibility/benefits) plus a
+// fallback price for build-time-unavailable backend; the fetch below
+// overrides annual/period for the four self-service tiers whenever the
+// backend is reachable, matching CLAUDE.md §4.5 build-time fetch convention.
+const liveTiers = [...PUBLIC_TIERS];
+try {
+  const res = await fetch('http://localhost:3001/api/v1/membership/public/classes');
+  if (res.ok) {
+    const classes = await res.json() as Array<{
+      code: string;
+      feeInr: number;
+      validityMonths: number;
+    }>;
+    for (const cls of classes) {
+      const idx = liveTiers.findIndex((t) => t.classCode === cls.code);
+      if (idx === -1) continue;
+      const formattedFee = `₹${cls.feeInr.toLocaleString('en-IN')}`;
+      liveTiers[idx] = {
+        ...liveTiers[idx],
+        annual: formattedFee,
+        period: cls.validityMonths > 12 ? `for ${Math.round(cls.validityMonths / 12)} years` : 'per year',
+      };
+    }
+  }
+} catch {
+  // Backend unavailable at build time -- tiers keep their PUBLIC_TIERS fallback pricing.
+}
 ---
 
 <BaseLayout
@@ -123,9 +153,9 @@ import {
           <span class="join-eyebrow">Membership Comparison</span>
         </div>
         <h2 class="join-section-heading">Find the right membership.</h2>
-        <p class="join-section-body join-section-body--narrow">Five memberships. One right one for you. Select a row to see the details.</p>
+        <p class="join-section-body join-section-body--narrow">Six memberships. One right one for you. Select a row to see the details.</p>
       </div>
-      <MembershipComparisonBlock tiers={PUBLIC_TIERS} />
+      <MembershipComparisonBlock tiers={liveTiers} />
     </div>
   </section>
 

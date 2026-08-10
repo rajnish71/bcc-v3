@@ -748,9 +748,10 @@ const { variant } = Astro.props;
 
     // ── Plan selection (read + clear from localStorage) ───────────────────
     const PLAN_MAP: Record<string, { classCode: string; displayName: string; badgeText: string; term: string }> = {
-      student:    { classCode: 'STUDENT_MEMBER',    displayName: 'Student Membership',    badgeText: 'Student Membership · 1 Year',    term: '1 Year · Effective from date of activation' },
-      individual: { classCode: 'INDIVIDUAL_MEMBER', displayName: 'Individual Membership', badgeText: 'Individual Membership · 1 Year', term: '1 Year · Effective from date of activation' },
-      basic:      { classCode: 'BASIC_MEMBER',      displayName: 'Basic Membership',      badgeText: 'Basic Membership · 1 Year',      term: '1 Year · Effective from date of activation' },
+      student:               { classCode: 'STUDENT_MEMBER',     displayName: 'Student Membership',            badgeText: 'Student Membership · 1 Year',             term: '1 Year · Effective from date of activation' },
+      individual:            { classCode: 'INDIVIDUAL_MEMBER',  displayName: 'Individual Membership',         badgeText: 'Individual Membership · 1 Year',          term: '1 Year · Effective from date of activation' },
+      'individual-biennial': { classCode: 'INDIVIDUAL_BIENNIAL',displayName: 'Individual Membership (Biennial)', badgeText: 'Individual Membership · 2 Years',       term: '2 Years · Effective from date of activation' },
+      basic:                 { classCode: 'BASIC_MEMBER',       displayName: 'Basic Membership',              badgeText: 'Basic Membership · 1 Year',               term: '1 Year · Effective from date of activation' },
     };
     const storedPlan = localStorage.getItem('bcc_pending_plan') ?? 'basic';
     const selectedPlan = PLAN_MAP[storedPlan] ?? PLAN_MAP['basic'];

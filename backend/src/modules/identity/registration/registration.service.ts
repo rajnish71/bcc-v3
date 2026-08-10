@@ -26,10 +26,10 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { Selectable } from 'kysely';
+import type { Kysely, Selectable } from 'kysely';
 import { randomUUID } from 'crypto';
 import * as argon2 from 'argon2';
-import { db, UsersTable } from '../../../database/db';
+import { db, UsersTable, type DB } from '../../../database/db';
 import { AuthService, DeviceContext, TokenPair } from '../auth/auth.service';
 import { logIdentityAudit } from '../shared/identity-audit.util';
 import {
@@ -346,31 +346,43 @@ export class RegistrationService {
       return { user: this.rowToPublicUser(existingByEmail), tokens, wasNewUser: false };
     }
 
-    // Wrap user creation + identity link in a transaction so a partial failure
-    // does not leave an orphaned user row with no auth_identity.
-    const { id, uuid } = await this.createBaselineUser({
-      email: dto.email,
-      phone: null,
-      fullName: dto.fullName,
-      passwordHash: null,
-      registrationMethod: 'SOCIAL_LOGIN',
-      createdBy: null,
-      emailVerifiedNow: true, // provider vouches for the email
-      phoneVerifiedNow: false,
+    // User creation + auth_identity link + session/refresh-token issuance all
+    // happen inside a single transaction, following the db.transaction()
+    // convention established in financial-contribution.service.ts. If any
+    // step fails (including refresh-token insertion), the whole thing rolls
+    // back -- no orphaned user, no orphaned auth_identity, no half-issued
+    // session.
+    const { id, uuid, tokens } = await db.transaction().execute(async (trx) => {
+      const created = await this.createBaselineUser(
+        {
+          email: dto.email,
+          phone: null,
+          fullName: dto.fullName,
+          passwordHash: null,
+          registrationMethod: 'SOCIAL_LOGIN',
+          createdBy: null,
+          emailVerifiedNow: true, // provider vouches for the email
+          phoneVerifiedNow: false,
+        },
+        trx,
+      );
+
+      await trx
+        .insertInto('auth_identities')
+        .values({ user_id: created.id, provider: dto.provider, provider_user_id: dto.providerUserId })
+        .execute();
+
+      const issuedTokens = await this.authService.issueSessionForUser(
+        created.id,
+        created.uuid,
+        'ACTIVE',
+        device,
+        trx,
+      );
+
+      return { id: created.id, uuid: created.uuid, tokens: issuedTokens };
     });
 
-    try {
-      await db
-        .insertInto('auth_identities')
-        .values({ user_id: id, provider: dto.provider, provider_user_id: dto.providerUserId })
-        .execute();
-    } catch (err) {
-      // auth_identity insert failed — remove the just-created user to prevent an orphan.
-      await db.deleteFrom('users').where('id', '=', id).execute().catch(() => {});
-      throw err;
-    }
-
-    const tokens = await this.authService.issueSessionForUser(id, uuid, 'ACTIVE', device);
     return { user: await this.toPublicUser(id), tokens, wasNewUser: true };
   }
 
@@ -653,11 +665,11 @@ export class RegistrationService {
     createdBy: number | null;
     emailVerifiedNow: boolean;
     phoneVerifiedNow: boolean;
-  }): Promise<{ id: number; uuid: string }> {
+  }, executor: Kysely<DB> = db): Promise<{ id: number; uuid: string }> {
     const uuid = randomUUID();
     const now = toMysqlDatetime(new Date());
 
-    const inserted = await db
+    const inserted = await executor
       .insertInto('users')
       .values({
         uuid,
@@ -680,12 +692,15 @@ export class RegistrationService {
     const userId = Number(inserted.insertId);
 
     // Deliberately NOT inserting a user_roles row here -- see file header.
-    await logIdentityAudit({
-      actorId: params.createdBy,
-      targetUserId: userId,
-      actionType: 'USER_REGISTERED',
-      newValue: { method: params.registrationMethod },
-    });
+    await logIdentityAudit(
+      {
+        actorId: params.createdBy,
+        targetUserId: userId,
+        actionType: 'USER_REGISTERED',
+        newValue: { method: params.registrationMethod },
+      },
+      executor,
+    );
 
     return { id: userId, uuid };
   }

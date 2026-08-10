@@ -24,6 +24,7 @@ import { ApplyOnBehalfDto } from './dto/apply-on-behalf.dto';
 import { RejectMembershipDto } from './dto/reject-membership.dto';
 import { SuspendMembershipDto } from './dto/suspend-membership.dto';
 import { TerminateMembershipDto } from './dto/terminate-membership.dto';
+import { SELF_SERVICE_CLASS_CODES } from './dto/submit-membership-form.dto';
 
 @Controller('api/v1/membership')
 export class MembershipController {
@@ -179,6 +180,63 @@ export class MembershipController {
 
   // -- Reads ---------------------------------------------------------
   // Static routes declared before parameterised :id to prevent shadowing.
+
+  // Public, unauthenticated: the /membership marketing page and the
+  // registration/application flow read fee_inr and term entitlements from
+  // here instead of hard-coding prices. Scoped to SELF_SERVICE_CLASS_CODES
+  // only (MEM-006: constitutional class names/pricing never appear on
+  // public surfaces) and to a fixed, non-sensitive set of entitlement keys.
+  @Get('public/classes')
+  @HttpCode(200)
+  async publicClasses() {
+    const classes = await db
+      .selectFrom('membership_classes')
+      .select(['id', 'code', 'name', 'sort_order'])
+      .where('code', 'in', SELF_SERVICE_CLASS_CODES as unknown as string[])
+      .where('type', '=', 'OPERATIONAL')
+      .orderBy('sort_order', 'asc')
+      .execute();
+
+    const classIds = classes.map((c) => c.id);
+    const entitlementKeys = [
+      'fee_inr',
+      'validity_months',
+      'renewal_term_months',
+      'pvc_card',
+      'welcome_kit',
+      'discount_pct',
+      'tour_discount_pct',
+    ];
+    const entitlements = classIds.length
+      ? await db
+          .selectFrom('class_entitlements')
+          .select(['membership_class_id', 'entitlement_key', 'entitlement_value'])
+          .where('membership_class_id', 'in', classIds)
+          .where('entitlement_key', 'in', entitlementKeys)
+          .execute()
+      : [];
+
+    const byClass = new Map<number, Record<string, string>>();
+    for (const e of entitlements) {
+      const existing = byClass.get(e.membership_class_id) ?? {};
+      existing[e.entitlement_key] = e.entitlement_value;
+      byClass.set(e.membership_class_id, existing);
+    }
+
+    return classes.map((c) => {
+      const ent = byClass.get(c.id) ?? {};
+      return {
+        code: c.code,
+        name: c.name,
+        feeInr: Number(ent.fee_inr ?? '0'),
+        validityMonths: Number(ent.renewal_term_months ?? ent.validity_months ?? '12'),
+        pvcCard: ent.pvc_card === 'true',
+        welcomeKit: ent.welcome_kit === 'true',
+        discountPct: Number(ent.discount_pct ?? '0'),
+        tourDiscountPct: Number(ent.tour_discount_pct ?? '0'),
+      };
+    });
+  }
 
   @Get('admin/pending')
   @HttpCode(200)

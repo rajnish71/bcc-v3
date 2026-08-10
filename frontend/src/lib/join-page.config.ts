@@ -44,6 +44,7 @@ export interface PublicTier {
   period: string;
   benefits: string[];
   ctaHref: string;
+  classCode?: string;
 }
 
 export interface JoinFaq {
@@ -130,7 +131,9 @@ export const PUBLIC_TIERS: PublicTier[] = [
     badge: 'BASIC',
     who: 'Photography enthusiasts beginning their journey.',
     eligibility: 'Open to all. No prior experience required.',
-    annual: '₹500',
+    // Fallback only -- membership.astro overrides this at build time from
+    // GET /api/v1/membership/public/classes (class_entitlements.fee_inr).
+    annual: '₹0',
     period: 'per year',
     benefits: [
       'Community membership',
@@ -139,6 +142,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Community forum access',
     ],
     ctaHref: '/auth/register?plan=basic',
+    classCode: 'BASIC_MEMBER',
   },
   {
     id: 'student',
@@ -146,7 +150,8 @@ export const PUBLIC_TIERS: PublicTier[] = [
     badge: 'STUDENT',
     who: 'Full-time students with a passion for photography.',
     eligibility: 'Valid student ID from a recognised institution required.',
-    annual: '₹300',
+    // Fallback only -- see basic tier comment above.
+    annual: '₹500',
     period: 'per year',
     benefits: [
       'All Basic benefits',
@@ -156,14 +161,16 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Digital membership card',
     ],
     ctaHref: '/auth/register?plan=student',
+    classCode: 'STUDENT_MEMBER',
   },
   {
     id: 'individual',
-    name: 'Individual',
+    name: 'Individual · Annual',
     badge: 'INDIVIDUAL',
     who: 'Serious photographers seeking full community participation.',
     eligibility: 'Open to all.',
-    annual: '₹1,500',
+    // Fallback only -- see basic tier comment above.
+    annual: '₹1,200',
     period: 'per year',
     benefits: [
       'All Basic benefits',
@@ -171,9 +178,29 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Exhibition participation',
       'Portfolio on bcc.bhopal.info',
       'Priority workshop booking',
-      'Digital + physical membership card',
+      'Digital membership card',
     ],
     ctaHref: '/auth/register?plan=individual',
+    classCode: 'INDIVIDUAL_MEMBER',
+  },
+  {
+    id: 'individual-biennial',
+    name: 'Individual · Biennial',
+    badge: 'INDIVIDUAL',
+    who: 'Serious photographers who want to commit for two years and save.',
+    eligibility: 'Open to all.',
+    // Fallback only -- see basic tier comment above.
+    annual: '₹2,500',
+    period: 'for 2 years',
+    benefits: [
+      'All Individual Annual benefits',
+      '2-year validity',
+      'Physical PVC membership card',
+      'Welcome kit',
+      'Higher activity + tour discounts',
+    ],
+    ctaHref: '/auth/register?plan=individual-biennial',
+    classCode: 'INDIVIDUAL_BIENNIAL',
   },
   {
     id: 'family',

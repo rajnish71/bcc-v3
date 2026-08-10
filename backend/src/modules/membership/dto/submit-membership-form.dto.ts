@@ -1,6 +1,6 @@
 import { IsDateString, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
-export const SELF_SERVICE_CLASS_CODES = ['BASIC_MEMBER', 'STUDENT_MEMBER', 'INDIVIDUAL_MEMBER'] as const;
+export const SELF_SERVICE_CLASS_CODES = ['BASIC_MEMBER', 'STUDENT_MEMBER', 'INDIVIDUAL_MEMBER', 'INDIVIDUAL_BIENNIAL'] as const;
 export type SelfServiceClassCode = (typeof SELF_SERVICE_CLASS_CODES)[number];
 
 export class SubmitMembershipFormDto {

@@ -9,7 +9,8 @@
 // member_recognitions. Keep it that way -- never add a membership-side
 // column here, even a nullable one "for convenience".
 
-import { db } from '../../../database/db';
+import type { Kysely } from 'kysely';
+import { db, type DB } from '../../../database/db';
 
 export interface IdentityAuditEntry {
   actorId: number | null;
@@ -20,8 +21,14 @@ export interface IdentityAuditEntry {
   reason?: string | null;
 }
 
-export async function logIdentityAudit(entry: IdentityAuditEntry): Promise<void> {
-  await db
+// executor defaults to the module-level `db` for all pre-existing callers;
+// callers running inside a transaction pass their `trx` so this insert
+// commits/rolls back atomically with the rest of the transaction.
+export async function logIdentityAudit(
+  entry: IdentityAuditEntry,
+  executor: Kysely<DB> = db,
+): Promise<void> {
+  await executor
     .insertInto('identity_audit_log')
     .values({
       actor_id: entry.actorId,

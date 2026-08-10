@@ -12,7 +12,10 @@
  * Mobile:   card-per-tier stack, contribution always visible
  *
  * Recognition classes EXCLUDED per MEM-006.
- * Annual amounts are placeholder — wire to CMS/DB API when available.
+ * Annual amounts for Basic/Student/Individual/Individual Biennial come from
+ * class_entitlements.fee_inr, fetched at build time by membership.astro via
+ * GET /api/v1/membership/public/classes. Family/Corporate (group-owned, not
+ * in class_entitlements) keep editorial fallback pricing from PUBLIC_TIERS.
  *
  * New Component — §12 specification.
  */

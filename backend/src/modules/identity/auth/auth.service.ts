@@ -21,7 +21,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import * as bcrypt from 'bcryptjs';
-import { db } from '../../../database/db';
+import type { Kysely } from 'kysely';
+import { db, type DB } from '../../../database/db';
 import {
   generateRefreshToken,
   hashRefreshToken,
@@ -293,14 +294,21 @@ export class AuthService {
   /**
    * Public entry point for other identity-domain services (RegistrationService)
    * to issue a fresh session immediately after creating a user.
+   *
+   * executor defaults to the module-level `db` for all pre-existing callers;
+   * a caller running inside a transaction passes its `trx` so the refresh
+   * token insert commits/rolls back atomically with the rest of the
+   * transaction (see financial-contribution.service.ts for the established
+   * convention this follows).
    */
   async issueSessionForUser(
     userId: number,
     uuid: string,
     status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED',
     device: DeviceContext,
+    executor: Kysely<DB> = db,
   ): Promise<TokenPair> {
-    return this.issueTokenPair(userId, uuid, status, device);
+    return this.issueTokenPair(userId, uuid, status, device, undefined, executor);
   }
 
   private async issueTokenPair(
@@ -309,6 +317,7 @@ export class AuthService {
     status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED',
     device: DeviceContext,
     replacesTokenId?: number,
+    executor: Kysely<DB> = db,
   ): Promise<TokenPair> {
     const payload: AccessTokenPayload = { sub: userId, uuid, status };
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -322,7 +331,7 @@ export class AuthService {
       Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
     );
 
-    const inserted = await db
+    const inserted = await executor
       .insertInto('refresh_tokens')
       .values({
         user_id:      userId,
@@ -335,7 +344,7 @@ export class AuthService {
       .executeTakeFirstOrThrow();
 
     if (replacesTokenId) {
-      await db
+      await executor
         .updateTable('refresh_tokens')
         .set({ replaced_by_token_id: Number(inserted.insertId) })
         .where('id', '=', replacesTokenId)

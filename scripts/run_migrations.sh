@@ -17,7 +17,12 @@ source backend/.env
 set +a
 
 export MYSQL_PWD="${DB_PASSWORD}"   # avoids password appearing in `ps` output via -p flag
-MYSQL_CMD=(mysql -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" "${DB_NAME}")
+# --no-defaults: the deploy operator's own ~/.my.cnf ([client] user=...,
+# host=localhost) is read by mysql AFTER MYSQL_PWD/command-line -u/-h are
+# resolved and silently wins, authenticating as the wrong MySQL user against
+# the wrong host instead of bcc_v3_app. --no-defaults skips all option-file
+# discovery so only the explicit flags below and MYSQL_PWD apply.
+MYSQL_CMD=(mysql --no-defaults -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" "${DB_NAME}")
 
 MIGRATIONS_DIR="/var/www/bcc-v3/database/migrations"
 

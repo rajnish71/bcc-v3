@@ -45,6 +45,8 @@ export interface PublicTier {
   benefits: string[];
   ctaHref: string;
   classCode?: string;
+  /** false = no self-service acquisition flow exists yet (Family/Corporate — group memberships). Defaults to true when omitted. */
+  selfService?: boolean;
 }
 
 export interface JoinFaq {
@@ -220,6 +222,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
     ],
     ctaHref: '/auth/register?plan=family',
     classCode: 'FAMILY_MEMBERSHIP',
+    selfService: false,
   },
   {
     id: 'corporate',
@@ -239,6 +242,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
     ],
     ctaHref: '/auth/register?plan=corporate',
     classCode: 'CORPORATE_MEMBERSHIP',
+    selfService: false,
   },
 ];
 

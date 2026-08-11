@@ -33,6 +33,8 @@ interface Tier {
   period: string;
   benefits: string[];
   ctaHref?: string;
+  /** false = no self-service acquisition flow exists yet (Family/Corporate — group memberships). Defaults to true when omitted. */
+  selfService?: boolean;
 }
 
 interface Props {
@@ -77,14 +79,23 @@ const { tiers, ctaLabel = 'Become a Member' } = Astro.props;
       <div class="mcb__col-annual">
         <div class="mcb__annual">{tier.annual}</div>
         <div class="mcb__period">{tier.period}</div>
-        <a
-          href={tier.ctaHref || '/auth/register/'}
-          class="mcb__select-btn"
-          tabindex="-1"
-          aria-hidden="true"
-        >
-          {ctaLabel}
-        </a>
+        {tier.selfService === false ? (
+          <span
+            class="mcb__select-btn mcb__select-btn--unavailable"
+            aria-disabled="true"
+          >
+            Self-Service Unavailable
+          </span>
+        ) : (
+          <a
+            href={tier.ctaHref || '/auth/register/'}
+            class="mcb__select-btn"
+            tabindex="-1"
+            aria-hidden="true"
+          >
+            {ctaLabel}
+          </a>
+        )}
       </div>
     </div>
   ))}
@@ -242,6 +253,21 @@ const { tiers, ctaLabel = 'Become a Member' } = Astro.props;
   pointer-events: auto;
 }
 
+/* Group memberships (Family/Corporate) — no self-service acquisition flow
+   exists yet. Muted, non-interactive state reusing the repository's
+   existing disabled-item treatment (Nav.astro .nav-dropdown-item--disabled,
+   Footer.astro .footer-link-disabled). Row/price/benefits stay unaffected —
+   only this CTA slot is muted. */
+.mcb__select-btn--unavailable {
+  background: var(--surface-2);
+  color: var(--ink-400);
+  cursor: default;
+}
+.mcb__row.is-active .mcb__select-btn--unavailable {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Footnote */
 .mcb__footnote {
   padding: 16px 48px 24px;
@@ -312,7 +338,7 @@ const { tiers, ctaLabel = 'Become a Member' } = Astro.props;
       r.setAttribute('aria-expanded', isTarget ? 'true' : 'false');
       const benefitsPanel = r.querySelector<HTMLElement>('.mcb__benefits-panel');
       if (benefitsPanel) benefitsPanel.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
-      const btn = r.querySelector<HTMLAnchorElement>('.mcb__select-btn');
+      const btn = r.querySelector<HTMLAnchorElement>('a.mcb__select-btn');
       if (btn) btn.setAttribute('tabindex', isTarget ? '0' : '-1');
       if (btn) btn.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
     });
@@ -328,7 +354,7 @@ const { tiers, ctaLabel = 'Become a Member' } = Astro.props;
         row.setAttribute('aria-expanded', 'false');
         const panel = row.querySelector<HTMLElement>('.mcb__benefits-panel');
         if (panel) panel.setAttribute('aria-hidden', 'true');
-        const btn = row.querySelector<HTMLAnchorElement>('.mcb__select-btn');
+        const btn = row.querySelector<HTMLAnchorElement>('a.mcb__select-btn');
         if (btn) { btn.setAttribute('tabindex', '-1'); btn.setAttribute('aria-hidden', 'true'); }
       } else {
         activateRow(row);

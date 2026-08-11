@@ -1,0 +1,164 @@
+---
+/**
+ * MembershipCTA.astro
+ * V6 MembershipCTA Design Reconciliation — Decision C.
+ * Presentation-only editorial invitation. Forest surface, one canonical
+ * layout, no variant mechanism. No prices, no benefit bullets, no data.
+ * Placement: Homepage only (see reconciliation §08 Placement Map).
+ * Journal keeps V6 64 Component 10 (Inline CTA Card) — not this component.
+ */
+interface Props {
+  headline?: string;
+  body?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  secondaryLabel?: string;
+  kicker?: string;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const {
+  headline = 'Photography is richer when shared.',
+  body = 'Explore BCC membership options and find the membership that fits your photographic journey.',
+  ctaLabel = 'Become a Member',
+  ctaHref = '/membership/',
+  secondaryLabel = 'Explore all membership options',
+  kicker,
+  headingLevel = 'h2',
+} = Astro.props;
+
+const Heading = headingLevel;
+---
+
+<section class="mcta" aria-label="Membership">
+  <div class="mcta__band">
+    <div class="mcta__gold-line" aria-hidden="true"></div>
+    <div class="mcta__content">
+      {kicker && (
+        <div class="mcta__kicker">
+          <span class="mcta__kicker-line" aria-hidden="true"></span>
+          {kicker}
+        </div>
+      )}
+      <Heading class="mcta__heading">{headline}</Heading>
+      <p class="mcta__body">{body}</p>
+      <div class="mcta__actions">
+        <a href={ctaHref} class="mcta__cta-primary">{ctaLabel} <span aria-hidden="true">→</span></a>
+        {secondaryLabel && (
+          <a href={ctaHref} class="mcta__cta-secondary">{secondaryLabel} <span aria-hidden="true">→</span></a>
+        )}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.mcta__band {
+  background: var(--forest-600);
+  padding: var(--s-10) var(--s-10);
+  position: relative;
+  overflow: hidden;
+}
+
+.mcta__gold-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--hairline-gold);
+  pointer-events: none;
+}
+
+.mcta__content {
+  max-width: var(--container-content);
+}
+
+.mcta__kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: 600;
+  color: rgba(201, 169, 97, 0.8);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-label);
+  margin-bottom: calc(var(--s-3) - 4px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mcta__kicker-line {
+  display: block;
+  width: var(--kicker-line-width);
+  height: var(--kicker-line-height);
+  background: rgba(201, 169, 97, 0.8);
+  flex-shrink: 0;
+}
+
+.mcta__heading {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: #FFFFFF;
+  max-width: 580px;
+  margin-bottom: calc(var(--s-3) - 4px);
+}
+
+.mcta__body {
+  font-size: 17px;
+  line-height: var(--lh-body);
+  font-weight: var(--weight-light);
+  color: rgba(216, 210, 198, 0.9);
+  max-width: 520px;
+  margin-bottom: calc(var(--s-5) - 4px);
+}
+
+.mcta__actions {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--s-3) - 4px);
+  flex-wrap: wrap;
+}
+
+.mcta__cta-primary {
+  font-size: var(--text-ui);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background: var(--gold-gradient);
+  padding: 14px 36px;
+  display: inline-block;
+  border-radius: var(--r-1);
+  text-decoration: none;
+  box-shadow: var(--gold-gradient-glow);
+  transition: opacity var(--dur-instant) var(--ease-standard);
+}
+.mcta__cta-primary:hover { opacity: 0.9; color: #FFFFFF; }
+
+.mcta__cta-secondary {
+  font-size: var(--text-ui);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(201, 169, 97, 0.8);
+  text-decoration: none;
+}
+.mcta__cta-secondary:hover { color: var(--gold-light); }
+
+@media (max-width: 900px) {
+  .mcta__band { padding: var(--s-6) var(--s-5); }
+  .mcta__heading { font-size: clamp(24px, 3vw, 34px); }
+  .mcta__body { font-size: 16px; }
+  .mcta__actions { gap: var(--s-2); }
+}
+
+@media (max-width: 480px) {
+  .mcta__band { padding: var(--s-5) var(--s-3); }
+  .mcta__heading { font-size: clamp(22px, 6vw, 28px); }
+  .mcta__body { font-size: 15px; }
+  .mcta__actions { flex-direction: column; align-items: stretch; gap: var(--s-2); }
+  .mcta__cta-primary { text-align: center; }
+  .mcta__cta-secondary { text-align: center; }
+}
+</style>

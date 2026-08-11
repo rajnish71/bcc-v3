@@ -42,12 +42,15 @@ import {
   COMMUNITY_ROW_2,
 } from '../lib/join-page.config';
 
-// Live pricing/term override: class_entitlements.fee_inr is the sole
-// authoritative pricing source (see membership-lifecycle.service.ts).
-// PUBLIC_TIERS carries editorial copy (who/eligibility/benefits) plus a
-// fallback price for build-time-unavailable backend; the fetch below
-// overrides annual/period for the four self-service tiers whenever the
-// backend is reachable, matching CLAUDE.md §4.5 build-time fetch convention.
+// Live pricing/term override. Individual-ownership tiers (Basic/Student/
+// Individual Annual/Individual Biennial) are priced from
+// class_entitlements.fee_inr; Family/Corporate are group memberships priced
+// from group_type_entitlements.fee_inr (see membership.controller.ts
+// publicClasses(), which merges both sources by classCode). PUBLIC_TIERS
+// carries editorial copy (who/eligibility/benefits) plus a fallback price
+// for build-time-unavailable backend; the fetch below overrides annual/
+// period for all six public tiers whenever the backend is reachable,
+// matching CLAUDE.md §4.5 build-time fetch convention.
 const liveTiers = [...PUBLIC_TIERS];
 try {
   const res = await fetch('http://localhost:3001/api/v1/membership/public/classes');

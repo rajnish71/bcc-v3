@@ -12,10 +12,12 @@
  * Mobile:   card-per-tier stack, contribution always visible
  *
  * Recognition classes EXCLUDED per MEM-006.
- * Annual amounts for Basic/Student/Individual/Individual Biennial come from
- * class_entitlements.fee_inr, fetched at build time by membership.astro via
- * GET /api/v1/membership/public/classes. Family/Corporate (group-owned, not
- * in class_entitlements) keep editorial fallback pricing from PUBLIC_TIERS.
+ * Annual amounts for all six tiers are fetched at build time by
+ * membership.astro via GET /api/v1/membership/public/classes: Basic/Student/
+ * Individual Annual/Individual Biennial from class_entitlements.fee_inr,
+ * Family/Corporate from group_type_entitlements.fee_inr (group-owned, a
+ * separate model). PUBLIC_TIERS values are the fallback used only when the
+ * backend is unreachable at build time.
  *
  * New Component — §12 specification.
  */

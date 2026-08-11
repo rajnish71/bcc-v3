@@ -208,8 +208,10 @@ export const PUBLIC_TIERS: PublicTier[] = [
     badge: 'FAMILY',
     who: 'Households where photography is a shared pursuit.',
     eligibility: 'Up to 4 members at the same address. Each receives an individual profile and membership number.',
-    annual: '₹2,500',
-    period: 'per year',
+    // Fallback only -- membership.astro overrides this at build time from
+    // GET /api/v1/membership/public/classes (group_type_entitlements.fee_inr).
+    annual: '₹6,000',
+    period: 'for 2 years',
     benefits: [
       'All Individual benefits per member',
       'Shared family membership number',
@@ -217,6 +219,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Family photowalk priority',
     ],
     ctaHref: '/auth/register?plan=family',
+    classCode: 'FAMILY_MEMBERSHIP',
   },
   {
     id: 'corporate',
@@ -224,7 +227,8 @@ export const PUBLIC_TIERS: PublicTier[] = [
     badge: 'CORPORATE',
     who: 'Businesses and organisations supporting the photography community.',
     eligibility: 'Any registered entity. Two nominated individuals receive Individual membership.',
-    annual: '₹8,000',
+    // Fallback only -- see family tier comment above.
+    annual: '₹5,000',
     period: 'per year',
     benefits: [
       'Two Individual memberships included',
@@ -234,6 +238,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
       'Annual impact report',
     ],
     ctaHref: '/auth/register?plan=corporate',
+    classCode: 'CORPORATE_MEMBERSHIP',
   },
 ];
 

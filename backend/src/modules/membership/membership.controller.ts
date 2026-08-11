@@ -183,9 +183,15 @@ export class MembershipController {
 
   // Public, unauthenticated: the /membership marketing page and the
   // registration/application flow read fee_inr and term entitlements from
-  // here instead of hard-coding prices. Scoped to SELF_SERVICE_CLASS_CODES
-  // only (MEM-006: constitutional class names/pricing never appear on
-  // public surfaces) and to a fixed, non-sensitive set of entitlement keys.
+  // here instead of hard-coding prices. Individual-ownership classes are
+  // scoped to SELF_SERVICE_CLASS_CODES (MEM-006: constitutional class
+  // names/pricing never appear on public surfaces) and a fixed,
+  // non-sensitive set of entitlement keys. Family/Corporate are group
+  // memberships (a separate model -- group_membership_types +
+  // group_type_entitlements, not membership_classes/class_entitlements) and
+  // are merged in from that source, tagged `kind: 'GROUP'` so consumers
+  // can't confuse them with individual-ownership classes. INSTITUTIONAL is
+  // excluded -- it has no presence on the public catalogue today.
   @Get('public/classes')
   @HttpCode(200)
   async publicClasses() {
@@ -223,11 +229,12 @@ export class MembershipController {
       byClass.set(e.membership_class_id, existing);
     }
 
-    return classes.map((c) => {
+    const individualResults = classes.map((c) => {
       const ent = byClass.get(c.id) ?? {};
       return {
         code: c.code,
         name: c.name,
+        kind: 'INDIVIDUAL' as const,
         feeInr: Number(ent.fee_inr ?? '0'),
         validityMonths: Number(ent.renewal_term_months ?? ent.validity_months ?? '12'),
         pvcCard: ent.pvc_card === 'true',
@@ -236,6 +243,47 @@ export class MembershipController {
         tourDiscountPct: Number(ent.tour_discount_pct ?? '0'),
       };
     });
+
+    const groupTypes = await db
+      .selectFrom('group_membership_types')
+      .select(['id', 'code', 'name', 'sort_order'])
+      .where('entity_type', 'in', ['FAMILY', 'CORPORATE'])
+      .orderBy('sort_order', 'asc')
+      .execute();
+
+    const groupTypeIds = groupTypes.map((g) => g.id);
+    const groupEntitlements = groupTypeIds.length
+      ? await db
+          .selectFrom('group_type_entitlements')
+          .select(['group_membership_type_id', 'entitlement_key', 'entitlement_value'])
+          .where('group_membership_type_id', 'in', groupTypeIds)
+          .where('entitlement_key', 'in', ['fee_inr', 'validity_months'])
+          .execute()
+      : [];
+
+    const byGroupType = new Map<number, Record<string, string>>();
+    for (const e of groupEntitlements) {
+      const existing = byGroupType.get(e.group_membership_type_id) ?? {};
+      existing[e.entitlement_key] = e.entitlement_value;
+      byGroupType.set(e.group_membership_type_id, existing);
+    }
+
+    const groupResults = groupTypes.map((g) => {
+      const ent = byGroupType.get(g.id) ?? {};
+      return {
+        code: g.code,
+        name: g.name,
+        kind: 'GROUP' as const,
+        feeInr: Number(ent.fee_inr ?? '0'),
+        validityMonths: Number(ent.validity_months ?? '12'),
+        pvcCard: false,
+        welcomeKit: false,
+        discountPct: 0,
+        tourDiscountPct: 0,
+      };
+    });
+
+    return [...individualResults, ...groupResults];
   }
 
   @Get('admin/pending')

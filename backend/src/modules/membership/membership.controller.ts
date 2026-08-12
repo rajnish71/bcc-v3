@@ -212,6 +212,11 @@ export class MembershipController {
       'welcome_kit',
       'discount_pct',
       'tour_discount_pct',
+      'portfolio_enabled',
+      'public_gallery_enabled',
+      'featured_in_directory',
+      'priority_registration',
+      'digital_card',
     ];
     const entitlements = classIds.length
       ? await db
@@ -241,6 +246,11 @@ export class MembershipController {
         welcomeKit: ent.welcome_kit === 'true',
         discountPct: Number(ent.discount_pct ?? '0'),
         tourDiscountPct: Number(ent.tour_discount_pct ?? '0'),
+        portfolioEnabled: ent.portfolio_enabled === 'true',
+        publicGalleryEnabled: ent.public_gallery_enabled === 'true',
+        featuredInDirectory: ent.featured_in_directory === 'true',
+        priorityRegistration: ent.priority_registration === 'true',
+        digitalCard: ent.digital_card === 'true',
       };
     });
 
@@ -252,12 +262,27 @@ export class MembershipController {
       .execute();
 
     const groupTypeIds = groupTypes.map((g) => g.id);
+    const groupEntitlementKeys = [
+      'fee_inr',
+      'validity_months',
+      'pvc_card',
+      'welcome_kit',
+      'discount_pct',
+      'tour_discount_pct',
+      'portfolio_enabled',
+      'public_gallery_enabled',
+      'featured_in_directory',
+      'priority_registration',
+      'digital_card',
+      'max_delegates',
+      'company_recognition',
+    ];
     const groupEntitlements = groupTypeIds.length
       ? await db
           .selectFrom('group_type_entitlements')
           .select(['group_membership_type_id', 'entitlement_key', 'entitlement_value'])
           .where('group_membership_type_id', 'in', groupTypeIds)
-          .where('entitlement_key', 'in', ['fee_inr', 'validity_months'])
+          .where('entitlement_key', 'in', groupEntitlementKeys)
           .execute()
       : [];
 
@@ -276,10 +301,17 @@ export class MembershipController {
         kind: 'GROUP' as const,
         feeInr: Number(ent.fee_inr ?? '0'),
         validityMonths: Number(ent.validity_months ?? '12'),
-        pvcCard: false,
-        welcomeKit: false,
-        discountPct: 0,
-        tourDiscountPct: 0,
+        pvcCard: ent.pvc_card === 'true',
+        welcomeKit: ent.welcome_kit === 'true',
+        discountPct: Number(ent.discount_pct ?? '0'),
+        tourDiscountPct: Number(ent.tour_discount_pct ?? '0'),
+        portfolioEnabled: ent.portfolio_enabled === 'true',
+        publicGalleryEnabled: ent.public_gallery_enabled === 'true',
+        featuredInDirectory: ent.featured_in_directory === 'true',
+        priorityRegistration: ent.priority_registration === 'true',
+        digitalCard: ent.digital_card === 'true',
+        maxDelegates: Number(ent.max_delegates ?? '0'),
+        companyRecognition: ent.company_recognition === 'true',
       };
     });
 

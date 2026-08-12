@@ -5,7 +5,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 <HubLayout title="Upload" description="Upload photographs to your Bhopal Camera Club portfolio.">
 
   <input type="file" id="file-input" multiple
-    accept="image/jpeg,.jpg,.jpeg,.tiff,.tif,image/tiff,.nef,.cr3,.arw,.dng,image/x-nikon-nef,image/x-canon-cr3,image/x-sony-arw,image/x-adobe-dng"
+    accept="image/jpeg,.jpg,.jpeg,image/png,.png,image/tiff,.tiff,.tif,image/heic,.heic,image/heif,.heif,image/webp,.webp,.nef,.cr2,.cr3,.arw,.orf,.dng,image/x-nikon-nef,image/x-canon-cr2,image/x-canon-cr3,image/x-sony-arw,image/x-olympus-orf,image/x-adobe-dng"
     class="sr-only" aria-label="Select photographs" />
 
   <div class="hub-main" id="hub-main">
@@ -31,8 +31,8 @@ import HubLayout from '../../../layouts/HubLayout.astro';
         <p class="drop-sub">Or choose files from your memory card, drive, or camera roll. Uploads continue in the background — you can navigate away and come back.</p>
         <button class="btn-gold" id="btn-choose" type="button">Choose Photographs</button>
         <div class="drop-hints-wrap">
-          <span class="mono-hint">JPEG · TIFF · RAW (.CR3 .NEF .ARW)</span>
-          <span class="mono-hint">Up to 50MB per file</span>
+          <span class="mono-hint">JPEG · PNG · HEIC · TIFF · RAW (.CR2 .CR3 .NEF .ARW .ORF .DNG)</span>
+          <span class="mono-hint">Up to 150MB per file</span>
           <span class="mono-hint" id="card-hint" hidden>Insert a memory card — BCC detects it automatically</span>
         </div>
       </div>
@@ -450,7 +450,7 @@ interface FileItem {
 /* ════════════════════════════════════════════════════════
    STATE
 ════════════════════════════════════════════════════════ */
-const MAX_BYTES = 50 * 1024 * 1024;
+const MAX_BYTES = 150 * 1024 * 1024; // matches backend MAX_PHOTO_BYTES (imagekit.util.ts)
 const CONCURRENCY = 3;
 
 let phase: Phase = 'empty';
@@ -872,7 +872,10 @@ function renderKeywords(): void {
 ════════════════════════════════════════════════════════ */
 function checkAllTerminal(): void {
   const nonTerminal = items.filter(i => i.status === 'queued' || i.status === 'uploading' || i.status === 'processing');
-  if (nonTerminal.length === 0 && items.length > 0) {
+  const needsAction = items.filter(i => i.status === 'failed' || i.status === 'duplicate');
+  // Failed/duplicate items must stay visible (with Retry/Remove or dup actions) in
+  // the uploading queue — never auto-advance past them with no trace.
+  if (nonTerminal.length === 0 && needsAction.length === 0 && items.length > 0) {
     // All resolved — move to metadata
     setTimeout(() => {
       setPhase('metadata');
@@ -992,17 +995,31 @@ async function runUploadQueue(): Promise<void> {
 /* ════════════════════════════════════════════════════════
    FILE HANDLING
 ════════════════════════════════════════════════════════ */
+// Matches backend ALLOWED_MIME_TYPES (imagekit.util.ts) — do not drift from it,
+// or valid files get silently rejected client-side before the server ever sees them.
 const ALLOWED = new Set([
-  'image/jpeg','image/jpg','image/tiff','image/x-nikon-nef',
-  'image/x-canon-cr2','image/x-canon-cr3','image/x-sony-arw','image/x-adobe-dng',
+  'image/jpeg','image/jpg','image/png','image/tiff',
+  'image/heic','image/heif','image/webp',
+  'image/x-nikon-nef','image/x-canon-cr2','image/x-canon-cr3',
+  'image/x-sony-arw','image/x-olympus-orf','image/x-adobe-dng',
 ]);
+const ALLOWED_EXT = /\.(jpe?g|png|tiff?|heic|heif|webp|nef|cr2|cr3|arw|orf|dng)$/i;
 
 function addFiles(files: FileList | File[]): void {
-  const arr = Array.from(files).filter(f => {
+  const all = Array.from(files);
+  const arr = all.filter(f => {
     if (f.size > MAX_BYTES) return false;
-    return ALLOWED.has(f.type) || /\.(jpg|jpeg|tiff?|nef|cr2|cr3|arw|dng)$/i.test(f.name);
+    return ALLOWED.has(f.type) || ALLOWED_EXT.test(f.name);
   });
-  if (!arr.length) return;
+  if (!arr.length) {
+    if (all.length > 0) {
+      const oversize = all.some(f => f.size > MAX_BYTES);
+      alert(oversize
+        ? `File exceeds the ${Math.round(MAX_BYTES / 1024 / 1024)}MB limit.`
+        : 'Unsupported file type. Allowed: JPEG, PNG, TIFF, HEIC, WebP, and common RAW formats (NEF, CR2, CR3, ARW, ORF, DNG).');
+    }
+    return;
+  }
 
   const newItems: FileItem[] = arr.map(f => {
     const thumb = f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined;

@@ -129,6 +129,17 @@ describe('RazorpaySettlementProvider — order translation (Step 18 Part 6/9)', 
     );
   });
 
+  it('orders are created with payment_capture: true so a successful payment auto-captures instead of sitting authorized-but-uncaptured forever', async () => {
+    ordersCreate.mockResolvedValue({ id: 'order_FAKEBBB', status: 'created' });
+    const provider = new RazorpaySettlementProvider();
+
+    await provider.createOrder({
+      contributionId: 1, amountPaise: 100, currency: 'INR', receiptReference: 'FC-1-gggggggg',
+    });
+
+    expect(ordersCreate).toHaveBeenCalledWith(expect.objectContaining({ payment_capture: true }));
+  });
+
   it('the provider never invents/adds fields to the request beyond what it was given', async () => {
     ordersCreate.mockResolvedValue({ id: 'order_FAKEAAA', status: 'created' });
     const provider = new RazorpaySettlementProvider();
@@ -138,7 +149,9 @@ describe('RazorpaySettlementProvider — order translation (Step 18 Part 6/9)', 
     });
 
     const callArgs = ordersCreate.mock.calls[0][0];
-    expect(Object.keys(callArgs).sort()).toStrictEqual(['amount', 'currency', 'notes', 'receipt'].sort());
+    expect(Object.keys(callArgs).sort()).toStrictEqual(
+      ['amount', 'currency', 'notes', 'receipt', 'payment_capture'].sort(),
+    );
   });
 
   it('returns providerOrderReference from the Razorpay order id', async () => {

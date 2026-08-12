@@ -68,6 +68,7 @@ export class RazorpaySettlementProvider implements SettlementProvider {
       currency: input.currency,
       receipt: input.receiptReference,
       notes: input.metadata,
+      payment_capture: true,
     });
 
     return {

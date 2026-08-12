@@ -49,6 +49,10 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
     <!-- ── PHASE: METADATA ───────────────────────────────────────── -->
     <section id="phase-metadata" hidden>
+      <div class="queue-toolbar">
+        <span class="queue-count-text" id="metadata-count-text">0 ready to caption</span>
+        <button class="btn-outline btn-sm" id="btn-add-more-metadata" type="button">Add More Photographs</button>
+      </div>
       <div class="selection-bar" id="selection-bar" hidden role="status" aria-live="polite">
         <div class="sel-left">
           <span class="sel-badge" id="sel-badge">0</span>
@@ -536,8 +540,9 @@ function setPhase(p: Phase): void {
   if (p === 'empty') sub.textContent = 'Photographs are processed in the order added · nothing publishes until you finish in Metadata';
   if (p === 'uploading') updateUploadingSubtitle();
   if (p === 'metadata') {
-    const ready = items.filter(i => i.status === 'done').length;
+    const ready = items.filter(i => i.status === 'done' && !i.confirmedAs).length;
     sub.textContent = `${ready} ready to caption · select photographs to begin`;
+    qid('metadata-count-text').textContent = `${ready} ready to caption`;
   }
   if (p === 'complete') sub.textContent = '';
 }
@@ -753,6 +758,7 @@ function renderQueueGrid(): void {
 function renderPhotoWall(): void {
   const done = items.filter(i => i.status === 'done' && !i.confirmedAs);
   qid('photo-wall').innerHTML = done.map(buildWallTile).join('');
+  qid('metadata-count-text').textContent = `${done.length} ready to caption`;
   updateSelectionBar();
 }
 
@@ -1027,7 +1033,7 @@ function addFiles(files: FileList | File[]): void {
   });
   items.push(...newItems);
 
-  if (phase === 'empty') setPhase('uploading');
+  if (phase === 'empty' || phase === 'metadata' || phase === 'complete') setPhase('uploading');
   renderQueueGrid();
   runUploadQueue().catch(() => {});
 }
@@ -1251,6 +1257,12 @@ dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === '
 
 // Choose button
 qid('btn-choose').addEventListener('click', e => {
+  e.stopPropagation();
+  if (isMobile()) { openSourcePicker(); } else { fileInput.click(); }
+});
+
+// Add more photographs — from the metadata phase, before publishing
+qid('btn-add-more-metadata').addEventListener('click', e => {
   e.stopPropagation();
   if (isMobile()) { openSourcePicker(); } else { fileInput.click(); }
 });

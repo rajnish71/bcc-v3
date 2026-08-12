@@ -1229,6 +1229,7 @@ async function handlePublish(asDraft: boolean): Promise<void> {
     else headline = `${totalDrafted} photograph${totalDrafted !== 1 ? 's' : ''} saved as draft${totalDrafted !== 1 ? 's' : ''}.`;
     qid('complete-headline').textContent = headline;
     setPhase('complete');
+    btnP.disabled = false; btnD.disabled = false;
   } else {
     if (errorMsg) showPubError(`Some photographs could not be published: ${errorMsg}`);
     renderPhotoWall();

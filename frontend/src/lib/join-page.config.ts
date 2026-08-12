@@ -229,12 +229,12 @@ export const PUBLIC_TIERS: PublicTier[] = [
     name: 'Corporate',
     badge: 'CORPORATE',
     who: 'Businesses and organisations supporting the photography community.',
-    eligibility: 'Any registered entity. Two nominated individuals receive Individual membership.',
+    eligibility: 'Any registered entity. Five nominated individuals receive Individual membership.',
     // Fallback only -- see family tier comment above.
     annual: '₹5,000',
     period: 'per year',
     benefits: [
-      'Two Individual memberships included',
+      'Five Individual memberships included',
       'Institutional recognition on bcc.bhopal.info',
       'Co-branding on selected activities',
       'Event sponsorship priority',

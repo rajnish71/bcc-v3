@@ -32,6 +32,7 @@ import CommunityPhotoGrid from '../components/join/CommunityPhotoGrid.astro';
 import BenefitPillarGrid from '../components/join/BenefitPillarGrid.astro';
 import IdentityCardGrid from '../components/join/IdentityCardGrid.astro';
 import MembershipComparisonBlock from '../components/join/MembershipComparisonBlock.astro';
+import MembershipBenefitsMatrix, { type PublicMembershipClass } from '../components/join/MembershipBenefitsMatrix.astro';
 import FAQAccordion from '../components/join/FAQAccordion.astro';
 import {
   BENEFIT_PILLARS,
@@ -52,14 +53,15 @@ import {
 // period for all six public tiers whenever the backend is reachable,
 // matching CLAUDE.md §4.5 build-time fetch convention.
 const liveTiers = [...PUBLIC_TIERS];
+let publicClasses: PublicMembershipClass[] = [];
 try {
   const res = await fetch('http://localhost:3001/api/v1/membership/public/classes');
   if (res.ok) {
-    const classes = await res.json() as Array<{
-      code: string;
+    const classes = await res.json() as Array<PublicMembershipClass & {
       feeInr: number;
       validityMonths: number;
     }>;
+    publicClasses = classes;
     for (const cls of classes) {
       const idx = liveTiers.findIndex((t) => t.classCode === cls.code);
       if (idx === -1) continue;
@@ -72,7 +74,8 @@ try {
     }
   }
 } catch {
-  // Backend unavailable at build time -- tiers keep their PUBLIC_TIERS fallback pricing.
+  // Backend unavailable at build time -- tiers keep their PUBLIC_TIERS fallback pricing;
+  // publicClasses stays empty and MembershipBenefitsMatrix renders nothing.
 }
 ---
 
@@ -159,6 +162,11 @@ try {
         <p class="join-section-body join-section-body--narrow">Six memberships. One right one for you. Select a row to see the details.</p>
       </div>
       <MembershipComparisonBlock tiers={liveTiers} />
+      <div class="join-benefits-divider">
+        <span class="join-benefits-divider__line" aria-hidden="true"></span>
+        <span class="join-benefits-divider__label">How they differ</span>
+      </div>
+      <MembershipBenefitsMatrix classes={publicClasses} />
     </div>
   </section>
 
@@ -263,6 +271,29 @@ try {
   margin-bottom: 0;
 }
 .join-section-body--narrow { max-width: 520px; }
+
+/* ── Benefits matrix divider (§05, between MembershipComparisonBlock and MembershipBenefitsMatrix) ── */
+.join-benefits-divider {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: var(--s-8, 64px);
+  margin-bottom: var(--s-1, 8px);
+}
+.join-benefits-divider__line {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+.join-benefits-divider__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold-600);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  flex-shrink: 0;
+}
 
 /* ── Basic note (§04 footer) ─────────────────────────────────── */
 .join-basic-note {

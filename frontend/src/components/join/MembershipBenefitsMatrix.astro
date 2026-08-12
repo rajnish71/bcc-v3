@@ -1,0 +1,287 @@
+---
+/**
+ * MembershipBenefitsMatrix — /membership/ Section 05, beneath MembershipComparisonBlock
+ *
+ * Answers "how do the six memberships differ" — grouped, verified entitlements,
+ * no price, no CTA. MembershipComparisonBlock answers "what is this membership";
+ * this component never duplicates that data.
+ *
+ * Data: receives the already-resolved GET /api/v1/membership/public/classes
+ * response from membership.astro. Presentation-only — no fetch, no entitlement
+ * resolution, no business logic. Authority: V6 Membership Benefits Comparison
+ * Reconciliation — Revision 3.
+ *
+ * discountPct/tourDiscountPct are shown as real percentages for all six
+ * columns: the live endpoint returns actual verified numbers for every tier
+ * (not just Family/Corporate), superseding Revision 3's "not verified"
+ * placeholder treatment for the four individual tiers.
+ */
+
+export interface PublicMembershipClass {
+  code: string;
+  kind: 'INDIVIDUAL' | 'GROUP';
+  portfolioEnabled: boolean;
+  publicGalleryEnabled: boolean;
+  featuredInDirectory: boolean;
+  pvcCard: boolean;
+  welcomeKit: boolean;
+  discountPct: number;
+  tourDiscountPct: number;
+  priorityRegistration: boolean;
+  digitalCard: boolean;
+  maxDelegates?: number;
+  companyRecognition?: boolean;
+}
+
+interface Props {
+  classes: PublicMembershipClass[];
+}
+
+const { classes } = Astro.props;
+
+const TIER_ORDER: Array<{ code: string; label: string }> = [
+  { code: 'BASIC_MEMBER', label: 'Basic' },
+  { code: 'STUDENT_MEMBER', label: 'Student' },
+  { code: 'INDIVIDUAL_MEMBER', label: 'Ind. Annual' },
+  { code: 'INDIVIDUAL_BIENNIAL', label: 'Ind. Biennial' },
+  { code: 'FAMILY_MEMBERSHIP', label: 'Family' },
+  { code: 'CORPORATE_MEMBERSHIP', label: 'Corporate' },
+];
+
+const tiers = TIER_ORDER.map((t) => ({
+  ...t,
+  data: classes.find((c) => c.code === t.code),
+})).filter((t): t is typeof t & { data: PublicMembershipClass } => Boolean(t.data));
+
+type Cell = { v: string; cls: string; aria: string };
+
+const yes = (label: string): Cell => ({ v: '✓', cls: 'mbm__v--yes', aria: `${label}: included` });
+const no = (label: string): Cell => ({ v: '—', cls: 'mbm__v--no', aria: `${label}: not included` });
+const na = (label: string): Cell => ({ v: '–', cls: 'mbm__v--na', aria: `${label}: not applicable` });
+const pct = (label: string, n: number): Cell => ({
+  v: `${n}%`,
+  cls: n > 0 ? 'mbm__v--yes' : 'mbm__v--no',
+  aria: `${label}: ${n}%`,
+});
+const qty = (label: string, n: number): Cell => ({ v: String(n), cls: 'mbm__v--yes', aria: `${label}: ${n}` });
+
+type Row = { label: string; field: string; cells: Cell[] };
+
+function boolRow(label: string, field: keyof PublicMembershipClass): Row {
+  return {
+    label,
+    field,
+    cells: tiers.map((t) => (t.data[field] ? yes(label) : no(label))),
+  };
+}
+
+function pctRow(label: string, field: 'discountPct' | 'tourDiscountPct'): Row {
+  return { label, field, cells: tiers.map((t) => pct(label, t.data[field])) };
+}
+
+const groups: Array<{ title: string; rows: Row[] }> = [
+  {
+    title: 'Public presence',
+    rows: [
+      boolRow('Public portfolio', 'portfolioEnabled'),
+      boolRow('Public gallery', 'publicGalleryEnabled'),
+      boolRow('Photographer directory', 'featuredInDirectory'),
+    ],
+  },
+  {
+    title: 'Member benefits',
+    rows: [boolRow('PVC membership card', 'pvcCard'), boolRow('Welcome kit', 'welcomeKit')],
+  },
+  {
+    title: 'Activity benefits',
+    rows: [pctRow('Activity discount', 'discountPct'), pctRow('Outstation trip discount', 'tourDiscountPct')],
+  },
+  {
+    title: 'Group capacity',
+    rows: [
+      {
+        label: 'Linked family members',
+        field: 'maxDelegates',
+        cells: tiers.map((t) =>
+          t.code === 'FAMILY_MEMBERSHIP' ? qty('Linked family members', t.data.maxDelegates ?? 0) : na('Linked family members')
+        ),
+      },
+      {
+        label: 'Nominated members',
+        field: 'maxDelegates',
+        cells: tiers.map((t) =>
+          t.code === 'CORPORATE_MEMBERSHIP' ? qty('Nominated members', t.data.maxDelegates ?? 0) : na('Nominated members')
+        ),
+      },
+    ],
+  },
+  {
+    title: 'Corporate',
+    rows: [
+      {
+        label: 'Company recognition',
+        field: 'companyRecognition',
+        cells: tiers.map((t) => {
+          if (t.kind === 'INDIVIDUAL') return na('Company recognition');
+          return t.data.companyRecognition ? yes('Company recognition') : no('Company recognition');
+        }),
+      },
+    ],
+  },
+];
+---
+
+{tiers.length > 0 && (
+  <div class="mbm">
+    <div class="mbm__scroll" tabindex="0" role="region" aria-label="Membership benefits comparison table — scroll horizontally to see all six memberships">
+      <table class="mbm__table">
+        <thead>
+          <tr>
+            <th scope="col" class="mbm__label-col">Benefit</th>
+            {tiers.map((t) => (
+              <th scope="col">{t.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {groups.map((group) => (
+            <>
+              <tr class="mbm__group-row">
+                <td colspan={tiers.length + 1}>{group.title}</td>
+              </tr>
+              {group.rows.map((row) => (
+                <tr>
+                  <th scope="row" class="mbm__label-col">{row.label}</th>
+                  {row.cells.map((cell) => (
+                    <td class={cell.cls} aria-label={cell.aria}>{cell.v}</td>
+                  ))}
+                </tr>
+              ))}
+            </>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="mbm__footnote">
+      All six memberships include priority event registration and a digital membership card.
+      <span class="mbm__scroll-hint">Scroll for more →</span>
+    </div>
+  </div>
+)}
+
+<style>
+.mbm {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  margin-top: var(--s-6);
+}
+
+.mbm__scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mbm__scroll:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: -2px;
+}
+
+.mbm__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.mbm__table thead th {
+  text-align: center;
+  padding: var(--s-2) var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  color: var(--ink-400);
+  font-weight: var(--weight-semibold);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+
+.mbm__label-col {
+  text-align: left;
+  min-width: 200px;
+}
+
+.mbm__table thead .mbm__label-col {
+  position: sticky;
+  left: 0;
+  z-index: var(--z-raised);
+  background: var(--surface-1);
+}
+
+.mbm__table tbody th.mbm__label-col {
+  position: sticky;
+  left: 0;
+  z-index: var(--z-raised);
+  background: var(--surface-0);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  color: var(--ink-900);
+  padding: var(--s-2) var(--s-3);
+  border-right: 1px solid var(--hairline);
+}
+
+.mbm__table tbody tr:not(.mbm__group-row) {
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.mbm__table tbody td {
+  text-align: center;
+  padding: var(--s-2);
+  font-size: var(--text-body-sm);
+  white-space: nowrap;
+}
+
+.mbm__group-row td {
+  background: var(--surface-1);
+  color: var(--gold-600);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  font-weight: var(--weight-bold);
+  text-align: left;
+  padding: var(--s-1) var(--s-3);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  position: static;
+}
+
+.mbm__v--yes { color: var(--forest-600); font-weight: var(--weight-semibold); }
+.mbm__v--no { color: var(--ink-400); }
+.mbm__v--na { color: var(--ink-200); }
+
+.mbm__footnote {
+  padding: var(--s-2) var(--s-3) var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  color: var(--ink-400);
+  letter-spacing: var(--ls-mono);
+  line-height: var(--lh-caption);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.mbm__scroll-hint {
+  display: none;
+  color: var(--gold-600);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .mbm__scroll-hint {
+    display: inline;
+  }
+}
+</style>

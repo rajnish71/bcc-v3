@@ -948,6 +948,7 @@ const { variant } = Astro.props;
 
       async function beginCheckout() {
         payBtn.disabled = true;
+        retryBtn.disabled = true;
         payLabel.style.opacity = '0.6';
         paySpin.style.display = 'inline';
         payError.style.display = 'none';
@@ -962,10 +963,33 @@ const { variant } = Astro.props;
             return;
           }
 
+          // `contributionState` reflects this screen's last render, not
+          // necessarily the outcome of a payment attempt that just failed
+          // via pollContributionStatus() (which updates the visible
+          // sub-state but never touches this variable, since it runs
+          // outside showPaymentScreen()'s closure). Ask the server for the
+          // live state right before deciding whether a retry is needed, so
+          // "Try Again" after a same-session failure doesn't skip
+          // /settlement/retry and hit razorpay-order with a stale FAILED
+          // contribution (409).
+          let liveState = contributionState;
+          try {
+            const stateRes = await fetch(`${API}/financial/contributions/${contributionId}`, {
+              headers: { Authorization: `Bearer ${token() ?? ''}` },
+            });
+            if (stateRes.ok) {
+              const current = await stateRes.json() as { state: string };
+              liveState = current.state;
+            }
+          } catch {
+            // Fall back to the render-time state -- worst case the retry is
+            // skipped and razorpay-order 409s, the pre-existing failure mode.
+          }
+
           // Retryable states must reopen the Contribution before a fresh
           // order can be created (FinancialContributionService
           // .initiateProviderSettlement() requires AWAITING_SETTLEMENT).
-          if (contributionState === 'FAILED' || contributionState === 'ABANDONED') {
+          if (liveState === 'FAILED' || liveState === 'ABANDONED') {
             const retryRes = await fetch(`${API}/financial/contributions/${contributionId}/settlement/retry`, {
               method: 'POST',
               headers: { Authorization: `Bearer ${token() ?? ''}` },
@@ -1011,6 +1035,7 @@ const { variant } = Astro.props;
             modal: {
               ondismiss: function () {
                 payBtn.disabled = false;
+                retryBtn.disabled = false;
                 payLabel.style.opacity = '';
                 paySpin.style.display = 'none';
               },
@@ -1024,12 +1049,14 @@ const { variant } = Astro.props;
           rzp.open();
 
           payBtn.disabled = false;
+          retryBtn.disabled = false;
           payLabel.style.opacity = '';
           paySpin.style.display = 'none';
         } catch {
           payError.textContent = 'Could not start payment. Please try again.';
           payError.style.display = '';
           payBtn.disabled = false;
+          retryBtn.disabled = false;
           payLabel.style.opacity = '';
           paySpin.style.display = 'none';
         }

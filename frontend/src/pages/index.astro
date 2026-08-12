@@ -20,13 +20,42 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/ui/PageHero.astro';
 import SectionHeader from '../components/ui/SectionHeader.astro';
-import MembershipCTA from '../components/MembershipCTA.astro';
+import HomeMembershipSection from '../components/HomeMembershipSection.astro';
 import { getUpcomingActivities, getFeaturedActivities } from '../lib/services/activity.service';
 import { PROJECTS } from '../data/projects';
+import { PUBLIC_TIERS } from '../lib/join-page.config';
 
 const upcomingEvents = (await getUpcomingActivities()).slice(0, 3);
 const featuredActs = await getFeaturedActivities();
 const featuredAct = featuredActs[0];
+
+// Canonical membership tier data — same source and live-price override
+// pattern as membership.astro (CLAUDE.md §4.5 build-time fetch convention).
+// Homepage shows Basic, Student, Individual Annual only (MEM-006).
+const homeMembershipTiers = [...PUBLIC_TIERS];
+try {
+  const res = await fetch('http://localhost:3001/api/v1/membership/public/classes');
+  if (res.ok) {
+    const classes = await res.json() as Array<{
+      code: string;
+      feeInr: number;
+      validityMonths: number;
+    }>;
+    for (const cls of classes) {
+      const idx = homeMembershipTiers.findIndex((t) => t.classCode === cls.code);
+      if (idx === -1) continue;
+      const formattedFee = `₹${cls.feeInr.toLocaleString('en-IN')}`;
+      homeMembershipTiers[idx] = {
+        ...homeMembershipTiers[idx],
+        annual: formattedFee,
+        period: cls.validityMonths > 12 ? `for ${Math.round(cls.validityMonths / 12)} years` : 'per year',
+      };
+    }
+  }
+} catch {
+  // Backend unavailable at build time -- tiers keep their PUBLIC_TIERS fallback pricing.
+}
+const homeTiers = homeMembershipTiers.filter((t) => ['basic', 'student', 'individual'].includes(t.id));
 
 const formatMetaDate = (dateStr: string) => {
   const d = new Date(dateStr);
@@ -465,9 +494,10 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
 
   <!-- ══════════════════════════════════════════════════
        10. MEMBERSHIP
-       V6 MembershipCTA Reconciliation — Decision C.
+       V6 MembershipCTA Reconciliation Correction — Decision B.
+       Three-step flow + three public tier cards, canonical data.
        ══════════════════════════════════════════════════ -->
-  <MembershipCTA />
+  <HomeMembershipSection tiers={homeTiers} />
 
 
   <!-- ══════════════════════════════════════════════════

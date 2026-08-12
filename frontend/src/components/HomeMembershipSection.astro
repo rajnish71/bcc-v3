@@ -1,0 +1,308 @@
+---
+/**
+ * HomeMembershipSection.astro
+ * V6 MembershipCTA Reconciliation Correction — Decision B.
+ * Homepage-specific presentation component. Restores V6 01 Home Ver2 §11
+ * information architecture: three-step educational flow + three public
+ * tier preview cards (Basic, Student, Individual Annual).
+ *
+ * PRESENTATION ONLY — receives canonical tier data as a prop. Does not
+ * import membership config, pricing, benefits, or eligibility rules.
+ * Contained inside the existing 1140px public-content token, itself
+ * nested inside the page's standard .container (matches the precedent
+ * in MembershipCTA.astro / EditorialCoverHero.astro).
+ */
+import type { PublicTier } from '../lib/join-page.config';
+
+interface Props {
+  tiers: PublicTier[];
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { tiers, headingLevel = 'h2' } = Astro.props;
+const Heading = headingLevel;
+
+const displayPrice = (tier: PublicTier) => (tier.annual === '₹0' ? 'Free' : tier.annual);
+---
+
+<section class="hms" id="membership" aria-label="Membership">
+  <div class="container">
+    <div class="hms__card">
+
+      <div class="hms__head">
+        <div class="hms__kicker">Become a Member</div>
+        <Heading class="hms__title">Join Bhopal Camera Club</Heading>
+        <p class="hms__subtitle">Three clear steps to membership.</p>
+      </div>
+
+      <!-- Three-step educational flow — editorial, no data -->
+      <div class="hms__steps">
+        <div class="hms__step">
+          <div class="hms__step-num">1</div>
+          <div class="hms__step-label">Register</div>
+          <div class="hms__step-desc">Create your account. Free.</div>
+        </div>
+        <div class="hms__step-arrow" aria-hidden="true">→</div>
+        <div class="hms__step">
+          <div class="hms__step-num">2</div>
+          <div class="hms__step-label">Apply</div>
+          <div class="hms__step-desc">Select a tier. Review.</div>
+        </div>
+        <div class="hms__step-arrow" aria-hidden="true">→</div>
+        <div class="hms__step">
+          <div class="hms__step-num hms__step-num--active">3</div>
+          <div class="hms__step-label hms__step-label--active">Active</div>
+          <div class="hms__step-desc">Full entitlements.</div>
+        </div>
+      </div>
+
+      <!-- Public tier preview — canonical data, never hardcoded -->
+      <div class="hms__tiers">
+        {tiers.map((tier) => (
+          <div class:list={['hms__tier', { 'hms__tier--featured': tier.id === 'individual' }]}>
+            {tier.id === 'individual' && <div class="hms__tier-badge">Most Popular</div>}
+            <div class="hms__tier-name">{tier.name}</div>
+            <div class="hms__tier-price">{displayPrice(tier)}{tier.annual !== '₹0' && <span class="hms__tier-period"> /yr</span>}</div>
+            <div class="hms__tier-note">{tier.id === 'basic' ? 'Forever · no expiry' : tier.period}</div>
+          </div>
+        ))}
+      </div>
+
+      <div class="hms__footer">
+        <a href="/membership/" class="hms__link">Explore all membership options <span aria-hidden="true">→</span></a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+.hms {
+  padding: var(--s-8) 0;
+}
+
+.hms__card {
+  max-width: var(--container-content);
+  margin: 0 auto;
+  background: linear-gradient(180deg, var(--surface-1), #F4F0E8);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+.hms__head {
+  text-align: center;
+  padding: var(--s-8) var(--s-6) 0;
+}
+.hms__kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--gold-600);
+  margin-bottom: 10px;
+}
+.hms__title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+  margin: 0 0 8px 0;
+}
+.hms__subtitle {
+  font-size: 14px;
+  color: var(--ink-600);
+  max-width: 320px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Three-step flow */
+.hms__steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  max-width: 460px;
+  margin: var(--s-6) auto 0;
+}
+.hms__step {
+  flex: 1;
+  text-align: center;
+  padding: 0 var(--s-1);
+}
+.hms__step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0 auto 8px;
+}
+.hms__step-num--active {
+  background: linear-gradient(135deg, var(--forest-600), #2A3E32);
+  border-color: transparent;
+  color: #FFFFFF;
+}
+.hms__step-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-400);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.hms__step-label--active {
+  color: var(--forest-600);
+}
+.hms__step-desc {
+  font-size: 11px;
+  color: var(--ink-600);
+  line-height: 1.5;
+}
+.hms__step-arrow {
+  padding-top: 10px;
+  color: var(--gold-500);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Tier preview */
+.hms__tiers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+  max-width: 720px;
+  margin: var(--s-6) auto 0;
+  padding: 0 var(--s-6);
+}
+.hms__tier {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: var(--s-3) var(--s-2);
+  text-align: center;
+  position: relative;
+}
+.hms__tier--featured {
+  border-color: var(--gold-500);
+}
+.hms__tier-badge {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background: var(--gold-gradient);
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.hms__tier-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-400);
+  font-weight: 600;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+.hms__tier--featured .hms__tier-name {
+  margin-top: 14px;
+}
+.hms__tier-price {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.hms__tier-period {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-400);
+}
+.hms__tier-note {
+  font-size: 11px;
+  color: var(--ink-400);
+}
+
+.hms__footer {
+  text-align: center;
+  padding: var(--s-4) var(--s-6) var(--s-6);
+  margin-top: var(--s-4);
+  border-top: 1px solid var(--hairline-soft, var(--hairline));
+}
+.hms__link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gold-600);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(168, 132, 60, 0.4);
+  padding-bottom: 2px;
+}
+.hms__link:hover {
+  border-bottom-color: var(--gold-600);
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .hms__head { padding: var(--s-6) var(--s-4) 0; }
+  .hms__steps { margin-top: var(--s-4); }
+  .hms__tiers { padding: 0 var(--s-4); gap: var(--s-1); }
+  .hms__tier { padding: var(--s-2) var(--s-1); }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .hms__head { padding: var(--s-5) var(--s-3) 0; }
+  .hms__title { font-size: 24px; }
+  .hms__steps {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-1);
+    max-width: 220px;
+    margin: var(--s-4) auto 0;
+  }
+  .hms__step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    padding: 0;
+  }
+  .hms__step-num { margin: 0; flex-shrink: 0; }
+  .hms__step-label { margin-bottom: 1px; }
+  .hms__step-arrow { display: none; }
+  .hms__tiers {
+    grid-template-columns: 1fr;
+    padding: 0 var(--s-3);
+    gap: 8px;
+  }
+  .hms__tier {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    padding: var(--s-2);
+  }
+  .hms__tier--featured { padding-top: var(--s-2); }
+  .hms__tier-badge { display: none; }
+  .hms__tier-name { margin: 0; }
+  .hms__tier-price { margin: 0; font-size: 16px; }
+  .hms__tier-note { display: none; }
+  .hms__footer { padding: var(--s-3) var(--s-3) var(--s-4); }
+}
+</style>

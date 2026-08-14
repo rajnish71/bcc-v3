@@ -260,7 +260,7 @@ export class MembershipAdminService {
 
         await this.communicationService.dispatch('SENIOR_STATUS_ACHIEVED', member.userId, {
           full_name: member.fullName ?? '',
-          portal_link: 'https://v3bcc.bhopal.info/hub/',
+          portal_link: `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`,
         });
 
         assigned++;
@@ -352,7 +352,7 @@ export class MembershipAdminService {
           membership_class: member.class_name ?? '',
           membership_number: member.membership_number ?? '',
           expiry_date: expiryDisplay,
-          portal_link: 'https://v3bcc.bhopal.info/hub/',
+          portal_link: `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`,
         });
 
         dispatched[typeKey]++;

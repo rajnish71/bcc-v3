@@ -556,7 +556,7 @@ export class MembershipLifecycleService {
           membership_number: membershipNumber,
           valid_from: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
           benefits: 'Voting rights, governance participation, all member benefits',
-          portal_link: 'https://v3bcc.bhopal.info/hub/',
+          portal_link: `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`,
         };
       }
     }
@@ -902,7 +902,7 @@ export class MembershipLifecycleService {
         ? new Date(updatedMembership.expires_at as unknown as string)
             .toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         : 'lifetime',
-      portal_link: 'https://v3bcc.bhopal.info/hub/',
+      portal_link: `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`,
     };
     await this.notifyMember(updatedMembership, typeKey, notifyVars);
   }

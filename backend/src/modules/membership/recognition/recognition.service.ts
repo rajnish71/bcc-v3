@@ -122,7 +122,7 @@ export class RecognitionService {
         await this.communicationService.dispatch('RECOGNITION_AWARDED', mem.user_id, {
           full_name: user?.full_name ?? '',
           recognition_class: recognitionCode.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-          portal_link: 'https://v3bcc.bhopal.info/hub/',
+          portal_link: `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`,
         });
       }
     }

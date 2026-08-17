@@ -142,16 +142,32 @@ export class AccountSettingsService {
       throw new BadRequestException('Verification link has expired. Please request a new one.');
     }
 
-    await db
-      .updateTable('users')
-      .set({ email: row.new_email })
-      .where('id', '=', row.user_id)
-      .execute();
+    // F-011: email update + audit entry + pending-token deletion happen
+    // inside a single transaction, following the pattern established for
+    // resetPassword() in auth.service.ts.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('users')
+        .set({ email: row.new_email })
+        .where('id', '=', row.user_id)
+        .execute();
 
-    await db
-      .deleteFrom('pending_email_changes')
-      .where('id', '=', row.id)
-      .execute();
+      // F-011: unauthenticated flow -- no actor, only a target (the account
+      // whose email was changed).
+      await logIdentityAudit(
+        {
+          actorId: null,
+          targetUserId: row.user_id,
+          actionType: 'EMAIL_CHANGED',
+        },
+        trx,
+      );
+
+      await trx
+        .deleteFrom('pending_email_changes')
+        .where('id', '=', row.id)
+        .execute();
+    });
 
     return { verified: true, newEmail: row.new_email };
   }

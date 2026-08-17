@@ -214,6 +214,49 @@ describe('AccountSettingsService.updatePassword() writes identity_audit_log (F-0
   });
 });
 
+// ── D3. AccountSettingsService.verifyEmailChange() writes identity_audit_log (F-011) ──
+
+const verifyEmailChangeBody = methodBody(
+  ACCOUNT_SETTINGS_SERVICE_SRC,
+  'async verifyEmailChange(',
+  'return { verified: true, newEmail: row.new_email };',
+);
+
+describe('AccountSettingsService.verifyEmailChange() writes identity_audit_log (F-011, real source inspection)', () => {
+  it('wraps the email update, audit write, and pending-row deletion in a single db.transaction()', () => {
+    expect(verifyEmailChangeBody).toContain('await db.transaction().execute(async (trx) => {');
+  });
+
+  it('the users update, the audit write, and the pending_email_changes delete all run against trx (not the module-level db)', () => {
+    expect(verifyEmailChangeBody).toMatch(/trx\s*\.updateTable\('users'\)/);
+    expect(verifyEmailChangeBody).toMatch(
+      /logIdentityAudit\(\s*\{[^}]*\},\s*trx,\s*\)/,
+    );
+    expect(verifyEmailChangeBody).toMatch(/trx\s*\.deleteFrom\('pending_email_changes'\)/);
+  });
+
+  it('logs an EMAIL_CHANGED audit entry with actorId null and the changed-email user as target', () => {
+    expect(verifyEmailChangeBody).toMatch(
+      /logIdentityAudit\(\s*\{\s*actorId:\s*null,\s*targetUserId:\s*row\.user_id,\s*actionType:\s*'EMAIL_CHANGED',\s*\},\s*trx,\s*\)/,
+    );
+  });
+
+  it('the audit write happens after the email update and before the pending-token deletion', () => {
+    const usersUpdateIndex = verifyEmailChangeBody.search(/trx\s*\.updateTable\('users'\)/);
+    const auditIndex = verifyEmailChangeBody.indexOf('logIdentityAudit(');
+    const deleteIndex = verifyEmailChangeBody.search(/trx\s*\.deleteFrom\('pending_email_changes'\)/);
+    expect(usersUpdateIndex).toBeGreaterThan(-1);
+    expect(auditIndex).toBeGreaterThan(usersUpdateIndex);
+    expect(deleteIndex).toBeGreaterThan(auditIndex);
+  });
+
+  it('still validates token existence, expiry, and returns the verified email (existing behaviour preserved)', () => {
+    expect(verifyEmailChangeBody).toContain('Verification link is invalid or has already been used');
+    expect(verifyEmailChangeBody).toContain('Verification link has expired');
+    expect(verifyEmailChangeBody).toContain("set({ email: row.new_email })");
+  });
+});
+
 // ── E. Admin-facing set paths are unchanged (regression guard) ─────────────
 
 describe('force_password_reset set paths still set true (F-034 regression guard)', () => {

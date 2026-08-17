@@ -142,6 +142,16 @@ export class AuthService {
           .set({ password_hash: newArgonHash })
           .where('id', '=', user.id)
           .execute();
+
+        // F-011: best-effort, same as the update above -- an audit failure
+        // must not block login any more than a migration failure does, so
+        // this stays inside the same try/catch rather than its own
+        // transaction.
+        await logIdentityAudit({
+          actorId: user.id,
+          targetUserId: user.id,
+          actionType: 'PASSWORD_HASH_MIGRATED',
+        });
       } catch (migrationError) {
         // Log error but do not block user login — password can be migrated next time
         console.error(`Failed to migrate password hash to Argon2 for user ${user.id}:`, migrationError);

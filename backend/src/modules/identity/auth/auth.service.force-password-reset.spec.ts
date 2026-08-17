@@ -75,6 +75,60 @@ describe('AuthService.login() force_password_reset gate (F-034, real source insp
   });
 });
 
+// ── A2. login() bcrypt→Argon2 migration writes identity_audit_log (F-011) ──
+
+const migrationBody = methodBody(
+  AUTH_SERVICE_SRC,
+  'if (needsMigration) {',
+  "if (user.status !== 'ACTIVE')",
+);
+
+describe('AuthService.login() bcrypt->Argon2 migration audit (F-011, real source inspection)', () => {
+  it('the migration block is still gated by needsMigration and wrapped in try/catch', () => {
+    expect(migrationBody).toContain('try {');
+    expect(migrationBody).toContain('} catch (migrationError) {');
+  });
+
+  it('still detects bcrypt and hashes/updates to Argon2 (existing behaviour preserved)', () => {
+    expect(AUTH_SERVICE_SRC).toContain(
+      "const isBcrypt = hash && (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$'));",
+    );
+    expect(migrationBody).toContain('const newArgonHash = await argon2.hash(password);');
+    expect(migrationBody).toContain("updateTable('users')");
+    expect(migrationBody).toContain('password_hash: newArgonHash');
+  });
+
+  it('logs a PASSWORD_HASH_MIGRATED audit entry with the migrated user as both actor and target', () => {
+    expect(migrationBody).toMatch(
+      /logIdentityAudit\(\{\s*actorId:\s*user\.id,\s*targetUserId:\s*user\.id,\s*actionType:\s*'PASSWORD_HASH_MIGRATED',\s*\}\)/,
+    );
+  });
+
+  it('the audit call happens after the password_hash UPDATE', () => {
+    const updateIndex = migrationBody.indexOf("updateTable('users')");
+    const auditIndex = migrationBody.indexOf('logIdentityAudit(');
+    expect(updateIndex).toBeGreaterThan(-1);
+    expect(auditIndex).toBeGreaterThan(updateIndex);
+  });
+
+  it('the audit call is inside the same try block as the UPDATE, before the catch (a failure there cannot block login)', () => {
+    const auditIndex = migrationBody.indexOf('logIdentityAudit(');
+    const catchIndex = migrationBody.indexOf('} catch (migrationError) {');
+    expect(auditIndex).toBeGreaterThan(-1);
+    expect(auditIndex).toBeLessThan(catchIndex);
+  });
+
+  it('does not wrap the migration in a db.transaction() (best-effort semantics preserved, not atomic)', () => {
+    expect(migrationBody).not.toContain('db.transaction()');
+  });
+
+  it('a migration failure still only logs to console -- it does not rethrow or block login', () => {
+    expect(migrationBody).toContain(
+      'console.error(`Failed to migrate password hash to Argon2 for user ${user.id}:`, migrationError);',
+    );
+  });
+});
+
 // ── B. refresh() enforcement (real source inspection) ──────────────────────
 
 describe('AuthService.refresh() force_password_reset gate (F-034, real source inspection)', () => {

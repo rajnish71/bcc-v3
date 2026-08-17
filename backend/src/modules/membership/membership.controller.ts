@@ -348,7 +348,7 @@ export class MembershipController {
   @Post('admin/users/:userId/reset-password')
   @HttpCode(200)
   @UseGuards(AccessTokenGuard, RbacGuard)
-  @RequirePermissions('membership.application.approve')
+  @RequirePermissions('identity.user.reset_password')
   async adminResetPassword(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() body: { newPassword: string },

@@ -34,6 +34,7 @@ import {
   toMysqlDatetime,
 } from '../shared/token-hash.util';
 import { CommunicationService } from '../../shared/communication/communication.service';
+import { logIdentityAudit } from '../shared/identity-audit.util';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
 const REFRESH_TOKEN_TTL_DAYS   = 30;
@@ -275,30 +276,48 @@ export class AuthService {
     // Hash the new password and update the user record.
     const passwordHash = await argon2.hash(newPassword);
 
-    // F-034: this is the canonical clearing point -- the only password-change
-    // path reachable without an existing session.
-    await db
-      .updateTable('users')
-      .set({ password_hash: passwordHash, force_password_reset: false })
-      .where('id', '=', tokenRow.user_id)
-      .execute();
+    // F-011: password update + audit entry + token consumption/revocation
+    // happen inside a single transaction, following the db.transaction()
+    // convention established in registration.service.ts / financial-
+    // contribution.service.ts. If any step fails, the whole reset rolls
+    // back -- no password change without its audit trail, and vice versa.
+    await db.transaction().execute(async (trx) => {
+      // F-034: this is the canonical clearing point -- the only password-change
+      // path reachable without an existing session.
+      await trx
+        .updateTable('users')
+        .set({ password_hash: passwordHash, force_password_reset: false })
+        .where('id', '=', tokenRow.user_id)
+        .execute();
 
-    // Consume the token so it cannot be reused.
-    await db
-      .updateTable('password_reset_tokens')
-      .set({ consumed_at: toMysqlDatetime(new Date()) })
-      .where('id', '=', tokenRow.id)
-      .execute();
+      // F-011: unauthenticated flow -- no actor, only a target (the account
+      // whose password was reset).
+      await logIdentityAudit(
+        {
+          actorId: null,
+          targetUserId: tokenRow.user_id,
+          actionType: 'PASSWORD_RESET',
+        },
+        trx,
+      );
 
-    // Revoke ALL active refresh tokens for this user -- forces re-login on
-    // every device after a password change. This is intentional security
-    // behaviour: if a password was compromised, the attacker's session ends.
-    await db
-      .updateTable('refresh_tokens')
-      .set({ revoked_at: toMysqlDatetime(new Date()) })
-      .where('user_id', '=', tokenRow.user_id)
-      .where('revoked_at', 'is', null)
-      .execute();
+      // Consume the token so it cannot be reused.
+      await trx
+        .updateTable('password_reset_tokens')
+        .set({ consumed_at: toMysqlDatetime(new Date()) })
+        .where('id', '=', tokenRow.id)
+        .execute();
+
+      // Revoke ALL active refresh tokens for this user -- forces re-login on
+      // every device after a password change. This is intentional security
+      // behaviour: if a password was compromised, the attacker's session ends.
+      await trx
+        .updateTable('refresh_tokens')
+        .set({ revoked_at: toMysqlDatetime(new Date()) })
+        .where('user_id', '=', tokenRow.user_id)
+        .where('revoked_at', 'is', null)
+        .execute();
+    });
   }
 
   // -- Token issuance --------------------------------------------------

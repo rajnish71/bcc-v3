@@ -101,13 +101,13 @@ describe('AuthService.refresh() force_password_reset gate (F-034, real source in
 
 // ── C. resetPassword() clears the flag (real source inspection) ────────────
 
-describe('AuthService.resetPassword() clears force_password_reset (F-034, real source inspection)', () => {
-  const resetBody = methodBody(
-    AUTH_SERVICE_SRC,
-    'async resetPassword(',
-    '// -- Token issuance --------------------------------------------------',
-  );
+const resetBody = methodBody(
+  AUTH_SERVICE_SRC,
+  'async resetPassword(',
+  '// -- Token issuance --------------------------------------------------',
+);
 
+describe('AuthService.resetPassword() clears force_password_reset (F-034, real source inspection)', () => {
   it('sets force_password_reset: false alongside the new password_hash', () => {
     expect(resetBody).toMatch(
       /\.set\(\{\s*password_hash:\s*passwordHash,\s*force_password_reset:\s*false\s*\}\)/,
@@ -122,6 +122,41 @@ describe('AuthService.resetPassword() clears force_password_reset (F-034, real s
   it('still consumes the reset token (existing behaviour preserved)', () => {
     expect(resetBody).toContain("updateTable('password_reset_tokens')");
     expect(resetBody).toContain('consumed_at:');
+  });
+});
+
+// ── C2. resetPassword() writes an identity_audit_log entry (F-011) ─────────
+
+describe('AuthService.resetPassword() writes identity_audit_log (F-011, real source inspection)', () => {
+  it('imports logIdentityAudit from the shared audit util', () => {
+    expect(AUTH_SERVICE_SRC).toContain(
+      "import { logIdentityAudit } from '../shared/identity-audit.util';",
+    );
+  });
+
+  it('wraps the reset sequence in a single db.transaction()', () => {
+    expect(resetBody).toContain('await db.transaction().execute(async (trx) => {');
+  });
+
+  it('the users update, audit write, token consumption, and refresh-token revocation all run against trx (not the module-level db)', () => {
+    expect(resetBody).toMatch(/trx\s*\.updateTable\('users'\)/);
+    expect(resetBody).toMatch(/trx\s*\.updateTable\('password_reset_tokens'\)/);
+    expect(resetBody).toMatch(/trx\s*\.updateTable\('refresh_tokens'\)/);
+  });
+
+  it('logs a PASSWORD_RESET audit entry with actorId null and the reset user as target, executed against trx', () => {
+    expect(resetBody).toMatch(
+      /logIdentityAudit\(\s*\{\s*actorId:\s*null,\s*targetUserId:\s*tokenRow\.user_id,\s*actionType:\s*'PASSWORD_RESET',\s*\},\s*trx,\s*\)/,
+    );
+  });
+
+  it('the audit write happens after the password update and before token consumption/revocation', () => {
+    const usersUpdateIndex = resetBody.search(/trx\s*\.updateTable\('users'\)/);
+    const auditIndex = resetBody.indexOf('logIdentityAudit(');
+    const tokenConsumeIndex = resetBody.search(/trx\s*\.updateTable\('password_reset_tokens'\)/);
+    expect(usersUpdateIndex).toBeGreaterThan(-1);
+    expect(auditIndex).toBeGreaterThan(usersUpdateIndex);
+    expect(tokenConsumeIndex).toBeGreaterThan(auditIndex);
   });
 });
 

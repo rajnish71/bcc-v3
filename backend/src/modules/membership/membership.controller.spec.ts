@@ -104,3 +104,76 @@ describe('Admin password-reset authorization boundary (F-033, mirrored)', () => 
     }
   });
 });
+
+// ── C. adminResetPassword() writes identity_audit_log (F-011, real source inspection) ──
+//
+// Path 5 of F-011: the admin-facing password reset was the only one of the
+// five identity write paths with no @CurrentUser() actor capture at all --
+// every sibling route in this controller already injects it. This block
+// asserts the actor param was added, the mutation now runs inside a
+// db.transaction() alongside the audit write, and none of that touched the
+// F-033 guard/permission decorators verified in block A above.
+
+const adminResetPasswordBodyStart = CONTROLLER_SRC.indexOf('async adminResetPassword(');
+const adminResetPasswordBody = CONTROLLER_SRC.slice(
+  adminResetPasswordBodyStart,
+  CONTROLLER_SRC.indexOf('return { ok: true };', adminResetPasswordBodyStart),
+);
+
+describe('MembershipController.adminResetPassword() writes identity_audit_log (F-011, real source inspection)', () => {
+  it('imports logIdentityAudit from the shared identity audit util', () => {
+    expect(CONTROLLER_SRC).toContain(
+      "import { logIdentityAudit } from '../identity/shared/identity-audit.util';",
+    );
+  });
+
+  it('captures the calling admin via @CurrentUser()', () => {
+    expect(adminResetPasswordBody).toContain('@CurrentUser() actor: AccessTokenPayload');
+  });
+
+  it('wraps the password update and audit write in a single db.transaction()', () => {
+    expect(adminResetPasswordBody).toContain('await db.transaction().execute(async (trx) => {');
+  });
+
+  it('the users update and the audit write both run against trx (not the module-level db)', () => {
+    expect(adminResetPasswordBody).toMatch(/trx\s*\.updateTable\('users'\)/);
+    expect(adminResetPasswordBody).toMatch(
+      /logIdentityAudit\(\s*\{[^}]*\},\s*trx,\s*\)/,
+    );
+  });
+
+  it('logs an ADMIN_PASSWORD_RESET audit entry with the calling admin as actor and the target user as target', () => {
+    expect(adminResetPasswordBody).toMatch(
+      /logIdentityAudit\(\s*\{\s*actorId:\s*actor\.sub,\s*targetUserId:\s*userId,\s*actionType:\s*'ADMIN_PASSWORD_RESET',\s*\},\s*trx,\s*\)/,
+    );
+  });
+
+  it('the audit write happens after the password update', () => {
+    const usersUpdateIndex = adminResetPasswordBody.search(/trx\s*\.updateTable\('users'\)/);
+    const auditIndex = adminResetPasswordBody.indexOf('logIdentityAudit(');
+    expect(usersUpdateIndex).toBeGreaterThan(-1);
+    expect(auditIndex).toBeGreaterThan(usersUpdateIndex);
+  });
+
+  it('still sets force_password_reset: true (existing admin-reset behaviour preserved)', () => {
+    expect(adminResetPasswordBody).toMatch(
+      /\.set\(\{\s*password_hash:\s*hash,\s*force_password_reset:\s*true\s*\}\)/,
+    );
+  });
+
+  it('still validates newPassword length before hashing (existing behaviour preserved)', () => {
+    expect(adminResetPasswordBody).toContain('newPassword must be at least 8 characters');
+    expect(adminResetPasswordBody).toContain('argon2.hash(body.newPassword)');
+  });
+
+  it('did not alter the F-033 guard/permission decorators (still identity.user.reset_password only)', () => {
+    const decorators = CONTROLLER_SRC.slice(
+      CONTROLLER_SRC.indexOf("@Post('admin/users/:userId/reset-password')"),
+      CONTROLLER_SRC.indexOf('async adminResetPassword'),
+    );
+    expect(decorators).toContain('AccessTokenGuard');
+    expect(decorators).toContain('RbacGuard');
+    expect(decorators).toContain("RequirePermissions('identity.user.reset_password')");
+    expect(decorators).not.toContain('membership.application.approve');
+  });
+});

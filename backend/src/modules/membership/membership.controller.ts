@@ -17,6 +17,7 @@ import { CurrentUser } from '../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../identity/auth/token.util';
 import { RbacGuard } from '../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../identity/rbac/permissions.decorator';
+import { logIdentityAudit } from '../identity/shared/identity-audit.util';
 import { MembershipLifecycleService } from './lifecycle/membership-lifecycle.service';
 import { ApplicationWorkflowService } from './application/application-workflow.service';
 import { ApplyMembershipDto } from './dto/apply-membership.dto';
@@ -350,6 +351,7 @@ export class MembershipController {
   @UseGuards(AccessTokenGuard, RbacGuard)
   @RequirePermissions('identity.user.reset_password')
   async adminResetPassword(
+    @CurrentUser() actor: AccessTokenPayload,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() body: { newPassword: string },
   ) {
@@ -357,11 +359,27 @@ export class MembershipController {
       throw new BadRequestException('newPassword must be at least 8 characters');
     }
     const hash = await argon2.hash(body.newPassword);
-    await db
-      .updateTable('users')
-      .set({ password_hash: hash, force_password_reset: true })
-      .where('id', '=', userId)
-      .execute();
+
+    // F-011: password update + audit entry happen inside a single
+    // transaction, following the pattern established for resetPassword()
+    // in auth.service.ts.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('users')
+        .set({ password_hash: hash, force_password_reset: true })
+        .where('id', '=', userId)
+        .execute();
+
+      await logIdentityAudit(
+        {
+          actorId: actor.sub,
+          targetUserId: userId,
+          actionType: 'ADMIN_PASSWORD_RESET',
+        },
+        trx,
+      );
+    });
+
     return { ok: true };
   }
 

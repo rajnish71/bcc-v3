@@ -162,13 +162,13 @@ describe('AuthService.resetPassword() writes identity_audit_log (F-011, real sou
 
 // ── D. AccountSettingsService.updatePassword() clears the flag ─────────────
 
-describe('AccountSettingsService.updatePassword() clears force_password_reset (F-034, real source inspection)', () => {
-  const updatePasswordBody = methodBody(
-    ACCOUNT_SETTINGS_SERVICE_SRC,
-    'async updatePassword(',
-    'return { updated: true };',
-  );
+const updatePasswordBody = methodBody(
+  ACCOUNT_SETTINGS_SERVICE_SRC,
+  'async updatePassword(',
+  'return { updated: true };',
+);
 
+describe('AccountSettingsService.updatePassword() clears force_password_reset (F-034, real source inspection)', () => {
   it('sets force_password_reset: false alongside the new password_hash', () => {
     expect(updatePasswordBody).toMatch(
       /\.set\(\{\s*password_hash:\s*newHash,\s*force_password_reset:\s*false\s*\}\)/,
@@ -177,6 +177,40 @@ describe('AccountSettingsService.updatePassword() clears force_password_reset (F
 
   it('still requires and verifies the current password (existing behaviour preserved)', () => {
     expect(updatePasswordBody).toContain('Current password is incorrect');
+  });
+});
+
+// ── D2. AccountSettingsService.updatePassword() writes identity_audit_log (F-011) ──
+
+describe('AccountSettingsService.updatePassword() writes identity_audit_log (F-011, real source inspection)', () => {
+  it('imports logIdentityAudit from the shared audit util', () => {
+    expect(ACCOUNT_SETTINGS_SERVICE_SRC).toContain(
+      "import { logIdentityAudit } from '../shared/identity-audit.util';",
+    );
+  });
+
+  it('wraps the password update and audit write in a single db.transaction()', () => {
+    expect(updatePasswordBody).toContain('await db.transaction().execute(async (trx) => {');
+  });
+
+  it('the users update and the audit write both run against trx (not the module-level db)', () => {
+    expect(updatePasswordBody).toMatch(/trx\s*\.updateTable\('users'\)/);
+    expect(updatePasswordBody).toMatch(
+      /logIdentityAudit\(\s*\{[^}]*\},\s*trx,\s*\)/,
+    );
+  });
+
+  it('logs a PASSWORD_CHANGED audit entry with the authenticated user as both actor and target', () => {
+    expect(updatePasswordBody).toMatch(
+      /logIdentityAudit\(\s*\{\s*actorId:\s*userId,\s*targetUserId:\s*userId,\s*actionType:\s*'PASSWORD_CHANGED',\s*\},\s*trx,\s*\)/,
+    );
+  });
+
+  it('the audit write happens after the password update', () => {
+    const usersUpdateIndex = updatePasswordBody.search(/trx\s*\.updateTable\('users'\)/);
+    const auditIndex = updatePasswordBody.indexOf('logIdentityAudit(');
+    expect(usersUpdateIndex).toBeGreaterThan(-1);
+    expect(auditIndex).toBeGreaterThan(usersUpdateIndex);
   });
 });
 

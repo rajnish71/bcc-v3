@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { db } from '../../../database/db';
 import { generateOpaqueToken, hashToken, toMysqlDatetime } from '../shared/token-hash.util';
 import { CommunicationService } from '../../shared/communication/communication.service';
+import { logIdentityAudit } from '../shared/identity-audit.util';
 import type { UpdateNameDto } from './dto/update-name.dto';
 import type { UpdatePasswordDto } from './dto/update-password.dto';
 import type { InitiateEmailChangeDto } from './dto/initiate-email-change.dto';
@@ -185,14 +186,30 @@ export class AccountSettingsService {
 
     const newHash = await argon2.hash(dto.newPassword);
 
-    // F-034: clear alongside resetPassword() -- keeps a user's flag from
-    // outliving a voluntary password change made while an existing session
-    // is still valid.
-    await db
-      .updateTable('users')
-      .set({ password_hash: newHash, force_password_reset: false })
-      .where('id', '=', userId)
-      .execute();
+    // F-011: password update + audit entry happen inside a single
+    // transaction, following the pattern established for resetPassword()
+    // in auth.service.ts.
+    await db.transaction().execute(async (trx) => {
+      // F-034: clear alongside resetPassword() -- keeps a user's flag from
+      // outliving a voluntary password change made while an existing session
+      // is still valid.
+      await trx
+        .updateTable('users')
+        .set({ password_hash: newHash, force_password_reset: false })
+        .where('id', '=', userId)
+        .execute();
+
+      // F-011: authenticated self-service flow -- the user is both actor
+      // and target.
+      await logIdentityAudit(
+        {
+          actorId: userId,
+          targetUserId: userId,
+          actionType: 'PASSWORD_CHANGED',
+        },
+        trx,
+      );
+    });
 
     return { updated: true };
   }

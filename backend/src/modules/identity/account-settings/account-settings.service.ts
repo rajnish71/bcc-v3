@@ -185,9 +185,12 @@ export class AccountSettingsService {
 
     const newHash = await argon2.hash(dto.newPassword);
 
+    // F-034: clear alongside resetPassword() -- keeps a user's flag from
+    // outliving a voluntary password change made while an existing session
+    // is still valid.
     await db
       .updateTable('users')
-      .set({ password_hash: newHash })
+      .set({ password_hash: newHash, force_password_reset: false })
       .where('id', '=', userId)
       .execute();
 

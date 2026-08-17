@@ -152,6 +152,16 @@ export class AuthService {
       throw new ForbiddenException(`Account is ${user.status.toLowerCase()}`);
     }
 
+    // F-034: a flagged account must not receive a session -- the only way
+    // out is the forgot-password flow, which is unauthenticated and clears
+    // the flag in resetPassword() below.
+    if (user.force_password_reset) {
+      await this.recordLoginAttempt(user.id, identifier, device, 'FAILED');
+      throw new ForbiddenException(
+        'Password reset required. Please reset your password before signing in.',
+      );
+    }
+
     // Success -- clear any failed-attempt counter, record history, issue tokens.
     await this.clearFailedAttempts(user.id);
     await this.recordLoginAttempt(user.id, identifier, device, 'SUCCESS');
@@ -265,9 +275,11 @@ export class AuthService {
     // Hash the new password and update the user record.
     const passwordHash = await argon2.hash(newPassword);
 
+    // F-034: this is the canonical clearing point -- the only password-change
+    // path reachable without an existing session.
     await db
       .updateTable('users')
-      .set({ password_hash: passwordHash })
+      .set({ password_hash: passwordHash, force_password_reset: false })
       .where('id', '=', tokenRow.user_id)
       .execute();
 
@@ -400,6 +412,14 @@ export class AuthService {
 
     if (!user || user.status !== 'ACTIVE') {
       throw new ForbiddenException('Account is not active');
+    }
+
+    // F-034: same gate as login() -- a flagged account does not get a new
+    // token pair on refresh either.
+    if (user.force_password_reset) {
+      throw new ForbiddenException(
+        'Password reset required. Please reset your password before signing in.',
+      );
     }
 
     await db

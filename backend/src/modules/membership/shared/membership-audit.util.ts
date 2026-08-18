@@ -9,7 +9,8 @@
 // identity events never land here; membership lifecycle/recognition/
 // entitlement events never land there. Keep it that way.
 
-import { db } from '../../../database/db';
+import type { Kysely } from 'kysely';
+import { db, type DB } from '../../../database/db';
 
 export interface MembershipAuditEntry {
   membershipId: number | null;
@@ -21,8 +22,15 @@ export interface MembershipAuditEntry {
   notes?: string | null;
 }
 
-export async function logMembershipAudit(entry: MembershipAuditEntry): Promise<void> {
-  await db
+// executor defaults to the module-level `db` for all pre-existing callers;
+// callers running inside a transaction pass their `trx` so this insert
+// commits/rolls back atomically with the rest of the transaction (F-013,
+// mirrors identity/shared/identity-audit.util.ts's executor pattern).
+export async function logMembershipAudit(
+  entry: MembershipAuditEntry,
+  executor: Kysely<DB> = db,
+): Promise<void> {
+  await executor
     .insertInto('membership_audit_log')
     .values({
       membership_id: entry.membershipId,

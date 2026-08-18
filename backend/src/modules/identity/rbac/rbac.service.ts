@@ -109,30 +109,40 @@ export class RbacService {
       throw new NotFoundException(`No such role: ${params.roleName}`);
     }
 
-    const inserted = await db
-      .insertInto('user_roles')
-      .values({
-        user_id: params.targetUserId,
-        role_id: role.id,
-        scope_type: params.scopeType ?? null,
-        scope_id: params.scopeId ?? null,
-        valid_until: params.validUntil
-          ? params.validUntil.toISOString().slice(0, 19).replace('T', ' ')
-          : null,
-        granted_by: params.actorId,
-      })
-      .executeTakeFirstOrThrow();
+    // F-013: user_roles insert + ROLE_GRANTED audit write commit/roll back
+    // as one transaction, following the db.transaction() + logIdentityAudit
+    // executor pattern established in auth.service.ts (F-011).
+    const insertedId = await db.transaction().execute(async (trx) => {
+      const inserted = await trx
+        .insertInto('user_roles')
+        .values({
+          user_id: params.targetUserId,
+          role_id: role.id,
+          scope_type: params.scopeType ?? null,
+          scope_id: params.scopeId ?? null,
+          valid_until: params.validUntil
+            ? params.validUntil.toISOString().slice(0, 19).replace('T', ' ')
+            : null,
+          granted_by: params.actorId,
+        })
+        .executeTakeFirstOrThrow();
 
-    await logIdentityAudit({
-      actorId: params.actorId,
-      targetUserId: params.targetUserId,
-      actionType: 'ROLE_GRANTED',
-      newValue: { role: params.roleName, scopeType: params.scopeType ?? null, scopeId: params.scopeId ?? null },
-      reason: params.reason ?? null,
+      await logIdentityAudit(
+        {
+          actorId: params.actorId,
+          targetUserId: params.targetUserId,
+          actionType: 'ROLE_GRANTED',
+          newValue: { role: params.roleName, scopeType: params.scopeType ?? null, scopeId: params.scopeId ?? null },
+          reason: params.reason ?? null,
+        },
+        trx,
+      );
+
+      return Number(inserted.insertId);
     });
 
     return {
-      userRoleId: Number(inserted.insertId),
+      userRoleId: insertedId,
       roleId: role.id,
       roleName: role.name,
       category: role.category,
@@ -161,18 +171,26 @@ export class RbacService {
     }
 
     const nowSql = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    await db
-      .updateTable('user_roles')
-      .set({ valid_until: nowSql })
-      .where('id', '=', userRoleId)
-      .execute();
 
-    await logIdentityAudit({
-      actorId,
-      targetUserId: existing.userId,
-      actionType: 'ROLE_REVOKED',
-      oldValue: { role: existing.roleName },
-      reason: reason ?? null,
+    // F-013: user_roles update + ROLE_REVOKED audit write commit/roll back
+    // as one transaction, same pattern as assignRole() above.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('user_roles')
+        .set({ valid_until: nowSql })
+        .where('id', '=', userRoleId)
+        .execute();
+
+      await logIdentityAudit(
+        {
+          actorId,
+          targetUserId: existing.userId,
+          actionType: 'ROLE_REVOKED',
+          oldValue: { role: existing.roleName },
+          reason: reason ?? null,
+        },
+        trx,
+      );
     });
   }
 }

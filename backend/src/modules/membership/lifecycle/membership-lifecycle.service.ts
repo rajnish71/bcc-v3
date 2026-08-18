@@ -223,27 +223,36 @@ export class MembershipLifecycleService {
     const uuid = randomUUID();
     const now = toMysqlDatetime(new Date());
 
-    const inserted = await db
-      .insertInto('memberships')
-      .values({
-        uuid,
-        owner_type: params.ownerType,
-        user_id: params.ownerType === 'INDIVIDUAL' ? params.userId! : null,
-        group_entity_id: params.ownerType === 'GROUP' ? params.groupEntityId! : null,
-        membership_class_id: params.ownerType === 'INDIVIDUAL' ? params.membershipClassId! : null,
-        group_membership_type_id: params.ownerType === 'GROUP' ? params.groupMembershipTypeId! : null,
-        lifecycle_state: 'PENDING',
-        applied_at: now,
-      })
-      .executeTakeFirstOrThrow();
+    // F-013: membership insert + LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction (mirrors auth.service.ts's F-011 pattern).
+    const id = await db.transaction().execute(async (trx) => {
+      const inserted = await trx
+        .insertInto('memberships')
+        .values({
+          uuid,
+          owner_type: params.ownerType,
+          user_id: params.ownerType === 'INDIVIDUAL' ? params.userId! : null,
+          group_entity_id: params.ownerType === 'GROUP' ? params.groupEntityId! : null,
+          membership_class_id: params.ownerType === 'INDIVIDUAL' ? params.membershipClassId! : null,
+          group_membership_type_id: params.ownerType === 'GROUP' ? params.groupMembershipTypeId! : null,
+          lifecycle_state: 'PENDING',
+          applied_at: now,
+        })
+        .executeTakeFirstOrThrow();
 
-    const id = Number(inserted.insertId);
+      const newId = Number(inserted.insertId);
 
-    await logMembershipAudit({
-      membershipId: id,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: 'SYSTEM',
-      newValue: { state: 'PENDING' },
+      await logMembershipAudit(
+        {
+          membershipId: newId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: 'SYSTEM',
+          newValue: { state: 'PENDING' },
+        },
+        trx,
+      );
+
+      return newId;
     });
 
     // Financial reconciliation (workflow-ordering fix): for a PAYMENT_REQUIRED
@@ -393,19 +402,27 @@ export class MembershipLifecycleService {
       }
     }
 
-    await db
-      .updateTable('memberships')
-      .set({ lifecycle_state: 'APPROVED', approved_at: toMysqlDatetime(new Date()) })
-      .where('id', '=', membershipId)
-      .execute();
+    // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction. Authorization/approval semantics above
+    // this point are unchanged -- this is atomicity-only.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('memberships')
+        .set({ lifecycle_state: 'APPROVED', approved_at: toMysqlDatetime(new Date()) })
+        .where('id', '=', membershipId)
+        .execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: 'ADMIN',
-      actorUserId,
-      oldValue: { state: membership.lifecycle_state },
-      newValue: { state: 'APPROVED' },
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { state: membership.lifecycle_state },
+          newValue: { state: 'APPROVED' },
+        },
+        trx,
+      );
     });
 
     if (cls?.activation_mode === 'AUTO_AFTER_APPROVAL' || cls?.activation_mode === 'PAYMENT_REQUIRED') {
@@ -448,10 +465,16 @@ export class MembershipLifecycleService {
     const membership = await this.requireState(membershipId, ['PENDING']);
 
     const contribution = await this.getMembershipContribution(membershipId);
+    // F-032: the "anything else" branch above (SETTLEMENT_IN_PROGRESS / FAILED
+    // / ABANDONED) intentionally takes no financial action -- that behaviour
+    // is unchanged. What was missing was any admin-visible record that it
+    // happened, so the rejection notes (already rendered in the admin Recent
+    // Events feed) carry the flag instead of leaving it silent.
+    let unresolvedContributionNote: string | null = null;
     if (contribution) {
       if (contribution.state === 'COMPLETED') {
         await this.financialService
-          .requestRefund(Number(contribution.id), reason, actorUserId)
+          .requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId })
           .catch(() => {
             // requestRefund() already records its own FAILED refund row on a
             // provider error rather than throwing; this guards only against
@@ -463,19 +486,29 @@ export class MembershipLifecycleService {
         await this.financialService
           .cancelContribution(Number(contribution.id), `Membership application rejected: ${reason}`)
           .catch(() => {});
+      } else {
+        unresolvedContributionNote =
+          `Financial Contribution ${contribution.id} left in state '${contribution.state}' -- not auto-resolved by rejection.`;
       }
     }
 
-    await db.updateTable('memberships').set({ lifecycle_state: 'REJECTED' }).where('id', '=', membershipId).execute();
+    // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx.updateTable('memberships').set({ lifecycle_state: 'REJECTED' }).where('id', '=', membershipId).execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: 'ADMIN',
-      actorUserId,
-      oldValue: { state: membership.lifecycle_state },
-      newValue: { state: 'REJECTED' },
-      notes: reason,
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { state: membership.lifecycle_state },
+          newValue: { state: 'REJECTED' },
+          notes: unresolvedContributionNote ? `${reason} | ${unresolvedContributionNote}` : reason,
+        },
+        trx,
+      );
     });
 
     await this.notifyMember(membership, 'MEMBERSHIP_APPLICATION_REJECTED', {
@@ -504,6 +537,9 @@ export class MembershipLifecycleService {
 
     const expiresAt = await this.computeExpiry(membership, now);
 
+    // F-013: audit write moved inside the existing transaction (no second
+    // transaction introduced) so lifecycle transition + number assignment +
+    // audit commit/roll back together.
     const { membershipNumber } = await db.transaction().execute(async (trx) => {
       await trx
         .updateTable('memberships')
@@ -517,16 +553,21 @@ export class MembershipLifecycleService {
         .where('id', '=', membershipId)
         .execute();
 
-      return this.numberingService.assignPermanentNumber(trx, membershipId, joinYear, joinMonth);
-    });
+      const result = await this.numberingService.assignPermanentNumber(trx, membershipId, joinYear, joinMonth);
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: actor.type,
-      actorUserId: actor.userId ?? null,
-      oldValue: { state: membership.lifecycle_state },
-      newValue: { state: 'ACTIVE', membershipNumber },
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: actor.type,
+          actorUserId: actor.userId ?? null,
+          oldValue: { state: membership.lifecycle_state },
+          newValue: { state: 'ACTIVE', membershipNumber: result.membershipNumber },
+        },
+        trx,
+      );
+
+      return result;
     });
 
     const refreshed = await this.getOrThrow(membershipId);
@@ -581,17 +622,24 @@ export class MembershipLifecycleService {
   async recordPaymentFailure(membershipId: number, failedAmountPaise?: number, notes?: string): Promise<void> {
     const membership = await this.requireState(membershipId, ['PENDING']);
 
-    await db
-      .updateTable('memberships')
-      .set({ last_payment_status: 'FAILED', pending_contribution_id: null })
-      .where('id', '=', membershipId)
-      .execute();
+    // F-013: mutation + existing PAYMENT_FAILED audit write commit/roll
+    // back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('memberships')
+        .set({ last_payment_status: 'FAILED', pending_contribution_id: null })
+        .where('id', '=', membershipId)
+        .execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'PAYMENT_FAILED',
-      actorType: 'SYSTEM',
-      notes: notes ?? null,
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'PAYMENT_FAILED',
+          actorType: 'SYSTEM',
+          notes: notes ?? null,
+        },
+        trx,
+      );
     });
 
     const failedAmount = failedAmountPaise != null
@@ -612,8 +660,31 @@ export class MembershipLifecycleService {
   // exists purely to record the payment-received milestone and let the
   // member/admin know the application is now eligible for final review.
   // ======================================================================
+  // F-002: a Contribution can still be SETTLEMENT_IN_PROGRESS when reject()
+  // runs (reject()'s "anything else" branch deliberately leaves it
+  // untouched -- see the comment above reject()). If that settlement
+  // subsequently succeeds, CONTRIBUTION_COMPLETED still arrives here for a
+  // now-REJECTED membership. The membership is never activated for that --
+  // admin rejection is final -- but the platform owes a refund of the
+  // completed settlement. requestRefund() is reused unchanged (idempotent,
+  // same Settlement Provider, immutable financial history); the only
+  // difference from the human-rejection refund path in reject() is the
+  // actor: no human initiated this, so actorType is SYSTEM with no
+  // actorUserId (F-002 system-actor governance decision).
   async recordPaymentReceived(membershipId: number): Promise<void> {
-    const membership = await this.requireState(membershipId, ['PENDING']);
+    const membership = await this.requireState(membershipId, ['PENDING', 'REJECTED']);
+
+    if (membership.lifecycle_state === 'REJECTED') {
+      const contribution = await this.getMembershipContribution(membershipId);
+      if (contribution) {
+        await this.financialService.requestRefund(
+          Number(contribution.id),
+          'Automatic refund: settlement completed after membership application was rejected',
+          { actorType: 'SYSTEM', actorUserId: null },
+        );
+      }
+      return;
+    }
 
     await logMembershipAudit({
       membershipId,
@@ -630,16 +701,23 @@ export class MembershipLifecycleService {
   async suspend(membershipId: number, actorUserId: number, reason: string): Promise<void> {
     const membership = await this.requireState(membershipId, ['ACTIVE']);
 
-    await db.updateTable('memberships').set({ lifecycle_state: 'SUSPENDED' }).where('id', '=', membershipId).execute();
+    // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx.updateTable('memberships').set({ lifecycle_state: 'SUSPENDED' }).where('id', '=', membershipId).execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: 'ADMIN',
-      actorUserId,
-      oldValue: { state: 'ACTIVE' },
-      newValue: { state: 'SUSPENDED' },
-      notes: reason,
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { state: 'ACTIVE' },
+          newValue: { state: 'SUSPENDED' },
+          notes: reason,
+        },
+        trx,
+      );
     });
 
     await this.notifyMember(membership, 'MEMBERSHIP_SUSPENDED');
@@ -651,15 +729,22 @@ export class MembershipLifecycleService {
   async reinstate(membershipId: number, actorUserId: number): Promise<void> {
     const membership = await this.requireState(membershipId, ['SUSPENDED']);
 
-    await db.updateTable('memberships').set({ lifecycle_state: 'ACTIVE' }).where('id', '=', membershipId).execute();
+    // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx.updateTable('memberships').set({ lifecycle_state: 'ACTIVE' }).where('id', '=', membershipId).execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: 'ADMIN',
-      actorUserId,
-      oldValue: { state: 'SUSPENDED' },
-      newValue: { state: 'ACTIVE' },
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { state: 'SUSPENDED' },
+          newValue: { state: 'ACTIVE' },
+        },
+        trx,
+      );
     });
 
     await this.notifyMember(membership, 'MEMBERSHIP_REINSTATED');
@@ -677,23 +762,30 @@ export class MembershipLifecycleService {
     // Preserve the original expires_at -- it anchors the grace-period
     // calculation in renewFromExpired. Only backfill with NOW when the
     // record never had a deadline (pre-renewal-engine activations).
-    await db
-      .updateTable('memberships')
-      .set(
-        membership.expires_at
-          ? { lifecycle_state: 'EXPIRED' }
-          : { lifecycle_state: 'EXPIRED', expires_at: toMysqlDatetime(new Date()) },
-      )
-      .where('id', '=', membershipId)
-      .execute();
+    // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('memberships')
+        .set(
+          membership.expires_at
+            ? { lifecycle_state: 'EXPIRED' }
+            : { lifecycle_state: 'EXPIRED', expires_at: toMysqlDatetime(new Date()) },
+        )
+        .where('id', '=', membershipId)
+        .execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: actor.type,
-      actorUserId: actor.userId ?? null,
-      oldValue: { state: 'ACTIVE' },
-      newValue: { state: 'EXPIRED' },
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: actor.type,
+          actorUserId: actor.userId ?? null,
+          oldValue: { state: 'ACTIVE' },
+          newValue: { state: 'EXPIRED' },
+        },
+        trx,
+      );
     });
 
     const graceDays = await this.gracePeriodDays(membership).catch(() => 0);
@@ -736,19 +828,26 @@ export class MembershipLifecycleService {
 
     const newExpiry = await this.computeExpiry(membership, new Date());
 
-    await db
-      .updateTable('memberships')
-      .set({ lifecycle_state: 'ACTIVE', expires_at: newExpiry, last_payment_status: 'SUCCEEDED' })
-      .where('id', '=', membershipId)
-      .execute();
+    // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('memberships')
+        .set({ lifecycle_state: 'ACTIVE', expires_at: newExpiry, last_payment_status: 'SUCCEEDED' })
+        .where('id', '=', membershipId)
+        .execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType,
-      actorUserId,
-      oldValue: { state: 'EXPIRED' },
-      newValue: { state: 'ACTIVE', note: 'renewal' },
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType,
+          actorUserId,
+          oldValue: { state: 'EXPIRED' },
+          newValue: { state: 'ACTIVE', note: 'renewal' },
+        },
+        trx,
+      );
     });
 
     await this.notifyMember(membership, 'MEMBERSHIP_RENEWED', {
@@ -769,20 +868,27 @@ export class MembershipLifecycleService {
       throw new ConflictException('A rejected application cannot be terminated -- there is no membership to terminate.');
     }
 
-    await db
-      .updateTable('memberships')
-      .set({ lifecycle_state: 'TERMINATED', terminated_at: toMysqlDatetime(new Date()) })
-      .where('id', '=', membershipId)
-      .execute();
+    // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
+    // roll back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('memberships')
+        .set({ lifecycle_state: 'TERMINATED', terminated_at: toMysqlDatetime(new Date()) })
+        .where('id', '=', membershipId)
+        .execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'LIFECYCLE_TRANSITION',
-      actorType: 'ADMIN',
-      actorUserId,
-      oldValue: { state: membership.lifecycle_state },
-      newValue: { state: 'TERMINATED' },
-      notes: reason,
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { state: membership.lifecycle_state },
+          newValue: { state: 'TERMINATED' },
+          notes: reason,
+        },
+        trx,
+      );
     });
 
     await this.notifyMember(membership, 'MEMBERSHIP_TERMINATED');
@@ -868,20 +974,27 @@ export class MembershipLifecycleService {
       new Date(),
     );
 
-    await db
-      .updateTable('memberships')
-      .set({ membership_class_id: newClassId, expires_at: newExpiry })
-      .where('id', '=', membershipId)
-      .execute();
+    // F-013: mutation + existing CLASS_CHANGED audit write commit/roll
+    // back as one transaction.
+    await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('memberships')
+        .set({ membership_class_id: newClassId, expires_at: newExpiry })
+        .where('id', '=', membershipId)
+        .execute();
 
-    await logMembershipAudit({
-      membershipId,
-      eventType: 'CLASS_CHANGED',
-      actorType: 'ADMIN',
-      actorUserId,
-      oldValue: { classId: membership.membership_class_id, className: oldClassName },
-      newValue: { classId: newClassId, className: newClass.name, direction },
-      notes: reason || undefined,
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'CLASS_CHANGED',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { classId: membership.membership_class_id, className: oldClassName },
+          newValue: { classId: newClassId, className: newClass.name, direction },
+          notes: reason || undefined,
+        },
+        trx,
+      );
     });
 
     // LEGACY_MEMBER class change dispatches LEGACY_STATUS_GRANTED instead of

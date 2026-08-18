@@ -141,8 +141,8 @@ describe('C. Contribution COMPLETED leaves Membership PENDING, unnumbered', () =
     'async suspend(',
   );
 
-  it('recordPaymentReceived() requires (and preserves) PENDING -- no state transition performed', () => {
-    expect(RECORD_PAYMENT_RECEIVED_FN).toContain("this.requireState(membershipId, ['PENDING'])");
+  it('recordPaymentReceived() requires PENDING or REJECTED (F-002: late settlement of an already-rejected application) -- no state transition performed either way', () => {
+    expect(RECORD_PAYMENT_RECEIVED_FN).toContain("this.requireState(membershipId, ['PENDING', 'REJECTED'])");
     expect(RECORD_PAYMENT_RECEIVED_FN).not.toContain('updateTable(\'memberships\')');
   });
 
@@ -260,7 +260,7 @@ describe('F/G. reject() resolves the Contribution before flipping the membership
 
   it('COMPLETED contribution -> requestRefund(); CREATED/AWAITING_SETTLEMENT -> cancelContribution()', () => {
     expect(REJECT_FN).toContain("contribution.state === 'COMPLETED'");
-    expect(REJECT_FN).toContain('.requestRefund(Number(contribution.id), reason, actorUserId)');
+    expect(REJECT_FN).toContain(".requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId })");
     expect(REJECT_FN).toContain("contribution.state === 'CREATED' || contribution.state === 'AWAITING_SETTLEMENT'");
     expect(REJECT_FN).toContain('.cancelContribution(Number(contribution.id),');
   });

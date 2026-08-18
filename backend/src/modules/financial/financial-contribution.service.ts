@@ -21,6 +21,7 @@ import {
   CANCELLABLE_CONTRIBUTION_STATES,
   type ContributionState,
   type FinancialObligationInput,
+  type RefundActor,
   type SettlementOutcomeInput,
 } from './financial.types';
 import {
@@ -328,8 +329,20 @@ export class FinancialContributionService {
   async requestRefund(
     contributionId: number,
     reason: string,
-    requestedByUserId: number,
+    actor: RefundActor,
   ): Promise<{ refundId: number; status: string; alreadyRequested: boolean }> {
+    // F-002 governance decision: HUMAN must carry a real actor id, SYSTEM
+    // must not carry one -- asserted at runtime (not just via the RefundActor
+    // union) because this value can arrive from an automated caller rather
+    // than a literal, and chk_refund_actor (migration 0096) would otherwise
+    // reject a mismatched pairing as an opaque DB error.
+    if (actor.actorType === 'HUMAN' && !actor.actorUserId) {
+      throw new BadRequestException('A HUMAN refund actor requires a valid actorUserId.');
+    }
+    if (actor.actorType === 'SYSTEM' && actor.actorUserId !== null) {
+      throw new BadRequestException('A SYSTEM refund actor must not carry a human actorUserId.');
+    }
+
     const contribution = await this.getContribution(contributionId);
     if (contribution.state !== 'COMPLETED') {
       throw new ConflictException(
@@ -358,7 +371,8 @@ export class FinancialContributionService {
           currency: contribution.currency,
           status: 'REQUESTED',
           reason,
-          requested_by_user_id: requestedByUserId,
+          requested_by_user_id: actor.actorUserId,
+          requested_by_type: actor.actorType,
         })
         .executeTakeFirstOrThrow();
       refundId = Number(inserted.insertId);

@@ -96,3 +96,14 @@ export interface FinancialObligationInput {
   idempotencyKey: string;       // deterministic, unique per obligation; required
   expiresAt?: Date | null;      // expiry policy set by Business Module
 }
+
+// requestRefund() actor identity (F-002 governance decision: domain-local
+// explicit discriminator + nullable human reference, mirrored onto
+// financial_refunds by migration 0096 -- no SYSTEM user is ever created).
+// The union shape makes an invalid pairing (HUMAN with no id, SYSTEM with
+// one) a compile-time error for typed callers; requestRefund() itself still
+// asserts the pairing at runtime since the value can originate from an
+// event payload rather than a literal.
+export type RefundActor =
+  | { actorType: 'HUMAN'; actorUserId: number }
+  | { actorType: 'SYSTEM'; actorUserId: null };

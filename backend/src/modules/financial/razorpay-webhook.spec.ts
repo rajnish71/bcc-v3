@@ -398,12 +398,12 @@ describe('P. Payment completion never activates Membership (Step 22B / workflow-
     expect(handlerBody).not.toMatch(/\.approve\(/);
   });
 
-  it('recordPaymentReceived() only accepts a PENDING membership and never sets lifecycle_state', () => {
+  it('recordPaymentReceived() only accepts PENDING or REJECTED (F-002) and never sets lifecycle_state', () => {
     const methodBody = LIFECYCLE_SRC.slice(
       LIFECYCLE_SRC.indexOf('async recordPaymentReceived'),
       LIFECYCLE_SRC.indexOf('async suspend'),
     );
-    expect(methodBody).toMatch(/requireState\(membershipId,\s*\['PENDING'\]\)/);
+    expect(methodBody).toMatch(/requireState\(membershipId,\s*\['PENDING', 'REJECTED'\]\)/);
     expect(methodBody).not.toMatch(/lifecycle_state:/);
   });
 

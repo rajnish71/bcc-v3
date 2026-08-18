@@ -514,6 +514,11 @@ export interface ReceiptsTable {
 // module-agnostic, same as the tables above: no membership-specific column.
 export type FinancialRefundStatus = 'REQUESTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
+// Migration 0096 -- F-002 domain-local actor discriminator. requested_by_type
+// is always present; requested_by_user_id is populated only for HUMAN
+// (chk_refund_actor enforces the pairing at the DB layer).
+export type FinancialRefundRequesterType = 'HUMAN' | 'SYSTEM';
+
 export interface FinancialRefundsTable {
   id: Generated<number>;
   uuid: string;
@@ -525,7 +530,8 @@ export interface FinancialRefundsTable {
   status: Generated<FinancialRefundStatus>;
   reason: string | null;
   failure_reason: string | null;
-  requested_by_user_id: number;
+  requested_by_user_id: number | null;
+  requested_by_type: Generated<FinancialRefundRequesterType>;
   requested_at: Generated<ColumnType<Date, string | undefined, never>>;
   resolved_at: ColumnType<Date | null, string | null, string | null>;
 }

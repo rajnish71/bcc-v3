@@ -241,9 +241,10 @@ Member in any renewal logic — skip renewal prompts entirely.
 
 ```
 git push origin master
-  → GitHub Actions: npm run build (Astro) + tsc compile check
-  → scp dist/ to /var/www/bcc-v3/frontend/dist/
-  → PM2 restart bcc-v3-backend
+  → GitHub Actions triggers scripts/deploy.sh on the server via forced SSH command
+  → backend: npm ci + npm run build → PM2 restart bcc-v3-backend
+  → frontend: npm ci + astro build --outDir dist-staging
+  → publish only on build success: dist → dist-old, dist-staging → dist
 ```
 
 **The deploy script uses `set -euo pipefail`.** Uncommitted server-side file

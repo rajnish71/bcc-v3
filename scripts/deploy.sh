@@ -11,6 +11,14 @@ set -euo pipefail
 LOG="/var/www/bcc-v3/deploy.log"
 exec >> "$LOG" 2>&1
 
+LOCK="/var/www/bcc-v3/.deploy.lock"
+exec 200>"$LOCK"
+if ! flock -n 200; then
+  echo ""
+  echo "=== Deploy skipped: $(date) — another deployment is already in progress ==="
+  exit 1
+fi
+
 echo ""
 echo "=== Deploy started: $(date) ==="
 

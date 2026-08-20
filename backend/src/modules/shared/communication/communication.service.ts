@@ -158,7 +158,7 @@ export class CommunicationService {
 
     // 2. Auto-inject platform_url; caller vars override if they supply it
     const resolvedVars: Record<string, string> = {
-      platform_url: process.env.FRONTEND_BASE_URL ?? 'https://v3bcc.bhopal.info',
+      platform_url: process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info',
       ...variables,
     };
 

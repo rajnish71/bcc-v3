@@ -101,7 +101,7 @@ export class AccountSettingsService {
       })
       .execute();
 
-    const baseUrl   = process.env.FRONTEND_BASE_URL ?? 'https://v3bcc.bhopal.info';
+    const baseUrl   = process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info';
     const verifyUrl = `${baseUrl}/hub/account-settings/verify/?token=${rawToken}`;
 
     const nameRow = await db

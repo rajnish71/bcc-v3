@@ -8,7 +8,7 @@
 // No puppeteer, no headless Chrome.
 //
 // QR code encodes the public verification URL:
-//   https://v3bcc.bhopal.info/verify/{card_verify_token}
+//   https://bcc.bhopal.info/verify/{card_verify_token}
 //
 // IMPORTANT (fixed from the original draft): the verify URL does NOT use
 // membership_number. membership_number is sequential and predictable under
@@ -64,7 +64,7 @@ const CLASS_BADGE_COLOURS: Record<string, [number, number, number]> = {
   FULL_MEMBER:           [0.659, 0.518, 0.235], // #A8843C
 };
 
-const VERIFY_BASE = 'https://v3bcc.bhopal.info/verify';
+const VERIFY_BASE = 'https://bcc.bhopal.info/verify';
 
 // Minimal shape returned to the public verification lookup. Deliberately
 // excludes anything sensitive -- no email, no phone, no user_id. This is
@@ -293,7 +293,7 @@ export class MembershipCardService {
 
     // ── Bottom amber bar ─────────────────────────────────────────────────────
     page.drawRectangle({ x: 3, y: 0, width: CARD_W - 3, height: 16, color: GOLD });
-    this.drawText(page, 'v3bcc.bhopal.info', fontBold, 6.5, 12, 4.5, BG);
+    this.drawText(page, 'bcc.bhopal.info', fontBold, 6.5, 12, 4.5, BG);
 
     // ── Verify hint (bottom right) ───────────────────────────────────────────
     const hint = 'Scan to verify';

@@ -636,7 +636,7 @@ export class RegistrationService {
   // ======================================================================
 
   private frontendBaseUrl(): string {
-    return process.env.FRONTEND_BASE_URL || 'https://v3bcc.bhopal.info';
+    return process.env.FRONTEND_BASE_URL || 'https://bcc.bhopal.info';
   }
 
   // Off by default -- MSG91/Interakt both charge per message with no

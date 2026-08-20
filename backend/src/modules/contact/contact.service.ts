@@ -138,7 +138,7 @@ export class ContactService {
           <!-- Footer -->
           <tr>
             <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 36px;">
-              <p style="margin:0;font-size:11px;color:#aaaaaa;">This message was sent via the contact form at <a href="https://v3bcc.bhopal.info/contact/" style="color:#b8924a;">v3bcc.bhopal.info/contact/</a>.</p>
+              <p style="margin:0;font-size:11px;color:#aaaaaa;">This message was sent via the contact form at <a href="https://bcc.bhopal.info/contact/" style="color:#b8924a;">bcc.bhopal.info/contact/</a>.</p>
             </td>
           </tr>
 

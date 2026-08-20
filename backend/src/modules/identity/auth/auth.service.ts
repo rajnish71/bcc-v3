@@ -239,7 +239,7 @@ export class AuthService {
       .execute();
 
     // Build reset URL and dispatch email.
-    const baseUrl   = process.env.FRONTEND_BASE_URL ?? 'https://v3bcc.bhopal.info';
+    const baseUrl   = process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info';
     const resetUrl  = `${baseUrl}/auth/reset-password/?token=${rawToken}`;
     const firstName = (user.full_name ?? '').split(' ')[0] || 'Member';
 

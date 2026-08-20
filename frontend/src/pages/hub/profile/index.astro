@@ -9,7 +9,7 @@
  *   1. Name fields (Title/First/Middle/Last) are READ-ONLY — edit via Account Settings.
  *   2. year_joined_bcc is TEMPORARILY USER-EDITABLE (V6 13 Amendment 002).
  *      Will revert to membership application date after full platform launch.
- *   3. Public URL prefix: v3bcc.bhopal.info/photographers/{username}
+ *   3. Public URL prefix: bcc.bhopal.info/photographers/{username}
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
 import TiptapBio from '../../../components/hub/TiptapBio.astro';
@@ -194,7 +194,7 @@ const maxYear = new Date().getFullYear() + 1;
       <div class="ps-field-group ps-field-group--full">
         <div class="ps-label">Public Profile URL</div>
         <div class="ps-url-row">
-          <span class="ps-url-prefix">v3bcc.bhopal.info/photographers/</span>
+          <span class="ps-url-prefix">bcc.bhopal.info/photographers/</span>
           <span class="ps-url-value" id="ps-url-value">—</span>
           <button class="ps-url-copy" id="ps-url-copy" type="button">Copy</button>
           <a class="ps-url-view" id="ps-url-view" href="#" target="_blank" rel="noopener">View ↗</a>
@@ -1527,7 +1527,7 @@ async function loadProfile() {
   setTxt('ph-name', p.fullName ?? '—');
   setTxt('ph-tier', p.membershipTier ?? '—');
   setTxt('ph-number', p.membershipNumberDisplay ?? p.membershipNumber ?? '—');
-  setTxt('ph-public-link', `v3bcc.bhopal.info/photographers/${p.username ?? ''}`);
+  setTxt('ph-public-link', `bcc.bhopal.info/photographers/${p.username ?? ''}`);
   setAttr('ph-public-link', 'href', `/photographers/${p.username ?? ''}/`);
   setTxt('ps-url-value', p.username ?? '—');
   setAttr('ps-url-view', 'href', `/photographers/${p.username ?? ''}/`);
@@ -1851,7 +1851,7 @@ function setActiveTab(sectionKey: string) {
 document.getElementById('ps-url-copy')?.addEventListener('click', () => {
   const username = (document.getElementById('ps-url-value') as HTMLElement)?.textContent ?? '';
   if (username && username !== '—') {
-    navigator.clipboard.writeText(`https://v3bcc.bhopal.info/photographers/${username}/`).catch(() => {});
+    navigator.clipboard.writeText(`https://bcc.bhopal.info/photographers/${username}/`).catch(() => {});
     const btn = document.getElementById('ps-url-copy') as HTMLButtonElement;
     if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
   }

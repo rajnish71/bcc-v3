@@ -10,6 +10,7 @@
 // Usage (run on the server, backend/ as cwd):
 //   npx ts-node -r tsconfig-paths/register src/scripts/grant-complimentary-membership.ts <membershipId> <actorUserId> <months> "<reason>"
 
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { MembershipAdminService } from '../modules/membership/admin/membership-admin.service';

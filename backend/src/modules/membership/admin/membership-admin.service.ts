@@ -488,11 +488,16 @@ export class MembershipAdminService {
           `Reversed for complimentary membership grant: ${reason}`,
           { actorType: 'HUMAN', actorUserId },
         );
-      } else if (['CREATED', 'AWAITING_SETTLEMENT', 'SETTLEMENT_IN_PROGRESS'].includes(existing.state)) {
+      } else if (['CREATED', 'AWAITING_SETTLEMENT'].includes(existing.state)) {
         await this.financialService.cancelContribution(
           Number(existing.id),
           `Cancelled for complimentary membership grant: ${reason}`,
         );
+      } else if (existing.state === 'SETTLEMENT_IN_PROGRESS') {
+        // Not cancellable (PAY-001 state machine) -- this attempt is stuck
+        // mid-checkout and will never resolve. ABANDONED is the correct
+        // terminal state for an administratively-determined dead attempt.
+        await this.financialService.transitionContribution(Number(existing.id), 'ABANDONED');
       }
       // FAILED / CANCELLED / EXPIRED / ABANDONED / REFUNDED are already
       // terminal -- nothing to resolve.

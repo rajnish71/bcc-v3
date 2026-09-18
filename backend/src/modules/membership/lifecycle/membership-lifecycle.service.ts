@@ -378,6 +378,7 @@ export class MembershipLifecycleService {
   async approve(
     membershipId: number,
     actorUserId: number,
+    opts?: { expiresAtOverride?: string },
   ): Promise<{ finalState: 'APPROVED' | 'ACTIVE' }> {
     const membership = await this.requireState(membershipId, ['PENDING']);
 
@@ -432,7 +433,7 @@ export class MembershipLifecycleService {
       // MEMBERSHIP_APPLICATION_APPROVED is suppressed for both -- the member
       // is activated in the same operation, so "pending review" copy would
       // be wrong; MEMBERSHIP_ACTIVATED fires via activate().
-      await this.activate(membershipId, { type: 'ADMIN', userId: actorUserId });
+      await this.activate(membershipId, { type: 'ADMIN', userId: actorUserId }, opts);
       return { finalState: 'ACTIVE' };
     }
 
@@ -527,7 +528,17 @@ export class MembershipLifecycleService {
   async activate(
     membershipId: number,
     actor: { type: 'SYSTEM' | 'ADMIN'; userId?: number | null },
-    opts?: { paymentId?: number | null; joinYear?: number; joinMonth?: number },
+    opts?: {
+      paymentId?: number | null;
+      joinYear?: number;
+      joinMonth?: number;
+      // Explicit one-off validity override for an authorized administrative
+      // grant (e.g. a time-boxed complimentary period) that must not reuse
+      // the class's normal renewal_term_months. Every other membership keeps
+      // going through computeExpiry() untouched -- this never alters class
+      // config. undefined (the default) preserves existing behaviour exactly.
+      expiresAtOverride?: string;
+    },
   ): Promise<{ membershipNumber: string }> {
     const membership = await this.requireState(membershipId, ['APPROVED']);
 
@@ -535,7 +546,7 @@ export class MembershipLifecycleService {
     const joinYear  = opts?.joinYear  ?? now.getFullYear();
     const joinMonth = opts?.joinMonth ?? (now.getMonth() + 1);
 
-    const expiresAt = await this.computeExpiry(membership, now);
+    const expiresAt = opts?.expiresAtOverride ?? await this.computeExpiry(membership, now);
 
     // F-013: audit write moved inside the existing transaction (no second
     // transaction introduced) so lifecycle transition + number assignment +

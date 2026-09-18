@@ -8,11 +8,15 @@
 //   - Recent audit events
 //   - Notification type catalogue for admin panel display
 
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 import { db } from '../../../database/db';
+import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { CommunicationService } from '../../shared/communication/communication.service';
+import { FinancialContributionService } from '../../financial/financial-contribution.service';
 import { RecognitionService } from '../recognition/recognition.service';
+import { EntitlementService } from '../entitlements/entitlement.service';
+import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 
 @Injectable()
@@ -20,6 +24,9 @@ export class MembershipAdminService {
   constructor(
     private readonly communicationService: CommunicationService,
     private readonly recognitionService: RecognitionService,
+    private readonly financialService: FinancialContributionService,
+    private readonly entitlementService: EntitlementService,
+    private readonly lifecycleService: MembershipLifecycleService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -425,5 +432,136 @@ export class MembershipAdminService {
       .where('m.owner_type', '=', 'INDIVIDUAL')
       .orderBy('m.expires_at', 'asc')
       .execute();
+  }
+
+  // -------------------------------------------------------------------------
+  // Exceptional administrative courtesy: grant a time-boxed complimentary
+  // (₹0) membership period for a specific, individually-authorized case --
+  // e.g. an applicant blocked by a payment gateway that is not currently
+  // collecting real payments. This is NOT a general waiver mechanism: it
+  // composes existing PAY-001 primitives (zero-value Contribution, refund,
+  // cancellation) and the existing lifecycle machine (approve/activate) --
+  // it does not touch class-level fee_inr or renewal_term_months, so the
+  // standard plan for this class is completely untouched for every other
+  // applicant. The complimentary window itself is recorded via the existing
+  // individual_overrides mechanism (key: complimentary_period) purely as a
+  // marker/expiry-anchor -- entitlement resolution for fee/term keys never
+  // reads layer 3 (see EntitlementService.getClassConfigValue), so this
+  // marker cannot silently alter pricing for anyone.
+  //
+  // Requires the membership to be PENDING (the normal application-intake
+  // state) -- this is a courtesy extended during onboarding, not a mid-life
+  // membership mutation.
+  // -------------------------------------------------------------------------
+  async grantComplimentaryMembership(
+    membershipId: number,
+    actorUserId: number,
+    months: number,
+    reason: string,
+  ): Promise<{ membershipNumber: string; expiresAt: string }> {
+    const membership = await db
+      .selectFrom('memberships')
+      .selectAll()
+      .where('id', '=', membershipId)
+      .executeTakeFirst();
+    if (!membership) throw new BadRequestException(`Membership ${membershipId} not found.`);
+
+    if (membership.lifecycle_state !== 'PENDING') {
+      throw new ConflictException(
+        `Membership ${membershipId} is in state '${membership.lifecycle_state}'; a complimentary grant requires PENDING.`,
+      );
+    }
+    if (membership.owner_type !== 'INDIVIDUAL' || membership.membership_class_id == null || !membership.user_id) {
+      throw new BadRequestException('Complimentary grants are only supported for INDIVIDUAL memberships with a membership class.');
+    }
+
+    // Resolve any existing Financial Contribution before creating the ₹0
+    // complimentary one -- PAY-001 never leaves two live obligations for the
+    // same application. A COMPLETED contribution (even one produced by a
+    // dummy/test-mode gateway) is reversed through a real refund, never
+    // silently discarded; a non-terminal one is cancelled.
+    const existing = await this.financialService.findLatestForBusinessReference('MEMBERSHIP', membershipId);
+    if (existing) {
+      if (existing.state === 'COMPLETED') {
+        await this.financialService.requestRefund(
+          Number(existing.id),
+          `Reversed for complimentary membership grant: ${reason}`,
+          { actorType: 'HUMAN', actorUserId },
+        );
+      } else if (['CREATED', 'AWAITING_SETTLEMENT', 'SETTLEMENT_IN_PROGRESS'].includes(existing.state)) {
+        await this.financialService.cancelContribution(
+          Number(existing.id),
+          `Cancelled for complimentary membership grant: ${reason}`,
+        );
+      }
+      // FAILED / CANCELLED / EXPIRED / ABANDONED / REFUNDED are already
+      // terminal -- nothing to resolve.
+    }
+
+    const idempotencyKey = `MEMBERSHIP-${membershipId}-COMPLIMENTARY-CONTRIBUTION`;
+    const { id: contributionId } = await this.financialService.createContribution({
+      payerUserId: membership.user_id,
+      businessModule: 'MEMBERSHIP',
+      businessReferenceId: membershipId,
+      purpose: `Complimentary membership (${months}-month courtesy period)`,
+      amountPaise: 0,
+      idempotencyKey,
+    });
+    await this.financialService.processZeroValueContribution(contributionId);
+
+    await db
+      .updateTable('memberships')
+      .set({ pending_contribution_id: contributionId })
+      .where('id', '=', membershipId)
+      .execute();
+
+    const expiresAtDate = new Date();
+    expiresAtDate.setMonth(expiresAtDate.getMonth() + months);
+    const expiresAtMysql = toMysqlDatetime(expiresAtDate);
+
+    await this.lifecycleService.approve(membershipId, actorUserId, { expiresAtOverride: expiresAtMysql });
+
+    await this.entitlementService.grantOverride(
+      membershipId,
+      'complimentary_period',
+      'GRANT',
+      'ACTIVE',
+      reason,
+      actorUserId,
+      expiresAtMysql,
+    );
+
+    const activated = await this.lifecycleService.getOrThrow(membershipId);
+    const [cls, user, feeRaw] = await Promise.all([
+      db.selectFrom('membership_classes').select(['name', 'code']).where('id', '=', membership.membership_class_id).executeTakeFirst(),
+      db.selectFrom('users').select('full_name').where('id', '=', membership.user_id).executeTakeFirst(),
+      this.entitlementService.getClassConfigValue(membership.membership_class_id, 'fee_inr'),
+    ]);
+
+    await logMembershipAudit({
+      membershipId,
+      eventType: 'COMPLIMENTARY_MEMBERSHIP_GRANTED',
+      actorType: 'ADMIN',
+      actorUserId,
+      newValue: { months, expiresAt: expiresAtMysql, classCode: cls?.code, contributionId },
+      notes: reason,
+    });
+
+    const untilDisplay = expiresAtDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    await this.communicationService.dispatch(
+      'MEMBERSHIP_COMPLIMENTARY_ACTIVATED',
+      membership.user_id,
+      {
+        full_name: user?.full_name ?? '',
+        membership_class: cls?.name ?? '',
+        membership_number: activated.membership_number ?? '',
+        complimentary_until: untilDisplay,
+        renewal_fee: feeRaw ? `₹${feeRaw}` : 'the standard fee',
+        portal_link: `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`,
+      },
+      { actionUrl: '/hub/' },
+    );
+
+    return { membershipNumber: activated.membership_number ?? '', expiresAt: expiresAtMysql };
   }
 }

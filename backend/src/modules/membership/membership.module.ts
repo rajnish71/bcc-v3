@@ -8,6 +8,7 @@ import { FinancialModule } from '../financial/financial.module';
 import { MembershipFinancialListener } from './financial/membership-financial.listener';
 import { MembershipNumberingService } from './numbering/membership-numbering.service';
 import { MembershipLifecycleService } from './lifecycle/membership-lifecycle.service';
+import { ComplimentaryExpiryCheckService } from './lifecycle/complimentary-expiry-check.service';
 import { EntitlementService } from './entitlements/entitlement.service';
 import { EntitlementController } from './entitlements/entitlement.controller';
 import { RecognitionService } from './recognition/recognition.service';
@@ -45,6 +46,7 @@ import { MembershipAdminController } from './admin/membership-admin.controller';
     MembershipFinancialListener,
     MembershipNumberingService,
     MembershipLifecycleService,
+    ComplimentaryExpiryCheckService,
     EntitlementService,
     RecognitionService,
     GroupService,

@@ -34,6 +34,7 @@ import { MembershipAdminService } from './membership-admin.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 import { UpgradeMembershipDto } from '../dto/upgrade-membership.dto';
 import { DowngradeMembershipDto } from '../dto/downgrade-membership.dto';
+import { GrantComplimentaryMembershipDto } from '../dto/grant-complimentary-membership.dto';
 
 @Controller('api/v1/membership')
 @UseGuards(AccessTokenGuard, RbacGuard)
@@ -157,6 +158,23 @@ export class MembershipAdminController {
       }
     }
     return { processed: results.length, results };
+  }
+
+  // ── Exceptional administrative courtesy ──────────────────────────────────
+  // Grants a time-boxed complimentary (₹0) membership period for a specific,
+  // individually-authorized case (e.g. payment gateway not collecting real
+  // payments). See MembershipAdminService.grantComplimentaryMembership() for
+  // the full rationale -- this does not create a new membership plan or
+  // alter any class-level fee/term configuration.
+  @Post(':id/grant-complimentary')
+  @HttpCode(200)
+  @RequirePermissions('membership.lifecycle.activate')
+  async grantComplimentary(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: GrantComplimentaryMembershipDto,
+  ) {
+    return this.adminService.grantComplimentaryMembership(id, actor.sub, dto.months, dto.reason);
   }
 
   // ── Class change (upgrade / downgrade) ───────────────────────────────────

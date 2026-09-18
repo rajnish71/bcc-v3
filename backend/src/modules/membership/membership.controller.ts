@@ -387,7 +387,27 @@ export class MembershipController {
   @HttpCode(200)
   @UseGuards(AccessTokenGuard)
   async mine(@CurrentUser() actor: AccessTokenPayload) {
-    return this.lifecycle.listForUser(actor.sub);
+    const memberships = await this.lifecycle.listForUser(actor.sub);
+    if (memberships.length === 0) return memberships;
+
+    // Surface an active complimentary-period marker (individual_overrides,
+    // key='complimentary_period') so the Hub can show a courtesy badge
+    // instead of implying this is the standard paid plan. Read-only lookup;
+    // never affects fee/term resolution (see EntitlementService.getClassConfigValue).
+    const overrides = await db
+      .selectFrom('individual_overrides')
+      .select(['membership_id', 'expires_at', 'reason'])
+      .where('membership_id', 'in', memberships.map((m) => m.id))
+      .where('entitlement_key', '=', 'complimentary_period')
+      .where('override_type', '=', 'GRANT')
+      .where((eb) => eb.or([eb('expires_at', 'is', null), eb('expires_at', '>', new Date())]))
+      .execute();
+    const complimentaryByMembership = new Map(overrides.map((o) => [o.membership_id, o]));
+
+    return memberships.map((m) => {
+      const c = complimentaryByMembership.get(m.id);
+      return c ? { ...m, complimentary: { until: c.expires_at, reason: c.reason } } : m;
+    });
   }
 
   @Get('due-for-expiry/list')

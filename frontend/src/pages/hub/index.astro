@@ -152,6 +152,7 @@ import HubLayout from '../../layouts/HubLayout.astro';
             <img src="/brand/BCC White Logo.png" alt="BCC" class="mcard-logo" />
             <div class="mcard-name" id="mcard-name">—</div>
             <div class="mcard-class" id="mcard-class">Member</div>
+            <div class="mcard-complimentary" id="mcard-complimentary" hidden></div>
             <div class="mcard-footer">
               <div>
                 <div class="mcard-field-label">Membership No.</div>
@@ -847,6 +848,17 @@ import HubLayout from '../../layouts/HubLayout.astro';
   margin-top: 4px;
   font-family: var(--font-body);
 }
+.mcard-complimentary {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  color: var(--dark-100);
+  background: var(--gold-light);
+  display: inline-block;
+  padding: 2px 8px;
+  margin-top: 6px;
+}
 .mcard-footer {
   display: flex;
   align-items: flex-end;
@@ -1121,6 +1133,7 @@ async function loadMembership(): Promise<void> {
     membership_class_id?: number | null;
     expires_at?: string | null;
     activated_at?: string | null;
+    complimentary?: { until: string | null; reason: string | null } | null;
   }>;
 
   const active = memberships.find(m => m.lifecycle_state === 'ACTIVE')
@@ -1158,6 +1171,23 @@ async function loadMembership(): Promise<void> {
 
   const numEl = document.getElementById('mcard-number');
   if (numEl) numEl.textContent = active.membership_number ?? '—';
+
+  // Complimentary/courtesy period badge — makes clear this is a temporary
+  // administrative grant, not the standard paid plan, per the courtesy note.
+  const compEl = document.getElementById('mcard-complimentary');
+  if (compEl) {
+    if (active.complimentary?.until) {
+      const untilDate = new Date(active.complimentary.until);
+      compEl.textContent = `Complimentary — valid until ${untilDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+      compEl.hidden = false;
+      addAttentionItem(
+        `Your <strong>complimentary membership</strong> ends ${untilDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — payment will be required to continue`,
+        '/hub/membership/',
+      );
+    } else {
+      compEl.hidden = true;
+    }
+  }
 
   // Expiry / renewal
   const expiryEl      = document.getElementById('mcard-expiry');

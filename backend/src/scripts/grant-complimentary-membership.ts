@@ -38,7 +38,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('grant-complimentary-membership.ts failed:', err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0)) // ComplimentaryExpiryCheckService's setInterval (and the
+  // Kysely/mysql2 pool) keep the event loop alive after app.close() in a
+  // standalone application context -- force exit once work is done.
+  .catch((err) => {
+    console.error('grant-complimentary-membership.ts failed:', err);
+    process.exit(1);
+  });

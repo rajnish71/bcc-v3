@@ -13,6 +13,10 @@ interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  ogImageAlt?: string;
+  ogImageType?: string;
   bodyClass?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
@@ -20,13 +24,18 @@ interface Props {
 const {
   title,
   description = 'Bhopal Camera Club — photography community since 2016. Events, exhibitions, workshops, and a curated portfolio of member work.',
-  ogImage = '/images/og-default.jpg',
+  ogImage = '/images/hero.jpg',
+  ogImageWidth,
+  ogImageHeight,
+  ogImageAlt = 'Bhopal Camera Club',
+  ogImageType = 'image/jpeg',
   bodyClass = '',
   jsonLd,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://bcc.bhopal.info');
 const fullTitle = `${title} | Bhopal Camera Club`;
+const ogImageURL = new URL(ogImage, Astro.site ?? 'https://bcc.bhopal.info').toString();
 
 const SITE_URL = 'https://bcc.bhopal.info';
 
@@ -71,9 +80,17 @@ const allSchemas = [organizationSchema, websiteSchema, ...(jsonLd ? (Array.isArr
   <meta property="og:url"         content={canonicalURL.toString()} />
   <meta property="og:title"       content={fullTitle} />
   <meta property="og:description" content={description} />
-  <meta property="og:image"       content={new URL(ogImage, Astro.site ?? 'https://bcc.bhopal.info').toString()} />
+  <meta property="og:image"       content={ogImageURL} />
+  <meta property="og:image:secure_url" content={ogImageURL} />
+  <meta property="og:image:type"  content={ogImageType} />
+  {ogImageWidth  && <meta property="og:image:width"  content={String(ogImageWidth)} />}
+  {ogImageHeight && <meta property="og:image:height" content={String(ogImageHeight)} />}
+  <meta property="og:image:alt"   content={ogImageAlt} />
   <meta property="og:site_name"   content="Bhopal Camera Club" />
-  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image"       content={ogImageURL} />
 
   <link rel="canonical" href={canonicalURL.toString()} />
 

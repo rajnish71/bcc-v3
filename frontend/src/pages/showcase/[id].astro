@@ -12,25 +12,80 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
-  let photos: any[] = [];
+  let ids: { id: number }[] = [];
   try {
     const res = await fetch(`${BUILD_API_URL}/gallery/photos/all-ids`);
-    if (res.ok) photos = await res.json();
+    if (res.ok) ids = await res.json();
   } catch { /* silent */ }
 
-  const paths = photos.map((p: any) => ({ params: { id: String(p.id) } }));
+  // Concurrency-limited fetch — 842+ photos means one-request-per-photo at
+  // build time must not be fully sequential (too slow) or fully parallel
+  // (floods the local backend). No new endpoint exists that returns full
+  // photo detail in bulk, so this reuses the same GET /gallery/photos/by-id/:id
+  // the client script already calls.
+  const PHOTO_DETAIL_CONCURRENCY = 16;
+  const photos: any[] = new Array(ids.length);
+  let next = 0;
+  async function worker() {
+    while (next < ids.length) {
+      const i = next++;
+      try {
+        const res = await fetch(`${BUILD_API_URL}/gallery/photos/by-id/${ids[i].id}`);
+        photos[i] = res.ok ? await res.json() : null;
+      } catch {
+        photos[i] = null;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(PHOTO_DETAIL_CONCURRENCY, ids.length) }, worker));
+
+  const paths = ids.map((p, i) => ({
+    params: { id: String(p.id) },
+    props: { photo: photos[i] ?? null },
+  }));
   // Always include the placeholder shell so Nginx try_files has a valid fallback
-  // for photos uploaded after the last build.
-  paths.push({ params: { id: 'placeholder' } });
+  // for photos uploaded after the last build. No photo data at build time —
+  // the client script resolves the real ID from the URL and renders it live.
+  paths.push({ params: { id: 'placeholder' }, props: { photo: null } });
   return paths;
 }
 
 const { id } = Astro.params;
+const { photo } = Astro.props as { photo: any };
+
+// ImageKit's tr=w-1600,c-maintain_ratio transform (see photoVariants() on the
+// backend) downscales to 1600px wide when the original is larger, preserving
+// aspect ratio; smaller originals pass through unchanged. Mirror that here so
+// og:image:width/height describe the actual "large" variant, not the original.
+function largeVariantDimensions(widthPx: number | null, heightPx: number | null) {
+  if (!widthPx || !heightPx) return { width: undefined, height: undefined };
+  if (widthPx <= 1600) return { width: widthPx, height: heightPx };
+  const width = 1600;
+  const height = Math.round((1600 * heightPx) / widthPx);
+  return { width, height };
+}
+
+const ogImageUrl = photo?.urls?.large || photo?.urls?.original || photo?.urls?.medium || undefined;
+const { width: ogImageWidth, height: ogImageHeight } = ogImageUrl
+  ? largeVariantDimensions(photo?.width_px ?? null, photo?.height_px ?? null)
+  : { width: undefined, height: undefined };
+const ogImageType = photo?.file_format ? `image/${String(photo.file_format).toLowerCase()}` : undefined;
+
+const pageTitle = photo?.title || 'Canonical Photo';
+const pageDescription = photo?.caption || photo?.description || 'Photograph detail page — Bhopal Camera Club Showcase';
+const ogImageAlt = photo?.title
+  ? `${photo.title}${photo.photographer?.name ? ` — photograph by ${photo.photographer.name}` : ''}`
+  : undefined;
 ---
 
 <BaseLayout
-  title="Canonical Photo — Bhopal Camera Club"
-  description="Photograph detail page — Bhopal Camera Club Showcase"
+  title={pageTitle}
+  description={pageDescription}
+  ogImage={ogImageUrl}
+  ogImageWidth={ogImageWidth}
+  ogImageHeight={ogImageHeight}
+  ogImageAlt={ogImageAlt}
+  ogImageType={ogImageType}
 >
   <!-- ══ VIEWING CONTEXT BAR ══ -->
   <div class="vcbar" id="vc-bar">

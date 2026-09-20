@@ -178,7 +178,7 @@ export class GalleryService {
     }
     if (dto.file_size_bytes > MAX_PHOTO_BYTES) {
       throw new BadRequestException(
-        `File exceeds the 150 MB limit (declared ${Math.round(dto.file_size_bytes / 1024 / 1024)} MB).`,
+        `File exceeds the 20 MB limit (declared ${Math.round(dto.file_size_bytes / 1024 / 1024)} MB).`,
       );
     }
 
@@ -263,6 +263,18 @@ export class GalleryService {
       throw new BadRequestException(
         'Object not found in R2 storage. ' +
         'Complete the PUT to the presigned URL before calling /confirm.',
+      );
+    }
+
+    // 2b. Validate the ACTUAL R2 object size against MAX_PHOTO_BYTES.
+    //     The browser-declared file_size_bytes from /presign is not trusted
+    //     here -- R2's ContentLength (head.sizeBytes) is authoritative. An
+    //     oversized object is left in PROCESSING (not activated) and is
+    //     swept up by the existing 48-hour PROCESSING TTL cleanup.
+    if (head.sizeBytes != null && head.sizeBytes > MAX_PHOTO_BYTES) {
+      throw new BadRequestException(
+        `Uploaded file is ${Math.round(head.sizeBytes / 1_000_000)} MB, which exceeds the 20 MB limit. ` +
+        'Please resize the image and re-select it to upload.',
       );
     }
 

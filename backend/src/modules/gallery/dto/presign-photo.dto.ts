@@ -13,7 +13,7 @@ export interface PresignPhotoDto {
   filename: string;
   /** MIME type declared by the client. Validated against ALLOWED_MIME_TYPES. */
   mime_type: string;
-  /** File size in bytes. Must be > 0 and <= MAX_PHOTO_BYTES (150 MB). */
+  /** File size in bytes. Must be > 0 and <= MAX_PHOTO_BYTES (20 MB). */
   file_size_bytes: number;
   /** Optional: link this photo to an event. Must be a published event. */
   source_event_id?: number;

@@ -140,8 +140,14 @@ export function mimeToFormat(mimeType: string): PhotoFileFormat {
   return map[mimeType.toLowerCase()] ?? 'OTHER';
 }
 
-/** Maximum upload size per file (150 MB -- covers RAW formats). */
-export const MAX_PHOTO_BYTES = 150 * 1024 * 1024;
+/**
+ * Maximum upload size per file (20 MB decimal bytes).
+ * Kept below the ImageKit free-plan input ceiling (~25 MiB / 26,214,400 bytes)
+ * observed in production. Existing Canonical Photo Master Assets uploaded
+ * before this limit was lowered are unaffected -- this only gates future
+ * presign/confirm admission.
+ */
+export const MAX_PHOTO_BYTES = 20_000_000;
 
 /** Allowed MIME types for photo uploads. */
 export const ALLOWED_MIME_TYPES = new Set<string>([

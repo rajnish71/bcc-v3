@@ -32,7 +32,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
         <button class="btn-gold" id="btn-choose" type="button">Choose Photographs</button>
         <div class="drop-hints-wrap">
           <span class="mono-hint">JPEG · PNG · HEIC · TIFF · RAW (.CR2 .CR3 .NEF .ARW .ORF .DNG)</span>
-          <span class="mono-hint">Up to 150MB per file</span>
+          <span class="mono-hint">Up to 20MB per file</span>
           <span class="mono-hint" id="card-hint" hidden>Insert a memory card — BCC detects it automatically</span>
         </div>
       </div>
@@ -454,7 +454,7 @@ interface FileItem {
 /* ════════════════════════════════════════════════════════
    STATE
 ════════════════════════════════════════════════════════ */
-const MAX_BYTES = 150 * 1024 * 1024; // matches backend MAX_PHOTO_BYTES (imagekit.util.ts)
+const MAX_BYTES = 20_000_000; // matches backend MAX_PHOTO_BYTES (imagekit.util.ts) -- decimal bytes, not MiB
 const CONCURRENCY = 3;
 
 let phase: Phase = 'empty';
@@ -1021,7 +1021,7 @@ function addFiles(files: FileList | File[]): void {
     if (all.length > 0) {
       const oversize = all.some(f => f.size > MAX_BYTES);
       alert(oversize
-        ? `File exceeds the ${Math.round(MAX_BYTES / 1024 / 1024)}MB limit.`
+        ? `File exceeds the ${Math.round(MAX_BYTES / 1_000_000)}MB limit.`
         : 'Unsupported file type. Allowed: JPEG, PNG, TIFF, HEIC, WebP, and common RAW formats (NEF, CR2, CR3, ARW, ORF, DNG).');
     }
     return;
@@ -1097,10 +1097,17 @@ async function assignCategories(photoUuid: string): Promise<void> {
   }
 }
 
+// Matches the backend's confirm-time oversize message (gallery.service.ts,
+// confirmUpload step 2b) -- distinguishes the terminal "actual R2 object
+// exceeds 20MB" case from ordinary transient confirm failures.
+function isOversizeConfirmError(status: number, msg: string): boolean {
+  return status === 400 && /exceeds the 20\s?MB limit/i.test(msg);
+}
+
 async function confirmItems(
   selectedIds: string[],
   visibility: string,
-): Promise<{ confirmed: number; errorMsg: string | null }> {
+): Promise<{ confirmed: number; errorMsg: string | null; oversizeRemoved: string[] }> {
   const title       = (qid('meta-title')        as HTMLInputElement).value.trim();
   const description = (qid('meta-description') as HTMLTextAreaElement).value.trim() || null;
   const exhibLabel  = (qid('meta-exh-label')   as HTMLInputElement).value.trim() || null;
@@ -1111,6 +1118,7 @@ async function confirmItems(
 
   let confirmed = 0;
   let errorMsg: string | null = null;
+  const oversizeRemoved: string[] = [];
 
   for (const id of selectedIds) {
     const item = items.find(i => i.id === id);
@@ -1178,7 +1186,17 @@ async function confirmItems(
           msg = Array.isArray(raw) ? raw.join('; ') : (raw ?? msg);
         } catch { /**/ }
         console.error(`[BCC Upload] confirm failed for "${item.file.name}" — HTTP ${res.status}:`, msg);
-        errorMsg = msg;
+
+        if (isOversizeConfirmError(res.status, msg)) {
+          // Terminal, non-retryable: the uploaded object itself exceeds the
+          // 20 MB limit. Drop it from the wall entirely rather than leaving
+          // it selectable for another Publish/Draft attempt, which would
+          // just fail identically every time.
+          items = items.filter(i => i.id !== item.id);
+          oversizeRemoved.push(item.file.name);
+        } else {
+          errorMsg = msg;
+        }
       }
     } catch (err) {
       const msg = (err as Error).message || 'Network error';
@@ -1187,7 +1205,7 @@ async function confirmItems(
     }
   }
 
-  return { confirmed, errorMsg };
+  return { confirmed, errorMsg, oversizeRemoved };
 }
 
 async function handlePublish(asDraft: boolean): Promise<void> {
@@ -1200,14 +1218,20 @@ async function handlePublish(asDraft: boolean): Promise<void> {
   clearPubError();
 
   const visibility = asDraft ? 'PRIVATE' : (qid('meta-visibility') as HTMLSelectElement).value;
-  const { confirmed, errorMsg } = await confirmItems(sel, visibility);
+  const { confirmed, errorMsg, oversizeRemoved } = await confirmItems(sel, visibility);
 
   if (asDraft) draftCount += confirmed;
   else publishedCount += confirmed;
 
-  if (errorMsg && confirmed === 0) {
+  const oversizeMsg = oversizeRemoved.length
+    ? `${oversizeRemoved.join(', ')} exceed${oversizeRemoved.length === 1 ? 's' : ''} the 20 MB limit and could not be uploaded. Please resize the file${oversizeRemoved.length === 1 ? '' : 's'} and re-select to try again.`
+    : null;
+  const combinedErrorMsg = [oversizeMsg, errorMsg].filter(Boolean).join(' ') || null;
+
+  if (combinedErrorMsg && confirmed === 0) {
     // All failed — keep inspector open, show error
-    showPubError(errorMsg);
+    showPubError(combinedErrorMsg);
+    renderPhotoWall();
     btnP.disabled = false; btnD.disabled = false;
     return;
   }
@@ -1231,7 +1255,7 @@ async function handlePublish(asDraft: boolean): Promise<void> {
     setPhase('complete');
     btnP.disabled = false; btnD.disabled = false;
   } else {
-    if (errorMsg) showPubError(`Some photographs could not be published: ${errorMsg}`);
+    if (combinedErrorMsg) showPubError(`Some photographs could not be published: ${combinedErrorMsg}`);
     renderPhotoWall();
     btnP.disabled = false; btnD.disabled = false;
   }

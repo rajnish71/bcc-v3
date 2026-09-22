@@ -632,6 +632,7 @@ export class FinancialContributionService {
         providerOrderReference: existingReference,
         amountPaise: Number(contribution.amount_paise),
         currency: String(contribution.currency),
+        providerPublicKeyId: this.provider.getPublicKeyId?.(),
       };
     }
 
@@ -701,6 +702,7 @@ export class FinancialContributionService {
           providerOrderReference: winnerReference,
           amountPaise,
           currency,
+          providerPublicKeyId: this.provider.getPublicKeyId?.(),
         };
       }
       // The winner's attempt has already resolved (SETTLED/FAILED/ABANDONED)

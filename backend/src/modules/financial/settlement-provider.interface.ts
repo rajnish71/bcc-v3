@@ -67,6 +67,12 @@ export interface SettlementProvider {
 
   createOrder(input: SettlementOrderInput): Promise<SettlementOrderResult>;
 
+  // Optional: the provider's public (non-secret) key/account id, if its
+  // checkout flow needs one handed to the frontend independently of order
+  // creation (e.g. when an already-created order is reused -- see
+  // FinancialContributionService.initiateProviderSettlement()).
+  getPublicKeyId?(): string | undefined;
+
   // Minimum generic refund capability (PAY-001 §OWNERSHIP MATRIX: Refund
   // Processing belongs to the Financial Engine). Provider-specific request
   // construction stays entirely inside the concrete adapter, exactly like

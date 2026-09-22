@@ -72,6 +72,21 @@ describe('RazorpaySettlementProvider — configuration (Step 18 Part 4/21)', () 
     expect(provider.providerName).toBe('RAZORPAY');
     expect(RAZORPAY_PROVIDER_NAME).toBe('RAZORPAY');
   });
+
+  it('getPublicKeyId() lazily configures the client and returns the PUBLIC key id, without ever calling the Razorpay API', () => {
+    process.env.RAZORPAY_KEY_ID = 'rzp_test_fake_key_id';
+    process.env.RAZORPAY_KEY_SECRET = 'fake_secret';
+    const provider = new RazorpaySettlementProvider();
+    expect(provider.getPublicKeyId()).toBe('rzp_test_fake_key_id');
+    expect(ordersCreate).not.toHaveBeenCalled();
+  });
+
+  it('getPublicKeyId() throws the same "not configured" error as createOrder() when unset', () => {
+    delete process.env.RAZORPAY_KEY_ID;
+    delete process.env.RAZORPAY_KEY_SECRET;
+    const provider = new RazorpaySettlementProvider();
+    expect(() => provider.getPublicKeyId()).toThrow(ServiceUnavailableException);
+  });
 });
 
 describe('RazorpaySettlementProvider — order translation (Step 18 Part 6/9)', () => {

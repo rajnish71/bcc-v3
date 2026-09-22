@@ -54,6 +54,15 @@ export class RazorpaySettlementProvider implements SettlementProvider {
     return this.client;
   }
 
+  // Public key id only -- never the secret. Used by initiateProviderSettlement()
+  // when it reuses an already-created order (no createOrder() call, so the
+  // key id would otherwise never reach the response) so the frontend gets a
+  // usable key on every call, not just the one that created the order.
+  getPublicKeyId(): string {
+    this.ensureClient();
+    return this.keyId;
+  }
+
   // Translates the Financial Engine's generic order-initiation input into a
   // Razorpay Orders API request (amount already in paise -- Razorpay's
   // `amount` is "currency subunits", the same unit this platform stores

@@ -1118,6 +1118,24 @@ describe('initiateProviderSettlement() — idempotency (Step 18 Part 11)', () =>
     expect(resolveConcurrentPersist(true)).toBe('LOST_RACE_REUSE_WINNER');
     expect(resolveConcurrentPersist(false)).toBe('PERSISTED');
   });
+
+  // Regression: both "reuse an already-active order" returns (the normal
+  // existingReference branch and the lost-a-race branch) must still supply
+  // providerPublicKeyId -- omitting it left the frontend unable to open
+  // Razorpay Checkout (razorpay-checkout-frontend.spec.ts's
+  // `if (!order.providerPublicKeyId) throw` guard) for any contribution
+  // that already had an in-flight order, i.e. any retried/reloaded/
+  // double-clicked checkout attempt (reproduced live 2026-09-22, fixed by
+  // RazorpaySettlementProvider.getPublicKeyId()).
+  it('both reuse-existing-order returns populate providerPublicKeyId via provider.getPublicKeyId()', () => {
+    const methodStart = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('async initiateProviderSettlement(');
+    const methodEnd = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf(
+      'private async markSettlementAttemptFailed(',
+    );
+    const body = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(methodStart, methodEnd);
+    const occurrences = body.split('providerPublicKeyId: this.provider.getPublicKeyId?.()').length - 1;
+    expect(occurrences).toBe(2);
+  });
 });
 
 describe('applyTransition() clears active_settlement_reference when leaving SETTLEMENT_IN_PROGRESS (Step 18 Part 10/12)', () => {

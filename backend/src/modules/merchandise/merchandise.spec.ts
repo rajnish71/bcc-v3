@@ -7,6 +7,8 @@
 // coupon-redemption exclusivity, and financial-listener wiring are
 // integration-level concerns exercised against the live schema, not here.
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import {
   MERCHANDISE_ORDER_STATUSES,
   CANCELLABLE_ORDER_STATUSES,
@@ -15,6 +17,57 @@ import {
   MERCHANDISE_BUSINESS_MODULE,
   computeOrderPricing,
 } from './merchandise.types';
+
+// Regression coverage for the CREATED -> AWAITING_SETTLEMENT production
+// defect (first live checkout, 2026-09-23): createOrder() created the
+// Financial Contribution but never made it payable, so
+// initiateProviderSettlement() -> startSettlement() rejected every Pay Now
+// attempt with a 409 ("... can only be started from AWAITING_SETTLEMENT").
+// merchandise-order.service.ts imports db.ts (Kysely, ESM-only) and cannot
+// be imported into this CommonJS Jest run -- same constraint documented in
+// financial-contribution.spec.ts and applied identically in
+// membership-payment-approval-reconciliation.spec.ts. This test statically
+// inspects the actual source text of createOrder() instead, the same
+// "real static source inspection" pattern already established there.
+function readSourceNormalized(path: string): string {
+  return readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
+}
+
+const ORDER_SERVICE_SRC = readSourceNormalized(join(__dirname, 'merchandise-order.service.ts'));
+
+function slice(src: string, startMarker: string, endMarker: string): string {
+  const start = src.indexOf(startMarker);
+  if (start === -1) throw new Error(`marker not found: ${startMarker}`);
+  const end = src.indexOf(endMarker, start);
+  if (end === -1) throw new Error(`end marker not found: ${endMarker} (after ${startMarker})`);
+  return src.slice(start, end);
+}
+
+describe('createOrder() makes its Financial Contribution payable (CREATED -> AWAITING_SETTLEMENT)', () => {
+  const CREATE_ORDER_FN = slice(ORDER_SERVICE_SRC, 'async createOrder(', 'async cancelOrder(');
+
+  it('creates the Financial Contribution via the unmodified Financial Engine API', () => {
+    expect(CREATE_ORDER_FN).toContain('this.financial.createContribution({');
+  });
+
+  it('transitions a positive-value contribution out of CREATED before returning, mirroring MembershipLifecycleService.createApplicationContribution()', () => {
+    expect(CREATE_ORDER_FN).toContain(
+      "await this.financial.transitionContribution(contribution.id, 'AWAITING_SETTLEMENT');",
+    );
+  });
+
+  it('routes a zero-value order through processZeroValueContribution() instead (PAY-001 Principle 12: zero-value never enters AWAITING_SETTLEMENT/SETTLEMENT_IN_PROGRESS)', () => {
+    expect(CREATE_ORDER_FN).toContain('if (order.total_paise === 0) {');
+    expect(CREATE_ORDER_FN).toContain('await this.financial.processZeroValueContribution(contribution.id);');
+  });
+
+  it('the AWAITING_SETTLEMENT transition happens after financial_contribution_id is persisted on the order', () => {
+    const persistIndex = CREATE_ORDER_FN.indexOf('financial_contribution_id: contribution.id');
+    const transitionIndex = CREATE_ORDER_FN.indexOf("transitionContribution(contribution.id, 'AWAITING_SETTLEMENT')");
+    expect(persistIndex).toBeGreaterThan(-1);
+    expect(transitionIndex).toBeGreaterThan(persistIndex);
+  });
+});
 
 describe('Merchandise order lifecycle constants', () => {
   it('defines exactly 7 order statuses', () => {

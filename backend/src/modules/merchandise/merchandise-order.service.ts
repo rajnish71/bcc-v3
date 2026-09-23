@@ -213,6 +213,18 @@ export class MerchandiseOrderService {
       .where('id', '=', orderId)
       .execute();
 
+    // A freshly created Contribution starts CREATED (PAY-001 default); it
+    // must be made payable before the frontend's Pay Now can call
+    // initiateProviderSettlement() (startSettlement() requires
+    // AWAITING_SETTLEMENT and rejects CREATED with a 409). Mirrors
+    // MembershipLifecycleService.createApplicationContribution()'s
+    // identical CREATED -> AWAITING_SETTLEMENT / zero-value split.
+    if (order.total_paise === 0) {
+      await this.financial.processZeroValueContribution(contribution.id);
+    } else {
+      await this.financial.transitionContribution(contribution.id, 'AWAITING_SETTLEMENT');
+    }
+
     return this.getOrder(orderId, userId, true);
   }
 

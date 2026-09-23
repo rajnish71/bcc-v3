@@ -1,6 +1,12 @@
 import { Kysely, MysqlDialect, Generated, ColumnType } from 'kysely';
 import { createPool } from 'mysql2';
 import type {
+  MerchandiseOrderStatus,
+  MerchandiseFulfilmentStatus,
+  MerchandiseCouponDiscountType,
+  MerchandiseCouponRedemptionStatus,
+} from '../modules/merchandise/merchandise.types';
+import type {
   ContributionState,
   TransactionOutcome,
 } from '../modules/financial/financial.types';
@@ -518,6 +524,79 @@ export type FinancialRefundStatus = 'REQUESTED' | 'PROCESSING' | 'COMPLETED' | '
 // is always present; requested_by_user_id is populated only for HUMAN
 // (chk_refund_actor enforces the pairing at the DB layer).
 export type FinancialRefundRequesterType = 'HUMAN' | 'SYSTEM';
+
+// ============================================================================
+// Merchandise (V1) — migration 0098
+// Business Module consuming PAY-001 unchanged. See
+// modules/merchandise/merchandise.types.ts (single source of truth for
+// MerchandiseOrderStatus/MerchandiseFulfilmentStatus/etc values).
+// ============================================================================
+
+export type { MerchandiseOrderStatus, MerchandiseFulfilmentStatus, MerchandiseCouponDiscountType, MerchandiseCouponRedemptionStatus };
+
+export interface MerchandiseProductsTable {
+  id: Generated<number>;
+  uuid: string;
+  sku: string;
+  name: string;
+  description: string | null;
+  price_paise: number;
+  active: Generated<boolean>;
+  stock_quantity: number | null;
+  image_refs: string | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface MerchandiseCouponsTable {
+  id: Generated<number>;
+  uuid: string;
+  code: string;
+  discount_type: Generated<MerchandiseCouponDiscountType>;
+  discount_value_paise: number;
+  applicable_product_id: number;
+  max_redemptions: Generated<number>;
+  active: Generated<boolean>;
+  valid_from: ColumnType<Date | null, string | null, string | null>;
+  valid_until: ColumnType<Date | null, string | null, string | null>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface MerchandiseOrdersTable {
+  id: Generated<number>;
+  uuid: string;
+  user_id: number;
+  status: Generated<MerchandiseOrderStatus>;
+  subtotal_paise: number;
+  discount_paise: Generated<number>;
+  total_paise: number;
+  coupon_id: number | null;
+  financial_contribution_id: number | null;
+  fulfilment_status: Generated<MerchandiseFulfilmentStatus>;
+  pickup_notes: string | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface MerchandiseOrderItemsTable {
+  id: Generated<number>;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  unit_price_paise: number;
+  line_total_paise: number;
+}
+
+export interface MerchandiseCouponRedemptionsTable {
+  id: Generated<number>;
+  coupon_id: number;
+  order_id: number;
+  user_id: number;
+  status: Generated<MerchandiseCouponRedemptionStatus>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  confirmed_at: ColumnType<Date | null, string | null, string | null>;
+}
 
 export interface FinancialRefundsTable {
   id: Generated<number>;
@@ -1140,6 +1219,12 @@ export interface DB {
   hero_assignments: HeroAssignmentsTable;
 
   journal_posts: JournalPostsTable;
+
+  merchandise_products: MerchandiseProductsTable;
+  merchandise_coupons: MerchandiseCouponsTable;
+  merchandise_orders: MerchandiseOrdersTable;
+  merchandise_order_items: MerchandiseOrderItemsTable;
+  merchandise_coupon_redemptions: MerchandiseCouponRedemptionsTable;
 }
 
 const dialect = new MysqlDialect({

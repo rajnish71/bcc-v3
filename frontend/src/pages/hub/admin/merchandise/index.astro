@@ -1,0 +1,191 @@
+---
+// frontend/src/pages/hub/admin/merchandise/index.astro
+//
+// Merchandise admin — bare minimum per authorizing prompt §17: product
+// list/create, order list with fulfilment actions, coupon list/create.
+// Requires merchandise.product.manage / merchandise.order.manage /
+// merchandise.coupon.manage (enforced server-side by RbacGuard; this page
+// performs no client-side role gating beyond the standard Hub auth check
+// already done by HubLayout).
+import HubLayout from '../../../../layouts/HubLayout.astro';
+---
+
+<HubLayout title="Merchandise Admin" description="Manage Merchandise products, orders, and coupons.">
+  <div class="hub-main" id="merch-admin-root">
+    <header class="page-header">
+      <div class="section-kicker"><span class="kicker-rule"></span>ADMIN — MERCHANDISE</div>
+      <h1 class="page-title">Merchandise Admin</h1>
+    </header>
+
+    <section class="admin-section" id="section-products">
+      <div class="section-kicker">PRODUCTS</div>
+      <div id="products-list"></div>
+      <details class="admin-form">
+        <summary>Add product</summary>
+        <input id="p-sku" placeholder="SKU" />
+        <input id="p-name" placeholder="Name" />
+        <input id="p-price" type="number" placeholder="Price (paise)" />
+        <input id="p-stock" type="number" placeholder="Stock quantity (optional)" />
+        <button id="p-create" class="btn-outline btn-sm" type="button">Create</button>
+      </details>
+    </section>
+
+    <section class="admin-section" id="section-orders">
+      <div class="section-kicker">ORDERS</div>
+      <div id="orders-list"></div>
+    </section>
+
+    <section class="admin-section" id="section-coupons">
+      <div class="section-kicker">COUPONS</div>
+      <div id="coupons-list"></div>
+      <details class="admin-form">
+        <summary>Add coupon</summary>
+        <input id="c-code" placeholder="Code" />
+        <input id="c-discount" type="number" placeholder="Discount (paise)" />
+        <input id="c-product" type="number" placeholder="Applicable product ID" />
+        <input id="c-max" type="number" placeholder="Max redemptions" value="1" />
+        <button id="c-create" class="btn-outline btn-sm" type="button">Create</button>
+      </details>
+    </section>
+  </div>
+
+  <style>
+    .admin-section { background: #FFFFFF; border: 1px solid rgba(20,18,16,0.08); padding: 20px; margin-top: 20px; }
+    .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(20,18,16,0.06); gap: 12px; font-size: 0.9rem; }
+    .admin-form { margin-top: 16px; }
+    .admin-form input { display: block; width: 100%; max-width: 320px; margin: 8px 0; padding: 8px; border: 1px solid rgba(20,18,16,0.15); }
+    .admin-row button { margin-left: 8px; }
+  </style>
+
+  <script>
+    (function () {
+      const API = '/api/v1/merchandise/admin';
+      function token(): string | null { return localStorage.getItem('bcc_token'); }
+      function authHeaders(json = false): Record<string, string> {
+        const h: Record<string, string> = { Authorization: `Bearer ${token() ?? ''}` };
+        if (json) h['Content-Type'] = 'application/json';
+        return h;
+      }
+
+      const productsList = document.getElementById('products-list') as HTMLElement;
+      const ordersList = document.getElementById('orders-list') as HTMLElement;
+      const couponsList = document.getElementById('coupons-list') as HTMLElement;
+
+      async function loadProducts() {
+        const res = await fetch(`${API}/products`, { headers: authHeaders() });
+        if (!res.ok) { productsList.textContent = 'Could not load products.'; return; }
+        const products = await res.json();
+        productsList.innerHTML = products
+          .map(
+            (p: any) => `
+          <div class="admin-row" data-id="${p.id}">
+            <span>${p.name} (${p.sku}) — ₹${(p.pricePaise / 100).toFixed(2)} — stock: ${p.stockQuantity ?? 'unlimited'}</span>
+            <button class="btn-outline btn-sm toggle-active" data-id="${p.id}" data-active="${p.active}">${p.active ? 'Deactivate' : 'Activate'}</button>
+          </div>`,
+          )
+          .join('');
+        productsList.querySelectorAll('.toggle-active').forEach((btn) =>
+          btn.addEventListener('click', async (e) => {
+            const target = e.currentTarget as HTMLButtonElement;
+            const id = target.dataset.id;
+            const active = target.dataset.active === 'true';
+            await fetch(`${API}/products/${id}`, {
+              method: 'PATCH',
+              headers: authHeaders(true),
+              body: JSON.stringify({ active: !active }),
+            });
+            loadProducts();
+          }),
+        );
+      }
+
+      async function loadOrders() {
+        const res = await fetch(`${API}/orders`, { headers: authHeaders() });
+        if (!res.ok) { ordersList.textContent = 'Could not load orders.'; return; }
+        const orders = await res.json();
+        ordersList.innerHTML = orders
+          .map(
+            (o: any) => `
+          <div class="admin-row" data-id="${o.id}">
+            <span>#${o.id} — ${o.status} / ${o.fulfilmentStatus} — ₹${(o.totalPaise / 100).toFixed(2)}</span>
+            ${o.status === 'PAID' ? `<button class="btn-outline btn-sm ready-btn" data-id="${o.id}">Ready for pickup</button>` : ''}
+            ${o.status === 'FULFILLED' ? `<button class="btn-outline btn-sm pickedup-btn" data-id="${o.id}">Picked up</button>` : ''}
+          </div>`,
+          )
+          .join('');
+        ordersList.querySelectorAll('.ready-btn').forEach((btn) =>
+          btn.addEventListener('click', async (e) => {
+            const id = (e.currentTarget as HTMLButtonElement).dataset.id;
+            await fetch(`${API}/orders/${id}/ready-for-pickup`, { method: 'POST', headers: authHeaders() });
+            loadOrders();
+          }),
+        );
+        ordersList.querySelectorAll('.pickedup-btn').forEach((btn) =>
+          btn.addEventListener('click', async (e) => {
+            const id = (e.currentTarget as HTMLButtonElement).dataset.id;
+            await fetch(`${API}/orders/${id}/picked-up`, { method: 'POST', headers: authHeaders(true), body: JSON.stringify({}) });
+            loadOrders();
+          }),
+        );
+      }
+
+      async function loadCoupons() {
+        const res = await fetch(`${API}/coupons`, { headers: authHeaders() });
+        if (!res.ok) { couponsList.textContent = 'Could not load coupons.'; return; }
+        const coupons = await res.json();
+        couponsList.innerHTML = coupons
+          .map(
+            (c: any) => `
+          <div class="admin-row" data-id="${c.id}">
+            <span>${c.code} — ₹${(c.discountValuePaise / 100).toFixed(2)} off product #${c.applicableProductId} — ${c.activeRedemptions}/${c.maxRedemptions} redeemed</span>
+            <button class="btn-outline btn-sm toggle-coupon" data-id="${c.id}" data-active="${c.active}">${c.active ? 'Deactivate' : 'Activate'}</button>
+          </div>`,
+          )
+          .join('');
+        couponsList.querySelectorAll('.toggle-coupon').forEach((btn) =>
+          btn.addEventListener('click', async (e) => {
+            const target = e.currentTarget as HTMLButtonElement;
+            const id = target.dataset.id;
+            const active = target.dataset.active === 'true';
+            await fetch(`${API}/coupons/${id}`, {
+              method: 'PATCH',
+              headers: authHeaders(true),
+              body: JSON.stringify({ active: !active }),
+            });
+            loadCoupons();
+          }),
+        );
+      }
+
+      document.getElementById('p-create')?.addEventListener('click', async () => {
+        const sku = (document.getElementById('p-sku') as HTMLInputElement).value;
+        const name = (document.getElementById('p-name') as HTMLInputElement).value;
+        const price_paise = Number((document.getElementById('p-price') as HTMLInputElement).value);
+        const stockRaw = (document.getElementById('p-stock') as HTMLInputElement).value;
+        await fetch(`${API}/products`, {
+          method: 'POST',
+          headers: authHeaders(true),
+          body: JSON.stringify({ sku, name, price_paise, stock_quantity: stockRaw ? Number(stockRaw) : undefined }),
+        });
+        loadProducts();
+      });
+
+      document.getElementById('c-create')?.addEventListener('click', async () => {
+        const code = (document.getElementById('c-code') as HTMLInputElement).value;
+        const discountValuePaise = Number((document.getElementById('c-discount') as HTMLInputElement).value);
+        const applicableProductId = Number((document.getElementById('c-product') as HTMLInputElement).value);
+        const maxRedemptions = Number((document.getElementById('c-max') as HTMLInputElement).value) || 1;
+        await fetch(`${API}/coupons`, {
+          method: 'POST',
+          headers: authHeaders(true),
+          body: JSON.stringify({ code, discountType: 'FIXED', discountValuePaise, applicableProductId, maxRedemptions }),
+        });
+        loadCoupons();
+      });
+
+      loadProducts();
+      loadOrders();
+      loadCoupons();
+    })();
+  </script>
+</HubLayout>

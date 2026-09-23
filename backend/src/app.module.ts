@@ -16,6 +16,7 @@ import { ContactModule } from './modules/contact/contact.module';
 import { HubProfileModule } from './modules/hub/profile/hub-profile.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { FinancialModule } from './modules/financial/financial.module';
+import { MerchandiseModule } from './modules/merchandise/merchandise.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { FinancialModule } from './modules/financial/financial.module';
     HubProfileModule,
     ProjectsModule,
     FinancialModule,
+    MerchandiseModule,
   ],
   controllers: [AppController],
 })

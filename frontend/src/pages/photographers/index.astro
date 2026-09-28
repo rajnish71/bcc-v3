@@ -563,18 +563,37 @@ function initials(name: string): string {
 }
 
 // ── Load data ─────────────────────────────────────────────────────────────
+// The list endpoint caps limit at 100; page with offset until total_count.
+async function fetchAllPhotographers(): Promise<{ data: any[]; total: number }> {
+  const PAGE_SIZE = 100;
+  const all: any[] = [];
+  let total = 0;
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const res = await fetch(`/api/v1/photographers?limit=${PAGE_SIZE}&offset=${offset}&sort=name`);
+    if (!res.ok) {
+      if (offset === 0) throw new Error(`HTTP ${res.status}`);
+      break;
+    }
+    const { data, meta } = await res.json();
+    const page: any[] = Array.isArray(data) ? data : [];
+    all.push(...page);
+    total = meta?.total_count ?? all.length;
+    if (page.length < PAGE_SIZE || all.length >= total) break;
+  }
+  return { data: all, total };
+}
+
 async function load() {
   try {
     const [phRes, feedRes] = await Promise.allSettled([
-      fetch('/api/v1/photographers?limit=200&sort=name'),
+      fetchAllPhotographers(),
       fetch('/api/v1/gallery/feed?limit=1'),
     ]);
 
     // Photographers
-    if (phRes.status === 'fulfilled' && phRes.value.ok) {
-      const { data, meta } = await phRes.value.json();
-      allPhotographers = Array.isArray(data) ? data : [];
-      const total = meta?.total_count ?? allPhotographers.length;
+    if (phRes.status === 'fulfilled') {
+      allPhotographers = phRes.value.data;
+      const total = phRes.value.total;
       const statEl = document.getElementById('stat-ph-count');
       if (statEl) statEl.textContent = total.toLocaleString('en-IN');
     }

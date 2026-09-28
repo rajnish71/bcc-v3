@@ -19,6 +19,7 @@ interface Props {
   ogImageType?: string;
   bodyClass?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  robots?: string;
 }
 
 const {
@@ -31,6 +32,7 @@ const {
   ogImageType = 'image/jpeg',
   bodyClass = '',
   jsonLd,
+  robots,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://bcc.bhopal.info');
@@ -74,6 +76,7 @@ const allSchemas = [organizationSchema, websiteSchema, ...(jsonLd ? (Array.isArr
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="generator" content={Astro.generator} />
   <meta name="description" content={description} />
+  {robots && <meta name="robots" content={robots} />}
 
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
@@ -95,7 +98,7 @@ const allSchemas = [organizationSchema, websiteSchema, ...(jsonLd ? (Array.isArr
   <link rel="canonical" href={canonicalURL.toString()} />
 
   <!-- JSON-LD structured data -->
-  <script type="application/ld+json" set:html={JSON.stringify(allSchemas)} />
+  <script type="application/ld+json" set:html={JSON.stringify(allSchemas).replace(/</g, '\\u003c')} />
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /hub/
+Disallow: /auth/
+
+Sitemap: https://bcc.bhopal.info/sitemap-index.xml

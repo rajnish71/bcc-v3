@@ -6,7 +6,25 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://bcc.bhopal.info',
   output: 'static',
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      // Only genuinely indexable public pages: no authenticated hub, auth
+      // forms, fallback/placeholder shells, legacy redirect stubs, or the
+      // QA test account.
+      filter: (page) => {
+        const path = new URL(page).pathname;
+        return !(
+          path.startsWith('/hub/') || path === '/hub' ||
+          path.startsWith('/auth/') ||
+          path.startsWith('/gallery/photographer/') ||
+          path === '/verify/' || path === '/verify-email/' ||
+          path === '/photographers/_profile/' ||
+          path === '/photographers/test/' ||
+          path === '/showcase/placeholder/'
+        );
+      },
+    }),
+  ],
   vite: {
     css: {
       // Tell LightningCSS to target modern evergreen browsers including Firefox,

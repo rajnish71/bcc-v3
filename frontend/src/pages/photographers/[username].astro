@@ -16,12 +16,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
+  // The list endpoint caps limit at 100; page with offset until total_count
+  // so every public photographer is discovered regardless of club size.
   let photographers: any[] = [];
   try {
-    const res = await fetch(`${BUILD_API_URL}/photographers?limit=200`);
-    if (res.ok) {
+    const PAGE_SIZE = 100;
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+      const res = await fetch(`${BUILD_API_URL}/photographers?limit=${PAGE_SIZE}&offset=${offset}`);
+      if (!res.ok) break;
       const json = await res.json();
-      photographers = json.data || [];
+      const page: any[] = json.data || [];
+      photographers.push(...page);
+      const total = json.meta?.total_count ?? 0;
+      if (page.length < PAGE_SIZE || photographers.length >= total) break;
     }
   } catch {
     // Backend unavailable at build time — fall through to hardcoded paths below.
@@ -69,10 +76,21 @@ export async function getStaticPaths() {
 const { username } = Astro.params;
 const { profile } = Astro.props as { profile: any };
 
+// Bios are stored as HTML (<p>, <br>, &amp;): reduce to plain text for
+// metadata, JSON-LD and the pre-rendered snippet.
+function plainText(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Concise single-line description for social previews: tagline → bio → generic.
 function metaSnippet(value: unknown, max = 160): string | null {
-  if (typeof value !== 'string') return null;
-  const text = value.replace(/\s+/g, ' ').trim();
+  const text = plainText(value);
   if (!text) return null;
   const chars = Array.from(text); // code points — never split a surrogate pair
   if (chars.length <= max) return text;
@@ -93,6 +111,32 @@ const ogImageUrl: string | undefined = displayName && profile?.avatarUrl
   ? `${profile.avatarUrl}${String(profile.avatarUrl).includes('?') ? '&' : '?'}tr=w-600,c-maintain_ratio`
   : undefined;
 const ogImageAlt = ogImageUrl ? `${displayName} — Bhopal Camera Club photographer` : undefined;
+
+// '_profile' is the Nginx fallback shell for unknown slugs — never indexable.
+const robots = username === '_profile' ? 'noindex, nofollow' : undefined;
+
+// Build-time profile text pre-rendered into the hero so crawlers see real
+// content before JS; the client script still overwrites the same elements.
+const initialTagline: string | null = displayName ? plainText(profile?.tagline) || null : null;
+const initialBio: string | null = displayName ? plainText(profile?.bio) || null : null;
+
+// ProfilePage + Person — existing verified profile fields only.
+const personDescription = metaSnippet(profile?.tagline) ?? metaSnippet(profile?.bio);
+const profileUrl = `https://bcc.bhopal.info/photographers/${username}/`;
+const jsonLd = displayName
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'ProfilePage',
+      url: profileUrl,
+      mainEntity: {
+        '@type': 'Person',
+        name: displayName,
+        url: profileUrl,
+        ...(profile?.avatarUrl ? { image: profile.avatarUrl } : {}),
+        ...(personDescription ? { description: personDescription } : {}),
+      },
+    }
+  : undefined;
 ---
 
 <BaseLayout
@@ -100,6 +144,8 @@ const ogImageAlt = ogImageUrl ? `${displayName} — Bhopal Camera Club photograp
   description={pageDescription}
   ogImage={ogImageUrl}
   ogImageAlt={ogImageAlt}
+  robots={robots}
+  jsonLd={jsonLd}
 >
 
 <!-- ── COVER BANNER ────────────────────────────────────────────────────────── -->
@@ -116,15 +162,15 @@ const ogImageAlt = ogImageUrl ? `${displayName} — Bhopal Camera Club photograp
     <div class="ph-avatar-wrap">
       <div class="ph-avatar" id="ph-avatar">
         <span class="ph-avatar-initials" id="ph-initials">—</span>
-        <img class="ph-avatar-img" id="ph-avatar-img" src="" alt="" hidden />
+        <img class="ph-avatar-img" id="ph-avatar-img" src="" alt={displayName ?? ''} hidden />
       </div>
     </div>
 
     <!-- Identity -->
     <div class="ph-identity">
-      <h1 class="ph-name" id="ph-name">—</h1>
-      <div class="ph-username" id="ph-username">@—</div>
-      <p class="ph-tagline" id="ph-tagline" hidden></p>
+      <h1 class="ph-name" id="ph-name">{displayName ?? '—'}</h1>
+      <div class="ph-username" id="ph-username">@{displayName ? profile.username : '—'}</div>
+      <p class="ph-tagline" id="ph-tagline" hidden={!initialTagline}>{initialTagline}</p>
       <div class="ph-location-row" id="ph-location-row" hidden>
         <span id="ph-location"></span>
         <span class="ph-dot" aria-hidden="true"></span>
@@ -226,8 +272,8 @@ const ogImageAlt = ogImageUrl ? `${displayName} — Bhopal Camera Club photograp
           <div class="stories-row" id="stories-row"></div>
         </section>
 
-        <div class="bio-snippet" id="bio-snippet" hidden>
-          <p id="bio-text"></p>
+        <div class="bio-snippet" id="bio-snippet" hidden={!initialBio}>
+          <p id="bio-text">{initialBio}</p>
           <a class="bio-more-link" data-tab-trigger="about">Full biography →</a>
         </div>
 
@@ -1260,7 +1306,7 @@ async function loadProfile() {
   if (profile.avatarUrl) {
     const img = document.getElementById('ph-avatar-img') as HTMLImageElement | null;
     const fallback = document.getElementById('ph-initials');
-    if (img) { img.src = profile.avatarUrl; img.hidden = false; }
+    if (img) { img.src = profile.avatarUrl; img.alt = profile.displayName ?? ''; img.hidden = false; }
     if (fallback) (fallback as HTMLElement).style.display = 'none';
   }
 

@@ -198,6 +198,7 @@ export class PhotographerProfilesService {
         opts.sort === 'joined' ? 'm.join_year' : 'u.full_name',
         'asc',
       )
+      .orderBy('u.id', 'asc') // unique tie-breaker so offset pages never overlap or skip
       .limit(dbLimit)
       .offset(dbOffset)
       .execute();

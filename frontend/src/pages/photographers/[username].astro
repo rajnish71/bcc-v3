@@ -86,7 +86,12 @@ const pageTitle = displayName ?? 'Photographer · Bhopal Camera Club';
 const pageDescription = displayName
   ? metaSnippet(profile?.tagline) ?? metaSnippet(profile?.bio) ?? `Photography profile and portfolio of ${displayName} on Bhopal Camera Club.`
   : 'Photography portfolio and profile on Bhopal Camera Club.';
-const ogImageUrl: string | undefined = displayName && profile?.avatarUrl ? profile.avatarUrl : undefined;
+// Social-preview copy only: the original avatar can exceed 1 MB, which WhatsApp
+// refuses to render in link previews. ImageKit resizes on delivery; the visible
+// avatar (client script) still uses the untransformed avatarUrl.
+const ogImageUrl: string | undefined = displayName && profile?.avatarUrl
+  ? `${profile.avatarUrl}${String(profile.avatarUrl).includes('?') ? '&' : '?'}tr=w-600,c-maintain_ratio`
+  : undefined;
 const ogImageAlt = ogImageUrl ? `${displayName} — Bhopal Camera Club photographer` : undefined;
 ---
 

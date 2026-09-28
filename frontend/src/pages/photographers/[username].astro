@@ -27,31 +27,74 @@ export async function getStaticPaths() {
     // Backend unavailable at build time — fall through to hardcoded paths below.
   }
 
-  const paths: { params: { username: string } }[] = [
-    { params: { username: '_profile' } },      // Nginx fallback shell — served for any unknown slug
-    { params: { username: 'rajnishkhare' } },
-    { params: { username: 'ankittiwari' } },
-    { params: { username: 'rahilkhan' } },
-    { params: { username: 'sauvikacharyya' } },
-    { params: { username: 'kshitijpatle' } },
-    { params: { username: 'anupamkharegupta' } },
+  const paths: { params: { username: string }; props: { profile: any } }[] = [
+    { params: { username: '_profile' }, props: { profile: null } },      // Nginx fallback shell — served for any unknown slug
+    { params: { username: 'rajnishkhare' }, props: { profile: null } },
+    { params: { username: 'ankittiwari' }, props: { profile: null } },
+    { params: { username: 'rahilkhan' }, props: { profile: null } },
+    { params: { username: 'sauvikacharyya' }, props: { profile: null } },
+    { params: { username: 'kshitijpatle' }, props: { profile: null } },
+    { params: { username: 'anupamkharegupta' }, props: { profile: null } },
   ];
 
   photographers.forEach((p: any) => {
     if (p.username && !paths.some(path => path.params.username === p.username)) {
-      paths.push({ params: { username: p.username } });
+      paths.push({ params: { username: p.username }, props: { profile: null } });
     }
   });
+
+  // Build-time profile detail for social/share metadata only. Reuses the same
+  // GET /photographers/:username the client script calls; concurrency-limited
+  // so the local backend is not flooded. Failures leave profile null, which
+  // falls back to generic metadata. '_profile' is never fetched.
+  const PROFILE_DETAIL_CONCURRENCY = 8;
+  const targets = paths.filter(p => p.params.username !== '_profile');
+  let next = 0;
+  async function worker() {
+    while (next < targets.length) {
+      const target = targets[next++];
+      try {
+        const res = await fetch(`${BUILD_API_URL}/photographers/${encodeURIComponent(target.params.username)}`);
+        if (res.ok) target.props.profile = (await res.json())?.data ?? null;
+      } catch {
+        // Leave profile null — generic metadata.
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(PROFILE_DETAIL_CONCURRENCY, targets.length) }, worker));
 
   return paths;
 }
 
 const { username } = Astro.params;
+const { profile } = Astro.props as { profile: any };
+
+// Concise single-line description for social previews: tagline → bio → generic.
+function metaSnippet(value: unknown, max = 160): string | null {
+  if (typeof value !== 'string') return null;
+  const text = value.replace(/\s+/g, ' ').trim();
+  if (!text) return null;
+  const chars = Array.from(text); // code points — never split a surrogate pair
+  if (chars.length <= max) return text;
+  const cut = chars.slice(0, max - 1).join('');
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,.;:—-]+$/, '')}…`;
+}
+
+const displayName: string | null = profile?.displayName || null;
+const pageTitle = displayName ?? 'Photographer · Bhopal Camera Club';
+const pageDescription = displayName
+  ? metaSnippet(profile?.tagline) ?? metaSnippet(profile?.bio) ?? `Photography profile and portfolio of ${displayName} on Bhopal Camera Club.`
+  : 'Photography portfolio and profile on Bhopal Camera Club.';
+const ogImageUrl: string | undefined = displayName && profile?.avatarUrl ? profile.avatarUrl : undefined;
+const ogImageAlt = ogImageUrl ? `${displayName} — Bhopal Camera Club photographer` : undefined;
 ---
 
 <BaseLayout
-  title={`Photographer · Bhopal Camera Club`}
-  description={`Photography portfolio and profile on Bhopal Camera Club.`}
+  title={pageTitle}
+  description={pageDescription}
+  ogImage={ogImageUrl}
+  ogImageAlt={ogImageAlt}
 >
 
 <!-- ── COVER BANNER ────────────────────────────────────────────────────────── -->

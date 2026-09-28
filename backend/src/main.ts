@@ -4,11 +4,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
+import { fastifyServerOptions, registerRequestIdResponseHeader } from './http/fastify-options';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ trustProxy: true }),
+    // See http/fastify-options.ts: server-generated request ids (OBS-01) and
+    // trustProxy restricted to the local Nginx hop (OBS-04).
+    new FastifyAdapter(fastifyServerOptions),
     // rawBody: true exposes req.rawBody (Buffer) alongside normal JSON body
     // parsing -- required by the Razorpay webhook route (PAY-001 Step 19
     // Part 3) to verify X-Razorpay-Signature against the exact bytes
@@ -19,6 +22,7 @@ async function bootstrap() {
   // All controllers declare their own full path including 'api/v1/...'
   // Nginx proxies /api/v1/ -> http://127.0.0.1:3001/api/v1/ (path preserved)
   // so the controller-level prefix is the single source of truth.
+  registerRequestIdResponseHeader(app.getHttpAdapter().getInstance());
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );

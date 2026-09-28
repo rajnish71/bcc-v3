@@ -33,8 +33,11 @@ import {
   ParseIntPipe,
   Post,
   Body,
+  Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { CurrentUser } from '../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../identity/auth/token.util';
@@ -47,6 +50,9 @@ import { SubmitSettlementEvidenceDto } from './dto/submit-settlement-evidence.dt
 import { ApproveSettlementEvidenceDto } from './dto/approve-settlement-evidence.dto';
 import { RejectSettlementEvidenceDto } from './dto/reject-settlement-evidence.dto';
 import { RequestEvidenceProofUploadDto } from './dto/request-evidence-proof-upload.dto';
+import { FinancialTraceQueryDto } from './dto/financial-trace-query.dto';
+import { FinancialTraceService } from './audit/financial-trace.service';
+import { requestAuditContext as auditContext } from './audit/request-provenance.util';
 
 // Generic settlement-mechanism marker for manual (offline) settlement in
 // this step. Deliberately NOT 'UPI'/'BANK_TRANSFER'/'RAZORPAY' -- Step 11
@@ -56,6 +62,7 @@ import { RequestEvidenceProofUploadDto } from './dto/request-evidence-proof-uplo
 const MANUAL_SETTLEMENT_PROVIDER = 'MANUAL';
 
 const VERIFY_PERMISSION = 'financial.settlement.verify';
+const AUDIT_VIEW_PERMISSION = 'financial.audit.view';
 
 @Controller('api/v1/financial')
 export class FinancialController {
@@ -63,6 +70,7 @@ export class FinancialController {
     private readonly financialService: FinancialContributionService,
     private readonly evidenceService: SettlementEvidenceService,
     private readonly rbac: RbacService,
+    private readonly traceService: FinancialTraceService,
   ) {}
 
   private async isVerifier(userId: number): Promise<boolean> {
@@ -83,9 +91,16 @@ export class FinancialController {
   @Post('contributions/:id/settlement/start')
   @HttpCode(200)
   @UseGuards(AccessTokenGuard)
-  async startSettlement(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
+  async startSettlement(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: FastifyRequest,
+  ) {
     await this.assertOwnedContribution(id, actor.sub);
-    const { contributionState } = await this.financialService.startSettlement(id);
+    const { contributionState } = await this.financialService.startSettlement(
+      id,
+      auditContext('MEMBER', req, actor),
+    );
     return { contributionId: id, state: contributionState };
   }
 
@@ -103,9 +118,16 @@ export class FinancialController {
   @Post('contributions/:id/settlement/razorpay-order')
   @HttpCode(200)
   @UseGuards(AccessTokenGuard)
-  async createRazorpayOrder(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
+  async createRazorpayOrder(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: FastifyRequest,
+  ) {
     await this.assertOwnedContribution(id, actor.sub);
-    const order = await this.financialService.initiateProviderSettlement(id);
+    const order = await this.financialService.initiateProviderSettlement(
+      id,
+      auditContext('MEMBER', req, actor),
+    );
     return {
       contributionId: order.contributionId,
       state: order.contributionState,
@@ -150,9 +172,16 @@ export class FinancialController {
   @Post('contributions/:id/settlement/retry')
   @HttpCode(200)
   @UseGuards(AccessTokenGuard)
-  async retrySettlement(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
+  async retrySettlement(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: FastifyRequest,
+  ) {
     await this.assertOwnedContribution(id, actor.sub);
-    const { contributionState } = await this.financialService.retrySettlement(id);
+    const { contributionState } = await this.financialService.retrySettlement(
+      id,
+      auditContext('MEMBER', req, actor),
+    );
     return { contributionId: id, state: contributionState };
   }
 
@@ -190,17 +219,21 @@ export class FinancialController {
     @CurrentUser() actor: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: SubmitSettlementEvidenceDto,
+    @Req() req: FastifyRequest,
   ) {
     await this.assertOwnedContribution(id, actor.sub);
-    const { id: evidenceId, uuid } = await this.evidenceService.submit({
-      financialContributionId: id,
-      referenceIdentifier: dto.referenceIdentifier,
-      paymentDate: new Date(dto.paymentDate),
-      claimedAmountPaise: dto.claimedAmountPaise,
-      proofObjectKey: dto.proofObjectKey ?? null,
-      proofMimeType: dto.proofMimeType ?? null,
-      submittedByUserId: actor.sub,
-    });
+    const { id: evidenceId, uuid } = await this.evidenceService.submit(
+      {
+        financialContributionId: id,
+        referenceIdentifier: dto.referenceIdentifier,
+        paymentDate: new Date(dto.paymentDate),
+        claimedAmountPaise: dto.claimedAmountPaise,
+        proofObjectKey: dto.proofObjectKey ?? null,
+        proofMimeType: dto.proofMimeType ?? null,
+        submittedByUserId: actor.sub,
+      },
+      auditContext('MEMBER', req, actor),
+    );
     return { id: evidenceId, uuid, reviewStatus: 'PENDING_REVIEW' as const };
   }
 
@@ -238,12 +271,14 @@ export class FinancialController {
     @CurrentUser() actor: AccessTokenPayload,
     @Param('evidenceId', ParseIntPipe) evidenceId: number,
     @Body() dto: ApproveSettlementEvidenceDto,
+    @Req() req: FastifyRequest,
   ) {
     const { transactionId } = await this.evidenceService.approve(
       evidenceId,
       actor.sub,
       MANUAL_SETTLEMENT_PROVIDER,
       dto.note,
+      auditContext('ADMIN', req, actor),
     );
     return { evidenceId, transactionId, reviewStatus: 'APPROVED' as const };
   }
@@ -275,14 +310,37 @@ export class FinancialController {
     @CurrentUser() actor: AccessTokenPayload,
     @Param('evidenceId', ParseIntPipe) evidenceId: number,
     @Body() dto: RejectSettlementEvidenceDto,
+    @Req() req: FastifyRequest,
   ) {
     const { transactionId } = await this.evidenceService.reject(
       evidenceId,
       actor.sub,
       MANUAL_SETTLEMENT_PROVIDER,
       dto.reason,
+      auditContext('ADMIN', req, actor),
     );
     return { evidenceId, transactionId, reviewStatus: 'REJECTED' as const };
+  }
+
+  // ── Forensic trace (OBS-09/OBS-10) ──────────────────────────────────────
+  //
+  // Read-only. Gated by financial.audit.view -- independent of
+  // financial.settlement.verify, because this surface returns client IP and
+  // User-Agent. An authenticated user without the permission gets 403 from
+  // RbacGuard; no member-facing route exposes these fields.
+
+  @Get('admin/trace')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions(AUDIT_VIEW_PERMISSION)
+  async trace(@Query() query: FinancialTraceQueryDto) {
+    return this.traceService.trace({
+      contributionId: query.contributionId !== undefined ? Number(query.contributionId) : undefined,
+      orderRef: query.orderRef,
+      paymentRef: query.paymentRef,
+      requestId: query.requestId,
+      live: query.live === 'true',
+    });
   }
 
   // ── Response shaping ─────────────────────────────────────────────────────

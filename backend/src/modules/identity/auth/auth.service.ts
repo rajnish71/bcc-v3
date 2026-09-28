@@ -26,6 +26,7 @@ import { db, type DB } from '../../../database/db';
 import {
   generateRefreshToken,
   hashRefreshToken,
+  resolveSessionId,
   AccessTokenPayload,
 } from './token.util';
 import {
@@ -174,10 +175,11 @@ export class AuthService {
     }
 
     // Success -- clear any failed-attempt counter, record history, issue tokens.
+    const sessionId = resolveSessionId();
     await this.clearFailedAttempts(user.id);
-    await this.recordLoginAttempt(user.id, identifier, device, 'SUCCESS');
+    await this.recordLoginAttempt(user.id, identifier, device, 'SUCCESS', sessionId);
 
-    return this.issueTokenPair(user.id, user.uuid, user.status, device);
+    return this.issueTokenPair(user.id, user.uuid, user.status, device, sessionId);
   }
 
   // -- Password reset ---------------------------------------------------
@@ -349,7 +351,18 @@ export class AuthService {
     device: DeviceContext,
     executor: Kysely<DB> = db,
   ): Promise<TokenPair> {
-    return this.issueTokenPair(userId, uuid, status, device, undefined, executor);
+    // Every non-password authentication path (email/password sign-up
+    // auto-login, phone OTP, OAuth, magic link, invitation) funnels through
+    // here -- each is a new session. login() records its own login_history
+    // row and never calls this, so there is exactly one row per session.
+    // The row is written after issuance succeeds, on the same executor, so a
+    // caller's transaction commits or rolls back the session and its history
+    // together. email_attempted stays NULL: no identifier was typed on these
+    // paths; user_id identifies the account.
+    const sessionId = resolveSessionId();
+    const tokens = await this.issueTokenPair(userId, uuid, status, device, sessionId, undefined, executor);
+    await this.recordLoginAttempt(userId, null, device, 'SUCCESS', sessionId, executor);
+    return tokens;
   }
 
   private async issueTokenPair(
@@ -357,10 +370,11 @@ export class AuthService {
     uuid: string,
     status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED',
     device: DeviceContext,
+    sessionId: string,
     replacesTokenId?: number,
     executor: Kysely<DB> = db,
   ): Promise<TokenPair> {
-    const payload: AccessTokenPayload = { sub: userId, uuid, status };
+    const payload: AccessTokenPayload = { sub: userId, uuid, status, sid: sessionId };
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
@@ -376,6 +390,7 @@ export class AuthService {
       .insertInto('refresh_tokens')
       .values({
         user_id:      userId,
+        session_id:   sessionId,
         token_hash:   tokenHash,
         device_label: device.deviceLabel ?? null,
         ip_address:   device.ipAddress,
@@ -464,6 +479,7 @@ export class AuthService {
       device.deviceLabel
         ? device
         : { ...device, deviceLabel: existing.device_label },
+      resolveSessionId(existing.session_id),
       existing.id,
     );
   }
@@ -555,14 +571,17 @@ export class AuthService {
 
   private async recordLoginAttempt(
     userId: number | null,
-    emailAttempted: string,
+    emailAttempted: string | null,
     device: DeviceContext,
     status: 'SUCCESS' | 'FAILED' | 'LOCKED',
+    sessionId: string | null = null,
+    executor: Kysely<DB> = db,
   ): Promise<void> {
-    await db
+    await executor
       .insertInto('login_history')
       .values({
         user_id:        userId,
+        session_id:     sessionId,
         email_attempted: emailAttempted,
         ip_address:     device.ipAddress,
         device:         device.userAgent,

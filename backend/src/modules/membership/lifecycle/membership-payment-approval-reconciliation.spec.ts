@@ -86,7 +86,7 @@ describe('A. Paid application submission creates the Financial Contribution at P
 
   it('is called from apply() right after the PENDING row is inserted, for INDIVIDUAL applications with a class', () => {
     const applyFn = slice(LIFECYCLE_SRC, 'async apply(', 'async createApplicationContribution(');
-    expect(applyFn).toContain('this.createApplicationContribution(id, params.membershipClassId, params.userId!)');
+    expect(applyFn).toContain('this.createApplicationContribution(id, params.membershipClassId, params.userId!, auditContext)');
   });
 
   it('the idempotency key is deterministic per membership id (createContribution() itself dedupes retries/duplicates)', () => {
@@ -260,7 +260,7 @@ describe('F/G. reject() resolves the Contribution before flipping the membership
 
   it('COMPLETED contribution -> requestRefund(); CREATED/AWAITING_SETTLEMENT -> cancelContribution()', () => {
     expect(REJECT_FN).toContain("contribution.state === 'COMPLETED'");
-    expect(REJECT_FN).toContain(".requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId })");
+    expect(REJECT_FN).toContain(".requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId }, auditContext)");
     expect(REJECT_FN).toContain("contribution.state === 'CREATED' || contribution.state === 'AWAITING_SETTLEMENT'");
     expect(REJECT_FN).toContain('.cancelContribution(Number(contribution.id),');
   });

@@ -18,8 +18,10 @@
 // GET /api/v1/financial/contributions/:id) against the returned
 // financialContributionId.
 
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Req } from '@nestjs/common';
 import { UseGuards } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { requestAuditContext } from '../financial/audit/request-provenance.util';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { CurrentUser } from '../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../identity/auth/token.util';
@@ -42,8 +44,12 @@ export class MerchandiseController {
   @Post('orders')
   @HttpCode(201)
   @UseGuards(AccessTokenGuard)
-  async createOrder(@CurrentUser() actor: AccessTokenPayload, @Body() dto: CreateOrderDto) {
-    return this.orders.createOrder(actor.sub, dto);
+  async createOrder(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Body() dto: CreateOrderDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.orders.createOrder(actor.sub, dto, requestAuditContext('MEMBER', req, actor));
   }
 
   @Get('orders/mine')

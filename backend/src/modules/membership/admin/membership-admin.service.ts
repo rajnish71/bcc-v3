@@ -14,6 +14,7 @@ import { db } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { FinancialContributionService } from '../../financial/financial-contribution.service';
+import type { AuditContext } from '../../financial/audit/financial-audit.types';
 import { RecognitionService } from '../recognition/recognition.service';
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
@@ -458,7 +459,11 @@ export class MembershipAdminService {
     actorUserId: number,
     months: number,
     reason: string,
+    auditContext?: AuditContext,
   ): Promise<{ membershipNumber: string; expiresAt: string }> {
+    // Without HTTP provenance (the CLI script) only the operator is known --
+    // request/session/IP stay NULL rather than being invented.
+    const audit: AuditContext = auditContext ?? { actorType: 'ADMIN', provenance: { actorUserId } };
     const membership = await db
       .selectFrom('memberships')
       .selectAll()
@@ -487,6 +492,7 @@ export class MembershipAdminService {
           Number(existing.id),
           `Reversed for complimentary membership grant: ${reason}`,
           { actorType: 'HUMAN', actorUserId },
+          audit,
         );
       } else if (['CREATED', 'AWAITING_SETTLEMENT'].includes(existing.state)) {
         await this.financialService.cancelContribution(
@@ -511,7 +517,7 @@ export class MembershipAdminService {
       purpose: `Complimentary membership (${months}-month courtesy period)`,
       amountPaise: 0,
       idempotencyKey,
-    });
+    }, audit);
     await this.financialService.processZeroValueContribution(contributionId);
 
     await db

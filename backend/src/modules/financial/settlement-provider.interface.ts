@@ -59,6 +59,31 @@ export interface RefundResult {
   status: 'PROCESSING' | 'COMPLETED';
 }
 
+// OBS-08 read-only forensic snapshots. Deliberately a small projection --
+// never the provider's full object, and never persisted anywhere.
+export interface ProviderOrderSnapshot {
+  id: string;
+  status: string;
+  amountPaise: number;
+  amountPaidPaise: number | null;
+  currency: string;
+  receipt: string | null;
+  attempts: number | null;
+  createdAt: number | null;
+}
+
+export interface ProviderPaymentSnapshot {
+  id: string;
+  orderId: string | null;
+  status: string;
+  amountPaise: number;
+  currency: string;
+  method: string | null;
+  captured: boolean | null;
+  errorCode: string | null;
+  createdAt: number | null;
+}
+
 export interface SettlementProvider {
   // Generic tag stored as financial_transactions.provider once an outcome
   // is eventually recorded (e.g. 'RAZORPAY') -- see financial.types.ts
@@ -78,4 +103,10 @@ export interface SettlementProvider {
   // construction stays entirely inside the concrete adapter, exactly like
   // createOrder().
   refund(input: RefundInput): Promise<RefundResult>;
+
+  // OBS-08: optional, read-only, on-demand forensic reconciliation only.
+  // Must never mutate provider or platform state; callers never persist the
+  // result.
+  fetchOrder?(providerOrderReference: string): Promise<ProviderOrderSnapshot>;
+  fetchPayment?(providerPaymentReference: string): Promise<ProviderPaymentSnapshot>;
 }

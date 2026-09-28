@@ -26,6 +26,7 @@ import { SELF_SERVICE_CLASS_CODES } from '../dto/submit-membership-form.dto';
 import { normalize, validate } from '../../shared/phone.util';
 import { FinancialContributionService } from '../../financial/financial-contribution.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
+import type { AuditContext } from '../../financial/audit/financial-audit.types';
 
 const BASIC_MEMBER_CODE = 'BASIC_MEMBER';
 const MEMBERSHIP_BUSINESS_MODULE = 'MEMBERSHIP';
@@ -187,6 +188,7 @@ export class HubMembershipService {
     dto: SubmitMembershipFormDto,
     ipAddress: string | null,
     userAgent: string | null,
+    auditContext?: AuditContext,
   ) {
     const existing = await this.getActiveMembership(userId);
     if (existing) {
@@ -263,7 +265,7 @@ export class HubMembershipService {
     // above commits (FinancialContributionService.createContribution() opens
     // its own transaction; see MembershipLifecycleService.apply() for the
     // same pattern). No-ops for AUTO_AFTER_APPROVAL/MANUAL classes.
-    await this.lifecycle.createApplicationContribution(membershipId, classId, userId);
+    await this.lifecycle.createApplicationContribution(membershipId, classId, userId, auditContext);
 
     return { success: true, submittedAt: now };
   }
@@ -360,6 +362,7 @@ export class HubMembershipService {
     dto: SubmitMembershipFormDto,
     ipAddress: string | null,
     userAgent: string | null,
+    auditContext?: AuditContext,
   ) {
     const activeMembership = await db
       .selectFrom('memberships')
@@ -448,7 +451,7 @@ export class HubMembershipService {
 
     // Workflow-ordering fix (PART 2) -- see submitApplication() for the
     // identical pattern and rationale.
-    await this.lifecycle.createApplicationContribution(membershipId, classId, userId);
+    await this.lifecycle.createApplicationContribution(membershipId, classId, userId, auditContext);
 
     return { success: true, submittedAt: now };
   }

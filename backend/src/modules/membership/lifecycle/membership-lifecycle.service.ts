@@ -34,6 +34,7 @@ import type { Selectable } from 'kysely';
 import { db, MembershipsTable } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { FinancialContributionService } from '../../financial/financial-contribution.service';
+import type { AuditContext } from '../../financial/audit/financial-audit.types';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
@@ -138,7 +139,9 @@ export class MembershipLifecycleService {
   // ======================================================================
   // -> PENDING
   // ======================================================================
-  async apply(params: ApplyMembershipParams): Promise<{ id: number; uuid: string }> {
+  // auditContext is request provenance for the Financial Engine audit log
+  // only (OBS-02); it never influences membership behaviour.
+  async apply(params: ApplyMembershipParams, auditContext?: AuditContext): Promise<{ id: number; uuid: string }> {
     if (params.ownerType === 'INDIVIDUAL') {
       if (!params.userId) throw new BadRequestException('userId is required for an INDIVIDUAL membership application.');
       if (!params.membershipClassId) {
@@ -262,7 +265,7 @@ export class MembershipLifecycleService {
     // COMPLETED (see approve() below). AUTO_AFTER_APPROVAL/MANUAL classes and
     // GROUP applications are untouched -- see createApplicationContribution().
     if (params.ownerType === 'INDIVIDUAL' && params.membershipClassId != null) {
-      await this.createApplicationContribution(id, params.membershipClassId, params.userId!);
+      await this.createApplicationContribution(id, params.membershipClassId, params.userId!, auditContext);
     }
 
     return { id, uuid };
@@ -292,6 +295,7 @@ export class MembershipLifecycleService {
     membershipId: number,
     membershipClassId: number,
     payerUserId: number,
+    auditContext?: AuditContext,
   ): Promise<void> {
     const cls = await db
       .selectFrom('membership_classes')
@@ -312,7 +316,7 @@ export class MembershipLifecycleService {
       purpose: 'Membership fee',
       amountPaise,
       idempotencyKey,
-    });
+    }, auditContext);
 
     await db
       .updateTable('memberships')
@@ -462,7 +466,12 @@ export class MembershipLifecycleService {
   // REJECTED so a crash between the two never leaves the rejection recorded
   // with an un-actioned Contribution silently forgotten.
   // ======================================================================
-  async reject(membershipId: number, actorUserId: number, reason: string): Promise<void> {
+  async reject(
+    membershipId: number,
+    actorUserId: number,
+    reason: string,
+    auditContext?: AuditContext,
+  ): Promise<void> {
     const membership = await this.requireState(membershipId, ['PENDING']);
 
     const contribution = await this.getMembershipContribution(membershipId);
@@ -475,7 +484,7 @@ export class MembershipLifecycleService {
     if (contribution) {
       if (contribution.state === 'COMPLETED') {
         await this.financialService
-          .requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId })
+          .requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId }, auditContext)
           .catch(() => {
             // requestRefund() already records its own FAILED refund row on a
             // provider error rather than throwing; this guards only against

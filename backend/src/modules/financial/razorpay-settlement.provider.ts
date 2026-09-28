@@ -21,6 +21,8 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import Razorpay from 'razorpay';
 import type {
+  ProviderOrderSnapshot,
+  ProviderPaymentSnapshot,
   RefundInput,
   RefundResult,
   SettlementOrderInput,
@@ -106,6 +108,37 @@ export class RazorpaySettlementProvider implements SettlementProvider {
     return {
       providerRefundReference: refund.id,
       status: refund.status === 'processed' ? 'COMPLETED' : 'PROCESSING',
+    };
+  }
+
+  // OBS-08: read-only GETs against the Orders/Payments APIs, projected down
+  // to a few fields. No notes, customer contact details, or card/VPA data.
+  async fetchOrder(providerOrderReference: string): Promise<ProviderOrderSnapshot> {
+    const order = await this.ensureClient().orders.fetch(providerOrderReference);
+    return {
+      id: order.id,
+      status: String(order.status),
+      amountPaise: Number(order.amount),
+      amountPaidPaise: order.amount_paid !== undefined ? Number(order.amount_paid) : null,
+      currency: String(order.currency),
+      receipt: order.receipt ?? null,
+      attempts: order.attempts !== undefined ? Number(order.attempts) : null,
+      createdAt: order.created_at !== undefined ? Number(order.created_at) : null,
+    };
+  }
+
+  async fetchPayment(providerPaymentReference: string): Promise<ProviderPaymentSnapshot> {
+    const payment = await this.ensureClient().payments.fetch(providerPaymentReference);
+    return {
+      id: payment.id,
+      orderId: payment.order_id ?? null,
+      status: String(payment.status),
+      amountPaise: Number(payment.amount),
+      currency: String(payment.currency),
+      method: payment.method ? String(payment.method) : null,
+      captured: typeof payment.captured === 'boolean' ? payment.captured : null,
+      errorCode: payment.error_code ?? null,
+      createdAt: payment.created_at !== undefined ? Number(payment.created_at) : null,
     };
   }
 }

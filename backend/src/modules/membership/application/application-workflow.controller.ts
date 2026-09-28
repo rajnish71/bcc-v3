@@ -21,8 +21,11 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { requestAuditContext } from '../../financial/audit/request-provenance.util';
 import { AccessTokenGuard } from '../../identity/auth/access-token.guard';
 import { CurrentUser } from '../../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../../identity/auth/token.util';
@@ -176,6 +179,7 @@ export class ApplicationWorkflowController {
     @CurrentUser() actor: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: StageDecisionDto,
+    @Req() req: FastifyRequest,
   ) {
     return this.workflow.recordStageDecision({
       membershipId: id,
@@ -183,6 +187,7 @@ export class ApplicationWorkflowController {
       decision: dto.decision,
       actorUserId: actor.sub,
       note: dto.note ?? null,
+      auditContext: requestAuditContext('ADMIN', req, actor),
     });
   }
 
@@ -194,6 +199,7 @@ export class ApplicationWorkflowController {
     @CurrentUser() actor: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: StageDecisionDto,
+    @Req() req: FastifyRequest,
   ) {
     return this.workflow.recordStageDecision({
       membershipId: id,
@@ -201,6 +207,7 @@ export class ApplicationWorkflowController {
       decision: dto.decision,
       actorUserId: actor.sub,
       note: dto.note ?? null,
+      auditContext: requestAuditContext('ADMIN', req, actor),
     });
   }
 }

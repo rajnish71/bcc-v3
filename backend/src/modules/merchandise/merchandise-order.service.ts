@@ -28,6 +28,7 @@ import { randomUUID } from 'crypto';
 import { db } from '../../database/db';
 import { toMysqlDatetime } from '../identity/shared/token-hash.util';
 import { FinancialContributionService } from '../financial/financial-contribution.service';
+import type { AuditContext } from '../financial/audit/financial-audit.types';
 import type { FinancialEngineEventPayload } from '../financial/financial.events';
 import {
   ACTIVE_REDEMPTION_STATUSES,
@@ -71,7 +72,9 @@ export class MerchandiseOrderService {
 
   // ── Create ────────────────────────────────────────────────────────────────
 
-  async createOrder(userId: number, dto: CreateOrderDto): Promise<OrderResponse> {
+  // auditContext is request provenance for the Financial Engine audit log
+  // only (OBS-02); it never influences order behaviour.
+  async createOrder(userId: number, dto: CreateOrderDto, auditContext?: AuditContext): Promise<OrderResponse> {
     const { orderId } = await db.transaction().execute(async (trx) => {
       const productIds = [...new Set(dto.items.map((i) => i.productId))];
       const products = await trx
@@ -205,7 +208,7 @@ export class MerchandiseOrderService {
       purpose: `BCC Merchandise Order #${orderId}`,
       amountPaise: order.total_paise,
       idempotencyKey: `merch-order-${orderId}`,
-    });
+    }, auditContext);
 
     await db
       .updateTable('merchandise_orders')

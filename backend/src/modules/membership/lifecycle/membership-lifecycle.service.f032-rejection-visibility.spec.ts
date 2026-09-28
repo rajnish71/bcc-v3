@@ -61,7 +61,7 @@ describe('F-032. reject() flags an unresolved Contribution left by the "anything
   });
 
   it('COMPLETED and CREATED/AWAITING_SETTLEMENT branches are unchanged -- still call requestRefund()/cancelContribution() and do not set the note', () => {
-    expect(REJECT_FN).toContain(".requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId })");
+    expect(REJECT_FN).toContain(".requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId }, auditContext)");
     expect(REJECT_FN).toContain('.cancelContribution(Number(contribution.id),');
     const completedBranch = slice(REJECT_FN, "if (contribution.state === 'COMPLETED')", '} else if (');
     const createdBranch = slice(REJECT_FN, "} else if (contribution.state === 'CREATED'", '} else {');

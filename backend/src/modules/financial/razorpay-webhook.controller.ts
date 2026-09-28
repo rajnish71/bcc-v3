@@ -44,6 +44,8 @@ export class RazorpayWebhookController {
       rawBody,
       signature: headerString(req.headers['x-razorpay-signature']),
       eventId: headerString(req.headers['x-razorpay-event-id']),
+      requestId: req.id,
+      route: req.routeOptions?.url ?? null,
     });
 
     // Never internal financial detail (contribution/transaction ids, DB

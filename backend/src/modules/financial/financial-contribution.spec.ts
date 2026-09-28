@@ -1024,7 +1024,7 @@ describe('initiateProviderSettlement() — state semantics (Step 18 Part 7/13/18
   it('reuses startSettlement() rather than duplicating the AWAITING_SETTLEMENT guard/transition', () => {
     const methodStart = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('async initiateProviderSettlement(');
     const methodBody = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(methodStart, methodStart + 3000);
-    expect(methodBody).toContain('this.startSettlement(contributionId)');
+    expect(methodBody).toContain('this.startSettlement(contributionId, auditContext)');
   });
 
   it('never writes financial_transactions or receipts during order initiation', () => {
@@ -1085,7 +1085,7 @@ describe('initiateProviderSettlement() — zero-value protection (Step 18 Part 8
 describe('initiateProviderSettlement() — idempotency (Step 18 Part 11)', () => {
   it('checks for an existing active_settlement_reference before ever calling the provider', () => {
     const methodStart = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('async initiateProviderSettlement(');
-    const body = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(methodStart, methodStart + 3000);
+    const body = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(methodStart, methodStart + 5000);
     const existingCheckIdx = body.indexOf('this.readActiveSettlementReference(contributionId)');
     const providerCallIdx = body.indexOf('this.provider.createOrder(');
     expect(existingCheckIdx).toBeGreaterThan(-1);
@@ -1252,7 +1252,7 @@ describe('markSettlementAttemptFailed() (Step 18A)', () => {
   });
 
   it('transitions to the existing FAILED state via transitionContribution(), not a new state', () => {
-    expect(HELPER_BODY).toContain("this.transitionContribution(contributionId, 'FAILED')");
+    expect(HELPER_BODY).toContain("this.transitionContribution(contributionId, 'FAILED', trx)");
   });
 
   it('never calls recordSettlementOutcome() -- no Financial Transaction or Receipt is implied by this recovery path', () => {
@@ -1284,16 +1284,20 @@ describe('initiateProviderSettlement() wires order-creation failure to markSettl
     expect(tryIdx).toBeGreaterThan(-1);
     expect(catchIdx).toBeGreaterThan(-1);
     const catchBody = catchSlice.slice(catchIdx, catchIdx + 200);
-    expect(catchBody).toContain('this.markSettlementAttemptFailed(contributionId)');
+    expect(catchBody).toContain('this.markSettlementAttemptFailed(contributionId, auditContext, null)');
     expect(catchBody).toContain('throw err');
   });
 
   it('wraps persistActiveSettlementReference() in a try/catch that calls markSettlementAttemptFailed() and rethrows (Part 5: reference persisted but unlinkable)', () => {
-    const persistIdx = METHOD_BODY.indexOf('this.persistActiveSettlementReference(contributionId, order.providerOrderReference)');
+    const persistIdx = METHOD_BODY.indexOf('this.persistActiveSettlementReference(');
     expect(persistIdx).toBeGreaterThan(-1);
-    const afterPersist = METHOD_BODY.slice(persistIdx, persistIdx + 300);
+    const afterPersist = METHOD_BODY.slice(persistIdx, persistIdx + 500);
+    expect(afterPersist).toContain('order.providerOrderReference');
     expect(afterPersist).toContain('} catch (err) {');
-    expect(afterPersist).toContain('this.markSettlementAttemptFailed(contributionId)');
+    // OBS-06: the orphaned-but-created order id is retained on the FAILED audit row.
+    expect(afterPersist).toContain(
+      'this.markSettlementAttemptFailed(contributionId, auditContext, order.providerOrderReference)',
+    );
     expect(afterPersist).toContain('throw err');
   });
 

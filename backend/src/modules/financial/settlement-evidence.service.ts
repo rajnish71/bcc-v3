@@ -23,6 +23,8 @@ import { db } from '../../database/db';
 import { toMysqlDatetime } from '../identity/shared/token-hash.util';
 import { R2Service } from '../shared/storage/r2.service';
 import { FinancialContributionService } from './financial-contribution.service';
+import { FinancialAuditService } from './audit/financial-audit.service';
+import type { AuditContext } from './audit/financial-audit.types';
 
 export interface SubmitEvidenceInput {
   financialContributionId: number;
@@ -53,6 +55,7 @@ export class SettlementEvidenceService {
   constructor(
     private readonly financialService: FinancialContributionService,
     private readonly r2: R2Service,
+    private readonly audit: FinancialAuditService,
   ) {}
 
   // ── Payment proof upload target ─────────────────────────────────────────
@@ -94,7 +97,10 @@ export class SettlementEvidenceService {
   // Append-only: a rejected evidence row is never overwritten. A retry
   // after rejection is a NEW row via this method again (Step 9 §D/Step 10
   // Part 4) -- callers do not update prior rows, they call submit() again.
-  async submit(input: SubmitEvidenceInput): Promise<{ id: number; uuid: string }> {
+  async submit(
+    input: SubmitEvidenceInput,
+    auditContext: AuditContext = { actorType: 'MEMBER', provenance: { actorUserId: input.submittedByUserId } },
+  ): Promise<{ id: number; uuid: string }> {
     const contribution = await this.financialService.getContribution(input.financialContributionId);
     if (contribution.state !== 'SETTLEMENT_IN_PROGRESS') {
       throw new ConflictException(
@@ -133,22 +139,79 @@ export class SettlementEvidenceService {
     }
 
     const uuid = randomUUID();
-    const result = await db
-      .insertInto('financial_settlement_evidence')
-      .values({
-        uuid,
-        financial_contribution_id: input.financialContributionId,
-        reference_identifier: input.referenceIdentifier,
-        payment_date: toMysqlDatetime(input.paymentDate).slice(0, 10),
-        claimed_amount_paise: input.claimedAmountPaise,
-        proof_object_key: input.proofObjectKey ?? null,
-        proof_mime_type: input.proofObjectKey ? input.proofMimeType : null,
-        proof_size_bytes: input.proofObjectKey ? proofSizeBytes : null,
-        submitted_by_user_id: input.submittedByUserId,
-      })
-      .executeTakeFirstOrThrow();
+    const id = await db.transaction().execute(async (trx) => {
+      const result = await trx
+        .insertInto('financial_settlement_evidence')
+        .values({
+          uuid,
+          financial_contribution_id: input.financialContributionId,
+          reference_identifier: input.referenceIdentifier,
+          payment_date: toMysqlDatetime(input.paymentDate).slice(0, 10),
+          claimed_amount_paise: input.claimedAmountPaise,
+          proof_object_key: input.proofObjectKey ?? null,
+          proof_mime_type: input.proofObjectKey ? input.proofMimeType : null,
+          proof_size_bytes: input.proofObjectKey ? proofSizeBytes : null,
+          submitted_by_user_id: input.submittedByUserId,
+        })
+        .executeTakeFirstOrThrow();
+      const evidenceId = Number(result.insertId);
+      await this.audit.record(trx, {
+        eventType: 'SETTLEMENT_EVIDENCE_SUBMITTED',
+        contributionId: input.financialContributionId,
+        settlementEvidenceId: evidenceId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerPaymentRef: input.referenceIdentifier,
+        resultingState: String(contribution.state),
+      });
+      return evidenceId;
+    });
 
-    return { id: Number(result.insertId), uuid };
+    return { id, uuid };
+  }
+
+  // Evidence review write + its audit row in one transaction (OBS-11). The
+  // settlement outcome itself is recorded separately by
+  // recordSettlementOutcome(), in its own transaction, with its own audit row.
+  private async markReviewed(
+    evidenceId: number,
+    contributionId: number,
+    decision: 'APPROVED' | 'REJECTED',
+    reviewerUserId: number,
+    note: string | null,
+    referenceIdentifier: string,
+    auditContext: AuditContext,
+  ): Promise<void> {
+    await db.transaction().execute(async (trx) => {
+      const updateResult = await trx
+        .updateTable('financial_settlement_evidence')
+        .set({
+          review_status: decision,
+          reviewed_by_user_id: reviewerUserId,
+          reviewed_at: toMysqlDatetime(new Date()),
+          review_note: note,
+        })
+        .where('id', '=', evidenceId)
+        .where('review_status', '=', 'PENDING_REVIEW')
+        .executeTakeFirst();
+
+      if (Number(updateResult.numUpdatedRows ?? 0) === 0) {
+        throw new ConflictException(`Evidence ${evidenceId} was already reviewed by a concurrent request.`);
+      }
+
+      await this.audit.record(trx, {
+        eventType: decision === 'APPROVED' ? 'SETTLEMENT_EVIDENCE_APPROVED' : 'SETTLEMENT_EVIDENCE_REJECTED',
+        contributionId,
+        settlementEvidenceId: evidenceId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerPaymentRef: referenceIdentifier,
+      });
+    });
+  }
+
+  private static adminAudit(reviewerUserId: number, auditContext?: AuditContext): AuditContext {
+    return auditContext ?? { actorType: 'ADMIN', provenance: { actorUserId: reviewerUserId } };
   }
 
   // ── Read ──────────────────────────────────────────────────────────────────
@@ -222,7 +285,9 @@ export class SettlementEvidenceService {
     reviewerUserId: number,
     provider: string,
     note?: string | null,
+    auditContext?: AuditContext,
   ): Promise<{ transactionId: number }> {
+    const audit = SettlementEvidenceService.adminAudit(reviewerUserId, auditContext);
     const evidence = await this.getEvidence(evidenceId);
     if (evidence.review_status !== 'PENDING_REVIEW') {
       throw new ConflictException(
@@ -239,21 +304,15 @@ export class SettlementEvidenceService {
       );
     }
 
-    const updateResult = await db
-      .updateTable('financial_settlement_evidence')
-      .set({
-        review_status: 'APPROVED',
-        reviewed_by_user_id: reviewerUserId,
-        reviewed_at: toMysqlDatetime(new Date()),
-        review_note: note ?? null,
-      })
-      .where('id', '=', evidenceId)
-      .where('review_status', '=', 'PENDING_REVIEW')
-      .executeTakeFirst();
-
-    if (Number(updateResult.numUpdatedRows ?? 0) === 0) {
-      throw new ConflictException(`Evidence ${evidenceId} was already reviewed by a concurrent request.`);
-    }
+    await this.markReviewed(
+      evidenceId,
+      evidence.financial_contribution_id,
+      'APPROVED',
+      reviewerUserId,
+      note ?? null,
+      evidence.reference_identifier,
+      audit,
+    );
 
     const { transactionId } = await this.financialService.recordSettlementOutcome(
       evidence.financial_contribution_id,
@@ -263,6 +322,7 @@ export class SettlementEvidenceService {
         result: 'SUCCEEDED',
         amountPaise: Number(contribution.amount_paise),
       },
+      audit,
     );
 
     return { transactionId };
@@ -282,7 +342,9 @@ export class SettlementEvidenceService {
     reviewerUserId: number,
     provider: string,
     reason: string,
+    auditContext?: AuditContext,
   ): Promise<{ transactionId: number }> {
+    const audit = SettlementEvidenceService.adminAudit(reviewerUserId, auditContext);
     const evidence = await this.getEvidence(evidenceId);
     if (evidence.review_status !== 'PENDING_REVIEW') {
       throw new ConflictException(
@@ -292,21 +354,15 @@ export class SettlementEvidenceService {
 
     const contribution = await this.financialService.getContribution(evidence.financial_contribution_id);
 
-    const updateResult = await db
-      .updateTable('financial_settlement_evidence')
-      .set({
-        review_status: 'REJECTED',
-        reviewed_by_user_id: reviewerUserId,
-        reviewed_at: toMysqlDatetime(new Date()),
-        review_note: reason,
-      })
-      .where('id', '=', evidenceId)
-      .where('review_status', '=', 'PENDING_REVIEW')
-      .executeTakeFirst();
-
-    if (Number(updateResult.numUpdatedRows ?? 0) === 0) {
-      throw new ConflictException(`Evidence ${evidenceId} was already reviewed by a concurrent request.`);
-    }
+    await this.markReviewed(
+      evidenceId,
+      evidence.financial_contribution_id,
+      'REJECTED',
+      reviewerUserId,
+      reason,
+      evidence.reference_identifier,
+      audit,
+    );
 
     const { transactionId } = await this.financialService.recordSettlementOutcome(
       evidence.financial_contribution_id,
@@ -317,6 +373,7 @@ export class SettlementEvidenceService {
         amountPaise: Number(contribution.amount_paise),
         failureReason: reason,
       },
+      audit,
     );
 
     return { transactionId };

@@ -33,6 +33,7 @@ import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { R2Service } from '../../shared/storage/r2.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
+import type { AuditContext } from '../../financial/audit/financial-audit.types';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 
 export type ApprovalStage = 'COORDINATOR' | 'COMMITTEE' | 'FINAL';
@@ -97,6 +98,8 @@ export class ApplicationWorkflowService {
     decision: 'APPROVED' | 'REJECTED';
     actorUserId: number;
     note?: string | null;
+    // Request provenance forwarded to a rejection refund's audit row only.
+    auditContext?: AuditContext;
   }): Promise<{ applicationState: string; nextStage: ApprovalStage | null }> {
     const membership = await this.requirePendingApplication(params.membershipId);
     const stages = await this.requiredStages(membership);
@@ -156,6 +159,7 @@ export class ApplicationWorkflowService {
         params.membershipId,
         params.actorUserId,
         params.note?.trim() || `Application rejected at the ${params.stage} review stage.`,
+        params.auditContext,
       );
       return { applicationState: 'REJECTED', nextStage: null };
     }

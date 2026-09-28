@@ -52,6 +52,10 @@ export interface RazorpayWebhookInput {
   rawBody: Buffer;
   signature: string | undefined;
   eventId: string | undefined;
+  // Server-generated request id (OBS-01) -- recorded on the
+  // SETTLEMENT_OUTCOME_RECORDED audit row and in failure diagnostics.
+  requestId?: string | null;
+  route?: string | null;
 }
 
 @Injectable()
@@ -94,9 +98,11 @@ export class RazorpayWebhookService {
     }
 
     try {
-      await this.process(claim.id, eventType, event);
+      await this.process(claim.id, eventType, event, input);
     } catch (err) {
-      await this.markFailed(claim.id, err instanceof Error ? err.message : 'Unknown processing error');
+      const message = err instanceof Error ? err.message : 'Unknown processing error';
+      this.logger.error(`Webhook inbox ${claim.id} failed [requestId=${input.requestId ?? 'none'}]: ${message}`);
+      await this.markFailed(claim.id, message);
       throw err;
     }
   }
@@ -143,7 +149,12 @@ export class RazorpayWebhookService {
   }
 
   // ── Processing ───────────────────────────────────────────────────────────
-  private async process(inboxId: number, eventType: string, event: Record<string, unknown>): Promise<void> {
+  private async process(
+    inboxId: number,
+    eventType: string,
+    event: Record<string, unknown>,
+    input: RazorpayWebhookInput,
+  ): Promise<void> {
     if (!HANDLED_EVENT_TYPES.has(eventType)) {
       await this.markProcessed(inboxId, null);
       return;
@@ -228,6 +239,11 @@ export class RazorpayWebhookService {
         result === 'FAILED'
           ? (payment.error_description ?? payment.error_code ?? 'Razorpay payment failed')
           : null,
+    }, {
+      // No actor user/session/IP: Razorpay, not a member, is the caller.
+      actorType: 'WEBHOOK',
+      webhookInboxId: inboxId,
+      provenance: { requestId: input.requestId ?? null, route: input.route ?? null },
     });
 
     await this.markProcessed(inboxId, contributionId);

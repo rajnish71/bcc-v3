@@ -140,7 +140,7 @@ describe('F-002 Test 2: recordPaymentReceived() on a REJECTED membership request
 // ═══════════════════════════════════════════════════════════════════════
 describe('F-002 Test 3: human/admin refund path (reject() on a COMPLETED Contribution) is unchanged', () => {
   it('reject() still passes the real admin actorUserId, now wrapped in the HUMAN actor shape', () => {
-    expect(REJECT_FN).toContain(".requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId })");
+    expect(REJECT_FN).toContain(".requestRefund(Number(contribution.id), reason, { actorType: 'HUMAN', actorUserId }, auditContext)");
   });
 
   it('requestRefund() rejects a HUMAN actor with no actorUserId rather than silently recording ambiguous provenance', () => {

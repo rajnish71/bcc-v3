@@ -9,8 +9,10 @@
 // completes the transition; for constitutional-class applications it records
 // the stage and returns the next required stage.
 
-import { BadRequestException, Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Req, UseGuards } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
 import * as argon2 from 'argon2';
+import { requestAuditContext } from '../financial/audit/request-provenance.util';
 import { db } from '../../database/db';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { CurrentUser } from '../identity/auth/current-user.decorator';
@@ -39,26 +41,41 @@ export class MembershipController {
   @Post('applications')
   @HttpCode(201)
   @UseGuards(AccessTokenGuard)
-  async apply(@CurrentUser() actor: AccessTokenPayload, @Body() dto: ApplyMembershipDto) {
-    return this.lifecycle.apply({
-      ownerType: 'INDIVIDUAL',
-      membershipClassId: dto.membershipClassId,
-      userId: actor.sub,
-    });
+  async apply(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Body() dto: ApplyMembershipDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.lifecycle.apply(
+      {
+        ownerType: 'INDIVIDUAL',
+        membershipClassId: dto.membershipClassId,
+        userId: actor.sub,
+      },
+      requestAuditContext('MEMBER', req, actor),
+    );
   }
 
+  // The audit actor is the staff member acting, not the payer.
   @Post('applications/on-behalf')
   @HttpCode(201)
   @UseGuards(AccessTokenGuard, RbacGuard)
   @RequirePermissions('membership.application.create_for_others')
-  async applyOnBehalf(@Body() dto: ApplyOnBehalfDto) {
-    return this.lifecycle.apply({
-      ownerType: dto.groupEntityId ? 'GROUP' : 'INDIVIDUAL',
-      membershipClassId: dto.membershipClassId ?? null,
-      groupMembershipTypeId: dto.groupMembershipTypeId ?? null,
-      userId: dto.groupEntityId ? null : dto.userId,
-      groupEntityId: dto.groupEntityId ?? null,
-    });
+  async applyOnBehalf(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Body() dto: ApplyOnBehalfDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.lifecycle.apply(
+      {
+        ownerType: dto.groupEntityId ? 'GROUP' : 'INDIVIDUAL',
+        membershipClassId: dto.membershipClassId ?? null,
+        groupMembershipTypeId: dto.groupMembershipTypeId ?? null,
+        userId: dto.groupEntityId ? null : dto.userId,
+        groupEntityId: dto.groupEntityId ?? null,
+      },
+      requestAuditContext('ADMIN', req, actor),
+    );
   }
 
   @Post(':id/approve')
@@ -82,6 +99,7 @@ export class MembershipController {
     @CurrentUser() actor: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: RejectMembershipDto,
+    @Req() req: FastifyRequest,
   ) {
     return this.workflow.recordStageDecision({
       membershipId: id,
@@ -89,6 +107,7 @@ export class MembershipController {
       decision: 'REJECTED',
       actorUserId: actor.sub,
       note: dto.reason,
+      auditContext: requestAuditContext('ADMIN', req, actor),
     });
   }
 

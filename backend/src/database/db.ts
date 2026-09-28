@@ -142,6 +142,9 @@ export interface InvitationsTable {
 export interface RefreshTokensTable {
   id: Generated<number>;
   user_id: number;
+  // OBS-03 (migration 0100) -- minted once per login, inherited across
+  // rotation. Correlation metadata only; grants no authority.
+  session_id: Nullable<string>;
   token_hash: string;
   device_label: string | null;
   ip_address: string | null;
@@ -156,6 +159,9 @@ export interface RefreshTokensTable {
 export interface LoginHistoryTable {
   id: Generated<number>;
   user_id: number | null;
+  // OBS-03 (migration 0100) -- populated only for the SUCCESS row of a
+  // login that actually issued a session; NULL for FAILED/LOCKED attempts.
+  session_id: Nullable<string>;
   email_attempted: string | null;
   ip_address: string | null;
   device: string | null;
@@ -613,6 +619,42 @@ export interface FinancialRefundsTable {
   requested_by_type: Generated<FinancialRefundRequesterType>;
   requested_at: Generated<ColumnType<Date, string | undefined, never>>;
   resolved_at: ColumnType<Date | null, string | null, string | null>;
+}
+
+// ============================================================================
+// Financial Audit Log (Payment & Authentication Observability Remediation,
+// OBS-02) -- migration 0099. Durable OBSERVABILITY/PROVENANCE layer only --
+// NOT a canonical financial state machine (PAY-001 remains authoritative).
+// See backend/src/modules/financial/audit/financial-audit.service.ts for
+// the transactional write pattern (OBS-11) and the metadata whitelist.
+// ============================================================================
+
+export type FinancialAuditActorType = 'MEMBER' | 'ADMIN' | 'SYSTEM' | 'WEBHOOK';
+
+export interface FinancialAuditLogTable {
+  id: Generated<number>;
+  uuid: string;
+  event_type: string;
+  contribution_id: Nullable<number>;
+  transaction_id: Nullable<number>;
+  refund_id: Nullable<number>;
+  settlement_evidence_id: Nullable<number>;
+  webhook_inbox_id: Nullable<number>;
+  actor_type: FinancialAuditActorType;
+  actor_user_id: Nullable<number>;
+  request_id: Nullable<string>;
+  session_id: Nullable<string>;
+  client_ip: Nullable<string>;
+  user_agent: Nullable<string>;
+  http_route: Nullable<string>;
+  provider_order_ref: Nullable<string>;
+  provider_payment_ref: Nullable<string>;
+  provider_receipt_ref: Nullable<string>;
+  previous_state: Nullable<string>;
+  resulting_state: Nullable<string>;
+  // TEXT, not JSON (CLAUDE.md §5.7) -- application code parses this itself.
+  metadata_json: Nullable<string>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
 }
 
 // ============================================================================
@@ -1189,6 +1231,7 @@ export interface DB {
   financial_transactions: FinancialTransactionsTable;
   receipts: ReceiptsTable;
   financial_refunds: FinancialRefundsTable;
+  financial_audit_log: FinancialAuditLogTable;
   financial_settlement_evidence: FinancialSettlementEvidenceTable;
   financial_event_outbox: FinancialEventOutboxTable;
   settlement_webhook_inbox: SettlementWebhookInboxTable;

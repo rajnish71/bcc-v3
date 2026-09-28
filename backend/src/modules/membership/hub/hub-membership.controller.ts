@@ -13,6 +13,7 @@ import { CurrentUser } from '../../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../../identity/auth/token.util';
 import { HubMembershipService } from './hub-membership.service';
 import { SubmitMembershipFormDto } from '../dto/submit-membership-form.dto';
+import { requestAuditContext } from '../../financial/audit/request-provenance.util';
 
 @Controller('api/v1/hub/membership')
 export class HubMembershipController {
@@ -40,7 +41,13 @@ export class HubMembershipController {
       req.ip ??
       null;
     const userAgent = (req.headers['user-agent'] as string | undefined) ?? null;
-    return this.hubMembership.submitApplication(user.sub, dto, ipAddress, userAgent);
+    return this.hubMembership.submitApplication(
+      user.sub,
+      dto,
+      ipAddress,
+      userAgent,
+      requestAuditContext('MEMBER', req, user),
+    );
   }
 
   // ── Renewal (Variant B — MEMBER role, renewal window or expired) ──────────
@@ -65,6 +72,12 @@ export class HubMembershipController {
       req.ip ??
       null;
     const userAgent = (req.headers['user-agent'] as string | undefined) ?? null;
-    return this.hubMembership.submitRenewal(user.sub, dto, ipAddress, userAgent);
+    return this.hubMembership.submitRenewal(
+      user.sub,
+      dto,
+      ipAddress,
+      userAgent,
+      requestAuditContext('MEMBER', req, user),
+    );
   }
 }

@@ -35,6 +35,13 @@ import {
   SETTLEMENT_PROVIDER,
   type SettlementProvider,
 } from './settlement-provider.interface';
+import { FinancialAuditService } from './audit/financial-audit.service';
+import type { AuditContext } from './audit/financial-audit.types';
+
+// Callers that do not (yet) thread HTTP provenance through -- e.g. Business
+// Module services invoking createContribution() -- are recorded as SYSTEM
+// with no request/session/IP. Never fabricated (remediation Section 11).
+const SYSTEM_AUDIT: AuditContext = { actorType: 'SYSTEM' };
 
 // A committed-but-not-yet-published Business Event: the outbox row that
 // backs it (for marking dispatched_at) plus the canonical payload to hand
@@ -50,12 +57,14 @@ export class FinancialContributionService {
   constructor(
     private readonly eventBus: FinancialEventBus,
     @Inject(SETTLEMENT_PROVIDER) private readonly provider: SettlementProvider,
+    private readonly audit: FinancialAuditService,
   ) {}
 
   // ── Create ────────────────────────────────────────────────────────────────
 
   async createContribution(
     obligation: FinancialObligationInput,
+    auditContext: AuditContext = SYSTEM_AUDIT,
   ): Promise<{ id: number; uuid: string }> {
     if (obligation.amountPaise < 0) {
       throw new BadRequestException('Contribution amount cannot be negative.');
@@ -114,6 +123,14 @@ export class FinancialContributionService {
         amountPaise: obligation.amountPaise,
         currency,
         contributionState: 'CREATED',
+      });
+
+      await this.audit.record(trx, {
+        eventType: 'CONTRIBUTION_CREATED',
+        contributionId: id,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        resultingState: 'CREATED',
       });
 
       return { id, uuid };
@@ -330,7 +347,14 @@ export class FinancialContributionService {
     contributionId: number,
     reason: string,
     actor: RefundActor,
+    auditContext?: AuditContext,
   ): Promise<{ refundId: number; status: string; alreadyRequested: boolean }> {
+    // No explicit context: HUMAN refunds are admin-decided today (membership
+    // rejection); SYSTEM stays SYSTEM. actorUserId is carried either way.
+    const refundAudit: AuditContext = auditContext ?? {
+      actorType: actor.actorType === 'SYSTEM' ? 'SYSTEM' : 'ADMIN',
+      provenance: { actorUserId: actor.actorUserId },
+    };
     // F-002 governance decision: HUMAN must carry a real actor id, SYSTEM
     // must not carry one -- asserted at runtime (not just via the RefundActor
     // union) because this value can arrive from an automated caller rather
@@ -362,20 +386,32 @@ export class FinancialContributionService {
     const uuid = randomUUID();
     let refundId: number;
     try {
-      const inserted = await db
-        .insertInto('financial_refunds')
-        .values({
-          uuid,
-          contribution_id: contributionId,
-          amount_paise: contribution.amount_paise,
-          currency: contribution.currency,
-          status: 'REQUESTED',
-          reason,
-          requested_by_user_id: actor.actorUserId,
-          requested_by_type: actor.actorType,
-        })
-        .executeTakeFirstOrThrow();
-      refundId = Number(inserted.insertId);
+      refundId = await db.transaction().execute(async (trx) => {
+        const inserted = await trx
+          .insertInto('financial_refunds')
+          .values({
+            uuid,
+            contribution_id: contributionId,
+            amount_paise: contribution.amount_paise,
+            currency: contribution.currency,
+            status: 'REQUESTED',
+            reason,
+            requested_by_user_id: actor.actorUserId,
+            requested_by_type: actor.actorType,
+          })
+          .executeTakeFirstOrThrow();
+        const id = Number(inserted.insertId);
+        await this.audit.record(trx, {
+          eventType: 'REFUND_REQUESTED',
+          contributionId,
+          refundId: id,
+          actorType: refundAudit.actorType,
+          provenance: refundAudit.provenance,
+          previousState: String(contribution.state),
+          resultingState: String(contribution.state),
+        });
+        return id;
+      });
     } catch (err) {
       // Lost a race against a concurrent requestRefund() call for the same
       // Contribution (uq_refund_contribution) — the winner's row is authoritative.
@@ -511,7 +547,10 @@ export class FinancialContributionService {
   // Idempotent: a Contribution already SETTLEMENT_IN_PROGRESS returns
   // successfully rather than erroring -- a duplicate "start" request (e.g.
   // a client retry) is a no-op, not a failure.
-  async startSettlement(contributionId: number): Promise<{ contributionState: ContributionState }> {
+  async startSettlement(
+    contributionId: number,
+    auditContext: AuditContext = SYSTEM_AUDIT,
+  ): Promise<{ contributionState: ContributionState }> {
     let pending: PendingFinancialEvent | null = null;
 
     const result = await db.transaction().execute(async (trx) => {
@@ -545,6 +584,14 @@ export class FinancialContributionService {
       }
 
       pending = await this.transitionContribution(contributionId, 'SETTLEMENT_IN_PROGRESS', trx);
+      await this.audit.record(trx, {
+        eventType: 'SETTLEMENT_START_REQUESTED',
+        contributionId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        previousState: currentState,
+        resultingState: 'SETTLEMENT_IN_PROGRESS',
+      });
       return { contributionState: 'SETTLEMENT_IN_PROGRESS' as ContributionState };
     });
 
@@ -608,7 +655,15 @@ export class FinancialContributionService {
   // pattern recordSettlementOutcome() already uses for its own idempotency
   // check. This narrow race is judged acceptable for a member-initiated
   // checkout click on a single-server platform; it is not a webhook path.
-  async initiateProviderSettlement(contributionId: number): Promise<{
+  //
+  // Audit (OBS-06): every branch below leaves a PROVIDER_ORDER_CREATED or
+  // PROVIDER_ORDER_FAILED row in financial_audit_log, so a provider order id
+  // survives applyTransition() clearing active_settlement_reference --
+  // including the orphaned order of a lost race.
+  async initiateProviderSettlement(
+    contributionId: number,
+    auditContext: AuditContext = SYSTEM_AUDIT,
+  ): Promise<{
     contributionId: number;
     contributionState: ContributionState;
     providerName: string;
@@ -620,11 +675,21 @@ export class FinancialContributionService {
     // Reused unchanged: transitions AWAITING_SETTLEMENT → SETTLEMENT_IN_PROGRESS
     // (idempotent if already there), rejects zero-value, publishes
     // SETTLEMENT_STARTED via the existing Step 17 outbox path.
-    const { contributionState } = await this.startSettlement(contributionId);
+    const { contributionState } = await this.startSettlement(contributionId, auditContext);
 
     const existingReference = await this.readActiveSettlementReference(contributionId);
     if (existingReference) {
       const contribution = await this.getContribution(contributionId);
+      // No business write on this branch -- the audit row is the only write.
+      await this.audit.record(db, {
+        eventType: 'PROVIDER_ORDER_CREATED',
+        contributionId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerOrderRef: existingReference,
+        resultingState: contributionState,
+        metadata: { providerOrderOutcome: 'REUSED' },
+      });
       return {
         contributionId,
         contributionState,
@@ -663,13 +728,17 @@ export class FinancialContributionService {
         amountPaise,
         currency,
         receiptReference,
+        // Passed through as Razorpay order notes (remediation Section 9) --
+        // correlation ids only, never a secret.
         metadata: {
           businessModule: String(contribution.business_module),
           businessReferenceId: Number(contribution.business_reference_id),
+          contributionId,
+          ...(auditContext.provenance?.requestId ? { bccRequestId: auditContext.provenance.requestId } : {}),
         },
       });
     } catch (err) {
-      await this.markSettlementAttemptFailed(contributionId);
+      await this.markSettlementAttemptFailed(contributionId, auditContext, null);
       throw err;
     }
 
@@ -683,9 +752,15 @@ export class FinancialContributionService {
     // documented below).
     let persisted: boolean;
     try {
-      persisted = await this.persistActiveSettlementReference(contributionId, order.providerOrderReference);
+      persisted = await this.persistActiveSettlementReference(
+        contributionId,
+        order.providerOrderReference,
+        receiptReference,
+        auditContext,
+      );
     } catch (err) {
-      await this.markSettlementAttemptFailed(contributionId);
+      // The order exists at the provider -- retain its id on the FAILED row.
+      await this.markSettlementAttemptFailed(contributionId, auditContext, order.providerOrderReference);
       throw err;
     }
 
@@ -694,6 +769,18 @@ export class FinancialContributionService {
       // Our own provider order is discarded (never referenced again); the
       // winner's reference is authoritative.
       const winnerReference = await this.readActiveSettlementReference(contributionId);
+      await this.audit.record(db, {
+        eventType: 'PROVIDER_ORDER_CREATED',
+        contributionId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerOrderRef: winnerReference,
+        resultingState: contributionState,
+        metadata: {
+          providerOrderOutcome: 'DISCARDED_LOST_RACE',
+          discardedProviderOrderReference: order.providerOrderReference,
+        },
+      });
       if (winnerReference) {
         return {
           contributionId,
@@ -739,9 +826,30 @@ export class FinancialContributionService {
   // now-stale SETTLEMENT_IN_PROGRESS precondition -- that isn't a stranding,
   // so there is nothing to recover. The caller rethrows the original
   // provider/persistence error regardless of what happens here.
-  private async markSettlementAttemptFailed(contributionId: number): Promise<void> {
+  //
+  // The FAILED transition and its PROVIDER_ORDER_FAILED audit row commit
+  // together (OBS-11); providerOrderRef is non-null when the provider order
+  // was created but could not be persisted (OBS-06: the orphan id is kept).
+  private async markSettlementAttemptFailed(
+    contributionId: number,
+    auditContext: AuditContext,
+    providerOrderRef: string | null,
+  ): Promise<void> {
     try {
-      await this.transitionContribution(contributionId, 'FAILED');
+      let pending: PendingFinancialEvent | null = null;
+      await db.transaction().execute(async (trx) => {
+        pending = await this.transitionContribution(contributionId, 'FAILED', trx);
+        await this.audit.record(trx, {
+          eventType: 'PROVIDER_ORDER_FAILED',
+          contributionId,
+          actorType: auditContext.actorType,
+          provenance: auditContext.provenance,
+          providerOrderRef,
+          previousState: 'SETTLEMENT_IN_PROGRESS',
+          resultingState: 'FAILED',
+        });
+      });
+      if (pending) await this.publishPending([pending]);
     } catch {
       // Not stranded -- see method comment. Original error is rethrown by the caller.
     }
@@ -767,15 +875,32 @@ export class FinancialContributionService {
   private async persistActiveSettlementReference(
     contributionId: number,
     reference: string,
+    receiptReference: string,
+    auditContext: AuditContext,
   ): Promise<boolean> {
-    const result = await db
-      .updateTable('financial_contributions')
-      .set({ active_settlement_reference: reference })
-      .where('id', '=', contributionId)
-      .where('state', '=', 'SETTLEMENT_IN_PROGRESS')
-      .where('active_settlement_reference', 'is', null)
-      .executeTakeFirst();
-    return Number(result.numUpdatedRows ?? 0) === 1;
+    return db.transaction().execute(async (trx) => {
+      const result = await trx
+        .updateTable('financial_contributions')
+        .set({ active_settlement_reference: reference })
+        .where('id', '=', contributionId)
+        .where('state', '=', 'SETTLEMENT_IN_PROGRESS')
+        .where('active_settlement_reference', 'is', null)
+        .executeTakeFirst();
+      const persisted = Number(result.numUpdatedRows ?? 0) === 1;
+      if (persisted) {
+        await this.audit.record(trx, {
+          eventType: 'PROVIDER_ORDER_CREATED',
+          contributionId,
+          actorType: auditContext.actorType,
+          provenance: auditContext.provenance,
+          providerOrderRef: reference,
+          providerReceiptRef: receiptReference,
+          resultingState: 'SETTLEMENT_IN_PROGRESS',
+          metadata: { providerOrderOutcome: 'CREATED' },
+        });
+      }
+      return persisted;
+    });
   }
 
   // ── Retry settlement (Step 12: financial settlement retry) ─────────────────
@@ -802,7 +927,10 @@ export class FinancialContributionService {
   // retry() call already reopened it) returns successfully rather than
   // erroring -- the same idempotency style as startSettlement()'s
   // duplicate-start handling.
-  async retrySettlement(contributionId: number): Promise<{ contributionState: ContributionState }> {
+  async retrySettlement(
+    contributionId: number,
+    auditContext: AuditContext = SYSTEM_AUDIT,
+  ): Promise<{ contributionState: ContributionState }> {
     let pending: PendingFinancialEvent | null = null;
 
     const result = await db.transaction().execute(async (trx) => {
@@ -829,6 +957,15 @@ export class FinancialContributionService {
       }
 
       pending = await this.transitionContribution(contributionId, 'AWAITING_SETTLEMENT', trx);
+      await this.audit.record(trx, {
+        eventType: 'SETTLEMENT_RETRY_REQUESTED',
+        contributionId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        previousState: currentState,
+        resultingState: 'AWAITING_SETTLEMENT',
+        metadata: { isRetry: true },
+      });
       return { contributionState: 'AWAITING_SETTLEMENT' as ContributionState };
     });
 
@@ -864,6 +1001,7 @@ export class FinancialContributionService {
   async recordSettlementOutcome(
     contributionId: number,
     outcome: SettlementOutcomeInput,
+    auditContext: AuditContext = SYSTEM_AUDIT,
   ): Promise<{ transactionId: number; contributionState: ContributionState }> {
     // Collected in canonical order (PAY-001 Step 17 Part 13) as the
     // transaction below produces them; published strictly after COMMIT,
@@ -939,6 +1077,23 @@ export class FinancialContributionService {
         })
         .executeTakeFirstOrThrow();
       const transactionId = Number(inserted.insertId);
+
+      // OBS-07: read the order reference now -- the transition below clears
+      // active_settlement_reference in this same transaction.
+      const resultingState: ContributionState =
+        outcome.result === 'SUCCEEDED' ? 'COMPLETED' : outcome.result === 'FAILED' ? 'FAILED' : 'ABANDONED';
+      await this.audit.record(trx, {
+        eventType: 'SETTLEMENT_OUTCOME_RECORDED',
+        contributionId,
+        transactionId,
+        webhookInboxId: auditContext.webhookInboxId ?? null,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerOrderRef: contribution.active_settlement_reference ?? null,
+        providerPaymentRef: outcome.providerReference,
+        previousState: currentState,
+        resultingState,
+      });
 
       const businessModule = String(contribution.business_module);
       const businessReferenceId = Number(contribution.business_reference_id);

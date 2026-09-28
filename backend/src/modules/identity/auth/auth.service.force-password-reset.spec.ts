@@ -70,8 +70,12 @@ describe('AuthService.login() force_password_reset gate (F-034, real source insp
 
   it('throws before clearFailedAttempts/recordLoginAttempt(SUCCESS) -- no session side effects on a flagged account', () => {
     const flagCheckIndex = loginBody.indexOf('if (user.force_password_reset)');
-    const successIndex = loginBody.indexOf("recordLoginAttempt(user.id, identifier, device, 'SUCCESS')");
+    const successIndex = loginBody.indexOf("recordLoginAttempt(user.id, identifier, device, 'SUCCESS', sessionId)");
+    const sessionMintIndex = loginBody.indexOf('resolveSessionId()');
+    expect(successIndex).toBeGreaterThan(-1);
     expect(flagCheckIndex).toBeLessThan(successIndex);
+    // OBS-03: no session id is minted for a flagged account either.
+    expect(flagCheckIndex).toBeLessThan(sessionMintIndex);
   });
 });
 

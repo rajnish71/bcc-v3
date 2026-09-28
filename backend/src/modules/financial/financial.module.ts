@@ -11,12 +11,16 @@ import { RazorpayWebhookController } from './razorpay-webhook.controller';
 import { SETTLEMENT_PROVIDER } from './settlement-provider.interface';
 import { RazorpaySettlementProvider } from './razorpay-settlement.provider';
 import { RazorpayWebhookService } from './razorpay-webhook.service';
+import { FinancialAuditService } from './audit/financial-audit.service';
+import { FinancialTraceService } from './audit/financial-trace.service';
 
 @Module({
   imports: [AuthModule, RbacModule, StorageModule],
   controllers: [FinancialController, RazorpayWebhookController],
   providers: [
     FinancialEventBus,
+    FinancialAuditService,
+    FinancialTraceService,
     FinancialContributionService,
     SettlementEvidenceService,
     RazorpaySettlementProvider,

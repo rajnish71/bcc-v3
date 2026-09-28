@@ -23,8 +23,11 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { requestAuditContext } from '../../financial/audit/request-provenance.util';
 import { AccessTokenGuard } from '../../identity/auth/access-token.guard';
 import { CurrentUser } from '../../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../../identity/auth/token.util';
@@ -173,8 +176,15 @@ export class MembershipAdminController {
     @CurrentUser() actor: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: GrantComplimentaryMembershipDto,
+    @Req() req: FastifyRequest,
   ) {
-    return this.adminService.grantComplimentaryMembership(id, actor.sub, dto.months, dto.reason);
+    return this.adminService.grantComplimentaryMembership(
+      id,
+      actor.sub,
+      dto.months,
+      dto.reason,
+      requestAuditContext('ADMIN', req, actor),
+    );
   }
 
   // ── Class change (upgrade / downgrade) ───────────────────────────────────

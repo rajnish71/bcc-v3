@@ -50,6 +50,17 @@ export async function getStaticPaths() {
     }
   });
 
+  // The hardcoded slugs are a safety net for when the backend is unavailable.
+  // When the public list did load, build only publicly listed profiles (plus
+  // '_profile') so non-public members never get a static, sitemap-listed page.
+  if (photographers.length > 0) {
+    const publicUsernames = new Set(photographers.map((p: any) => p.username));
+    for (let i = paths.length - 1; i >= 0; i--) {
+      const u = paths[i].params.username;
+      if (u !== '_profile' && !publicUsernames.has(u)) paths.splice(i, 1);
+    }
+  }
+
   // Build-time profile detail for social/share metadata only. Reuses the same
   // GET /photographers/:username the client script calls; concurrency-limited
   // so the local backend is not flooded. Failures leave profile null, which
@@ -113,7 +124,8 @@ const ogImageUrl: string | undefined = displayName && profile?.avatarUrl
 const ogImageAlt = ogImageUrl ? `${displayName} — Bhopal Camera Club photographer` : undefined;
 
 // '_profile' is the Nginx fallback shell for unknown slugs — never indexable.
-const robots = username === '_profile' ? 'noindex, nofollow' : undefined;
+// Any page built without public profile data is the same generic shell.
+const robots = username === '_profile' || !displayName ? 'noindex, nofollow' : undefined;
 
 // Build-time profile text pre-rendered into the hero so crawlers see real
 // content before JS; the client script still overwrites the same elements.

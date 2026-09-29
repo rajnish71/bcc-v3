@@ -372,7 +372,7 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
           const month = d.toLocaleString('en-IN', { month: 'short' }).toUpperCase();
           const year = d.getFullYear();
           const monthText = `${month} ${year}`;
-          const time = '07:30 AM'; // default time for mornings in seed records
+          const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
 
           let tagClass = 'tag-default';
           let typeLabel = ev.category;
@@ -393,7 +393,7 @@ const specialProjects = Object.values(PROJECTS).slice(0, 3);
           }
 
           const isMembersOnly = ev.visibility === 'Members Only';
-          const isFree = !ev.registrationRequired;
+          const isFree = ev.isFree === true;
 
           return (
             <a href={`/activities/${ev.slug ?? ev.id}/`} class="event-row">

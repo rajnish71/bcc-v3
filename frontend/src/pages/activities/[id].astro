@@ -1,113 +1,98 @@
 ---
 /**
  * activities/[id].astro
- * Dynamic Route: /activities/[id]/ (or slug)
+ * Dynamic Route: /activities/[id]/ -- [id] is the Activity slug (or numeric id).
  *
- * Activity/Event detail view. Displays description, location pin, gear checklist,
- * price/eligibility, and registration state.
+ * Activity detail view backed by the live Activity API (GET /api/v1/events/:idOrSlug).
+ * Content is pre-rendered from the API at build time; the client script then
+ * refreshes live values (capacity, state) and drives registration.
  *
- * Uses a hybrid static pre-rendering model with client-side hydration to ensure
- * robust offline builds and dynamic live updates.
+ * Participation is by Registered User. Membership is never required by this
+ * page itself -- the API applies the Activity's own eligibility rules.
+ * KNOWN LIMITATION (Stage 2 follow-up): pages are statically generated, so an
+ * Activity published after a build has no detail route until the next deploy.
+ * There is no seed fallback; if the API is unreachable the page says so.
+ *
+ * Historical Activities show a date that is never more precise than what is
+ * known, plus their provenance note, and are not open for registration.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeader from '../../components/ui/SectionHeader.astro';
 import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
-  let events = [];
+  let items: any[] = [];
   try {
     const res = await fetch(`${BUILD_API_URL}/events?limit=100`);
     if (res.ok) {
       const json = await res.json();
-      events = json.data || [];
+      items = Array.isArray(json.items) ? json.items : [];
     }
-  } catch (e) {
-    // Silent warn, fallback to standard mock paths
+  } catch {
+    // Backend unreachable at build time: no Activity pages are generated.
   }
 
-  // Pre-defined static paths to ensure successful offline compilation
-  const paths = [
-    { params: { id: 'old-city-heritage-walk' } },
-    { params: { id: 'golden-hour-masterclass' } },
-    { params: { id: 'monsoon-reflections-exhibition' } },
-    { params: { id: 'van-vihar-birding-walk' } },
-    { params: { id: 'pachmarhi-weekend-photo-tour' } },
-    { params: { id: 'understanding-copyright' } }
-  ];
-
-  events.forEach((ev: any) => {
-    if (ev.slug && !paths.some(p => p.params.id === ev.slug)) {
-      paths.push({ params: { id: ev.slug } });
+  const paths: { params: { id: string }; props: { event: any } }[] = [];
+  for (const it of items) {
+    let event: any = null;
+    try {
+      const res = await fetch(`${BUILD_API_URL}/events/${it.slug}`);
+      if (res.ok) event = await res.json();
+    } catch {
+      // fall through with null; client script hydrates from the API
     }
-    if (ev.id && !paths.some(p => p.params.id === String(ev.id))) {
-      paths.push({ params: { id: String(ev.id) } });
-    }
-  });
-
+    if (it.slug) paths.push({ params: { id: it.slug }, props: { event } });
+    if (it.id) paths.push({ params: { id: String(it.id) }, props: { event } });
+  }
   return paths;
 }
 
-const { id } = Astro.params;
+const { event } = Astro.props as { event: any };
 
-// Fallback details used if backend is offline during client rendering
-const fallbackEvents: Record<string, any> = {
-  'old-city-heritage-walk': {
-    title: 'Old City Heritage Walk',
-    type: 'Photowalk',
-    date: '2026-07-14T06:00:00Z',
-    location: 'Chowk Bazaar, Bhopal',
-    description: 'Explore the labyrinthine lanes of old Bhopal at golden hour. Capture the striking architecture of Taj-ul-Masajid, street life, and the daily hustle of local markets.',
-    price: 0,
-    eligibility: 'Open to All',
-    spotsLeft: 18,
-    difficulty: 'Beginner-friendly',
-    gear: ['Camera with standard lens (24-70mm equivalent)', 'Comfortable walking shoes', 'Water bottle']
-  },
-  'golden-hour-masterclass': {
-    title: 'Golden Hour Masterclass',
-    type: 'Workshop',
-    date: '2026-07-19T16:00:00Z',
-    location: 'Partner Studio Space, MP Nagar',
-    description: 'A hands-on technical deep-dive into shooting during the golden hour. Covers advanced topics like highlight preservation, creative flare, silhouetting, and post-processing RAW images.',
-    price: 500,
-    eligibility: 'Members Only',
-    spotsLeft: 9,
-    difficulty: 'Intermediate',
-    gear: ['DSLR or Mirrorless camera', 'Prime lens (50mm or 85mm recommended)', 'Tripod', 'Laptop with Lightroom/Photoshop']
-  }
+const TYPE_LABEL: Record<string, string> = {
+  PHOTOWALK: 'Photowalk', BIRD_WALK: 'Bird Walk', WORKSHOP: 'Workshop', SEMINAR: 'Seminar',
+  TOUR: 'Tour', MEETUP: 'Meetup', TRAINING: 'Training', CONSERVATION: 'Conservation',
+  EXHIBITION_EVENT: 'Exhibition', GOVERNANCE: 'Governance', AWARD_CEREMONY: 'Award Ceremony',
+  ONLINE: 'Online', COLLABORATIVE: 'Collaborative', OTHER: 'Activity',
+};
+const DIFFICULTY_LABEL: Record<string, string> = {
+  ALL: 'All levels', BEGINNER: 'Beginner-friendly', INTERMEDIATE: 'Intermediate', ADVANCED: 'Advanced',
 };
 
-const defaultEvent = fallbackEvents[id] || {
-  title: 'Club Activity Detail',
-  type: 'Photowalk',
-  date: new Date().toISOString(),
-  location: 'Bhopal, Madhya Pradesh',
-  description: 'Join the Bhopal Camera Club for a guided photography session, mentored feedback, and community engagement.',
-  price: 0,
-  eligibility: 'Open to All',
-  spotsLeft: 10,
-  difficulty: 'All levels',
-  gear: ['Any camera or smartphone', 'Comfortable clothes']
-};
+// Public wording only: no constitutional class names (MEM-006).
+function eligibilityLabel(mode: string | undefined): string {
+  if (mode === 'OPEN') return 'Open to all registered users';
+  if (mode === 'INVITE_ONLY') return 'By invitation';
+  return 'Members only';
+}
+
+const title = event?.title ?? 'Activity';
+const typeLabel = event ? (TYPE_LABEL[event.event_type] ?? 'Activity') : 'Activity';
+const difficulty = event ? (DIFFICULTY_LABEL[event.difficulty_level] ?? '') : '';
+const location = event?.location_name ?? '';
+const description = event?.description ?? '';
+const feeText = !event ? '—' : event.fee_type === 'FREE' ? 'Free' : `₹${(event.base_fee_paise / 100).toLocaleString('en-IN')}`;
+const gear: string[] = (event?.what_to_bring ?? '').split(/[\n,]+/).map((x: string) => x.trim()).filter(Boolean);
+const isHistorical = Boolean(event?.is_historical);
 ---
 
 <BaseLayout
-  title={defaultEvent.title}
-  description={defaultEvent.description}
+  title={title}
+  description={description || `${typeLabel} — Bhopal Camera Club`}
 >
   <!-- Event Page Hero -->
   <div class="event-hero surface-white">
     <div class="container">
       <div class="event-meta-top">
-        <span id="event-tag" class="tag tag-photowalk">{defaultEvent.type}</span>
-        <span id="event-difficulty" class="event-difficulty-badge">{defaultEvent.difficulty}</span>
+        <span id="event-tag" class="tag tag-photowalk">{typeLabel}</span>
+        <span id="event-difficulty" class="event-difficulty-badge">{difficulty}</span>
       </div>
-      <h1 id="event-title" class="event-title">{defaultEvent.title}</h1>
+      <h1 id="event-title" class="event-title">{title}</h1>
       <p id="event-subtitle" class="event-subtitle-location">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.5"/>
         </svg>
-        {defaultEvent.location}
+        <span id="event-location">{location}</span>
       </p>
     </div>
     <div class="hairline"></div>
@@ -119,16 +104,20 @@ const defaultEvent = fallbackEvents[id] || {
     <main class="event-main">
       <SectionHeader eyebrow="Overview" title="Activity Details" align="left" />
       <div id="event-description" class="event-description-text">
-        <p>{defaultEvent.description}</p>
+        {description && <p>{description}</p>}
       </div>
 
-      <div class="event-gear-checklist">
+      <div class="event-gear-checklist" id="event-gear-block" hidden={gear.length === 0}>
         <h3 class="checklist-title">What to Bring</h3>
         <ul id="event-gear-list" class="checklist-items">
-          {defaultEvent.gear.map((item: string) => (
+          {gear.map((item: string) => (
             <li>{item}</li>
           ))}
         </ul>
+      </div>
+
+      <div class="event-provenance" id="event-provenance" hidden={!(isHistorical && event?.historical_source_note)}>
+        <strong>Source.</strong> <span id="event-provenance-text">{event?.historical_source_note ?? ''}</span>
       </div>
     </main>
 
@@ -136,33 +125,31 @@ const defaultEvent = fallbackEvents[id] || {
     <aside class="event-sidebar">
       <div class="sticky-sidebar">
         <div class="reg-card">
-          <div class="reg-card__header">
+          <div class="reg-card__header" id="reg-fee-block" hidden={isHistorical}>
             <span class="reg-card__label">Participation Fee</span>
-            <span id="event-price" class="reg-card__price">
-              {defaultEvent.price === 0 ? 'Free' : `₹${defaultEvent.price.toLocaleString('en-IN')}`}
-            </span>
+            <span id="event-price" class="reg-card__price">{feeText}</span>
           </div>
 
           <div class="reg-card__body">
             <div class="reg-card__spec">
-              <span class="spec-label">Eligibility</span>
-              <span id="event-eligibility" class="spec-value tag tag-exhibition">{defaultEvent.eligibility}</span>
-            </div>
-            <div class="reg-card__spec">
-              <span class="spec-label">Spots Remaining</span>
-              <span id="event-spots" class="spec-value">{defaultEvent.spotsLeft} spots available</span>
-            </div>
-            <div class="reg-card__spec">
-              <span class="spec-label">Schedule</span>
+              <span class="spec-label">When</span>
               <span id="event-time" class="spec-value">—</span>
+            </div>
+            <div class="reg-card__spec" id="spec-eligibility" hidden={isHistorical}>
+              <span class="spec-label">Eligibility</span>
+              <span id="event-eligibility" class="spec-value tag tag-exhibition">{event ? eligibilityLabel(event.eligibility_mode) : '—'}</span>
+            </div>
+            <div class="reg-card__spec" id="spec-spots" hidden={isHistorical}>
+              <span class="spec-label">Availability</span>
+              <span id="event-spots" class="spec-value">—</span>
             </div>
           </div>
 
           <div class="reg-card__footer">
             <button id="register-btn" class="btn btn-dark btn-md reg-btn" disabled>
-              Loading Registration...
+              Loading…
             </button>
-            <p id="reg-status-sub" class="reg-sub-label">Please sign in to register.</p>
+            <p id="reg-status-sub" class="reg-sub-label"></p>
           </div>
         </div>
       </div>
@@ -337,113 +324,184 @@ const defaultEvent = fallbackEvents[id] || {
     position: static;
   }
 }
+.event-provenance {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-4);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-400);
+  line-height: 1.6;
+}
+.event-provenance strong { color: var(--ink-600); font-weight: 600; }
+.reg-btn[hidden], .reg-card__spec[hidden] { display: none; }
 </style>
 
 <script>
-  // Dynamically load event content and registration status client-side
-  const eventId = window.location.pathname.split('/').filter(Boolean).pop();
+  // Refreshes live values from the Activity API and drives registration.
+  // Registration requires a signed-in Registered User; membership is enforced
+  // server-side only when the Activity's eligibility rules require it.
+  const slug = window.location.pathname.split('/').filter(Boolean).pop();
 
-  const TAG_CLASSES: Record<string, string> = {
-    photowalk:  'tag tag-photowalk',
-    workshop:   'tag tag-workshop',
-    exhibition: 'tag tag-exhibition',
+  const TYPE_LABEL: Record<string, string> = {
+    PHOTOWALK: 'Photowalk', BIRD_WALK: 'Bird Walk', WORKSHOP: 'Workshop', SEMINAR: 'Seminar',
+    TOUR: 'Tour', MEETUP: 'Meetup', TRAINING: 'Training', CONSERVATION: 'Conservation',
+    EXHIBITION_EVENT: 'Exhibition', GOVERNANCE: 'Governance', AWARD_CEREMONY: 'Award Ceremony',
+    ONLINE: 'Online', COLLABORATIVE: 'Collaborative', OTHER: 'Activity',
   };
 
-  async function loadEventDetails() {
-    if (!eventId) return;
-    try {
-      const res = await fetch(`/api/v1/events/${eventId}`);
-      if (!res.ok) throw new Error('API Error');
-      const { data } = await res.json();
-      if (data) {
-        // Update Title and subtitle
-        document.getElementById('event-title')!.textContent = data.title;
-        document.getElementById('event-subtitle')!.innerHTML = `
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="margin-right:4px;">
-            <circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.5"/>
-          </svg> ${data.location}
-        `;
+  const $ = (id: string) => document.getElementById(id)!;
+  const token = () => localStorage.getItem('bcc_token');
 
-        // Update Tag & Difficulty
-        const tagEl = document.getElementById('event-tag')!;
-        tagEl.textContent = data.type;
-        tagEl.className = TAG_CLASSES[data.type?.toLowerCase()] || 'tag tag-photowalk';
-        document.getElementById('event-difficulty')!.textContent = data.difficulty || 'All levels';
-
-        // Update Price & details
-        document.getElementById('event-price')!.textContent = data.price === 0 ? 'Free' : `₹${data.price.toLocaleString('en-IN')}`;
-        document.getElementById('event-eligibility')!.textContent = data.eligibility || 'Open to All';
-        document.getElementById('event-spots')!.textContent = `${data.spotsLeft ?? 10} spots available`;
-        document.getElementById('event-description')!.innerHTML = `<p>${data.description}</p>`;
-
-        // Update checklist
-        const gearList = document.getElementById('event-gear-list')!;
-        gearList.innerHTML = '';
-        const gearItems = Array.isArray(data.gear) ? data.gear : ['Any camera or smartphone', 'Comfortable clothes'];
-        gearItems.forEach((item: string) => {
-          const li = document.createElement('li');
-          li.textContent = item;
-          gearList.appendChild(li);
-        });
-
-        // Set date string
-        const formattedDate = new Date(data.date).toLocaleString('en-IN', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        document.getElementById('event-time')!.textContent = formattedDate;
-
-        updateRegisterButton(data);
-      }
-    } catch {
-      // Keep fallback static details but format time
-      const fallbackTime = new Date().toLocaleString('en-IN', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      document.getElementById('event-time')!.textContent = fallbackTime;
-      updateRegisterButton({ price: 0, eligibility: 'Open to All', spotsLeft: 10 });
-    }
+  function eligibilityLabel(mode: string): string {
+    if (mode === 'OPEN') return 'Open to all registered users';
+    if (mode === 'INVITE_ONLY') return 'By invitation';
+    return 'Members only';
   }
 
-  function updateRegisterButton(event: any) {
-    const regBtn = document.getElementById('register-btn') as HTMLButtonElement;
-    const subLabel = document.getElementById('reg-status-sub')!;
+  // Never more precise than what is recorded.
+  function whenText(ev: any): string {
+    if (ev.starts_at) {
+      return new Date(ev.starts_at).toLocaleString('en-IN', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+    }
+    let t = 'Date not recorded';
+    if (ev.historical_year != null) {
+      t = ev.historical_month != null
+        ? new Date(ev.historical_year, ev.historical_month - 1, 1).toLocaleString('en-IN', { month: 'long', year: 'numeric' })
+        : String(ev.historical_year);
+    }
+    return ev.historical_date_note ? `${ev.historical_date_note} (${t})` : t;
+  }
 
-    // Check if user is logged in
-    const isLoggedIn = document.cookie.includes('session'); 
+  function setRegistration(ev: any) {
+    const btn = $('register-btn') as HTMLButtonElement;
+    const sub = $('reg-status-sub');
+    const fresh = btn.cloneNode(false) as HTMLButtonElement; // drop stale listeners
+    btn.replaceWith(fresh);
+    const b = fresh;
+    b.id = 'register-btn';
+    b.className = 'btn btn-dark btn-md reg-btn';
+    sub.textContent = '';
 
-    if (event.spotsLeft <= 0) {
-      regBtn.textContent = 'Sold Out';
-      regBtn.disabled = true;
-      subLabel.textContent = 'No slots remaining for this activity.';
-    } else if (!isLoggedIn && event.eligibility !== 'Open to All') {
-      regBtn.textContent = 'Members Only';
-      regBtn.disabled = true;
-      subLabel.innerHTML = 'This event is restricted to members. Please <a href="/auth/signin/" style="color:var(--gold-600);text-decoration:underline;">sign in</a>.';
-    } else {
-      regBtn.textContent = event.price === 0 ? 'Register Now (Free)' : 'Pay & Register →';
-      regBtn.removeAttribute('disabled');
-      subLabel.textContent = 'One-click registration and payment via Razorpay.';
+    if (ev.is_historical || ev.state === 'COMPLETED') {
+      b.hidden = true;
+      sub.textContent = ev.is_historical ? 'This is a record of a past BCC activity.' : 'This activity has taken place.';
+      return;
+    }
+    if (ev.state === 'CANCELLED') {
+      b.textContent = 'Cancelled';
+      b.disabled = true;
+      sub.textContent = ev.cancellation_reason || 'This activity has been cancelled.';
+      return;
+    }
+    if (ev.fee_type !== 'FREE') {
+      b.textContent = 'Paid registration coming soon';
+      b.disabled = true;
+      sub.textContent = 'Online payment for activities is not available yet.';
+      return;
+    }
+    const full = ev.capacity != null && ev.registration_count >= ev.capacity;
+    if (full && !ev.waitlist_enabled) {
+      b.textContent = 'Full';
+      b.disabled = true;
+      sub.textContent = 'No places remaining for this activity.';
+      return;
+    }
 
-      regBtn.addEventListener('click', () => {
-        if (!isLoggedIn) {
+    b.disabled = false;
+    b.textContent = full ? 'Join waitlist' : 'Register';
+    if (!token()) {
+      sub.innerHTML = '';
+      const a = document.createElement('a');
+      a.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
+      a.textContent = 'Sign in';
+      a.style.cssText = 'color:var(--gold-600);text-decoration:underline;';
+      sub.append(a, ' with your BCC account to register.');
+    }
+
+    b.addEventListener('click', async () => {
+      if (!token()) {
+        window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
+      b.disabled = true;
+      try {
+        const res = await fetch(`/api/v1/events/${ev.id}/registrations`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token()}` },
+        });
+        const body = await res.json().catch(() => ({}));
+        if (res.status === 201) {
+          b.textContent = body.status === 'WAITLISTED' ? 'On the waitlist' : 'Registered';
+          sub.textContent = body.status === 'WAITLISTED'
+            ? `You are number ${body.waitlist_position} on the waitlist.`
+            : 'You are registered. A confirmation is on its way.';
+        } else if (res.status === 401) {
           window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
         } else {
-          // Trigger registration flow
-          window.location.href = `/hub/membership/apply/`;
+          sub.textContent = body.message || 'Registration could not be completed.';
+          b.disabled = res.status !== 409 ? false : true;
+          if (res.status === 409) b.textContent = 'Already registered';
         }
-      });
+      } catch {
+        sub.textContent = 'Network error. Please try again.';
+        b.disabled = false;
+      }
+    });
+  }
+
+  function render(ev: any) {
+    $('event-title').textContent = ev.title;
+    document.title = `${ev.title} | Bhopal Camera Club`;
+    $('event-location').textContent = ev.location_name ?? '';
+    $('event-tag').textContent = TYPE_LABEL[ev.event_type] ?? 'Activity';
+    $('event-time').textContent = whenText(ev);
+    $('event-description').replaceChildren();
+    if (ev.description) {
+      const p = document.createElement('p');
+      p.textContent = ev.description;
+      $('event-description').append(p);
+    }
+
+    const historical = Boolean(ev.is_historical);
+    $('reg-fee-block').hidden = historical;
+    $('spec-eligibility').hidden = historical;
+    $('spec-spots').hidden = historical;
+    $('event-price').textContent = ev.fee_type === 'FREE' ? 'Free' : `₹${(ev.base_fee_paise / 100).toLocaleString('en-IN')}`;
+    $('event-eligibility').textContent = eligibilityLabel(ev.eligibility_mode);
+    $('event-spots').textContent = ev.capacity == null
+      ? 'Open attendance'
+      : `${Math.max(ev.capacity - ev.registration_count, 0)} of ${ev.capacity} places left`;
+
+    const gear = String(ev.what_to_bring ?? '').split(/[\n,]+/).map((x: string) => x.trim()).filter(Boolean);
+    const gearList = $('event-gear-list');
+    gearList.replaceChildren(...gear.map((g: string) => {
+      const li = document.createElement('li');
+      li.textContent = g;
+      return li;
+    }));
+    $('event-gear-block').hidden = gear.length === 0;
+
+    $('event-provenance').hidden = !(historical && ev.historical_source_note);
+    $('event-provenance-text').textContent = ev.historical_source_note ?? '';
+
+    setRegistration(ev);
+  }
+
+  async function load() {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/events/${encodeURIComponent(slug)}`);
+      if (!res.ok) throw new Error(`Activities API ${res.status}`);
+      render(await res.json());
+    } catch {
+      const btn = $('register-btn') as HTMLButtonElement;
+      btn.textContent = 'Unavailable';
+      btn.disabled = true;
+      $('reg-status-sub').textContent = 'Live details are temporarily unavailable. Please try again shortly.';
     }
   }
 
-  loadEventDetails();
+  load();
 </script>

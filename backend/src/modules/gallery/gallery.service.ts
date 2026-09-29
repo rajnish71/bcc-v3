@@ -192,7 +192,9 @@ export class GalleryService {
       const event = await db
         .selectFrom('events')
         .where('id', '=', dto.source_event_id)
-        .where('state', '=', 'PUBLISHED')
+        // COMPLETED included: past and historical Activities end in COMPLETED
+        // and their documenting photographs must remain linkable.
+        .where('state', 'in', ['PUBLISHED', 'COMPLETED'])
         .select('id')
         .executeTakeFirst();
       if (!event) {

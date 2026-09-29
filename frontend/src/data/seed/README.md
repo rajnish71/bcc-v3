@@ -6,12 +6,9 @@ These collections are consumed **exclusively** by the Service Layer (`src/lib/se
 
 ## Contents
 
-- Exactly 35 records across 7 files:
-  - `activities.ts` (5 records)
-  - `photowalks.ts` (5 records)
+- Remaining seed collections (Activities were removed: `/activities` and the homepage use the live Activity API):
   - `workshops.ts` (5 records)
   - `contests.ts` (5 records)
-  - `featuredActivities.ts` (5 records)
   - `journal.ts` (5 records)
   - `photoSeries.ts` (5 records)
 - Centralized image path constants mapping locally under `public/images/seed/` in `images.ts`.

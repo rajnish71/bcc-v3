@@ -2,11 +2,12 @@
 //
 // Validates POST /api/v1/events (creates a new DRAFT event).
 // The service enforces business-complete state at publish() time;
-// creation only requires title, event_type, and starts_at.
+// creation requires title and event_type; starts_at is required unless the
+// Activity is historical.
 
 import {
   IsString, IsEnum, IsOptional, IsInt, IsBoolean,
-  IsNumber, IsArray, Min, MaxLength, IsDateString,
+  IsNumber, IsArray, Min, Max, MaxLength, IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { EventType, EligibilityMode } from '../../../database/db';
@@ -27,13 +28,46 @@ export class CreateEventDto {
   ])
   event_type: EventType;
 
+  // Marks an Activity that happened before the portal existed (or is being
+  // recorded after the fact). Historical Activities may omit starts_at.
   @IsOptional()
-  @IsEnum(['SINGLE','RECURRING'])
-  occurrence?: 'SINGLE' | 'RECURRING';
+  @IsBoolean()
+  is_historical?: boolean;
 
-  // ISO-8601 datetime string; toMysqlDatetime() converts before DB write
+  // ISO-8601 datetime string; toMysqlDatetime() converts before DB write.
+  // Required unless is_historical = true (enforced by EventsService).
+  @IsOptional()
   @IsDateString()
-  starts_at: string;
+  starts_at?: string;
+
+  // Historical date detail -- used when the exact date is unknown or partial.
+  // Never forces false precision: omit starts_at and give what is known.
+  @IsOptional()
+  @IsInt()
+  @Min(1800)
+  @Max(2100)
+  @Type(() => Number)
+  historical_year?: number;
+
+  // Requires historical_year. 1-12.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  @Type(() => Number)
+  historical_month?: number;
+
+  // Free-text date as remembered/recorded, e.g. "Winter 2019".
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  historical_date_note?: string;
+
+  // Provenance of the historical facts (who/what says this happened).
+  @IsOptional()
+  @IsString()
+  historical_source_note?: string;
+
 
   @IsOptional()
   @IsDateString()
@@ -74,8 +108,8 @@ export class CreateEventDto {
   waitlist_enabled?: boolean;
 
   @IsOptional()
-  @IsEnum(['FREE','FLAT','MEMBER_DISCOUNTED'])
-  fee_type?: 'FREE' | 'FLAT' | 'MEMBER_DISCOUNTED';
+  @IsEnum(['FREE','FLAT'])
+  fee_type?: 'FREE' | 'FLAT';
 
   // Stored in paise (1 INR = 100 paise). Must be 0 for FREE events.
   @IsOptional()
@@ -106,12 +140,6 @@ export class CreateEventDto {
   @IsOptional()
   @IsBoolean()
   weather_dependent?: boolean;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Type(() => Number)
-  volunteer_slots_needed?: number;
 
   @IsOptional()
   @IsString()

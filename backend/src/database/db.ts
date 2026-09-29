@@ -891,7 +891,8 @@ export interface EventsTable {
   description: string | null;
   event_type: EventType;
   occurrence: Generated<'SINGLE' | 'RECURRING'>;
-  starts_at: ColumnType<Date, string, string>;
+  // Nullable since migration 0102: NULL only for historical Activities with no exact date.
+  starts_at: ColumnType<Date | null, string | null, string | null>;
   ends_at: ColumnType<Date | null, string | null, string | null>;
   location_name: string | null;
   location_address: string | null;
@@ -912,6 +913,12 @@ export interface EventsTable {
   tags: string | null;
   banner_r2_key: string | null;
   state: Generated<EventState>;
+  // Historical Activity fields -- migration 0102.
+  is_historical: Generated<boolean>;
+  historical_year: number | null;
+  historical_month: number | null;
+  historical_date_note: string | null;
+  historical_source_note: string | null;
   cancellation_reason: string | null;
   created_by: number;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;

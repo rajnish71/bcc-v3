@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/ui/PageHero.astro';
-import { getUpcomingActivities, getPastActivities } from '../lib/services/activity.service';
 
 const TYPES = [
   { value: 'all',         label: 'All' },
@@ -11,9 +10,8 @@ const TYPES = [
   { value: 'meetup',      label: 'Meetups' },
 ];
 
-// Fetch activities through the Service Layer contract
-const upcomingActivities = await getUpcomingActivities();
-const pastActivities = await getPastActivities();
+// Activities are loaded at runtime from the live Activity API (GET /api/v1/events),
+// so newly published Activities appear without a rebuild.
 ---
 
 <BaseLayout
@@ -129,6 +127,7 @@ const pastActivities = await getPastActivities();
 }
 
 .acts-load-more { display: flex; justify-content: center; padding: var(--s-6) 0; }
+.acts-empty[hidden], .acts-load-more[hidden] { display: none; }
 .acts-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-4); padding: var(--s-12) 0; text-align: center; color: var(--ink-400); }
 
 @media (max-width: 768px) {
@@ -137,89 +136,129 @@ const pastActivities = await getPastActivities();
 }
 </style>
 
-<script define:vars={{ upcomingActivities, pastActivities }}>
-  const TAG_CLASSES = {
-    photowalk:  'tag tag-photowalk',
-    workshop:   'tag tag-workshop',
-    exhibition: 'tag tag-exhibition',
-  };
+<script>
+  // Live Activity data -- GET /api/v1/events?scope=upcoming|past
+  let upcomingActivities = [];
+  let pastActivities = [];
 
   let currentType = 'all';
 
-  function formatDate(dateStr) {
-    const d = new Date(dateStr);
-    return { 
-      day: d.getDate().toString().padStart(2, '0'), 
-      month: d.toLocaleString('en-IN', { month: 'short' }).toUpperCase() 
-    };
+  // event_type (API classification) -> filter chip key
+  const TYPE_TO_FILTER = {
+    PHOTOWALK: 'photowalk',
+    BIRD_WALK: 'photowalk',
+    WORKSHOP: 'workshop',
+    SEMINAR: 'workshop',
+    TRAINING: 'workshop',
+    EXHIBITION_EVENT: 'exhibition',
+    MEETUP: 'meetup',
+  };
+
+  function matchesType(ev) {
+    return currentType === 'all' || TYPE_TO_FILTER[ev.event_type] === currentType;
+  }
+
+  // Date block: exact date -> day + month; partial/unknown -> no false precision.
+  function dateBlock(ev) {
+    if (ev.starts_at) {
+      const d = new Date(ev.starts_at);
+      return {
+        day: d.getDate().toString().padStart(2, '0'),
+        month: d.toLocaleString('en-IN', { month: 'short' }).toUpperCase(),
+      };
+    }
+    if (ev.historical_year != null) {
+      const month = ev.historical_month != null
+        ? new Date(2000, ev.historical_month - 1, 1).toLocaleString('en-IN', { month: 'short' }).toUpperCase()
+        : '';
+      return { day: String(ev.historical_year), month };
+    }
+    return { day: '—', month: 'DATE UNKNOWN' };
+  }
+
+  function el(tag, className, text) {
+    const n = document.createElement(tag);
+    if (className) n.className = className;
+    if (text != null) n.textContent = text;
+    return n;
   }
 
   function createRow(ev) {
-    const a = document.createElement('a');
+    const a = el('a', 'act-row');
     a.href = `/activities/${ev.slug ?? ev.id}/`;
-    a.className = 'act-row';
-    const { day, month } = ev.startDate ? formatDate(ev.startDate) : { day: '—', month: '—' };
-    const tc = TAG_CLASSES[ev.category?.toLowerCase()] ?? '';
-    a.innerHTML = `
-      <div class="act-date"><div class="act-date__day">${day}</div><div class="act-date__month">${month}</div></div>
-      <div class="act-thumb">${ev.coverImage ? `<img src="${ev.coverImage}" alt="" loading="lazy" width="64" height="42" />` : ''}</div>
-      <div><div class="act-title">${ev.title ?? ''}</div><div class="act-meta">${[ev.duration, ev.venue].filter(Boolean).join(' · ')}</div></div>
-      <div class="act-action">Details →</div>
-    `;
+    const { day, month } = dateBlock(ev);
+
+    const date = el('div', 'act-date');
+    date.append(el('div', 'act-date__day', day), el('div', 'act-date__month', month));
+
+    const thumb = el('div', 'act-thumb');
+    if (ev.banner_url) {
+      const img = document.createElement('img');
+      img.src = ev.banner_url;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.width = 64;
+      img.height = 42;
+      thumb.append(img);
+    }
+
+    const info = el('div');
+    info.append(
+      el('div', 'act-title', ev.title ?? ''),
+      el('div', 'act-meta', [ev.historical_date_note, ev.location_name].filter(Boolean).join(' · ')),
+    );
+
+    a.append(date, thumb, info, el('div', 'act-action', 'Details →'));
     return a;
   }
 
-  function loadUpcoming() {
-    const list = document.getElementById('upcoming-list');
+  function renderList(listId, items, emptyMessage) {
+    const list = document.getElementById(listId);
     if (!list) return;
-    
-    let filtered = upcomingActivities;
-    if (currentType !== 'all') {
-      filtered = upcomingActivities.filter(ev => {
-        const cat = ev.category.toLowerCase();
-        if (currentType === 'photowalk') {
-          return cat.includes('walk') || cat.includes('birding') || cat.includes('street') || cat.includes('nature') || cat.includes('landscape');
-        }
-        return cat.includes(currentType);
-      });
-    }
-    
     list.innerHTML = '';
+    const filtered = items.filter(matchesType);
     if (!filtered.length) {
-      list.innerHTML = `<p style="padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);">No upcoming activities right now. Check back soon!</p>`;
+      const p = el('p', null, emptyMessage);
+      p.style.cssText = 'padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);';
+      list.append(p);
       return;
     }
     filtered.forEach(ev => list.appendChild(createRow(ev)));
   }
 
-  function loadPast(reset = true) {
-    const list = document.getElementById('past-list');
-    const loadWrap = document.getElementById('load-more-wrap');
-    if (!list) return;
-    
-    if (reset) {
-      list.innerHTML = '';
-    }
-    
-    let filtered = pastActivities;
-    if (currentType !== 'all') {
-      filtered = pastActivities.filter(ev => {
-        const cat = ev.category.toLowerCase();
-        if (currentType === 'photowalk') {
-          return cat.includes('walk') || cat.includes('birding') || cat.includes('street') || cat.includes('nature') || cat.includes('landscape');
+  function loadUpcoming() {
+    renderList('upcoming-list', upcomingActivities, 'No upcoming activities right now. Check back soon!');
+  }
+
+  function loadPast() {
+    renderList('past-list', pastActivities, 'No past activities match this filter.');
+    document.getElementById('load-more-wrap')?.setAttribute('hidden', '');
+  }
+
+  async function fetchScope(scope) {
+    const res = await fetch(`/api/v1/events?scope=${scope}&limit=100`);
+    if (!res.ok) throw new Error(`Activities API ${res.status}`);
+    const json = await res.json();
+    return Array.isArray(json.items) ? json.items : [];
+  }
+
+  async function loadData() {
+    try {
+      [upcomingActivities, pastActivities] = await Promise.all([fetchScope('upcoming'), fetchScope('past')]);
+    } catch (e) {
+      console.error('Failed to load activities', e);
+      for (const id of ['upcoming-list', 'past-list']) {
+        const list = document.getElementById(id);
+        if (list) {
+          list.innerHTML = '';
+          const p = el('p', null, 'Activities are temporarily unavailable. Please try again shortly.');
+          p.style.cssText = 'padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);';
+          list.append(p);
         }
-        return cat.includes(currentType);
-      });
+      }
+      return false;
     }
-    
-    list.innerHTML = '';
-    if (!filtered.length) {
-      list.innerHTML = `<p style="padding:var(--s-4) 0;color:var(--ink-400);font-size:var(--text-small);">No past activities match this filter.</p>`;
-      if (loadWrap) loadWrap.setAttribute('hidden', '');
-      return;
-    }
-    filtered.forEach(ev => list.appendChild(createRow(ev)));
-    if (loadWrap) loadWrap.setAttribute('hidden', '');
+    return true;
   }
 
   async function updateHeroForType(type) {
@@ -308,6 +347,7 @@ const pastActivities = await getPastActivities();
   });
 
   updateHeroForType(initialType);
-  loadUpcoming();
-  loadPast(true);
+  loadData().then(ok => {
+    if (ok) { loadUpcoming(); loadPast(); }
+  });
 </script>

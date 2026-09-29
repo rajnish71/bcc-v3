@@ -7,7 +7,7 @@
 
 import {
   IsString, IsEnum, IsOptional, IsInt, IsBoolean,
-  IsNumber, IsArray, Min, MaxLength, IsDateString,
+  IsNumber, IsArray, Min, Max, MaxLength, IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { EventType, EligibilityMode } from '../../../database/db';
@@ -31,12 +31,36 @@ export class UpdateEventDto {
   event_type?: EventType;
 
   @IsOptional()
-  @IsEnum(['SINGLE','RECURRING'])
-  occurrence?: 'SINGLE' | 'RECURRING';
-
-  @IsOptional()
   @IsDateString()
   starts_at?: string;
+
+  // Historical date detail -- used when the exact date is unknown or partial.
+  // Never forces false precision: omit starts_at and give what is known.
+  @IsOptional()
+  @IsInt()
+  @Min(1800)
+  @Max(2100)
+  @Type(() => Number)
+  historical_year?: number;
+
+  // Requires historical_year. 1-12.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  @Type(() => Number)
+  historical_month?: number;
+
+  // Free-text date as remembered/recorded, e.g. "Winter 2019".
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  historical_date_note?: string;
+
+  // Provenance of the historical facts (who/what says this happened).
+  @IsOptional()
+  @IsString()
+  historical_source_note?: string;
 
   @IsOptional()
   @IsDateString()
@@ -75,8 +99,8 @@ export class UpdateEventDto {
   waitlist_enabled?: boolean;
 
   @IsOptional()
-  @IsEnum(['FREE','FLAT','MEMBER_DISCOUNTED'])
-  fee_type?: 'FREE' | 'FLAT' | 'MEMBER_DISCOUNTED';
+  @IsEnum(['FREE','FLAT'])
+  fee_type?: 'FREE' | 'FLAT';
 
   @IsOptional()
   @IsInt()
@@ -105,12 +129,6 @@ export class UpdateEventDto {
   @IsOptional()
   @IsBoolean()
   weather_dependent?: boolean;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Type(() => Number)
-  volunteer_slots_needed?: number;
 
   @IsOptional()
   @IsString()

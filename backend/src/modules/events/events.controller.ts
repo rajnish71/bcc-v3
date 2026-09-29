@@ -1,29 +1,31 @@
 // backend/src/modules/events/events.controller.ts
 //
-// REST surface for Module 04 Events.
+// REST surface for Module 04 Activities (table `events`).
 //
-// PUBLIC endpoints (no auth guard):
-//   GET  /api/v1/events          list published events
-//   GET  /api/v1/events/:id      get event detail
+// PUBLIC endpoints (no auth guard). Only PUBLISHED / COMPLETED Activities are
+// listed; DRAFT is never public:
+//   GET  /api/v1/events?scope=upcoming|past   list public Activities
+//   GET  /api/v1/events/:idOrSlug             Activity detail (numeric id or slug)
 //
-// AUTHENTICATED (AccessTokenGuard only):
-//   POST /api/v1/events/:id/registrations          register for event
+// AUTHENTICATED (AccessTokenGuard only -- any Registered User):
+//   POST /api/v1/events/:id/registrations          participate (no body)
 //   DELETE /api/v1/events/:id/registrations/:regId cancel own registration
-//   POST /api/v1/events/:id/volunteer-slots/:slotId/apply  apply as volunteer
 //
 // COORDINATOR / ADMIN (AccessTokenGuard + RbacGuard):
-//   POST   /api/v1/events                                  create event
-//   PATCH  /api/v1/events/:id                              update event
-//   POST   /api/v1/events/:id/publish                      publish event
+//   POST   /api/v1/events                                  create Activity
+//   PATCH  /api/v1/events/:id                              update Activity
+//   POST   /api/v1/events/:id/publish                      publish (historical -> COMPLETED)
 //   POST   /api/v1/events/:id/complete                     mark completed
-//   POST   /api/v1/events/:id/cancel                       cancel event
+//   POST   /api/v1/events/:id/cancel                       cancel Activity
+//   GET    /api/v1/events/admin/all                        list any state
+//   GET    /api/v1/events/admin/:id                        detail in any state
 //   GET    /api/v1/events/:id/registrations                list registrations
-//   POST   /api/v1/events/:id/registrations/:regId/checkin check in
-//   DELETE /api/v1/events/:id/registrations/:regId (admin) cancel any reg
+//   POST   /api/v1/events/:id/registrations/:regId/checkin mark attended
+//   DELETE /api/v1/events/:id/registrations/:regId/admin   cancel any registration
 //   POST   /api/v1/events/:id/invites                      add to invite list
-//   POST   /api/v1/events/:id/volunteer-slots              create slot
-//   GET    /api/v1/events/:id/volunteer-slots              list slots
-//   PATCH  /api/v1/events/:id/volunteer-slots/:slotId/volunteers/:volId update volunteer
+//
+// The volunteer endpoints were removed in the Stage 1 reconciliation (out of
+// Module 04 scope); the event_volunteer* tables are retained untouched.
 
 import {
   Body,
@@ -45,10 +47,7 @@ import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import {
-  RegisterEventDto,
   CancelRegistrationDto,
-  CreateVolunteerSlotDto,
-  UpdateVolunteerStatusDto,
   CancelEventDto,
   AddInviteDto,
 } from './dto/register-event.dto';
@@ -69,22 +68,19 @@ export class EventsController {
     @Query('state') state?: string,
     @Query('event_type') event_type?: string,
     @Query('upcoming') upcoming?: string,
+    @Query('scope') scope?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
-    // Unauthenticated callers only see PUBLISHED events
     return this.events.listEvents({
-      state: state ?? 'PUBLISHED',
+      public: true,
+      state,
       event_type,
       upcoming_only: upcoming === 'true',
+      scope: scope === 'upcoming' || scope === 'past' ? scope : undefined,
       limit: limit ? parseInt(limit, 10) : 20,
       offset: offset ? parseInt(offset, 10) : 0,
     });
-  }
-
-  @Get(':id')
-  async getEvent(@Param('id', ParseIntPipe) id: number) {
-    return this.events.getEvent(id);
   }
 
   // =========================================================================
@@ -155,19 +151,33 @@ export class EventsController {
     });
   }
 
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('event.view_registrations')
+  @Get('admin/:id')
+  async getEventAdmin(@Param('id', ParseIntPipe) id: number) {
+    return this.events.getEvent(id);
+  }
+
+  // Public detail. Declared after the static admin/* routes.
+  @Get(':idOrSlug')
+  async getEvent(@Param('idOrSlug') idOrSlug: string) {
+    return this.events.getPublicEvent(idOrSlug);
+  }
+
   // =========================================================================
-  // REGISTRATION -- member self-service
+  // REGISTRATION -- Registered User self-service
   // =========================================================================
 
+  // Any Registered User may participate; membership is consulted only when
+  // the Activity's eligibility rules require it.
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.CREATED)
   @Post(':id/registrations')
   async register(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: RegisterEventDto,
     @Req() req: any,
   ) {
-    return this.events.registerForEvent(id, dto, req.user.sub);
+    return this.events.registerForEvent(id, req.user.sub);
   }
 
   @UseGuards(AccessTokenGuard)
@@ -242,50 +252,5 @@ export class EventsController {
     @Req() req: any,
   ) {
     return this.events.addToInviteList(id, dto, req.user.sub);
-  }
-
-  // =========================================================================
-  // VOLUNTEER SLOTS
-  // =========================================================================
-
-  @UseGuards(AccessTokenGuard, RbacGuard)
-  @RequirePermissions('event.volunteer.manage')
-  @Post(':id/volunteer-slots')
-  async createSlot(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CreateVolunteerSlotDto,
-    @Req() req: any,
-  ) {
-    return this.events.createVolunteerSlot(id, dto, req.user.sub);
-  }
-
-  @Get(':id/volunteer-slots')
-  async listSlots(@Param('id', ParseIntPipe) id: number) {
-    return this.events.listVolunteerSlots(id);
-  }
-
-  // Spec 10.1: any Registered User can volunteer
-  @UseGuards(AccessTokenGuard)
-  @HttpCode(HttpStatus.CREATED)
-  @Post(':id/volunteer-slots/:slotId/apply')
-  async applyAsVolunteer(
-    @Param('id', ParseIntPipe) eventId: number,
-    @Param('slotId', ParseIntPipe) slotId: number,
-    @Req() req: any,
-  ) {
-    return this.events.applyAsVolunteer(eventId, slotId, req.user.sub);
-  }
-
-  @UseGuards(AccessTokenGuard, RbacGuard)
-  @RequirePermissions('event.volunteer.manage')
-  @HttpCode(HttpStatus.OK)
-  @Patch(':id/volunteer-slots/:slotId/volunteers/:volId')
-  async updateVolunteer(
-    @Param('id', ParseIntPipe) eventId: number,
-    @Param('volId', ParseIntPipe) volId: number,
-    @Body() dto: UpdateVolunteerStatusDto,
-    @Req() req: any,
-  ) {
-    return this.events.updateVolunteerStatus(eventId, volId, dto, req.user.sub);
   }
 }

@@ -21,6 +21,8 @@ export interface PublicMembershipClass {
   code: string;
   kind: 'INDIVIDUAL' | 'GROUP';
   portfolioEnabled: boolean;
+  /** MEM-008: null = full public portfolio; a number = maximum public photos. */
+  portfolioMaxPhotos?: number | null;
   publicGalleryEnabled: boolean;
   featuredInDirectory: boolean;
   pvcCard: boolean;
@@ -75,6 +77,20 @@ function boolRow(label: string, field: keyof PublicMembershipClass): Row {
   };
 }
 
+// MEM-008: portfolio row shows the actual allowance, not just yes/no.
+function portfolioRow(label: string): Row {
+  return {
+    label,
+    field: 'portfolioMaxPhotos',
+    cells: tiers.map((t) => {
+      if (!t.data.portfolioEnabled) return no(label);
+      const max = t.data.portfolioMaxPhotos;
+      if (max === null || max === undefined) return { v: 'Full', cls: 'mbm__v--yes', aria: `${label}: full` };
+      return { v: `Up to ${max} photos`, cls: 'mbm__v--yes', aria: `${label}: up to ${max} photos` };
+    }),
+  };
+}
+
 function pctRow(label: string, field: 'discountPct' | 'tourDiscountPct'): Row {
   return { label, field, cells: tiers.map((t) => pct(label, t.data[field])) };
 }
@@ -83,7 +99,7 @@ const groups: Array<{ title: string; rows: Row[] }> = [
   {
     title: 'Public presence',
     rows: [
-      boolRow('Public portfolio', 'portfolioEnabled'),
+      portfolioRow('Public portfolio'),
       boolRow('Public gallery', 'publicGalleryEnabled'),
       boolRow('Photographer directory', 'featuredInDirectory'),
     ],
@@ -164,6 +180,7 @@ const groups: Array<{ title: string; rows: Row[] }> = [
     </div>
     <div class="mbm__footnote">
       All six memberships include priority event registration and a digital membership card.
+      Basic and Student portfolios show the photographs the member selects, up to the limit shown; the rest of the library stays private to the member.
       <span class="mbm__scroll-hint">Scroll for more →</span>
     </div>
   </div>

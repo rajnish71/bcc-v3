@@ -493,6 +493,31 @@ Architecture authority: `ProjectDocs/Architecture/Identity_Architecture_Freeze_v
 
 HUB-ARCH-001 updated: Amendment 001 (FD-016, FD-017, FD-018) records HubLayout as Identity Guard.
 
+### MEM-008 Portfolio Cap & Public Exposure Enforcement
+
+**Status:** 🚧 PENDING DEPLOYMENT
+
+Owner-authorized MEM-008 amendment establishes:
+
+- Basic Member: maximum 5 publicly visible portfolio photos.
+- Student Member: maximum 10 publicly visible portfolio photos.
+- Basic and Student members do not receive Public Gallery access.
+
+Implementation:
+
+- Public exposure is enforced through the entitlement/policy layer.
+- Portfolio selection is explicit through `photos.portfolio_selected`.
+- The system never automatically selects, promotes, orders, or trims photos.
+- If stored selection exceeds the applicable cap, no selected photos are publicly exposed until the member reconciles the selection to the cap.
+- Four owner-authorized individual overrides provide unlimited portfolio + public gallery while retaining BASIC_MEMBER class.
+- Pranil Kishnani has a temporary individual portfolio restriction pending separate minor-policy decision.
+- Migration 0103 establishes the applicable individual overrides/restriction.
+- Membership comparison UI is reconciled to the amended MEM-008 policy.
+
+Status: Pending production deployment.
+
+---
+
 ---
 
 ## FEEDBACK STAGE 5 — P0 Release Blockers

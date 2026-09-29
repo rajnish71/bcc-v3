@@ -227,6 +227,14 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       <p class="insp-toggle-hint">The photograph stays in your library and can still be used as a Hero image — it just won’t appear in your public portfolio.</p>
     </div>
 
+    <div class="insp-field" id="insp-slot-field" style="display:none">
+      <label class="insp-toggle-row" for="insp-slot-select">
+        <input type="checkbox" id="insp-slot-select" class="insp-toggle-check" />
+        <span class="insp-toggle-label">Show in my public portfolio</span>
+      </label>
+      <p class="insp-toggle-hint" id="insp-slot-hint"></p>
+    </div>
+
     <div class="insp-focal-row">
       <div>
         <div class="insp-label">Focal Point</div>
@@ -998,7 +1006,23 @@ interface Exif {
   aperture?: string | null; shutter_speed?: string | null;
   iso?: number | null; taken_at?: string | null;
 }
+/* MEM-008: capped plans (Basic 5 / Student 10) choose which photographs
+   occupy their public portfolio slots. max_photos === null means unlimited
+   (no selection needed). */
+interface PortfolioSlots { portfolio_enabled: boolean; max_photos: number | null; selected_count: number; remaining: number | null; over_cap?: boolean; }
+let portfolioSlots: PortfolioSlots | null = null;
+async function loadPortfolioSlots() {
+  try {
+    const r = await apiFetch(`${API}/gallery/portfolio/slots`);
+    portfolioSlots = r.ok ? await r.json() as PortfolioSlots : null;
+  } catch { portfolioSlots = null; }
+}
+function slotsApply(): boolean {
+  return !!portfolioSlots && portfolioSlots.portfolio_enabled && portfolioSlots.max_photos !== null;
+}
+
 interface Photo {
+  portfolio_selected?: boolean;
   uuid: string;
   title?: string | null;
   caption?: string | null;
@@ -1055,6 +1079,7 @@ async function loadPhotos() {
   if (!res.ok) return;
   const data = await res.json() as { photos?: Photo[] };
   allPhotos = data.photos ?? [];
+  await loadPortfolioSlots();
 
   // Update page header count
   updateHeaderCount();
@@ -1285,6 +1310,19 @@ function populateInspector(p: Photo) {
   // show_in_portfolio: true by default; checkbox is CHECKED when hidden (inverted).
   (document.getElementById('insp-hide-portfolio') as HTMLInputElement).checked = !(p as any).show_in_portfolio;
 
+  const slotField = document.getElementById('insp-slot-field') as HTMLElement;
+  slotField.style.display = slotsApply() ? '' : 'none';
+  (document.getElementById('insp-slot-select') as HTMLInputElement).checked = !!p.portfolio_selected;
+  if (slotsApply() && portfolioSlots) {
+    document.getElementById('insp-slot-hint')!.textContent =
+      `Your membership shows up to ${portfolioSlots.max_photos} photographs publicly. ` +
+      `You are using ${portfolioSlots.selected_count} of ${portfolioSlots.max_photos}. ` +
+      'Your other photographs stay safely in your library.' +
+      (portfolioSlots.over_cap
+        ? ` You have selected more than your current limit, so none are shown publicly until you deselect down to ${portfolioSlots.max_photos}. We never choose for you.`
+        : '');
+  }
+
   const exifEl = document.getElementById('insp-exif')!;
   const exif = p.exif;
   if (exif) {
@@ -1467,11 +1505,14 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
   // show_in_portfolio: checkbox is CHECKED when hidden, so invert.
   const hidePortfolio    = (document.getElementById('insp-hide-portfolio') as HTMLInputElement).checked;
   const show_in_portfolio = !hidePortfolio;
+  const portfolio_selected = (document.getElementById('insp-slot-select') as HTMLInputElement).checked;
+  const patch: Record<string, unknown> = { title, description, exhibition_label, visibility, show_in_portfolio };
+  if (slotsApply()) patch.portfolio_selected = portfolio_selected;
 
   const res = await apiFetch(`${API}/gallery/photos/${inspectorUuid}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description, exhibition_label, visibility, show_in_portfolio }),
+    body: JSON.stringify(patch),
   });
 
   saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
@@ -1483,6 +1524,7 @@ document.getElementById('insp-save-btn')?.addEventListener('click', async () => 
     const updated = await res.json() as Photo;
     const idx = allPhotos.findIndex(p => p.uuid === inspectorUuid);
     if (idx >= 0) allPhotos[idx] = { ...allPhotos[idx], ...updated, title, description, exhibition_label, visibility, show_in_portfolio } as any;
+    await loadPortfolioSlots();
     closeInspector();
     applyFilters();
   } else {

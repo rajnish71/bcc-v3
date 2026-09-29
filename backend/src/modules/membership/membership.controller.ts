@@ -28,6 +28,7 @@ import { RejectMembershipDto } from './dto/reject-membership.dto';
 import { SuspendMembershipDto } from './dto/suspend-membership.dto';
 import { TerminateMembershipDto } from './dto/terminate-membership.dto';
 import { SELF_SERVICE_CLASS_CODES } from './dto/submit-membership-form.dto';
+import { parseMaxPhotos } from '../gallery/portfolio-exposure.policy';
 
 @Controller('api/v1/membership')
 export class MembershipController {
@@ -233,6 +234,7 @@ export class MembershipController {
       'discount_pct',
       'tour_discount_pct',
       'portfolio_enabled',
+      'portfolio_max_photos',
       'public_gallery_enabled',
       'featured_in_directory',
       'priority_registration',
@@ -267,6 +269,8 @@ export class MembershipController {
         discountPct: Number(ent.discount_pct ?? '0'),
         tourDiscountPct: Number(ent.tour_discount_pct ?? '0'),
         portfolioEnabled: ent.portfolio_enabled === 'true',
+        // MEM-008: null = full/unlimited public portfolio; a number = cap.
+        portfolioMaxPhotos: parseMaxPhotos(ent.portfolio_max_photos),
         publicGalleryEnabled: ent.public_gallery_enabled === 'true',
         featuredInDirectory: ent.featured_in_directory === 'true',
         priorityRegistration: ent.priority_registration === 'true',
@@ -290,6 +294,7 @@ export class MembershipController {
       'discount_pct',
       'tour_discount_pct',
       'portfolio_enabled',
+      'portfolio_max_photos',
       'public_gallery_enabled',
       'featured_in_directory',
       'priority_registration',
@@ -326,6 +331,8 @@ export class MembershipController {
         discountPct: Number(ent.discount_pct ?? '0'),
         tourDiscountPct: Number(ent.tour_discount_pct ?? '0'),
         portfolioEnabled: ent.portfolio_enabled === 'true',
+        // MEM-008: null = full/unlimited public portfolio; a number = cap.
+        portfolioMaxPhotos: parseMaxPhotos(ent.portfolio_max_photos),
         publicGalleryEnabled: ent.public_gallery_enabled === 'true',
         featuredInDirectory: ent.featured_in_directory === 'true',
         priorityRegistration: ent.priority_registration === 'true',

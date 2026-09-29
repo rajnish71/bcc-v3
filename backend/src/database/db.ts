@@ -1024,6 +1024,11 @@ export interface PhotosTable {
   // When false, photo is excluded from the photographer portfolio listing only.
   // Has no effect on hero eligibility or any admin tool.
   show_in_portfolio:  Generated<boolean>;
+  // portfolio_selected — added by migration 0103 (MEM-008 portfolio cap).
+  // Member-chosen slot in a CAPPED public portfolio (Basic 5 / Student 10).
+  // Default 0: uploads never consume a slot. Ignored for uncapped members.
+  portfolio_selected:     Generated<boolean>;
+  portfolio_selected_at:  ColumnType<Date | null, string | null, string | null>;
   source_event_id:    Nullable<number>;
   view_count:         Generated<number>;
   created_at:         Generated<ColumnType<Date, string | undefined, never>>;

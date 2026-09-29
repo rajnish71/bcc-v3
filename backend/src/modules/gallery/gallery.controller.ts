@@ -249,13 +249,15 @@ export class GalleryController {
   @Get('photos/:uuid/comments')
   async listComments(
     @Param('uuid') uuid: string,
+    @Req() req: any,
     @Query('limit')  limit?: string,
     @Query('offset') offset?: string,
   ) {
+    const requestingUserId: number | null = req.user?.sub ?? null;
     return this.gallery.listComments(uuid, {
       limit:  limit  ? parseInt(limit, 10)  : 20,
       offset: offset ? parseInt(offset, 10) : 0,
-    });
+    }, requestingUserId);
   }
 
   /** Post a comment — authenticated. */
@@ -340,6 +342,16 @@ export class GalleryController {
       limit:  limit  ? parseInt(limit, 10)  : 20,
       offset: offset ? parseInt(offset, 10) : 0,
     });
+  }
+
+  /**
+   * MEM-008: the caller's public-portfolio slot allowance
+   * (max_photos null = unlimited) and how many slots are in use.
+   */
+  @UseGuards(AccessTokenGuard)
+  @Get('portfolio/slots')
+  async portfolioSlots(@Req() req: any) {
+    return this.gallery.getPortfolioSlots(req.user.sub);
   }
 
   /** Update photo metadata (title, caption, genre, visibility). */

@@ -21,6 +21,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../../../database/db';
 import { logMembershipAudit } from '../shared/membership-audit.util';
+import { applyEntitlementLayers } from './entitlement-layers';
 
 export interface ResolvedEntitlements {
   membershipId: number;
@@ -130,6 +131,79 @@ export class EntitlementService {
     }
 
     return { membershipId, resolved, provenance };
+  }
+
+  // Batch form of resolve() for many memberships at once, restricted to a
+  // set of keys. Same three layers, same order (applyEntitlementLayers), but
+  // 5 queries total instead of 3 per membership -- used by public-exposure
+  // filtering, which must evaluate every photographer per request.
+  // Returns flat resolved maps only (no provenance).
+  async resolveMany(membershipIds: number[], keys: string[]): Promise<Map<number, Record<string, string>>> {
+    const out = new Map<number, Record<string, string>>();
+    if (membershipIds.length === 0) return out;
+
+    const memberships = await db
+      .selectFrom('memberships')
+      .select(['id', 'owner_type', 'membership_class_id', 'group_membership_type_id'])
+      .where('id', 'in', membershipIds)
+      .execute();
+
+    const classIds = [...new Set(memberships.filter((m) => !(m.owner_type === 'GROUP' && m.group_membership_type_id !== null) && m.membership_class_id !== null).map((m) => m.membership_class_id as number))];
+    const groupIds = [...new Set(memberships.filter((m) => m.owner_type === 'GROUP' && m.group_membership_type_id !== null).map((m) => m.group_membership_type_id as number))];
+
+    const [classRows, groupRows, modifierRows, overrideRows] = await Promise.all([
+      classIds.length
+        ? db.selectFrom('class_entitlements')
+            .select(['membership_class_id', 'entitlement_key', 'entitlement_value'])
+            .where('membership_class_id', 'in', classIds)
+            .where('entitlement_key', 'in', keys)
+            .execute()
+        : Promise.resolve([]),
+      groupIds.length
+        ? db.selectFrom('group_type_entitlements')
+            .select(['group_membership_type_id', 'entitlement_key', 'entitlement_value'])
+            .where('group_membership_type_id', 'in', groupIds)
+            .where('entitlement_key', 'in', keys)
+            .execute()
+        : Promise.resolve([]),
+      db.selectFrom('member_recognitions as mr')
+        .innerJoin('recognition_modifiers as rm', 'rm.recognition_code', 'mr.recognition_code')
+        .select(['mr.membership_id', 'rm.entitlement_key', 'rm.modifier_value'])
+        .where('mr.membership_id', 'in', membershipIds)
+        .where('mr.status', '=', 'ACTIVE')
+        .where('rm.entitlement_key', 'in', keys)
+        .execute(),
+      db.selectFrom('individual_overrides')
+        .select(['membership_id', 'entitlement_key', 'override_type', 'override_value', 'expires_at'])
+        .where('membership_id', 'in', membershipIds)
+        .where('entitlement_key', 'in', keys)
+        .execute(),
+    ]);
+
+    const now = new Date();
+    for (const m of memberships) {
+      const isGroup = m.owner_type === 'GROUP' && m.group_membership_type_id !== null;
+      const base = isGroup
+        ? groupRows
+            .filter((r) => r.group_membership_type_id === m.group_membership_type_id)
+            .map((r) => ({ key: r.entitlement_key, value: r.entitlement_value }))
+        : classRows
+            .filter((r) => r.membership_class_id === m.membership_class_id)
+            .map((r) => ({ key: r.entitlement_key, value: r.entitlement_value }));
+      const mods = modifierRows
+        .filter((r) => Number(r.membership_id) === Number(m.id))
+        .map((r) => ({ key: r.entitlement_key, value: r.modifier_value }));
+      const overrides = overrideRows
+        .filter((r) => Number(r.membership_id) === Number(m.id))
+        .map((r) => ({
+          key: r.entitlement_key,
+          type: r.override_type as 'GRANT' | 'REVOKE',
+          value: r.override_value,
+          expiresAt: r.expires_at ? new Date(r.expires_at as unknown as string) : null,
+        }));
+      out.set(Number(m.id), applyEntitlementLayers(base, mods, overrides, now));
+    }
+    return out;
   }
 
   // Convenience for other services (renewal engine uses this for

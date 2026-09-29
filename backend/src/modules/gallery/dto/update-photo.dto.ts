@@ -14,6 +14,10 @@ export interface UpdatePhotoDto {
   /** When false, photo is excluded from the photographer portfolio listing only.
    *  Has no effect on visibility gating, Hero eligibility, or any admin tool. */
   show_in_portfolio?:   boolean;
+  /** MEM-008: occupy (true) / release (false) one of the member's public
+   *  portfolio slots. Rejected with 409 when a capped plan (Basic 5 /
+   *  Student 10) has no free slot. Releasing never promotes another photo. */
+  portfolio_selected?:  boolean;
   /** Link to (number) or unlink from (null) an Activity. Independent of
    *  show_in_portfolio. */
   source_event_id?:     number | null;

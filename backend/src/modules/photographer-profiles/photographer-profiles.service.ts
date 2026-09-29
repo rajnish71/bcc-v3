@@ -23,6 +23,10 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../../database/db';
+import { PortfolioExposureService, exposedPhotoPredicate } from '../gallery/portfolio-exposure.service';
+import type { ExposureSet } from '../gallery/portfolio-exposure.policy';
+
+const P_COLS = { owner: 'photos.owner_user_id', selected: 'photos.portfolio_selected', id: 'photos.id' };
 
 // ---------------------------------------------------------------------------
 // Class token map -- returned in API response as `memberClass`
@@ -70,15 +74,21 @@ function buildDisplayName(fullName: string | null, nameTitle: string | null): st
   return name;
 }
 
-async function batchPhotoCounts(userIds: number[]): Promise<Record<number, number>> {
+async function batchPhotoCounts(userIds: number[], set: ExposureSet): Promise<Record<number, number>> {
   if (userIds.length === 0) return {};
 
+  // MEM-008: PUBLIC photographs count only while their owner's portfolio
+  // entitlement / cap exposes them; MEMBERS_ONLY keep their existing rule.
   const rows = await db
     .selectFrom('photos')
     .where('owner_user_id', 'in', userIds)
     .where('status', '=', 'ACTIVE')
     .where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
     .where('show_in_portfolio', '=', true as any)
+    .where(eb => eb.or([
+      eb('visibility', '!=', 'PUBLIC'),
+      exposedPhotoPredicate(eb, { owner: 'owner_user_id', selected: 'portfolio_selected', id: 'id' }, set),
+    ]))
     .groupBy('owner_user_id')
     .select(['owner_user_id'])
     .select(eb => eb.fn.count<number>('id').as('cnt'))
@@ -97,6 +107,7 @@ async function batchPhotoCounts(userIds: number[]): Promise<Record<number, numbe
 
 @Injectable()
 export class PhotographerProfilesService {
+  constructor(private readonly exposure: PortfolioExposureService) {}
 
   // =========================================================================
   // List photographers
@@ -109,6 +120,9 @@ export class PhotographerProfilesService {
     genre?: string;
     hasApprovedPhotos?: boolean;
   }) {
+    // MEM-008: PUBLIC photographs are exposed per owner entitlement + cap.
+    const exposureSet = await this.exposure.getExposureSet('PORTFOLIO');
+
     // ------------------------------------------------------------------
     // Total count
     // ------------------------------------------------------------------
@@ -130,6 +144,7 @@ export class PhotographerProfilesService {
             .where('photos.status', '=', 'ACTIVE')
             .where('photos.visibility', '=', 'PUBLIC')
             .where('photos.show_in_portfolio', '=', true as any)
+            .where(eb2 => exposedPhotoPredicate(eb2, P_COLS, exposureSet))
             .select('photos.id')
         )
       );
@@ -176,6 +191,7 @@ export class PhotographerProfilesService {
             .where('photos.status', '=', 'ACTIVE')
             .where('photos.visibility', '=', 'PUBLIC')
             .where('photos.show_in_portfolio', '=', true as any)
+            .where(eb2 => exposedPhotoPredicate(eb2, P_COLS, exposureSet))
             .select('photos.id')
         )
       );
@@ -211,7 +227,7 @@ export class PhotographerProfilesService {
     // Photo counts (batched)
     // ------------------------------------------------------------------
     const userIds  = rows.map(r => r.id);
-    const photoMap = await batchPhotoCounts(userIds);
+    const photoMap = await batchPhotoCounts(userIds, exposureSet);
 
     // ------------------------------------------------------------------
     // Optional genre filter
@@ -229,6 +245,10 @@ export class PhotographerProfilesService {
         .where('pt.category', '=', 'GENRE')
         .where('photos.visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
         .where('photos.show_in_portfolio', '=', true as any)
+        .where(eb => eb.or([
+          eb('photos.visibility', '!=', 'PUBLIC'),
+          exposedPhotoPredicate(eb, P_COLS, exposureSet),
+        ]))
         .select('photos.owner_user_id')
         .execute();
       genreSet = new Set(genreRows.map(r => r.owner_user_id as number));
@@ -362,13 +382,18 @@ export class PhotographerProfilesService {
       .orderBy('sort_order', 'asc')
       .execute();
 
-    // Photo count
+    // Photo count (MEM-008: PUBLIC photographs only while exposed)
+    const ownSet = await this.exposure.getExposureSet('PORTFOLIO', [user.id]);
     const countRow = await db
       .selectFrom('photos')
       .where('owner_user_id', '=', user.id)
       .where('status', '=', 'ACTIVE')
       .where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
       .where('show_in_portfolio', '=', true as any)
+      .where(eb => eb.or([
+        eb('visibility', '!=', 'PUBLIC'),
+        exposedPhotoPredicate(eb, { owner: 'owner_user_id', selected: 'portfolio_selected', id: 'id' }, ownSet),
+      ]))
       .select(eb => eb.fn.count<number>('id').as('cnt'))
       .executeTakeFirst();
 

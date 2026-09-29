@@ -56,6 +56,8 @@ import type { ConfirmPhotoDto } from './dto/confirm-photo.dto';
 import type { UpdatePhotoDto } from './dto/update-photo.dto';
 import type { CreateAlbumDto, UpdateAlbumDto, AddPhotoToAlbumDto } from './dto/album.dto';
 import { HERO_DESTINATIONS } from './hero-destinations.config';
+import { PortfolioExposureService, exposedPhotoPredicate } from './portfolio-exposure.service';
+import { decideSelection } from './portfolio-exposure.policy';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -69,6 +71,9 @@ function isoOrNull(v: unknown): string | null {
   if (v == null) return null;
   return toDate(v).toISOString();
 }
+
+const PHOTO_COLS = { owner: 'owner_user_id', selected: 'portfolio_selected', id: 'id' };
+const PHOTO_COLS_QUALIFIED = { owner: 'photos.owner_user_id', selected: 'photos.portfolio_selected', id: 'photos.id' };
 
 // ---------------------------------------------------------------------------
 // Response shapes
@@ -105,6 +110,8 @@ function formatPhoto(row: Record<string, unknown>) {
     gps_stripped:       !!row.gps_stripped,
     // show_in_portfolio — migration 0077. Defaults to true on all existing rows.
     show_in_portfolio:  row.show_in_portfolio !== undefined && row.show_in_portfolio !== null ? !!row.show_in_portfolio : true,
+    // portfolio_selected — migration 0103. Member-chosen public slot (capped plans).
+    portfolio_selected: !!row.portfolio_selected,
     owner_user_id:   row.owner_user_id,
     source_event_id: row.source_event_id ?? null,
     urls:            variants,
@@ -148,7 +155,10 @@ function formatAlbum(row: Record<string, unknown>) {
 
 @Injectable()
 export class GalleryService {
-  constructor(private readonly r2: R2Service) {}
+  constructor(
+    private readonly r2: R2Service,
+    private readonly exposure: PortfolioExposureService,
+  ) {}
 
   // =========================================================================
   // Upload: presign
@@ -363,10 +373,14 @@ export class GalleryService {
   // =========================================================================
 
   async getAllPhotoIds(): Promise<{ id: number }[]> {
+    // Only photographs whose owner is entitled to public exposure (MEM-008)
+    // get a statically generated /showcase/{id} page.
+    const set = await this.exposure.getExposureSet('PORTFOLIO');
     const rows = await db
       .selectFrom('photos')
       .where('status', '=', 'ACTIVE')
       .where('visibility', '=', 'PUBLIC')
+      .where(eb => exposedPhotoPredicate(eb, PHOTO_COLS, set))
       .select('id')
       .execute();
     return rows.map(r => ({ id: Number(r.id) }));
@@ -399,6 +413,7 @@ export class GalleryService {
       photo.owner_user_id as number,
       photo.visibility as string,
     );
+    await this.assertPublicExposure(requestingUserId, photo as Record<string, unknown>);
 
     return formatPhoto(photo as Record<string, unknown>);
   }
@@ -430,6 +445,7 @@ export class GalleryService {
       photo.owner_user_id as number,
       photo.visibility as string,
     );
+    await this.assertPublicExposure(requestingUserId, photo as Record<string, unknown>);
 
     return formatPhoto(photo as Record<string, unknown>);
   }
@@ -473,6 +489,13 @@ export class GalleryService {
       } else {
         query = query.where('visibility', '=', 'PUBLIC');
       }
+      // MEM-008: PUBLIC photographs are only exposed per the owner's portfolio
+      // entitlement + cap (selected slots).
+      const set = await this.exposure.getExposureSet('PORTFOLIO', [opts.owner_user_id]);
+      query = query.where(eb => eb.or([
+        eb('visibility', '!=', 'PUBLIC'),
+        exposedPhotoPredicate(eb, PHOTO_COLS, set),
+      ]));
     } else {
       // General feed: exclude PRIVATE and UNLISTED
       if (isMember) {
@@ -480,6 +503,16 @@ export class GalleryService {
       } else {
         query = query.where('visibility', '=', 'PUBLIC');
       }
+      // MEM-008: a club-wide public listing is the Public Gallery surface.
+      const set = await this.exposure.getExposureSet('GALLERY');
+      query = query.where(eb => {
+        const conds: any[] = [
+          eb('visibility', '!=', 'PUBLIC'),
+          exposedPhotoPredicate(eb, PHOTO_COLS, set),
+        ];
+        if (requestingUserId != null) conds.push(eb('owner_user_id', '=', requestingUserId));
+        return eb.or(conds);
+      });
     }
 
     if (opts.exclude_hidden) {
@@ -541,6 +574,12 @@ export class GalleryService {
       throw new ConflictException(`Cannot update a photo in ${photo.status} state.`);
     }
 
+    // MEM-008 portfolio slot selection -- validated (and cap-enforced) first so
+    // a rejected selection never half-applies the rest of the PATCH.
+    if (dto.portfolio_selected !== undefined) {
+      await this.setPortfolioSelection(userId, photo, !!dto.portfolio_selected);
+    }
+
     const updates: Record<string, unknown> = {
       updated_at: toMysqlDatetime(new Date()),
     };
@@ -576,6 +615,83 @@ export class GalleryService {
       .executeTakeFirstOrThrow();
 
     return formatPhoto(updated as Record<string, unknown>);
+  }
+
+  // =========================================================================
+  // Portfolio slots (MEM-008 cap: Basic 5 / Student 10)
+  //
+  // A capped member chooses which photographs occupy their public portfolio
+  // slots. Nothing is auto-selected, auto-replaced or auto-promoted: uploads
+  // never take a slot, removing one never promotes another, and photographs
+  // are never deleted or mutated to enforce the cap.
+  // =========================================================================
+
+  async getPortfolioSlots(userId: number): Promise<{
+    portfolio_enabled: boolean;
+    max_photos: number | null;
+    selected_count: number;
+    remaining: number | null;
+    /** Stored selection exceeds the current cap: nothing is publicly shown
+     *  until the member unselects down to the cap. Nothing is auto-changed. */
+    over_cap: boolean;
+  }> {
+    const [exposure, selected] = await Promise.all([
+      this.exposure.getOwnerExposure(userId),
+      this.exposure.countSelected(userId),
+    ]);
+    return {
+      portfolio_enabled: exposure.portfolioEnabled,
+      max_photos:        exposure.maxPhotos,
+      selected_count:    selected,
+      remaining:         exposure.maxPhotos === null ? null : Math.max(0, exposure.maxPhotos - selected),
+      over_cap:          exposure.portfolioEnabled && exposure.maxPhotos !== null && selected > exposure.maxPhotos,
+    };
+  }
+
+  private async setPortfolioSelection(
+    userId: number,
+    photo: { id: number | unknown; portfolio_selected?: unknown },
+    selected: boolean,
+  ): Promise<void> {
+    const alreadySelected = !!photo.portfolio_selected;
+    if (alreadySelected === selected) return;
+    const now: any = toMysqlDatetime(new Date());
+
+    await db.transaction().execute(async trx => {
+      // Serialise concurrent selections by this member so two requests can't
+      // both pass the cap check.
+      await trx.selectFrom('users').select('id').where('id', '=', userId).forUpdate().executeTakeFirst();
+
+      if (selected) {
+        const exposure = await this.exposure.getOwnerExposure(userId);
+        const row = await trx
+          .selectFrom('photos')
+          .select(eb => eb.fn.countAll<number>().as('n'))
+          .where('owner_user_id', '=', userId)
+          .where('status', '=', 'ACTIVE')
+          .where('portfolio_selected', '=', true as any)
+          .executeTakeFirst();
+        const decision = decideSelection(exposure, Number(row?.n ?? 0), false);
+        if (decision === 'NOT_ENABLED') {
+          throw new ForbiddenException('Your membership does not currently include a public portfolio.');
+        }
+        if (decision === 'CAP_REACHED') {
+          throw new ConflictException(
+            `Your public portfolio is limited to ${exposure.maxPhotos} photographs. ` +
+            'Remove one from your portfolio before adding another.',
+          );
+        }
+      }
+
+      await trx
+        .updateTable('photos')
+        .set({
+          portfolio_selected:    selected,
+          portfolio_selected_at: selected ? now : null,
+        } as any)
+        .where('id', '=', Number(photo.id))
+        .execute();
+    });
   }
 
   // =========================================================================
@@ -736,6 +852,13 @@ export class GalleryService {
       .selectFrom('photo_albums')
       .where('owner_user_id', '=', ownerUserId);
 
+    // MEM-008: for non-owners, PUBLIC photographs inside albums (counts and
+    // covers) only count if their owners are currently exposed.
+    const albumSet = requestingUserId !== ownerUserId
+      ? await this.exposure.getExposureSet('PORTFOLIO')
+      : null;
+    const PAI = { owner: 'photos.owner_user_id', selected: 'photos.portfolio_selected', id: 'photos.id' };
+
     if (requestingUserId !== ownerUserId) {
       if (isMember) {
         q = q.where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const);
@@ -752,10 +875,18 @@ export class GalleryService {
 
     return Promise.all(
       albums.map(async album => {
-        const count = await db
+        let countQ = db
           .selectFrom('photo_album_items')
-          .where('album_id', '=', album.id as number)
-          .select(eb => eb.fn.count<number>('id').as('cnt'))
+          .innerJoin('photos', 'photos.id', 'photo_album_items.photo_id')
+          .where('photo_album_items.album_id', '=', album.id as number);
+        if (albumSet) {
+          countQ = countQ.where(eb => eb.or([
+            eb('photos.visibility', '!=', 'PUBLIC'),
+            exposedPhotoPredicate(eb, PAI, albumSet),
+          ]));
+        }
+        const count = await countQ
+          .select(eb => eb.fn.count<number>('photo_album_items.id').as('cnt'))
           .executeTakeFirst();
         let coverUuid: string | null = null;
         let coverImageUrl: string | null = null;
@@ -770,6 +901,10 @@ export class GalleryService {
             .where('photos.status', '=', 'ACTIVE')
             .orderBy('photo_album_items.sort_order', 'asc')
           )
+          .$if(!!albumSet, qb => qb.where(eb => eb.or([
+            eb('photos.visibility', '!=', 'PUBLIC'),
+            exposedPhotoPredicate(eb, PAI, albumSet!),
+          ])))
           .select(['photos.uuid', 'photos.r2_key'])
           .executeTakeFirst();
         if (coverPhoto) {
@@ -824,11 +959,22 @@ export class GalleryService {
     const limit  = Math.min(opts.limit ?? 50, 200);
     const offset = opts.offset ?? 0;
 
+    // MEM-008: for non-owners, withhold PUBLIC photographs whose owners are not
+    // currently exposed (entitlement + cap). Nothing is deleted from the album.
+    const albumSet = requestingUserId !== album.owner_user_id
+      ? await this.exposure.getExposureSet('PORTFOLIO')
+      : null;
+    const AP = { owner: 'p.owner_user_id', selected: 'p.portfolio_selected', id: 'p.id' };
+
     const items = await db
       .selectFrom('photo_album_items as pai')
       .innerJoin('photos as p', 'p.id', 'pai.photo_id')
       .where('pai.album_id', '=', album.id as number)
       .where('p.status', '=', 'ACTIVE')
+      .$if(!!albumSet, qb => qb.where(eb => eb.or([
+        eb('p.visibility', '!=', 'PUBLIC'),
+        exposedPhotoPredicate(eb, AP, albumSet!),
+      ])))
       .orderBy('pai.sort_order', 'asc')
       .orderBy('pai.added_at', 'asc')
       .limit(limit)
@@ -837,9 +983,14 @@ export class GalleryService {
       .execute();
 
     const totalCount = await db
-      .selectFrom('photo_album_items')
-      .where('album_id', '=', album.id as number)
-      .select(eb => eb.fn.count<number>('id').as('cnt'))
+      .selectFrom('photo_album_items as pai')
+      .innerJoin('photos as p', 'p.id', 'pai.photo_id')
+      .where('pai.album_id', '=', album.id as number)
+      .$if(!!albumSet, qb => qb.where(eb => eb.or([
+        eb('p.visibility', '!=', 'PUBLIC'),
+        exposedPhotoPredicate(eb, AP, albumSet!),
+      ])))
+      .select(eb => eb.fn.count<number>('pai.id').as('cnt'))
       .executeTakeFirst();
 
     let coverUuid: string | null = null;
@@ -847,6 +998,10 @@ export class GalleryService {
       const cover = await db
         .selectFrom('photos')
         .where('id', '=', album.cover_photo_id as number)
+        .$if(!!albumSet, qb => qb.where(eb => eb.or([
+          eb('visibility', '!=', 'PUBLIC'),
+          exposedPhotoPredicate(eb, PHOTO_COLS, albumSet!),
+        ])))
         .select('uuid')
         .executeTakeFirst();
       coverUuid = cover?.uuid ?? null;
@@ -1079,6 +1234,10 @@ export class GalleryService {
     const paginatedLimit = Math.min(opts.limit ?? 20, 200);
     const offset = opts.offset ?? 0;
 
+    // MEM-008: the club-wide feed is the Public Gallery surface -- only owners
+    // with public_gallery_enabled (and, if capped, their selected slots).
+    const gallerySet = await this.exposure.getExposureSet('GALLERY');
+
     let q = db
       .selectFrom('photos')
       .leftJoin('users', 'users.id', 'photos.owner_user_id')
@@ -1089,7 +1248,8 @@ export class GalleryService {
       ] as any)
       .where('photos.status', '=', 'ACTIVE')
       .where('photos.visibility', '=', 'PUBLIC')
-      .where('photos.show_in_portfolio', '=', true as any);
+      .where('photos.show_in_portfolio', '=', true as any)
+      .where(eb => exposedPhotoPredicate(eb, PHOTO_COLS_QUALIFIED, gallerySet));
 
     if (opts.genre) {
       const genre = opts.genre;
@@ -1127,7 +1287,8 @@ export class GalleryService {
         .selectFrom('photos')
         .where('photos.status', '=', 'ACTIVE')
         .where('photos.visibility', '=', 'PUBLIC')
-        .where('photos.show_in_portfolio', '=', true as any);
+        .where('photos.show_in_portfolio', '=', true as any)
+        .where(eb => exposedPhotoPredicate(eb, PHOTO_COLS_QUALIFIED, gallerySet));
       if (opts.genre) {
         const genre = opts.genre;
         countQ = countQ.where('photos.id', 'in', eb =>
@@ -1478,6 +1639,7 @@ export class GalleryService {
 
   /** GENRE tags assigned to at least one PUBLIC active photo (Showcase chips). */
   async getPublicGenres(): Promise<{ tag_key: string; display_name: string }[]> {
+    const gallerySet = await this.exposure.getExposureSet('GALLERY');
     return db
       .selectFrom('photo_tags as pt')
       .innerJoin('photo_tag_assignments as pta', 'pta.tag_id', 'pt.id')
@@ -1486,6 +1648,7 @@ export class GalleryService {
       .where('pt.is_active', '=', true)
       .where('p.status', '=', 'ACTIVE')
       .where('p.visibility', '=', 'PUBLIC')
+      .where(eb => exposedPhotoPredicate(eb, { owner: 'p.owner_user_id', selected: 'p.portfolio_selected', id: 'p.id' }, gallerySet))
       .select(['pt.tag_key', 'pt.display_name'])
       .distinct()
       .orderBy('pt.display_name', 'asc')
@@ -1516,6 +1679,11 @@ export class GalleryService {
       q = isMember
         ? q.where('p.visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
         : q.where('p.visibility', '=', 'PUBLIC');
+      const set = await this.exposure.getExposureSet('PORTFOLIO', [photographerUserId]);
+      q = q.where(eb => eb.or([
+        eb('p.visibility', '!=', 'PUBLIC'),
+        exposedPhotoPredicate(eb, { owner: 'p.owner_user_id', selected: 'p.portfolio_selected', id: 'p.id' }, set),
+      ]));
     }
 
     return q
@@ -1557,13 +1725,22 @@ export class GalleryService {
     // Photo visibility mirrors listPhotos(): PUBLIC for everyone,
     // MEMBERS_ONLY for active members, and the owner's own photos.
     // PRIVATE / UNLISTED photos never appear in a listing.
+    // MEM-008: PUBLIC photographs appear here only if their owner is entitled
+    // to public exposure (portfolio_enabled + cap/selected slots).
+    const exposureSet = await this.exposure.getExposureSet('PORTFOLIO');
     const base = db
       .selectFrom('photos')
       .leftJoin('users', 'users.id', 'photos.owner_user_id')
       .where('photos.source_event_id', '=', eventId)
       .where('photos.status', '=', 'ACTIVE')
       .where(eb => {
-        const conds = [eb('photos.visibility', '=', 'PUBLIC')];
+        const conds: any[] = [eb.and([
+          eb('photos.visibility', '=', 'PUBLIC'),
+          eb.or([
+            exposedPhotoPredicate(eb, PHOTO_COLS_QUALIFIED, exposureSet),
+            ...(requestingUserId != null ? [eb('photos.owner_user_id', '=', requestingUserId)] : []),
+          ]),
+        ])];
         if (isMember) conds.push(eb('photos.visibility', '=', 'MEMBERS_ONLY'));
         if (requestingUserId != null) {
           conds.push(eb.and([
@@ -1635,6 +1812,25 @@ export class GalleryService {
     return row != null;
   }
 
+  /**
+   * MEM-008: a PUBLIC photograph is only reachable by non-owners while its
+   * owner's resolved entitlements expose it. Responds 404 (not 403) so the
+   * existence of a withheld photograph is not disclosed.
+   */
+  private async assertPublicExposure(
+    requestingUserId: number | null,
+    photo: Record<string, unknown>,
+  ): Promise<void> {
+    if (photo.visibility !== 'PUBLIC') return;
+    if (requestingUserId != null && requestingUserId === Number(photo.owner_user_id)) return;
+    const ok = await this.exposure.isPhotoExposed({
+      id: Number(photo.id),
+      owner_user_id: Number(photo.owner_user_id),
+      portfolio_selected: photo.portfolio_selected,
+    });
+    if (!ok) throw new NotFoundException('Photo not found.');
+  }
+
   private async assertVisibility(
     requestingUserId: number | null,
     ownerUserId: number,
@@ -1690,11 +1886,12 @@ export class GalleryService {
       .selectFrom('photos')
       .where('uuid', '=', photoUuid)
       .where('status', '!=', 'DELETED')
-      .select(['id', 'visibility', 'owner_user_id'])
+      .select(['id', 'visibility', 'owner_user_id', 'portfolio_selected'])
       .executeTakeFirst();
     if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
 
     await this.assertVisibility(requestingUserId, photo.owner_user_id as number, photo.visibility as string);
+    await this.assertPublicExposure(requestingUserId, photo as Record<string, unknown>);
 
     const rows = await db
       .selectFrom('photo_reactions')
@@ -1723,10 +1920,11 @@ export class GalleryService {
       .selectFrom('photos')
       .where('uuid', '=', photoUuid)
       .where('status', '!=', 'DELETED')
-      .select(['id', 'visibility', 'owner_user_id'])
+      .select(['id', 'visibility', 'owner_user_id', 'portfolio_selected'])
       .executeTakeFirst();
     if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
     await this.assertVisibility(userId, photo.owner_user_id as number, photo.visibility as string);
+    await this.assertPublicExposure(userId, photo as Record<string, unknown>);
 
     const photoId = photo.id as number;
 
@@ -1761,14 +1959,17 @@ export class GalleryService {
   async listComments(
     photoUuid: string,
     opts: { limit?: number; offset?: number } = {},
+    requestingUserId: number | null = null,
   ): Promise<{ comments: unknown[]; total: number }> {
     const photo = await db
       .selectFrom('photos')
       .where('uuid', '=', photoUuid)
       .where('status', '!=', 'DELETED')
-      .select('id')
+      .select(['id', 'visibility', 'owner_user_id', 'portfolio_selected'])
       .executeTakeFirst();
     if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
+    await this.assertVisibility(requestingUserId, photo.owner_user_id as number, photo.visibility as string);
+    await this.assertPublicExposure(requestingUserId, photo as Record<string, unknown>);
 
     const limit  = Math.min(opts.limit  ?? 20, 50);
     const offset = opts.offset ?? 0;
@@ -1818,10 +2019,11 @@ export class GalleryService {
       .selectFrom('photos')
       .where('uuid', '=', photoUuid)
       .where('status', '!=', 'DELETED')
-      .select(['id', 'visibility', 'owner_user_id'])
+      .select(['id', 'visibility', 'owner_user_id', 'portfolio_selected'])
       .executeTakeFirst();
     if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
     await this.assertVisibility(userId, photo.owner_user_id as number, photo.visibility as string);
+    await this.assertPublicExposure(userId, photo as Record<string, unknown>);
 
     if (!body || body.trim().length === 0) {
       throw new BadRequestException('Comment body cannot be empty.');
@@ -1854,6 +2056,9 @@ export class GalleryService {
       .executeTakeFirst();
     if (!photo) return [];
 
+    // MEM-008: only the owner's currently exposed photographs are related content.
+    const relatedSet = await this.exposure.getExposureSet('PORTFOLIO', [photo.owner_user_id as number]);
+
     const rows = await db
       .selectFrom('photos')
       .leftJoin('users', 'users.id', 'photos.owner_user_id')
@@ -1861,6 +2066,7 @@ export class GalleryService {
       .where('photos.status', '=', 'ACTIVE')
       .where('photos.visibility', '=', 'PUBLIC')
       .where('photos.show_in_portfolio', '=', true as any)
+      .where(eb => exposedPhotoPredicate(eb, PHOTO_COLS_QUALIFIED, relatedSet))
       .where('photos.id', '!=', photo.id as number)
       .selectAll('photos')
       .select(['users.full_name as photographer_name', 'users.username as photographer_username'] as any)
@@ -1880,9 +2086,11 @@ export class GalleryService {
       .selectFrom('photos')
       .where('uuid', '=', photoUuid)
       .where('status', '!=', 'DELETED')
-      .select('id')
+      .select(['id', 'visibility', 'owner_user_id', 'portfolio_selected'])
       .executeTakeFirst();
     if (!photo) throw new NotFoundException(`Photo ${photoUuid} not found.`);
+    // Views of withheld photographs are not recorded (and not confirmed to exist).
+    await this.assertPublicExposure(null, photo as Record<string, unknown>);
 
     // Atomic increment — avoids read-modify-write race
     await sql`UPDATE photos SET view_count = view_count + 1 WHERE id = ${photo.id}`.execute(db);
@@ -1903,9 +2111,10 @@ export class GalleryService {
       .selectFrom('photos')
       .where('uuid', '=', photoUuid)
       .where('status', '!=', 'DELETED')
-      .select('id')
+      .select(['id', 'visibility', 'owner_user_id', 'portfolio_selected'])
       .executeTakeFirst();
     if (!photo) return [];
+    if (photo.visibility === 'PUBLIC' && !(await this.exposure.isPhotoExposed(photo as any))) return [];
 
     const rows = await db
       .selectFrom('photo_album_items')

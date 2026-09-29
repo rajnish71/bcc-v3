@@ -119,6 +119,13 @@ const isHistorical = Boolean(event?.is_historical);
       <div class="event-provenance" id="event-provenance" hidden={!(isHistorical && event?.historical_source_note)}>
         <strong>Source.</strong> <span id="event-provenance-text">{event?.historical_source_note ?? ''}</span>
       </div>
+
+      <!-- Activity Gallery: Canonical Photos linked via photos.source_event_id.
+           Populated client-side from GET /api/v1/gallery/events/:id/photos. -->
+      <section class="event-gallery" id="event-gallery" aria-label="Activity Gallery" hidden>
+        <SectionHeader eyebrow="Photographs" title="Activity Gallery" align="left" />
+        <div id="event-gallery-grid" class="event-gallery__grid"></div>
+      </section>
     </main>
 
     <!-- Right Column: Registration Card -->
@@ -334,6 +341,26 @@ const isHistorical = Boolean(event?.is_historical);
 }
 .event-provenance strong { color: var(--ink-600); font-weight: 600; }
 .reg-btn[hidden], .reg-card__spec[hidden] { display: none; }
+
+.event-gallery { border-top: 1px solid var(--hairline); padding-top: var(--s-6); }
+.event-gallery[hidden] { display: none; }
+/* Gallery tiles are created at runtime, so they never receive Astro's scoping
+   attribute — style them through :global. Photos are never rounded. */
+.event-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--s-3);
+}
+:global(.event-gallery__grid.is-single) { grid-template-columns: minmax(0, 560px); }
+:global(.event-photo) { display: block; margin: 0; background: var(--surface-1); text-decoration: none; }
+:global(.event-photo img) { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 0; }
+:global(.event-photo figcaption) {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-600);
+  padding: var(--s-2) 0;
+  line-height: 1.4;
+}
 </style>
 
 <script>
@@ -489,12 +516,53 @@ const isHistorical = Boolean(event?.is_historical);
     setRegistration(ev);
   }
 
+  // Activity Gallery: Canonical Photos linked to this Activity. Hidden when the
+  // Activity has none (or the API is unavailable) -- no placeholders, no banner.
+  async function loadGallery(eventId: number) {
+    const section = $('event-gallery');
+    const grid = $('event-gallery-grid');
+    try {
+      const res = await fetch(`/api/v1/gallery/events/${eventId}/photos`);
+      if (!res.ok) throw new Error(`Gallery API ${res.status}`);
+      const { photos } = await res.json() as { photos: any[] };
+      if (!Array.isArray(photos) || photos.length === 0) {
+        section.hidden = true;
+        return;
+      }
+      grid.classList.toggle('is-single', photos.length === 1);
+      grid.replaceChildren(...photos.map((p: any) => {
+        const fig = document.createElement('figure');
+        fig.className = 'event-photo';
+        const a = document.createElement('a');
+        a.href = `/showcase/${p.id}/`;
+        const img = document.createElement('img');
+        img.src = p.urls?.medium ?? p.urls?.thumbnail;
+        img.loading = 'lazy';
+        img.alt = p.title || p.caption || 'Activity photograph';
+        a.append(img);
+        fig.append(a);
+        const credit = [p.title, p.photographer?.name].filter(Boolean).join(' — ');
+        if (credit) {
+          const cap = document.createElement('figcaption');
+          cap.textContent = credit;
+          fig.append(cap);
+        }
+        return fig;
+      }));
+      section.hidden = false;
+    } catch {
+      section.hidden = true;
+    }
+  }
+
   async function load() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/events/${encodeURIComponent(slug)}`);
       if (!res.ok) throw new Error(`Activities API ${res.status}`);
-      render(await res.json());
+      const ev = await res.json();
+      render(ev);
+      void loadGallery(ev.id);
     } catch {
       const btn = $('register-btn') as HTMLButtonElement;
       btn.textContent = 'Unavailable';

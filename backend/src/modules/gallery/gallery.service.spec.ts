@@ -178,3 +178,31 @@ describe('confirmUpload() oversize-path wiring (real source inspection)', () => 
     expect(ownerCheckIdx).toBeLessThan(sizeCheckIdx);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Module 04 Stage 2: Activity linkage on confirm (real source inspection).
+// presign/confirm need R2, so the wiring is asserted here; the R2-free PATCH
+// path and the Activity Gallery query are covered by test/activity-gallery.e2e-spec.ts.
+// ---------------------------------------------------------------------------
+
+describe('confirmUpload() Activity linkage wiring', () => {
+  const CONFIRM_SRC = SERVICE_SRC.slice(
+    SERVICE_SRC.indexOf('async confirmUpload'),
+    SERVICE_SRC.indexOf('async getAllPhotoIds'),
+  );
+
+  it('validates a supplied source_event_id and persists it in the activation UPDATE', () => {
+    expect(CONFIRM_SRC).toContain('assertLinkableEvent(dto.source_event_id)');
+    expect(CONFIRM_SRC).toMatch(/source_event_id:\s+sourceEventId/);
+  });
+
+  it('keeps the presign-time link when the field is omitted (undefined) and allows explicit null', () => {
+    expect(CONFIRM_SRC).toContain('photo.source_event_id');
+    expect(CONFIRM_SRC).toContain('dto.source_event_id !== undefined');
+  });
+
+  it('does not tie Activity linkage to show_in_portfolio', () => {
+    expect(CONFIRM_SRC).toMatch(/show_in_portfolio:\s+dto\.show_in_portfolio !== false/);
+    expect(CONFIRM_SRC).not.toMatch(/show_in_portfolio:[^\n]*source_event_id/);
+  });
+});

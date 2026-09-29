@@ -5,6 +5,7 @@
 // PUBLIC endpoints (no auth guard):
 //   GET  /api/v1/gallery/feed                  public photo feed
 //   GET  /api/v1/gallery/photographer/:userId  photographer's gallery
+//   GET  /api/v1/gallery/events/:eventId/photos  Activity Gallery (Canonical Photos by source_event_id)
 //   GET  /api/v1/gallery/tags                  tag taxonomy
 //   GET  /api/v1/gallery/photos/:uuid          single photo (visibility gated in service)
 //
@@ -166,6 +167,21 @@ export class GalleryController {
     const hero = await this.gallery.getHeroForLocation(location);
     if (!hero) throw new NotFoundException(`No hero configured for location ${location}`);
     return hero;
+  }
+
+  /** Canonical Photos linked to a PUBLISHED / COMPLETED Activity (Module 04). */
+  @Get('events/:eventId/photos')
+  async eventPhotos(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Req() req: any,
+    @Query('limit')  limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    const requestingUserId: number | null = req.user?.sub ?? null;
+    return this.gallery.getEventPhotos(requestingUserId, eventId, {
+      limit:  limit  ? parseInt(limit, 10)  : 60,
+      offset: offset ? parseInt(offset, 10) : 0,
+    });
   }
 
   /** Tag taxonomy list. */

@@ -1,0 +1,298 @@
+---
+// frontend/src/pages/hub/admin/activities/index.astro
+//
+// Activities admin (Module 04 Stage 2) -- minimal create / edit / publish /
+// complete over the existing Activity API, including historical Activities.
+// Same pattern as the merchandise admin page: HubLayout owns authentication and
+// the shell; RBAC is enforced server-side (event.create, event.update_any,
+// event.publish, event.view_registrations). No client-side role gating here.
+//
+// Historical dates are entered at the precision actually known and are never
+// completed for the user: an exact date, month + year, year only, or nothing.
+import HubLayout from '../../../../layouts/HubLayout.astro';
+---
+
+<HubLayout title="Activities Admin" description="Create, edit and publish Bhopal Camera Club Activities.">
+  <div class="hub-main" id="activities-admin-root">
+    <header class="page-header">
+      <div class="section-kicker"><span class="kicker-rule"></span>ADMIN — ACTIVITIES</div>
+      <h1 class="page-title">Activities Admin</h1>
+    </header>
+
+    <p id="act-message" class="act-message" role="status" hidden></p>
+
+    <section class="admin-section" id="section-list">
+      <div class="section-kicker">ALL ACTIVITIES</div>
+      <div id="act-list">Loading…</div>
+    </section>
+
+    <section class="admin-section" id="section-form">
+      <div class="section-kicker" id="form-heading">NEW ACTIVITY</div>
+      <form id="act-form" class="admin-form" novalidate>
+        <label>Title <input id="f-title" maxlength="255" required /></label>
+        <label>Type
+          <select id="f-type">
+            <option value="PHOTOWALK">Photowalk</option>
+            <option value="BIRD_WALK">Bird Walk</option>
+            <option value="WORKSHOP">Workshop</option>
+            <option value="SEMINAR">Seminar</option>
+            <option value="TOUR">Tour</option>
+            <option value="MEETUP">Meetup</option>
+            <option value="TRAINING">Training</option>
+            <option value="CONSERVATION">Conservation</option>
+            <option value="EXHIBITION_EVENT">Exhibition</option>
+            <option value="GOVERNANCE">Governance</option>
+            <option value="AWARD_CEREMONY">Award Ceremony</option>
+            <option value="ONLINE">Online</option>
+            <option value="COLLABORATIVE">Collaborative</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </label>
+        <label>Description <textarea id="f-description" rows="4"></textarea></label>
+        <label>Location <input id="f-location" maxlength="255" /></label>
+
+        <label class="check"><input type="checkbox" id="f-historical" /> Historical Activity (already took place)</label>
+        <p class="hint" id="hist-lock-hint" hidden>Whether an Activity is historical is fixed at creation.</p>
+
+        <label>Exact date &amp; time <input id="f-starts" type="datetime-local" /></label>
+        <div id="hist-fields" hidden>
+          <p class="hint">Enter only what is actually known. Leave the exact date empty to record a month and year, a year alone, or nothing. Precision is never inferred.</p>
+          <label>Year <input id="f-year" type="number" min="1800" max="2100" /></label>
+          <label>Month (needs a year)
+            <select id="f-month">
+              <option value="">—</option>
+              <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+              <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+              <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+            </select>
+          </label>
+          <label>Date note <input id="f-date-note" maxlength="255" placeholder='e.g. "Winter 2019"' /></label>
+          <label>Source note <textarea id="f-source-note" rows="3" placeholder="Who or what records that this happened"></textarea></label>
+          <p class="hint" id="hist-clear-hint" hidden>A recorded year or month can be corrected but not cleared here.</p>
+        </div>
+
+        <div class="form-actions">
+          <button id="f-save" class="btn-outline btn-sm" type="submit">Create Activity</button>
+          <button id="f-cancel" class="btn-outline btn-sm" type="button" hidden>Cancel edit</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <style>
+    .admin-section { background: #FFFFFF; border: 1px solid rgba(20,18,16,0.08); padding: 20px; margin-top: 20px; }
+    .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(20,18,16,0.06); gap: 12px; font-size: 0.9rem; flex-wrap: wrap; }
+    .admin-row button { margin-left: 8px; }
+    .admin-form label { display: block; margin: 12px 0 0; font-size: 0.85rem; }
+    .admin-form input:not([type=checkbox]), .admin-form select, .admin-form textarea {
+      display: block; width: 100%; max-width: 480px; margin-top: 4px; padding: 8px;
+      border: 1px solid rgba(20,18,16,0.15); font: inherit; box-sizing: border-box;
+    }
+    .admin-form .check { display: flex; align-items: center; gap: 8px; }
+    .form-actions { margin-top: 16px; }
+    .hint { font-size: 0.78rem; color: rgba(20,18,16,0.55); margin: 8px 0 0; max-width: 480px; }
+    .act-message { margin-top: 16px; padding: 10px 14px; background: #FFFFFF; border: 1px solid rgba(20,18,16,0.15); font-size: 0.9rem; }
+    .act-message.is-error { border-color: #B3261E; color: #B3261E; }
+    .act-state { font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border: 1px solid rgba(20,18,16,0.2); margin-right: 8px; }
+    .act-meta { color: rgba(20,18,16,0.55); margin-left: 8px; }
+    [hidden] { display: none !important; }
+  </style>
+
+  <script>
+    (function () {
+      const API = '/api/v1/events';
+      const token = (): string => localStorage.getItem('bcc_token') ?? '';
+      const authHeaders = (json = false): Record<string, string> => {
+        const h: Record<string, string> = { Authorization: `Bearer ${token()}` };
+        if (json) h['Content-Type'] = 'application/json';
+        return h;
+      };
+      const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+
+      const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+      let editingId: number | null = null;
+      let editingHistorical = false;
+
+      function message(text: string, isError = false) {
+        const el = $('act-message');
+        el.textContent = text;
+        el.classList.toggle('is-error', isError);
+        el.hidden = !text;
+      }
+
+      async function errorText(res: Response): Promise<string> {
+        try {
+          const b = await res.json() as { message?: string | string[] };
+          return Array.isArray(b.message) ? b.message.join('; ') : (b.message ?? `Request failed (${res.status})`);
+        } catch { return `Request failed (${res.status})`; }
+      }
+
+      // Same precision rules as the public Activity page: never more precise than recorded.
+      function whenLabel(a: any): string {
+        if (a.starts_at) return new Date(a.starts_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+        if (a.historical_year != null) {
+          return a.historical_month != null ? `${MONTHS[a.historical_month - 1]} ${a.historical_year}` : String(a.historical_year);
+        }
+        return 'Date unknown';
+      }
+
+      function toLocalInput(iso: string | null): string {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const p = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+      }
+
+      function syncHistoricalUi() {
+        const hist = ($('f-historical') as HTMLInputElement).checked;
+        $('hist-fields').hidden = !hist;
+        ($('f-historical') as HTMLInputElement).disabled = editingId !== null;
+        $('hist-lock-hint').hidden = editingId === null;
+        $('hist-clear-hint').hidden = editingId === null;
+      }
+
+      function resetForm() {
+        editingId = null;
+        editingHistorical = false;
+        ($('act-form') as HTMLFormElement).reset();
+        $('form-heading').textContent = 'NEW ACTIVITY';
+        $('f-save').textContent = 'Create Activity';
+        $('f-cancel').hidden = true;
+        syncHistoricalUi();
+      }
+
+      async function startEdit(id: number) {
+        message('');
+        const res = await fetch(`${API}/admin/${id}`, { headers: authHeaders() });
+        if (!res.ok) { message(await errorText(res), true); return; }
+        const a = await res.json();
+        editingId = a.id;
+        editingHistorical = Boolean(a.is_historical);
+        ($('f-title') as HTMLInputElement).value = a.title ?? '';
+        ($('f-type') as HTMLSelectElement).value = a.event_type;
+        ($('f-description') as HTMLTextAreaElement).value = a.description ?? '';
+        ($('f-location') as HTMLInputElement).value = a.location_name ?? '';
+        ($('f-historical') as HTMLInputElement).checked = editingHistorical;
+        ($('f-starts') as HTMLInputElement).value = toLocalInput(a.starts_at);
+        ($('f-year') as HTMLInputElement).value = a.historical_year ?? '';
+        ($('f-month') as HTMLSelectElement).value = a.historical_month ?? '';
+        ($('f-date-note') as HTMLInputElement).value = a.historical_date_note ?? '';
+        ($('f-source-note') as HTMLTextAreaElement).value = a.historical_source_note ?? '';
+        $('form-heading').textContent = `EDIT ACTIVITY #${a.id}`;
+        $('f-save').textContent = 'Save changes';
+        $('f-cancel').hidden = false;
+        syncHistoricalUi();
+        $('section-form').scrollIntoView({ behavior: 'smooth' });
+      }
+
+      async function transition(id: number, action: 'publish' | 'complete') {
+        message('');
+        const res = await fetch(`${API}/${id}/${action}`, { method: 'POST', headers: authHeaders() });
+        if (!res.ok) { message(await errorText(res), true); return; }
+        message(action === 'publish' ? 'Activity published.' : 'Activity marked completed.');
+        await loadList();
+      }
+
+      async function loadList() {
+        const list = $('act-list');
+        const res = await fetch(`${API}/admin/all?limit=100`, { headers: authHeaders() });
+        if (!res.ok) { list.textContent = 'Could not load Activities.'; return; }
+        const { items } = await res.json() as { items: any[] };
+        list.replaceChildren();
+        if (!items.length) { list.textContent = 'No Activities yet.'; return; }
+
+        for (const a of items) {
+          const row = document.createElement('div');
+          row.className = 'admin-row';
+
+          const label = document.createElement('span');
+          const state = document.createElement('span');
+          state.className = 'act-state';
+          state.textContent = a.state;
+          const title = document.createElement('strong');
+          title.textContent = a.title;
+          const meta = document.createElement('span');
+          meta.className = 'act-meta';
+          meta.textContent = `${whenLabel(a)}${a.is_historical ? ' · historical' : ''}`;
+          label.append(state, title, meta);
+
+          const actions = document.createElement('span');
+          const btn = (text: string, fn: () => void) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn-outline btn-sm';
+            b.textContent = text;
+            b.addEventListener('click', fn);
+            actions.append(b);
+          };
+          // Cancelled Activities are never editable; completed non-historical ones are locked.
+          const editable = a.state !== 'CANCELLED' && !(a.state === 'COMPLETED' && !a.is_historical);
+          if (editable) btn('Edit', () => void startEdit(a.id));
+          if (a.state === 'DRAFT') btn('Publish', () => void transition(a.id, 'publish'));
+          if (a.state === 'PUBLISHED' && !a.is_historical) btn('Mark completed', () => void transition(a.id, 'complete'));
+
+          row.append(label, actions);
+          list.append(row);
+        }
+      }
+
+      function buildBody(): { body: Record<string, unknown>; error?: string } {
+        const val = (id: string) => ($(id) as HTMLInputElement).value.trim();
+        const historical = editingId === null ? ($('f-historical') as HTMLInputElement).checked : editingHistorical;
+        const body: Record<string, unknown> = {
+          title: val('f-title'),
+          event_type: val('f-type'),
+          description: val('f-description'),
+          location_name: val('f-location'),
+        };
+        if (!body.title) return { body, error: 'Title is required.' };
+
+        const starts = val('f-starts');
+        const year = val('f-year');
+        const month = val('f-month');
+        if (starts) body.starts_at = new Date(starts).toISOString();
+
+        if (historical) {
+          if (month && !year) return { body, error: 'A month needs a year.' };
+          if (!starts && year) {
+            body.historical_year = Number(year);
+            if (month) body.historical_month = Number(month);
+          }
+          if (editingId === null) body.is_historical = true;
+          const note = val('f-date-note');
+          const source = val('f-source-note');
+          if (note || editingId !== null) body.historical_date_note = note;
+          if (source || editingId !== null) body.historical_source_note = source;
+        } else if (!starts) {
+          return { body, error: 'An exact date and time is required for a non-historical Activity.' };
+        }
+        return { body };
+      }
+
+      $('act-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        message('');
+        const { body, error } = buildBody();
+        if (error) { message(error, true); return; }
+        const creating = editingId === null;
+        const res = await fetch(creating ? API : `${API}/${editingId}`, {
+          method: creating ? 'POST' : 'PATCH',
+          headers: authHeaders(true),
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) { message(await errorText(res), true); return; }
+        message(creating ? 'Activity created as a draft. Publish it when ready.' : 'Changes saved.');
+        resetForm();
+        await loadList();
+      });
+
+      $('f-historical').addEventListener('change', syncHistoricalUi);
+      $('f-cancel').addEventListener('click', () => { message(''); resetForm(); });
+
+      syncHistoricalUi();
+      void loadList();
+    })();
+  </script>
+</HubLayout>

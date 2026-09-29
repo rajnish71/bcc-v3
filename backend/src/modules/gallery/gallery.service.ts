@@ -189,17 +189,7 @@ export class GalleryService {
 
     // 4. Validate source_event_id if provided
     if (dto.source_event_id != null) {
-      const event = await db
-        .selectFrom('events')
-        .where('id', '=', dto.source_event_id)
-        // COMPLETED included: past and historical Activities end in COMPLETED
-        // and their documenting photographs must remain linkable.
-        .where('state', 'in', ['PUBLISHED', 'COMPLETED'])
-        .select('id')
-        .executeTakeFirst();
-      if (!event) {
-        throw new NotFoundException(`Event ${dto.source_event_id} not found or not published.`);
-      }
+      await this.assertLinkableEvent(dto.source_event_id);
     }
 
     // 5. Create PROCESSING photo record.
@@ -301,6 +291,15 @@ export class GalleryService {
       }
     }
 
+    // 4b. Activity linkage. The Upload Studio chooses the Activity after the
+    //     file has been presigned, so confirm may set or clear it.
+    //     undefined = keep the presign-time value; null = unlink; number = link.
+    let sourceEventId = photo.source_event_id as number | null;
+    if (dto.source_event_id !== undefined) {
+      if (dto.source_event_id !== null) await this.assertLinkableEvent(dto.source_event_id);
+      sourceEventId = dto.source_event_id;
+    }
+
     // 5. Parse EXIF from payload
     const exif = dto.exif ?? {};
     // EXIF taken_at: client sends "YYYY-MM-DD HH:MM:SS" (EXIF format after
@@ -328,6 +327,7 @@ export class GalleryService {
         gps_stripped:       !!dto.gps_stripped,
         // show_in_portfolio: defaults TRUE. Client may opt-out during upload.
         show_in_portfolio:  dto.show_in_portfolio !== false,
+        source_event_id:    sourceEventId,
         // Use R2 HEAD size as the authoritative value
         file_size_bytes:    head.sizeBytes ?? (photo.file_size_bytes as number | null),
         // EXIF fields
@@ -553,6 +553,15 @@ export class GalleryService {
     if (dto.gps_stripped       !== undefined) updates.gps_stripped       = !!dto.gps_stripped;
     // show_in_portfolio: Generated<boolean>: allow owner to hide from portfolio.
     if (dto.show_in_portfolio  !== undefined) updates.show_in_portfolio  = !!dto.show_in_portfolio;
+    // Activity linkage is independent of show_in_portfolio. null unlinks.
+    if (dto.source_event_id !== undefined) {
+      // Re-saving the current link must not fail if the Activity has since left
+      // the public states; only a *new* link is validated.
+      if (dto.source_event_id !== null && dto.source_event_id !== photo.source_event_id) {
+        await this.assertLinkableEvent(dto.source_event_id);
+      }
+      updates.source_event_id = dto.source_event_id;
+    }
 
     await db
       .updateTable('photos')
@@ -1517,8 +1526,95 @@ export class GalleryService {
   }
 
   // =========================================================================
+  // Activity Gallery (Module 04 Stage 2)
+  //
+  // An Activity's gallery is simply the Canonical Photos whose
+  // photos.source_event_id points at it. No separate store; Portfolio
+  // inclusion (show_in_portfolio) is deliberately NOT consulted here.
+  // =========================================================================
+
+  async getEventPhotos(
+    requestingUserId: number | null,
+    eventId: number,
+    opts: { limit?: number; offset?: number } = {},
+  ): Promise<{ photos: ReturnType<typeof formatPhoto>[]; total: number }> {
+    // Same public-state rule as the Activities API: DRAFT/CANCELLED are not public.
+    const event = await db
+      .selectFrom('events')
+      .where('id', '=', eventId)
+      .where('state', 'in', ['PUBLISHED', 'COMPLETED'])
+      .select('id')
+      .executeTakeFirst();
+    if (!event) throw new NotFoundException('Activity not found');
+
+    const limit  = Math.min(opts.limit ?? 60, 200);
+    const offset = opts.offset ?? 0;
+
+    const isMember = requestingUserId != null
+      ? await this.isActiveMember(requestingUserId)
+      : false;
+
+    // Photo visibility mirrors listPhotos(): PUBLIC for everyone,
+    // MEMBERS_ONLY for active members, and the owner's own photos.
+    // PRIVATE / UNLISTED photos never appear in a listing.
+    const base = db
+      .selectFrom('photos')
+      .leftJoin('users', 'users.id', 'photos.owner_user_id')
+      .where('photos.source_event_id', '=', eventId)
+      .where('photos.status', '=', 'ACTIVE')
+      .where(eb => {
+        const conds = [eb('photos.visibility', '=', 'PUBLIC')];
+        if (isMember) conds.push(eb('photos.visibility', '=', 'MEMBERS_ONLY'));
+        if (requestingUserId != null) {
+          conds.push(eb.and([
+            eb('photos.owner_user_id', '=', requestingUserId),
+            eb('photos.visibility', '!=', 'UNLISTED'),
+          ]));
+        }
+        return eb.or(conds);
+      });
+
+    const [rows, countRow] = await Promise.all([
+      base
+        .selectAll('photos')
+        .select([
+          'users.full_name as photographer_name',
+          'users.username as photographer_username',
+        ] as any)
+        .orderBy('photos.created_at', 'asc')
+        .orderBy('photos.id', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      base
+        .select(eb => eb.fn.count<number>('photos.id').as('cnt'))
+        .executeTakeFirst(),
+    ]);
+
+    return {
+      photos: rows.map(r => formatPhoto(r as Record<string, unknown>)),
+      total:  Number(countRow?.cnt ?? 0),
+    };
+  }
+
+  // =========================================================================
   // Private helpers
   // =========================================================================
+
+  /** An Activity a photograph may be linked to (PUBLISHED or COMPLETED). */
+  private async assertLinkableEvent(eventId: number): Promise<void> {
+    const event = await db
+      .selectFrom('events')
+      .where('id', '=', eventId)
+      // COMPLETED included: past and historical Activities end in COMPLETED
+      // and their documenting photographs must remain linkable.
+      .where('state', 'in', ['PUBLISHED', 'COMPLETED'])
+      .select('id')
+      .executeTakeFirst();
+    if (!event) {
+      throw new NotFoundException(`Event ${eventId} not found or not published.`);
+    }
+  }
 
   private async requireActiveMembership(userId: number): Promise<void> {
     if (!(await this.isActiveMember(userId))) {

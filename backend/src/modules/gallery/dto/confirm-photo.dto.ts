@@ -50,4 +50,8 @@ export interface ConfirmPhotoDto {
    *  Has no effect on visibility gating, Hero eligibility, or any admin tool.
    *  Defaults to true (visible in portfolio). */
   show_in_portfolio?: boolean;
+  /** Link the photograph to an Activity (events.id). Omit to keep any value set
+   *  at presign; null explicitly leaves it unlinked. Independent of
+   *  show_in_portfolio. */
+  source_event_id?: number | null;
 }

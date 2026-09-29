@@ -3,7 +3,9 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "setupFiles": ["<rootDir>/setup-env.js"],
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": { "allowJs": true, "esModuleInterop": true, "experimentalDecorators": true, "emitDecoratorMetadata": true, "target": "ES2022", "module": "commonjs" }, "diagnostics": false }]
+  },
+  "transformIgnorePatterns": ["/node_modules/(?!(kysely)/)"]
 }

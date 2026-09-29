@@ -140,19 +140,13 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 
       <div class="insp-field">
         <div class="insp-label-row">
-          <div class="insp-label">Origin Activity</div>
+          <label class="insp-label" for="meta-activity">Origin Activity</label>
           <span class="insp-optional">optional</span>
         </div>
-        <div class="pill-group" id="activity-pills" role="group" aria-label="Origin activity">
-          <button class="pill" data-value="Photowalk" type="button">Photowalk</button>
-          <button class="pill" data-value="Workshop" type="button">Workshop</button>
-          <button class="pill" data-value="Tour" type="button">Tour</button>
-          <button class="pill" data-value="Exhibition" type="button">Exhibition</button>
-          <button class="pill" data-value="Contest" type="button">Contest</button>
-          <button class="pill" data-value="Assignment" type="button">Assignment</button>
-          <button class="pill pill--dashed" data-value="Independent" type="button">Independent</button>
-        </div>
-        <p class="insp-hint">Applies to all photographs in this upload — powers Showcase filtering, event galleries, and photographer statistics.</p>
+        <select class="insp-input" id="meta-activity">
+          <option value="">Independent — not linked to an Activity</option>
+        </select>
+        <p class="insp-hint">Links every photograph in this upload to that Activity's gallery. Independent of "Hide from portfolio".</p>
       </div>
 
       <div class="insp-field">
@@ -464,7 +458,7 @@ let draftCount = 0;
 const abortMap = new Map<string, AbortController>();
 
 // Inspector metadata state
-let activeActivity: string | null = null;
+let activeActivity: number | null = null; // events.id -> photos.source_event_id
 let keywords: string[] = [];
 let addingKeyword = false;
 
@@ -1136,6 +1130,8 @@ async function confirmItems(
       exhibition_label: exhibLabel || undefined,
       visibility,
       show_in_portfolio: showInPortfolio,
+      // null = independent photo. Sent explicitly so it is authoritative at confirm time.
+      source_event_id: activeActivity,
       exif: {
         width_px:      item.exif?.widthPx,
         height_px:     item.exif?.heightPx,
@@ -1419,13 +1415,10 @@ qid('project-pills').addEventListener('click', e => {
   btn.classList.toggle('pill--active', selectedCategories.has(val));
 });
 
-// Activity pills
-qid('activity-pills').addEventListener('click', e => {
-  const btn = (e.target as Element).closest('.pill') as HTMLElement | null;
-  if (!btn) return;
-  const val = btn.dataset.value!;
-  activeActivity = activeActivity === val ? null : val;
-  qid('activity-pills').querySelectorAll('.pill').forEach(p => p.classList.toggle('pill--active', (p as HTMLElement).dataset.value === activeActivity));
+// Origin Activity (real Activity record -> photos.source_event_id)
+qid('meta-activity').addEventListener('change', e => {
+  const v = (e.target as HTMLSelectElement).value;
+  activeActivity = v ? Number(v) : null;
 });
 
 // Publish / Draft
@@ -1446,10 +1439,12 @@ qid('btn-draft').addEventListener('click', () => handlePublish(true).catch((err:
 qid('btn-upload-more').addEventListener('click', () => {
   items = []; publishedCount = 0; draftCount = 0;
   activeActivity = null; keywords = [];
+  (qid('meta-activity') as HTMLSelectElement).value = '';
   selectedCategories.clear();
   qid('genre-pills').querySelectorAll('.pill').forEach(p => p.classList.remove('pill--active'));
   qid('project-pills').querySelectorAll('.pill').forEach(p => p.classList.remove('pill--active'));
   setPhase('empty');
+  if (isMobile()) { openSourcePicker(); } else { fileInput.click(); }
 });
 
 /* ════════════════════════════════════════════════════════
@@ -1486,4 +1481,24 @@ qid('src-files').addEventListener('click', () => {
 
 // Load the category taxonomy for the inspector pills (item 71).
 void loadCategoryPills();
+
+// Load real Activities (PUBLISHED / COMPLETED, per the public Activities API --
+// the same states the backend accepts for linkage) for the Origin Activity select.
+async function loadActivityOptions(): Promise<void> {
+  try {
+    const res = await fetch('/api/v1/events?limit=100');
+    if (!res.ok) return;
+    const sel = qid('meta-activity') as HTMLSelectElement;
+    const json = await res.json() as { items?: Array<{ id: number; title: string; starts_at: string | null; historical_year: number | null }> };
+    const rows = json.items ?? [];
+    for (const it of rows) {
+      const year = it.starts_at ? new Date(it.starts_at).getFullYear() : it.historical_year;
+      const opt = document.createElement('option');
+      opt.value = String(it.id);
+      opt.textContent = year ? `${it.title} (${year})` : it.title;
+      sel.appendChild(opt);
+    }
+  } catch { /* non-critical — photos simply stay independent */ }
+}
+void loadActivityOptions();
 </script>

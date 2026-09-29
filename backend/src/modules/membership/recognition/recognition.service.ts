@@ -23,7 +23,8 @@
 // an interpretation -- confirm with governance before first real AUTO award.
 
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { db } from '../../../database/db';
+import type { Kysely } from 'kysely';
+import { db, type DB } from '../../../database/db';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 
@@ -61,6 +62,7 @@ export class RecognitionService {
     actorUserId: number,
     startDate?: string,
   ): Promise<void> {
+    this.assertTrackMatchesCode(recognitionCode, track);
     const membership = await db
       .selectFrom('memberships')
       .select(['id', 'lifecycle_state'])
@@ -125,6 +127,146 @@ export class RecognitionService {
           portal_link: `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`,
         });
       }
+    }
+  }
+
+  // ---- Atomic grant with MEM-006 supersession --------------------------
+  //
+  // MEM-006 Recognition Precedence Rule: Governance Recognition supersedes
+  // Automatic Recognition, which becomes Historical. Everything (the old
+  // row's flip to HISTORICAL, the new ACTIVE row, and both audit rows) runs
+  // against the caller's trx, so a failure anywhere leaves the member with
+  // exactly the recognition they had before.
+  //
+  // Supersession is deliberately narrow: only an ACTIVE *AUTO* row is
+  // superseded, and only by a governance (HONORARY_*) code. Any other
+  // conflict (e.g. replacing one MANUAL recognition with another) stays a
+  // ConflictException -- that is an explicit revoke decision, not something
+  // this method may make silently.
+  //
+  // Idempotent: re-granting the code the member already holds returns
+  // 'NOOP' and writes nothing.
+  async grantInTransaction(
+    trx: Kysely<DB>,
+    params: {
+      membershipId: number;
+      recognitionCode: RecognitionCode;
+      track: 'AUTO' | 'MANUAL';
+      reason: string;
+      actorUserId: number;
+      startDate?: string;
+    },
+  ): Promise<{ outcome: 'GRANTED' | 'SUPERSEDED' | 'NOOP'; userId: number | null }> {
+    const { membershipId, recognitionCode, track, reason, actorUserId } = params;
+    this.assertTrackMatchesCode(recognitionCode, track);
+
+    const membership = await trx
+      .selectFrom('memberships')
+      .select(['id', 'user_id', 'lifecycle_state'])
+      .where('id', '=', membershipId)
+      .forUpdate()
+      .executeTakeFirst();
+    if (!membership) throw new NotFoundException('Membership record not found.');
+    if (membership.lifecycle_state !== 'ACTIVE') {
+      throw new ConflictException(
+        `Recognitions can only be assigned to ACTIVE memberships (current state: ${membership.lifecycle_state}).`,
+      );
+    }
+    const userId = membership.user_id !== null ? Number(membership.user_id) : null;
+
+    const active = await trx
+      .selectFrom('member_recognitions')
+      .selectAll()
+      .where('membership_id', '=', membershipId)
+      .where('status', '=', 'ACTIVE')
+      .executeTakeFirst();
+
+    const today = new Date().toISOString().slice(0, 10);
+    let outcome: 'GRANTED' | 'SUPERSEDED' = 'GRANTED';
+
+    if (active) {
+      if (active.recognition_code === recognitionCode) return { outcome: 'NOOP', userId };
+      const supersedable = active.track === 'AUTO' && HONORARY_CODES.includes(recognitionCode);
+      if (!supersedable) {
+        throw new ConflictException(
+          `Membership ${membershipId} already holds active ${active.recognition_code} (${active.track}); only an AUTO recognition can be superseded, and only by a governance recognition. Revoke explicitly first.`,
+        );
+      }
+      await trx
+        .updateTable('member_recognitions')
+        .set({ status: 'HISTORICAL', end_date: today })
+        .where('id', '=', active.id)
+        .execute();
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'RECOGNITION_SUPERSEDED',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { recognitionCode: active.recognition_code, track: active.track },
+          newValue: { recognitionCode, track },
+          notes: reason,
+        },
+        trx,
+      );
+      outcome = 'SUPERSEDED';
+    }
+
+    await trx
+      .insertInto('member_recognitions')
+      .values({
+        membership_id: membershipId,
+        recognition_code: recognitionCode,
+        track,
+        status: 'ACTIVE',
+        reason,
+        assigned_by_user_id: actorUserId,
+        start_date: params.startDate ?? today,
+      })
+      .execute();
+    await logMembershipAudit(
+      {
+        membershipId,
+        eventType: 'RECOGNITION_ASSIGNED',
+        actorType: 'ADMIN',
+        actorUserId,
+        newValue: { recognitionCode, track },
+        notes: reason,
+      },
+      trx,
+    );
+
+    return { outcome, userId };
+  }
+
+  // Sent only AFTER the transaction commits, so a rolled-back batch never
+  // emails anyone. HONORARY_* -> RECOGNITION_AWARDED; SENIOR_MEMBER ->
+  // SENIOR_STATUS_ACHIEVED (same variable sets the existing paths use).
+  async notifyGrant(userId: number, recognitionCode: RecognitionCode): Promise<void> {
+    const user = await db.selectFrom('users').select('full_name').where('id', '=', userId).executeTakeFirst();
+    const portalLink = `${process.env.FRONTEND_BASE_URL ?? 'https://bcc.bhopal.info'}/hub/`;
+    if (HONORARY_CODES.includes(recognitionCode)) {
+      await this.communicationService.dispatch('RECOGNITION_AWARDED', userId, {
+        full_name: user?.full_name ?? '',
+        recognition_class: recognitionCode.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        portal_link: portalLink,
+      });
+    } else if (recognitionCode === 'SENIOR_MEMBER') {
+      await this.communicationService.dispatch('SENIOR_STATUS_ACHIEVED', userId, {
+        full_name: user?.full_name ?? '',
+        portal_link: portalLink,
+      });
+    }
+  }
+
+  // Governance classes are MANUAL by definition (MEM-006 governance track).
+  // SENIOR_MEMBER may be AUTO (system qualification) or MANUAL (recorded
+  // owner exception); HONORARY_SENIOR_MEMBER is management-awarded per
+  // MEM-008, so it is MANUAL only.
+  private assertTrackMatchesCode(code: RecognitionCode, track: 'AUTO' | 'MANUAL'): void {
+    const manualOnly = HONORARY_CODES.includes(code) || code === 'HONORARY_SENIOR_MEMBER';
+    if (manualOnly && track !== 'MANUAL') {
+      throw new ConflictException(`${code} is a governance recognition and must use the MANUAL track.`);
     }
   }
 

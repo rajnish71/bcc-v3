@@ -46,6 +46,10 @@ import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.se
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
 import { GroupMembershipService } from './group-membership.service';
 import { GroupService } from './group.service';
+import { HubMembershipService } from '../hub/hub-membership.service';
+import { SubmitGroupApplicationDto } from '../dto/submit-group-application.dto';
+import { SubmitMembershipFormDto } from '../dto/submit-membership-form.dto';
+import { validate } from 'class-validator';
 
 const fake = db as unknown as FakeDb;
 const WEBHOOK_SECRET = 'whsec_lifecycle_test';
@@ -222,6 +226,7 @@ let lifecycle: MembershipLifecycleService;
 let groupMemberships: GroupMembershipService;
 let groups: GroupService;
 let workflow: ApplicationWorkflowService;
+let hub: HubMembershipService;
 let linkSeq = 0;
 let eventSeq = 0;
 
@@ -248,8 +253,9 @@ function buildServices(): void {
   const entitlements = new EntitlementService();
   const communication = { dispatch: jest.fn().mockResolvedValue(undefined) } as unknown as CommunicationService;
   lifecycle = new MembershipLifecycleService(new MembershipNumberingService(), communication, entitlements, financial);
-  groupMemberships = new GroupMembershipService(lifecycle, entitlements);
+  groupMemberships = new GroupMembershipService(lifecycle, entitlements, financial);
   groups = new GroupService(entitlements);
+  hub = new HubMembershipService(financial, lifecycle, groups);
   workflow = new ApplicationWorkflowService(lifecycle, {} as R2Service, communication);
   // Payment -> Membership only through Financial Engine events (PAY-001 §11).
   new MembershipFinancialListener(bus, lifecycle).onModuleInit();
@@ -949,5 +955,198 @@ describe('Security — route surface (real source inspection)', () => {
     const code = migration.replace(/--.*$/gm, '');
     expect(code).not.toMatch(/CREATE TABLE/i);
     expect(code).not.toMatch(/number_pool|number_serial|membership_number/i);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SELF-SERVICE APPLICATION ENTRY (Hub) — orchestration of existing services
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('Self-service Family / Corporate application', () => {
+  // The table model does not evaluate SQL joins. The head-level reads used by
+  // this path (duplicate check, Hub view) are `memberships AS m INNER JOIN
+  // group_entities AS ge`; emulate exactly that join here so those real
+  // queries are exercised with their real where-clauses (qualified columns).
+  beforeEach(() => {
+    const base = fake.responder;
+    fake.responder = (op: FakeOp) => {
+      if (op.kind === 'select' && op.table === 'memberships as m') {
+        const rows = table('memberships').flatMap((m) => {
+          const ge = table('group_entities').find((e) => e.id === m.group_entity_id);
+          if (!ge) return [];
+          const q: Row = {};
+          for (const [k, v] of Object.entries(m)) q[`m.${k}`] = v;
+          for (const [k, v] of Object.entries(ge)) q[`ge.${k}`] = v;
+          return [q];
+        });
+        const same = (a: unknown, b: unknown) => (a == null && b == null) || String(a) === String(b);
+        const hit = rows.filter((q) => op.wheres.every(([c, o, v]) => {
+          if (typeof c !== 'string') return true;
+          const actual = q[c];
+          if (o === '=') return same(actual, v);
+          if (o === 'in') return (v as unknown[]).some((x) => same(actual, x));
+          return true;
+        }));
+        return hit.map((q) => ({
+          id: q['m.id'], lifecycle_state: q['m.lifecycle_state'],
+          membershipId: q['m.id'], lifecycleState: q['m.lifecycle_state'], expiresAt: q['m.expires_at'],
+          type: q['ge.type'], name: q['ge.name'],
+        }));
+      }
+      return base(op);
+    };
+  });
+
+  const dto =(over: Partial<SubmitGroupApplicationDto> = {}): SubmitGroupApplicationDto =>
+    Object.assign(new SubmitGroupApplicationDto(), {
+      groupType: 'FAMILY', groupName: 'Outsider Family', phone: '9876543210', termsVersion: 'v1.0', ...over,
+    });
+  const submit = (userId: number, over: Partial<SubmitGroupApplicationDto> = {}) =>
+    hub.submitGroupApplication(userId, dto(over), '203.0.113.9', 'jest', { actorType: 'MEMBER', provenance: { actorUserId: userId } });
+
+  it('Family: applicant becomes head of a NEW entity; PENDING group + ₹6,000 contribution; consent + audit; no number', async () => {
+    const res = await submit(OUTSIDER);
+
+    const entity = table('group_entities').find((e) => e.id === res.groupEntityId)!;
+    expect(entity).toMatchObject({ type: 'FAMILY', name: 'Outsider Family', primary_contact_user_id: OUTSIDER });
+    expect(membership(res.membershipId)).toMatchObject({
+      owner_type: 'GROUP', group_entity_id: res.groupEntityId, group_membership_type_id: FAMILY_TYPE,
+      lifecycle_state: 'PENDING', number_serial: null,
+    });
+    expect(res.contribution).toMatchObject({ amountPaise: 600000, currency: 'INR', state: 'AWAITING_SETTLEMENT' });
+    expect(applicationContribution(res.membershipId)).toMatchObject({ payer_user_id: OUTSIDER, purpose: 'Family Membership fee' });
+    expect(table('membership_consent_log')).toEqual([
+      expect.objectContaining({ user_id: OUTSIDER, consent_type: 'APPLICATION', terms_version: 'v1.0' }),
+    ]);
+    const submitted = table('membership_audit_log').find((a) => a.event_type === 'GROUP_APPLICATION_SUBMITTED')!;
+    expect(submitted).toMatchObject({ membership_id: res.membershipId, actor_type: 'MEMBER', actor_user_id: OUTSIDER });
+    // Heading a group never creates an individual seat or record for the head.
+    expect(table('memberships').filter((m) => m.user_id === OUTSIDER)).toHaveLength(0);
+    expect(pool()).toBe(FIRST_SERIAL);
+  });
+
+  it('Corporate: ₹5,000 contribution from configuration', async () => {
+    const res = await submit(OUTSIDER, { groupType: 'CORPORATE', groupName: 'Outsider Pvt Ltd' });
+    expect(res.contribution).toMatchObject({ amountPaise: 500000, currency: 'INR' });
+    expect(membership(res.membershipId).group_membership_type_id).toBe(CORP_TYPE);
+  });
+
+  it("reuses the head's own existing entity of that kind (no orphan entities)", async () => {
+    const before = table('group_entities').length;
+    const res = await submit(FAMILY_HEAD, { groupName: 'Khare Family' });
+    expect(res.groupEntityId).toBe(FAMILY_ENTITY);
+    expect(table('group_entities')).toHaveLength(before);
+  });
+
+  it('a second OPEN application of the same type is refused; nothing new is written', async () => {
+    await submit(OUTSIDER);
+    const counts = [table('group_entities').length, table('memberships').length, table('financial_contributions').length];
+    await expect(submit(OUTSIDER)).rejects.toThrow(/already have an open Family Membership/);
+    expect([table('group_entities').length, table('memberships').length, table('financial_contributions').length]).toEqual(counts);
+  });
+
+  it('after a REJECTED application the head may re-apply, reusing the same entity', async () => {
+    const first = await submit(OUTSIDER);
+    await workflow.recordStageDecision({
+      membershipId: first.membershipId, stage: 'COORDINATOR', decision: 'REJECTED', actorUserId: ADMIN, note: 'Incomplete',
+    });
+    const second = await submit(OUTSIDER);
+    expect(second.groupEntityId).toBe(first.groupEntityId);
+    expect(second.membershipId).not.toBe(first.membershipId);
+  });
+
+  it('invalid or already-registered phone is refused before anything is created', async () => {
+    const before = table('group_entities').length;
+    await expect(submit(OUTSIDER, { phone: '12345' })).rejects.toThrow(BadRequestException);
+    table('users').find((u) => u.id === 101)!.phone = '9876543210';
+    await expect(submit(OUTSIDER)).rejects.toThrow(/already registered to another account/);
+    expect(table('group_entities')).toHaveLength(before);
+    expect(table('memberships').filter((m) => m.owner_type === 'GROUP')).toHaveLength(0);
+  });
+
+  it('runs the SAME frozen lifecycle: unpaid -> no approval; paid -> approve -> invite -> accept -> activate -> number', async () => {
+    const res = await submit(OUTSIDER);
+    await expect(approveViaWorkflow(res.membershipId)).rejects.toThrow(/approval requires COMPLETED/);
+    await payContribution(res.contribution!.contributionId);
+    expect(membership(res.membershipId).lifecycle_state).toBe('PENDING'); // payment never approves
+    await approveViaWorkflow(res.membershipId);
+    const memberId = await inviteAndAccept(res.membershipId, OUTSIDER, 'f101@bcc.test');
+    expect(pool()).toBe(FIRST_SERIAL);
+    await lifecycle.activate(memberId, { type: 'ADMIN', userId: ADMIN });
+    expect(membership(memberId).number_serial).toBe(FIRST_SERIAL);
+    expect(membership(res.membershipId)).toMatchObject({ lifecycle_state: 'ACTIVE', number_serial: null });
+  });
+
+  it('Human Authority ruling: an existing Individual member may head a group, but gets no second seat', async () => {
+    const res = await submit(ALREADY_MEMBER, { groupName: 'Existing Member Family' });
+    expect(membership(res.membershipId)).toMatchObject({ lifecycle_state: 'PENDING', owner_type: 'GROUP' });
+    const view = await groupMemberships.mine(ALREADY_MEMBER);
+    expect(view.holdsOpenMembership).toBe(true);
+    await payContribution(res.contribution!.contributionId);
+    await approveViaWorkflow(res.membershipId);
+    await expect(groupMemberships.invite(res.membershipId, 'member@bcc.test', ALREADY_MEMBER))
+      .rejects.toThrow(/already holds an open membership/);
+    // Only the original Individual record exists for them.
+    expect(table('memberships').filter((m) => m.user_id === ALREADY_MEMBER)).toHaveLength(1);
+  });
+
+  it('the Hub view shows the head their application payment state (no payment URL in the read)', async () => {
+    const res = await submit(OUTSIDER);
+    const view = await groupMemberships.mine(OUTSIDER);
+    expect(view.headOf).toEqual([
+      expect.objectContaining({
+        membershipId: res.membershipId,
+        lifecycleState: 'PENDING',
+        applicationContribution: expect.objectContaining({
+          contributionId: res.contribution!.contributionId, state: 'AWAITING_SETTLEMENT', amountPaise: 600000,
+        }),
+      }),
+    ]);
+    expect(JSON.stringify(view)).not.toMatch(/https?:\/\//);
+    expect(view.holdsOpenMembership).toBe(false);
+  });
+});
+
+describe('Self-service — input and route security', () => {
+  it('the DTO has exactly groupType, groupName, phone, termsVersion (no fee/type-id/entity/head/capacity/user)', () => {
+    const src = readFileSync(join(__dirname, '../dto/submit-group-application.dto.ts'), 'utf8');
+    const fields = [...src.matchAll(/^\s{2}(\w+)!?:\s/gm)].map((m) => m[1]).sort();
+    expect(fields).toEqual(['groupName', 'groupType', 'phone', 'termsVersion']);
+  });
+
+  it('only FAMILY / CORPORATE are accepted as groupType', async () => {
+    const make = (groupType: string) =>
+      Object.assign(new SubmitGroupApplicationDto(), { groupType, groupName: 'X Y', phone: '9876543210', termsVersion: 'v1.0' });
+    expect(await validate(make('FAMILY'))).toHaveLength(0);
+    expect(await validate(make('CORPORATE'))).toHaveLength(0);
+    for (const bad of ['INSTITUTIONAL', 'family', '1', '']) {
+      expect((await validate(make(bad))).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('the INDIVIDUAL self-service endpoint rejects group codes (no silent Basic fallback for them)', async () => {
+    const indiv = Object.assign(new SubmitMembershipFormDto(), {
+      dateOfBirth: '1990-01-01', gender: 'MALE', phone: '9876543210', addressLine1: '12 Main Road', city: 'Bhopal',
+      state: 'MP', pinCode: '462001', termsVersion: 'v1.0', membershipClassCode: 'FAMILY_MEMBERSHIP',
+    });
+    const errors = await validate(indiv);
+    expect(errors.map((e) => e.property)).toContain('membershipClassCode');
+  });
+
+  it('route is authenticated and binds the applicant to the token identity only', () => {
+    const src = readFileSync(join(__dirname, '../hub/hub-membership.controller.ts'), 'utf8');
+    const block = src.slice(src.indexOf("@Post('group-application')"), src.indexOf('// ── Renewal (Variant B'));
+    expect(block).toContain('@UseGuards(AccessTokenGuard)');
+    expect(block).toMatch(/submitGroupApplication\(\s*user\.sub,/);
+    expect(block).toContain("requestAuditContext('MEMBER', req, user)");
+  });
+
+  it('orchestration adds no business rule: delegates to createGroup + lifecycle.apply, never numbering/approval/activation', () => {
+    const src = readFileSync(join(__dirname, '../hub/hub-membership.service.ts'), 'utf8');
+    const fn = src.slice(src.indexOf('async submitGroupApplication('), src.indexOf('// ── Renewal flow (Variant B)'));
+    expect(fn).toContain('this.groupService.createGroup(');
+    expect(fn).toContain('this.lifecycle.apply(');
+    expect(fn).toContain('primaryContactUserId: userId');
+    expect(fn).not.toMatch(/assignPermanentNumber|\.approve\(|\.activate\(|createContribution\(|fee_inr|amount_paise:/);
   });
 });

@@ -213,7 +213,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
     name: 'Family',
     badge: 'FAMILY',
     who: 'Households where photography is a shared pursuit.',
-    eligibility: 'Up to 4 members at the same address. Arranged with BCC: payment, BCC review, then members are invited and activated — each with their own membership number.',
+    eligibility: 'Up to 4 members at the same address. Apply online as the head of the family: payment, BCC review, then members are invited and activated — each with their own membership number.',
     // Fallback only -- membership.astro overrides this at build time from
     // GET /api/v1/membership/public/classes (group_type_entitlements.fee_inr).
     annual: '₹6,000',
@@ -226,14 +226,13 @@ export const PUBLIC_TIERS: PublicTier[] = [
     ],
     ctaHref: '/auth/register?plan=family',
     classCode: 'FAMILY_MEMBERSHIP',
-    selfService: false,
   },
   {
     id: 'corporate',
     name: 'Corporate',
     badge: 'CORPORATE',
     who: 'Businesses and organisations supporting the photography community.',
-    eligibility: 'Any registered entity. Arranged with BCC: payment, BCC review, then up to five nominated individuals are invited and activated — each with their own membership number.',
+    eligibility: 'Any registered entity. Apply online as the organisation’s contact: payment, BCC review, then up to five nominated individuals are invited and activated — each with their own membership number.',
     // Fallback only -- see family tier comment above.
     annual: '₹5,000',
     period: 'per year',
@@ -246,7 +245,6 @@ export const PUBLIC_TIERS: PublicTier[] = [
     ],
     ctaHref: '/auth/register?plan=corporate',
     classCode: 'CORPORATE_MEMBERSHIP',
-    selfService: false,
   },
 ];
 
@@ -271,7 +269,7 @@ export const JOIN_FAQS: JoinFaq[] = [
   },
   {
     q: 'How do Family and Corporate memberships work?',
-    a: 'They are arranged with BCC rather than through online sign-up. The family or organisation pays the membership contribution first; BCC then reviews and approves the membership. After approval, the head of the family or the organisation’s contact invites each member, each member accepts, and BCC activates their individual membership — issuing every member their own membership number. There is no shared membership number.',
+    a: 'The head of the family, or the organisation’s contact, applies online from their BCC account and pays the membership contribution for that application; BCC then reviews and approves the membership. After approval, the head of the family or the organisation’s contact invites each member, each member accepts, and BCC activates their individual membership — issuing every member their own membership number. There is no shared membership number.',
   },
   {
     q: 'What if my application is not approved?',

@@ -754,6 +754,12 @@ const { variant } = Astro.props;
       basic:                 { classCode: 'BASIC_MEMBER',       displayName: 'Basic Membership',              badgeText: 'Basic Membership · 1 Year',               term: '1 Year · Effective from date of activation' },
     };
     const storedPlan = localStorage.getItem('bcc_pending_plan') ?? 'basic';
+    // Family / Corporate are group applications with their own Hub flow.
+    // They must NEVER fall through to PLAN_MAP's Basic default below.
+    if (variant === 'apply' && (storedPlan === 'family' || storedPlan === 'corporate')) {
+      window.location.replace('/hub/membership/group/');
+      return;
+    }
     const selectedPlan = PLAN_MAP[storedPlan] ?? PLAN_MAP['basic'];
 
     // ── State ──────────────────────────────────────────────────────────────

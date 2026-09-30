@@ -264,7 +264,10 @@ import CheckboxField from '../../components/forms/CheckboxField.astro';
   /* -- Persist selected plan from ?plan= param (localStorage so it
        survives email verification links opening in new tabs) ----------- */
   (function persistPlan(): void {
-    const allowed = new Set(['basic', 'student', 'individual', 'individual-biennial']);
+    // family / corporate: group plans -- carried to the Family & Corporate
+    // application in the Hub (/hub/membership/group/), never to the
+    // individual form (which must not fall back to Basic for them).
+    const allowed = new Set(['basic', 'student', 'individual', 'individual-biennial', 'family', 'corporate']);
     const planParam = new URLSearchParams(window.location.search).get('plan') ?? '';
     const plan = allowed.has(planParam) ? planParam : '';
     if (plan) {

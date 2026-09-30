@@ -41,9 +41,11 @@ import type { Kysely, Selectable } from 'kysely';
 import { db, type DB, type MembershipsTable } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { EntitlementService } from '../entitlements/entitlement.service';
+import { FinancialContributionService } from '../../financial/financial-contribution.service';
 import {
   GROUP_LIFECYCLE_ENTITY_TYPES,
   MembershipLifecycleService,
+  groupApplicationContributionKey,
 } from '../lifecycle/membership-lifecycle.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 
@@ -77,6 +79,7 @@ export class GroupMembershipService {
   constructor(
     private readonly lifecycle: MembershipLifecycleService,
     private readonly entitlements: EntitlementService,
+    private readonly financial: FinancialContributionService,
   ) {}
 
   // ── Shared reads ─────────────────────────────────────────────────────────
@@ -484,6 +487,32 @@ export class GroupMembershipService {
       .where('gd.removed_at', 'is', null)
       .execute();
 
-    return { headOf, invitations };
+    // Application payment state for each group this user heads (the head is
+    // the payer, so this is their own obligation). Read-only; looked up by
+    // the application obligation's own idempotency key so a later renewal
+    // obligation never stands in for it. No payment URL here -- the head
+    // obtains/reuses it through the existing payer-owned payment-link route.
+    const headOfWithPayment = await Promise.all(
+      headOf.map(async (g) => {
+        const c = await this.financial.findByIdempotencyKey(groupApplicationContributionKey(Number(g.membershipId)));
+        return {
+          ...g,
+          applicationContribution: c
+            ? {
+                contributionId: Number(c.id),
+                state: String(c.state),
+                amountPaise: Number(c.amount_paise),
+                currency: String(c.currency),
+              }
+            : null,
+        };
+      }),
+    );
+
+    // Lets the Hub explain (Human Authority ruling) that heading a group does
+    // not create a second membership seat for someone who already holds one.
+    const holdsOpenMembership = await this.hasOpenMembership(db, userId);
+
+    return { headOf: headOfWithPayment, invitations, holdsOpenMembership };
   }
 }

@@ -25,10 +25,19 @@ import type { SubmitMembershipFormDto } from '../dto/submit-membership-form.dto'
 import { SELF_SERVICE_CLASS_CODES } from '../dto/submit-membership-form.dto';
 import { normalize, validate } from '../../shared/phone.util';
 import { FinancialContributionService } from '../../financial/financial-contribution.service';
-import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
+import {
+  MembershipLifecycleService,
+  groupApplicationContributionKey,
+} from '../lifecycle/membership-lifecycle.service';
 import type { AuditContext } from '../../financial/audit/financial-audit.types';
+import type { SubmitGroupApplicationDto } from '../dto/submit-group-application.dto';
+import { GroupService } from '../groups/group.service';
+import { logMembershipAudit } from '../shared/membership-audit.util';
 
 const BASIC_MEMBER_CODE = 'BASIC_MEMBER';
+
+// A group application/membership still "open" for duplicate protection.
+const OPEN_GROUP_MEMBERSHIP_STATES = ['PENDING', 'APPROVED', 'ACTIVE', 'SUSPENDED'] as const;
 const MEMBERSHIP_BUSINESS_MODULE = 'MEMBERSHIP';
 
 // Workflow-ordering fix: the Financial Contribution for a PAYMENT_REQUIRED
@@ -52,6 +61,7 @@ export class HubMembershipService {
   constructor(
     private readonly financialService: FinancialContributionService,
     private readonly lifecycle: MembershipLifecycleService,
+    private readonly groupService: GroupService,
   ) {}
 
   private async getBasicMemberClassId(): Promise<number> {
@@ -268,6 +278,144 @@ export class HubMembershipService {
     await this.lifecycle.createApplicationContribution(membershipId, classId, userId, auditContext);
 
     return { success: true, submittedAt: now };
+  }
+
+  // ── Family / Corporate self-service application ───────────────────────────
+  //
+  // Orchestration only -- no new lifecycle or business rule. The frozen
+  // Family/Corporate lifecycle (PAY -> APPROVE -> INVITE/ASSIGN -> ACCEPT ->
+  // ACTIVATE -> NUMBER) is owned by the existing services it calls:
+  //   • GroupService.createGroup()      -- entity + applicant as head (primary contact)
+  //   • MembershipLifecycleService.apply({ownerType:'GROUP'})
+  //       -- validates fee/payer BEFORE writing, refuses a second open
+  //          application for the entity, inserts PENDING, and creates the
+  //          PAY-001 Financial Contribution (fee from group_type_entitlements).
+  // Payment then goes through the EXISTING payer-owned payment-link route;
+  // approval, invitations, activation and numbering are untouched.
+  //
+  // The applicant is the access-token identity and always becomes the head.
+  // Heading a group never creates an individual membership seat for them
+  // (Human Authority ruling): a seat exists only via invitation + acceptance,
+  // and someone who already holds an Individual membership keeps that one.
+  async submitGroupApplication(
+    userId: number,
+    dto: SubmitGroupApplicationDto,
+    ipAddress: string | null,
+    userAgent: string | null,
+    auditContext?: AuditContext,
+  ) {
+    const groupType = await db
+      .selectFrom('group_membership_types')
+      .select(['id', 'name'])
+      .where('entity_type', '=', dto.groupType)
+      .executeTakeFirst();
+    if (!groupType) throw new NotFoundException('This membership type is not available.');
+
+    // A. One OPEN application/membership of this type per head.
+    const open = await db
+      .selectFrom('memberships as m')
+      .innerJoin('group_entities as ge', 'ge.id', 'm.group_entity_id')
+      .select(['m.id', 'm.lifecycle_state'])
+      .where('m.owner_type', '=', 'GROUP')
+      .where('ge.type', '=', dto.groupType)
+      .where('ge.primary_contact_user_id', '=', userId)
+      .where('m.lifecycle_state', 'in', [...OPEN_GROUP_MEMBERSHIP_STATES])
+      .executeTakeFirst();
+    if (open) {
+      throw new ConflictException(
+        `You already have an open ${groupType.name} (${open.lifecycle_state.toLowerCase()}). ` +
+        'Continue it from your Hub instead of starting a new one.',
+      );
+    }
+
+    // Same phone validation / uniqueness rule as the individual application.
+    const canonical = normalize(dto.phone);
+    if (!validate(canonical)) {
+      throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
+    }
+    const phoneConflict = await db
+      .selectFrom('users')
+      .select(['id'])
+      .where('phone', '=', canonical)
+      .where('id', '!=', userId)
+      .executeTakeFirst();
+    if (phoneConflict) {
+      throw new ConflictException('This phone number is already registered to another account');
+    }
+
+    // B. Reuse this head's own entity of the same kind (none of which can be
+    // open -- step A), so a retry after rejection/lapse never piles up
+    // orphan entities; otherwise create one with the applicant as head.
+    const groupName = dto.groupName.trim();
+    const reusable = await db
+      .selectFrom('group_entities')
+      .select(['id', 'name'])
+      .where('type', '=', dto.groupType)
+      .where('primary_contact_user_id', '=', userId)
+      .orderBy('id', 'desc')
+      .executeTakeFirst();
+    let groupEntityId: number;
+    if (reusable) {
+      groupEntityId = Number(reusable.id);
+      if (reusable.name !== groupName) {
+        await this.groupService.updateGroup(groupEntityId, { name: groupName }, userId, false);
+      }
+    } else {
+      ({ id: groupEntityId } = await this.groupService.createGroup({
+        type: dto.groupType,
+        name: groupName,
+        primaryContactUserId: userId,
+        actorUserId: userId,
+      }));
+    }
+
+    // C. The existing lifecycle entry point: PENDING application + PAY-001
+    // contribution. groupMembershipTypeId is server-resolved, never client input.
+    const { id: membershipId } = await this.lifecycle.apply(
+      { ownerType: 'GROUP', groupEntityId, groupMembershipTypeId: Number(groupType.id) },
+      auditContext,
+    );
+
+    // D. Applicant contact + consent + self-service audit marker.
+    await db.transaction().execute(async (trx) => {
+      await trx.updateTable('users').set({ phone: canonical }).where('id', '=', userId).execute();
+      await trx
+        .insertInto('membership_consent_log')
+        .values({
+          user_id: userId,
+          consent_type: 'APPLICATION',
+          terms_version: dto.termsVersion,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        })
+        .execute();
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'GROUP_APPLICATION_SUBMITTED',
+          actorType: 'MEMBER',
+          actorUserId: userId,
+          newValue: { groupType: dto.groupType, groupEntityId, reusedEntity: !!reusable, channel: 'SELF_SERVICE' },
+        },
+        trx,
+      );
+    });
+
+    const contribution = await this.financialService.findByIdempotencyKey(groupApplicationContributionKey(membershipId));
+    return {
+      success: true,
+      membershipId,
+      groupEntityId,
+      lifecycleState: 'PENDING' as const,
+      contribution: contribution
+        ? {
+            contributionId: Number(contribution.id),
+            state: String(contribution.state),
+            amountPaise: Number(contribution.amount_paise),
+            currency: String(contribution.currency),
+          }
+        : null,
+    };
   }
 
   // ── Renewal flow (Variant B) ──────────────────────────────────────────────

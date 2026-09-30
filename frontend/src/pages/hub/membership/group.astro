@@ -13,6 +13,11 @@
  *     remaining capacity, and can invite once BCC has approved the group.
  *     There is deliberately NO remove/revoke/replace control: only BCC
  *     administration can remove a member.
+ *   • Applicant (self-service): submits a Family/Corporate application and
+ *     becomes its head (POST api/v1/hub/membership/group-application), then
+ *     pays THAT application's contribution via the existing payer-owned
+ *     payment-link / retry routes. No standalone payment exists here.
+ *     Fee / term / capacity are displayed from configuration, never sent.
  *
  * All data from existing API routes (api/v1/membership/groups/...).
  */
@@ -35,6 +40,11 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     <section class="grp__section" aria-labelledby="grp-head-h">
       <h3 id="grp-head-h" class="grp__h">Groups you manage</h3>
       <div id="grp-headof" class="grp__body">Loading…</div>
+    </section>
+
+    <section class="grp__section" id="grp-apply-section" aria-labelledby="grp-apply-h" hidden>
+      <h3 id="grp-apply-h" class="grp__h">Apply for Family or Corporate membership</h3>
+      <div id="grp-apply" class="grp__body"></div>
     </section>
   </div>
 </HubLayout>
@@ -132,21 +142,170 @@ import HubLayout from '../../../layouts/HubLayout.astro';
       </div>`);
   }
 
+  // ── Self-service application + payment (existing routes only) ─────────
+  //
+  // Applying: POST /api/v1/hub/membership/group-application (the signed-in
+  // user becomes head; the server sets fee/term/capacity from configuration).
+  // Paying: the EXISTING payer-owned Financial Engine routes -- there is no
+  // standalone payment here, only payment of this application's contribution.
+
+  interface HeadOfGroup {
+    membershipId: number;
+    lifecycleState: string;
+    type: string;
+    name: string;
+    applicationContribution: { contributionId: number; state: string; amountPaise: number; currency: string } | null;
+  }
+
+  const OPEN_STATES = ['PENDING', 'APPROVED', 'ACTIVE', 'SUSPENDED'];
+  const FIN = '/api/v1/financial/contributions';
+
+  async function post(url: string, body: unknown = {}) {
+    const res = await fetch(url, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((data as { message?: string }).message ?? `Error ${res.status}`);
+    return data as Record<string, unknown>;
+  }
+
+  function inr(paise: number): string {
+    return `₹${(paise / 100).toLocaleString('en-IN')}`;
+  }
+
+  // Payment state of a PENDING application, with the one next payment action.
+  function renderPayment(host: HTMLElement, g: HeadOfGroup) {
+    if (g.lifecycleState !== 'PENDING' || !g.applicationContribution) return;
+    const c = g.applicationContribution;
+    let body = '';
+    if (c.state === 'COMPLETED') {
+      body = '<p class="grp-note">Contribution paid. BCC is reviewing your application; you can invite members once it is approved.</p>';
+    } else if (c.state === 'AWAITING_SETTLEMENT' || c.state === 'SETTLEMENT_IN_PROGRESS') {
+      body = `<button class="grp-btn" data-pay="link" data-cid="${c.contributionId}">Pay contribution (${inr(c.amountPaise)})</button>`;
+    } else if (c.state === 'FAILED' || c.state === 'ABANDONED') {
+      body = `<p class="grp-note">The previous payment link expired or was not completed.</p>
+        <button class="grp-btn" data-pay="retry" data-cid="${c.contributionId}">Get a new payment link</button>`;
+    } else {
+      body = `<p class="grp-note">Contribution status: ${esc(c.state)}. Please contact BCC.</p>`;
+    }
+    host.insertAdjacentHTML('beforeend', `
+      <div class="grp-card" data-pay-card>
+        <div class="grp-row__name">${esc(g.name)} · application payment</div>
+        <div class="grp-row__meta">Application submitted · awaiting ${c.state === 'COMPLETED' ? 'BCC approval' : 'payment'}</div>
+        ${body}
+        <div class="grp-note" data-pay-msg></div>
+      </div>`);
+  }
+
+  async function onPayClick(e: Event) {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-pay]');
+    if (!btn) return;
+    const msg = btn.closest('[data-pay-card]')?.querySelector<HTMLElement>('[data-pay-msg]');
+    btn.disabled = true;
+    try {
+      const cid = btn.dataset.cid;
+      if (btn.dataset.pay === 'retry') await post(`${FIN}/${cid}/settlement/retry`);
+      const link = await post(`${FIN}/${cid}/settlement/payment-link`);
+      const url = String(link.paymentLinkUrl ?? '');
+      if (!/^https:\/\//.test(url)) throw new Error('Payment link unavailable. Please try again.');
+      window.location.href = url; // provider-hosted page; settlement arrives via the signed webhook
+    } catch (err) {
+      btn.disabled = false;
+      if (msg) msg.textContent = (err as Error).message;
+    }
+  }
+
+  async function renderApplyForm(headOf: HeadOfGroup[], holdsOpenMembership: boolean) {
+    const section = document.getElementById('grp-apply-section');
+    const host = document.getElementById('grp-apply');
+    if (!section || !host) return;
+
+    const openTypes = new Set(headOf.filter((g) => OPEN_STATES.includes(g.lifecycleState)).map((g) => g.type));
+    const available = ['FAMILY', 'CORPORATE'].filter((t) => !openTypes.has(t));
+    if (!available.length) return;
+
+    // Fee / term / capacity shown from the public catalogue (configuration);
+    // display only -- the server never takes them from the client.
+    let catalogue: Array<Record<string, unknown>> = [];
+    try {
+      const res = await fetch('/api/v1/membership/public/classes');
+      if (res.ok) catalogue = await res.json();
+    } catch { /* display-only; form still works */ }
+    const info = (code: string) => {
+      const c = catalogue.find((x) => x.code === code);
+      return c ? ` — ${inr(Number(c.feeInr) * 100)} · ${c.validityMonths} months · up to ${c.maxDelegates} members` : '';
+    };
+    const stored = (localStorage.getItem('bcc_pending_plan') ?? '').toUpperCase();
+    const preselect = available.includes(stored) ? stored : available[0];
+    const option = (t: string) => {
+      const label = t === 'FAMILY' ? 'Family Membership' : 'Corporate Membership';
+      const code = t === 'FAMILY' ? 'FAMILY_MEMBERSHIP' : 'CORPORATE_MEMBERSHIP';
+      return `<label class="grp-choice"><input type="radio" name="groupType" value="${t}" ${t === preselect ? 'checked' : ''} required />
+        ${label}${esc(info(code))}</label>`;
+    };
+
+    host.innerHTML = `
+      <form class="grp-card grp-apply" novalidate>
+        <p class="grp-note">You apply as the head of the group. After you submit, you pay the contribution; BCC then reviews
+          and approves the application, and only then can you invite members.</p>
+        ${holdsOpenMembership ? `<p class="grp-note">You already hold a BCC membership. You can still apply for and manage this
+          group as its head — your existing membership stays your membership, and heading the group does not add a
+          second membership place for you.</p>` : ''}
+        <fieldset class="grp-fieldset"><legend class="grp-invite__label">Membership type</legend>${available.map(option).join('')}</fieldset>
+        <label class="grp-invite__label" for="grp-apply-name">Family or organisation name</label>
+        <input id="grp-apply-name" class="grp-input" name="groupName" required minlength="2" maxlength="255" autocomplete="organization" />
+        <label class="grp-invite__label" for="grp-apply-phone">Your mobile number</label>
+        <input id="grp-apply-phone" class="grp-input" name="phone" required inputmode="tel" autocomplete="tel" maxlength="14" />
+        <label class="grp-choice"><input type="checkbox" name="terms" required />
+          I agree to the <a href="/terms/" target="_blank" rel="noopener">BCC membership terms</a>.</label>
+        <div class="grp-invite__row"><button class="grp-btn" type="submit">Submit application</button></div>
+        <div class="grp-note" data-apply-msg></div>
+      </form>`;
+    section.hidden = false;
+
+    const form = host.querySelector<HTMLFormElement>('form.grp-apply')!;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector<HTMLElement>('[data-apply-msg]')!;
+      const fd = new FormData(form);
+      if (!fd.get('terms')) { msg.textContent = 'Please accept the membership terms.'; return; }
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      submit.disabled = true;
+      try {
+        await post('/api/v1/hub/membership/group-application', {
+          groupType: String(fd.get('groupType') ?? ''),
+          groupName: String(fd.get('groupName') ?? '').trim(),
+          phone: String(fd.get('phone') ?? '').trim(),
+          termsVersion: 'v1.0',
+        });
+        localStorage.removeItem('bcc_pending_plan');
+        window.location.reload(); // shows the new application with its payment action
+      } catch (err) {
+        submit.disabled = false;
+        msg.textContent = (err as Error).message;
+      }
+    });
+  }
+
   async function init() {
     const invEl = document.getElementById('grp-invitations');
     const headEl = document.getElementById('grp-headof');
     if (!invEl || !headEl) return;
     try {
       const mine = await api('/memberships/mine') as {
-        headOf: Array<{ membershipId: number }>;
+        headOf: HeadOfGroup[];
         invitations: Array<Record<string, unknown>>;
+        holdsOpenMembership: boolean;
       };
       renderInvitations(invEl, mine.invitations);
       if (!mine.headOf.length) { headEl.textContent = 'You do not manage a Family or Corporate membership.'; }
       else {
         headEl.textContent = '';
-        for (const g of mine.headOf) await renderGroup(headEl, g.membershipId);
+        for (const g of mine.headOf) {
+          await renderGroup(headEl, g.membershipId);
+          renderPayment(headEl, g);
+        }
       }
+      await renderApplyForm(mine.headOf, mine.holdsOpenMembership);
+      headEl.addEventListener('click', onPayClick);
       headEl.addEventListener('submit', async (e) => {
         const form = (e.target as HTMLElement).closest<HTMLFormElement>('form.grp-invite');
         if (!form) return;
@@ -204,6 +363,17 @@ import HubLayout from '../../../layouts/HubLayout.astro';
   :global(.grp-invite) { margin-top: 16px; }
   :global(.grp-invite__label) { display: block; font-family: var(--font-body); font-size: 12px; color: var(--ink-600); margin-bottom: 6px; }
   :global(.grp-invite__row) { display: flex; gap: 8px; flex-wrap: wrap; }
+  :global(.grp-fieldset) { border: 0; padding: 0; margin: 12px 0 0; }
+  :global(.grp-choice) {
+    display: flex; align-items: center; gap: 8px; margin: 6px 0;
+    font-family: var(--font-body); font-size: 13px; color: var(--ink-900);
+  }
+  :global(.grp-apply .grp-invite__label) { margin-top: 12px; }
+  :global(.grp-input) {
+    display: block; width: 100%; max-width: 420px; font-family: var(--font-body); font-size: 13px; padding: 6px 8px;
+    border: 1px solid var(--hairline); background: var(--surface-0); color: var(--ink-900); box-sizing: border-box;
+  }
+  :global(.grp-apply .grp-invite__row) { margin-top: 16px; }
   :global(.grp-invite__row input) {
     flex: 1 1 220px; min-width: 0; font-family: var(--font-body); font-size: 13px; padding: 6px 8px;
     border: 1px solid var(--hairline); background: var(--surface-0); color: var(--ink-900);

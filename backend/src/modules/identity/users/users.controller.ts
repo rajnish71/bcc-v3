@@ -120,7 +120,16 @@ export class UsersController {
         'm.activated_at as activatedAt',
         'mc.name as className',
         'mc.code as classCode',
+        'mc.activation_mode as activationMode',
         'ua.imagekit_url as avatarUrl',
+        eb
+          .selectFrom('financial_contributions as fc')
+          .select('fc.state')
+          .where('fc.business_module', '=', 'MEMBERSHIP')
+          .whereRef('fc.business_reference_id', '=', 'm.id')
+          .orderBy('fc.created_at', 'desc')
+          .limit(1)
+          .as('contributionState'),
         eb
           .selectFrom('login_history')
           .select('created_at')

@@ -134,6 +134,13 @@ export class ApplicationWorkflowService {
       }
     }
 
+    // The stage that fires the lifecycle transition must not be persisted
+    // unless approve() will accept it: check its (payment) preconditions
+    // first, so a refusal leaves no stage row or audit entry behind.
+    if (params.decision === 'APPROVED' && stageIndex === stages.length - 1) {
+      await this.lifecycle.assertApprovalPreconditions(params.membershipId);
+    }
+
     await db
       .insertInto('membership_approval_stages')
       .values({

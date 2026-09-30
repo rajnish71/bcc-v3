@@ -27,6 +27,8 @@ import type {
   RefundResult,
   SettlementOrderInput,
   SettlementOrderResult,
+  SettlementPaymentLinkInput,
+  SettlementPaymentLinkResult,
   SettlementProvider,
 } from './settlement-provider.interface';
 
@@ -88,6 +90,44 @@ export class RazorpaySettlementProvider implements SettlementProvider {
       currency: input.currency,
       providerPublicKeyId: this.keyId,
     };
+  }
+
+  // Translates the Financial Engine's generic payment-link input into a
+  // Razorpay Payment Links API request. Same unit discipline as
+  // createOrder(): amount is already in paise. accept_partial is always
+  // false -- a Contribution is settled exactly once, in full (PAY-001
+  // Principle 7). notify is disabled: the platform hands the hosted URL to
+  // whoever requested it; Razorpay never messages the payer on its own.
+  // No customer details are sent (the API treats `customer` as optional;
+  // the SDK typing does not, hence the cast) -- the platform owns payer
+  // identity, not the provider. Returns only the link id + hosted URL.
+  async createPaymentLink(input: SettlementPaymentLinkInput): Promise<SettlementPaymentLinkResult> {
+    const client = this.ensureClient();
+
+    const params = {
+      amount: input.amountPaise,
+      currency: input.currency,
+      accept_partial: false,
+      reference_id: input.referenceId,
+      description: input.description,
+      notify: { sms: false, email: false },
+      reminder_enable: false,
+      notes: input.metadata,
+      ...(input.expiresAt ? { expire_by: Math.floor(input.expiresAt.getTime() / 1000) } : {}),
+    } as unknown as Parameters<Razorpay['paymentLink']['create']>[0];
+
+    const link = await client.paymentLink.create(params);
+
+    return {
+      providerLinkReference: link.id,
+      hostedUrl: link.short_url,
+      amountPaise: input.amountPaise,
+      currency: input.currency,
+    };
+  }
+
+  async cancelPaymentLink(providerLinkReference: string): Promise<void> {
+    await this.ensureClient().paymentLink.cancel(providerLinkReference);
   }
 
   // Translates the Financial Engine's generic refund-initiation input into

@@ -26,10 +26,14 @@ import { AccessTokenGuard } from '../../identity/auth/access-token.guard';
 import { CurrentUser } from '../../identity/auth/current-user.decorator';
 import type { AccessTokenPayload } from '../../identity/auth/token.util';
 import { RbacService } from '../../identity/rbac/rbac.service';
+import { RbacGuard } from '../../identity/rbac/rbac.guard';
+import { RequirePermissions } from '../../identity/rbac/permissions.decorator';
 import { GroupService } from './group.service';
+import { GroupMembershipService } from './group-membership.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { AddDelegateDto } from '../dto/add-delegate.dto';
+import { InviteGroupMemberDto, RevokeGroupMemberDto } from '../dto/group-member.dto';
 
 const MANAGE_ANY = 'group.entity.manage_any';
 
@@ -39,6 +43,7 @@ export class GroupController {
   constructor(
     private readonly groups: GroupService,
     private readonly rbac: RbacService,
+    private readonly groupMemberships: GroupMembershipService,
   ) {}
 
   private async canManageAny(userId: number): Promise<boolean> {
@@ -67,6 +72,65 @@ export class GroupController {
     return this.groups.listGroupsForUser(actor.sub);
   }
 
+  // ── Family / Corporate: invitation, assignment, revocation ─────────────
+  // (static two-segment paths; they cannot shadow the ':id' routes below)
+
+  // Signed-in user's own view: groups they head + invitations awaiting them.
+  @Get('memberships/mine')
+  @HttpCode(200)
+  async myGroupMemberships(@CurrentUser() actor: AccessTokenPayload) {
+    return this.groupMemberships.mine(actor.sub);
+  }
+
+  // Head (or staff): roster, invitation states, remaining capacity.
+  @Get('memberships/:groupMembershipId/members')
+  @HttpCode(200)
+  async listGroupMembers(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('groupMembershipId', ParseIntPipe) groupMembershipId: number,
+  ) {
+    return this.groupMemberships.listMembers(groupMembershipId, actor.sub, await this.canManageAny(actor.sub));
+  }
+
+  // Head only (enforced in the service): invite a Registered User.
+  @Post('memberships/:groupMembershipId/invitations')
+  @HttpCode(201)
+  async inviteMember(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('groupMembershipId', ParseIntPipe) groupMembershipId: number,
+    @Body() dto: InviteGroupMemberDto,
+  ) {
+    return this.groupMemberships.invite(groupMembershipId, dto.identifier, actor.sub);
+  }
+
+  // Invitee only (enforced in the service): accept. Creates the member's own
+  // APPROVED record; never activates or numbers it.
+  @Post('invitations/:invitationId/accept')
+  @HttpCode(200)
+  async acceptInvitation(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('invitationId', ParseIntPipe) invitationId: number,
+  ) {
+    return this.groupMemberships.accept(invitationId, actor.sub);
+  }
+
+  // BCC administration ONLY. There is deliberately no head/creator-side
+  // revoke, remove, replace or transfer route. Existing permissions, AND
+  // semantics: roster administration (group.entity.manage_any) + ending the
+  // member's record (membership.lifecycle.terminate). Reason mandatory.
+  @Post('memberships/:groupMembershipId/members/:userId/revoke')
+  @HttpCode(200)
+  @UseGuards(RbacGuard)
+  @RequirePermissions(MANAGE_ANY, 'membership.lifecycle.terminate')
+  async revokeMember(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('groupMembershipId', ParseIntPipe) groupMembershipId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() dto: RevokeGroupMemberDto,
+  ) {
+    return this.groupMemberships.revokeMember(groupMembershipId, userId, actor.sub, dto.reason);
+  }
+
   @Get(':id')
   @HttpCode(200)
   async get(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
@@ -74,8 +138,9 @@ export class GroupController {
     const staff = await this.canManageAny(actor.sub);
     const isMember =
       group.primary_contact_user_id === actor.sub ||
-      // removed_at is Date | null from Kysely -- falsy check is correct here
-      group.delegates.some((d) => d.user_id === actor.sub && !d.removed_at);
+      // removed_at is Date | null from Kysely -- falsy check is correct here.
+      // A merely INVITED person is not yet a member of the group.
+      group.delegates.some((d) => d.user_id === actor.sub && !d.removed_at && d.status !== 'INVITED');
     if (!staff && !isMember) {
       throw new ForbiddenException('You are not a delegate of this group.');
     }

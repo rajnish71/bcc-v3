@@ -51,7 +51,10 @@ export class EntitlementService {
     // "Base(Membership Class)"; post-0026 (Option B separation) the base for
     // a GROUP-owned membership is its group type's config, which fills the
     // same slot in the formula without making group types classes.
-    if (membership.owner_type === 'GROUP' && membership.group_membership_type_id !== null) {
+    // A Family/Corporate member's own record (0105: INDIVIDUAL, no class,
+    // group_membership_type_id set) takes the same group-type base as the
+    // group relationship itself -- never a membership class (MEM-006).
+    if (membership.group_membership_type_id !== null) {
       const groupRows = await db
         .selectFrom('group_type_entitlements')
         .select(['entitlement_key', 'entitlement_value'])
@@ -148,8 +151,8 @@ export class EntitlementService {
       .where('id', 'in', membershipIds)
       .execute();
 
-    const classIds = [...new Set(memberships.filter((m) => !(m.owner_type === 'GROUP' && m.group_membership_type_id !== null) && m.membership_class_id !== null).map((m) => m.membership_class_id as number))];
-    const groupIds = [...new Set(memberships.filter((m) => m.owner_type === 'GROUP' && m.group_membership_type_id !== null).map((m) => m.group_membership_type_id as number))];
+    const classIds = [...new Set(memberships.filter((m) => m.group_membership_type_id === null && m.membership_class_id !== null).map((m) => m.membership_class_id as number))];
+    const groupIds = [...new Set(memberships.filter((m) => m.group_membership_type_id !== null).map((m) => m.group_membership_type_id as number))];
 
     const [classRows, groupRows, modifierRows, overrideRows] = await Promise.all([
       classIds.length
@@ -182,7 +185,7 @@ export class EntitlementService {
 
     const now = new Date();
     for (const m of memberships) {
-      const isGroup = m.owner_type === 'GROUP' && m.group_membership_type_id !== null;
+      const isGroup = m.group_membership_type_id !== null;
       const base = isGroup
         ? groupRows
             .filter((r) => r.group_membership_type_id === m.group_membership_type_id)

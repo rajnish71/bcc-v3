@@ -32,6 +32,19 @@ import { logMembershipAudit } from '../shared/membership-audit.util';
 
 export type GroupEntityType = 'FAMILY' | 'CORPORATE' | 'INSTITUTIONAL';
 
+// Family/Corporate entities run the frozen invitation lifecycle
+// (GroupMembershipService): members join ONLY by invitation + acceptance,
+// and only BCC administration can remove one. The direct delegate
+// add/remove and head-side primary-contact transfer below therefore apply
+// to them only where noted.
+const INVITATION_LIFECYCLE_TYPES: ReadonlyArray<GroupEntityType> = ['FAMILY', 'CORPORATE'];
+
+// A roster row counts as an active delegate unless it is merely INVITED
+// (not yet accepted) or removed. status NULL = pre-0105 roster/contact row.
+function activeDelegateStatus(eb: any, column: string) {
+  return eb.or([eb(column, 'is', null), eb(column, '=', 'ACCEPTED')]);
+}
+
 @Injectable()
 export class GroupService {
   constructor(private readonly entitlementService: EntitlementService) {}
@@ -108,12 +121,18 @@ export class GroupService {
     if (updates.name !== undefined) set.name = updates.name;
 
     if (updates.primaryContactUserId !== undefined) {
+      // The head of a Family/Corporate group cannot hand the group (and its
+      // members) to someone else; only BCC administration may.
+      if (!canManageAny && INVITATION_LIFECYCLE_TYPES.includes(group.type)) {
+        throw new ForbiddenException('Only BCC administration can change the head of a Family or Corporate group.');
+      }
       const isDelegate = await db
         .selectFrom('group_delegates')
         .select('id')
         .where('group_entity_id', '=', groupEntityId)
         .where('user_id', '=', updates.primaryContactUserId)
         .where('removed_at', 'is', null)
+        .where((eb) => activeDelegateStatus(eb, 'status'))
         .executeTakeFirst();
       if (!isDelegate) {
         throw new ConflictException('The new primary contact must be an active delegate of this group first.');
@@ -146,7 +165,7 @@ export class GroupService {
     const delegates = await db
       .selectFrom('group_delegates as gd')
       .innerJoin('users as u', 'u.id', 'gd.user_id')
-      .select(['gd.id', 'gd.user_id', 'gd.role', 'gd.added_at', 'gd.removed_at', 'u.full_name', 'u.email'])
+      .select(['gd.id', 'gd.user_id', 'gd.role', 'gd.status', 'gd.added_at', 'gd.removed_at', 'u.full_name', 'u.email'])
       .where('gd.group_entity_id', '=', groupEntityId)
       .orderBy('gd.added_at', 'asc')
       .execute();
@@ -167,7 +186,8 @@ export class GroupService {
               .select('gd.id')
               .whereRef('gd.group_entity_id', '=', 'ge.id')
               .where('gd.user_id', '=', userId)
-              .where('gd.removed_at', 'is', null),
+              .where('gd.removed_at', 'is', null)
+              .where((eb2) => activeDelegateStatus(eb2, 'gd.status')),
           ),
         ]),
       )
@@ -189,6 +209,14 @@ export class GroupService {
 
   async addDelegate(groupEntityId: number, userId: number, actorUserId: number, canManageAny: boolean): Promise<void> {
     const group = await this.requireManageRights(groupEntityId, actorUserId, canManageAny);
+
+    // Frozen Family/Corporate contract: an invited person must ACCEPT before
+    // becoming an assigned member -- nobody (head or staff) adds one directly.
+    if (INVITATION_LIFECYCLE_TYPES.includes(group.type)) {
+      throw new ConflictException(
+        'Family and Corporate members join by invitation: the group head invites, the member accepts.',
+      );
+    }
 
     const user = await db.selectFrom('users').select('id').where('id', '=', userId).executeTakeFirst();
     if (!user) throw new NotFoundException('User not found. Delegates must be Registered Users (MEM-006 P1).');
@@ -250,6 +278,28 @@ export class GroupService {
     canManageAny: boolean,
   ): Promise<void> {
     const group = await this.requireManageRights(groupEntityId, actorUserId, canManageAny);
+
+    // Frozen Family/Corporate contract: the head (creator) can NEVER remove
+    // an invited/assigned member; only BCC administration can, and only
+    // through the audited revocation (reason required, member record ended
+    // via the membership lifecycle) -- not this roster-only delete.
+    if (INVITATION_LIFECYCLE_TYPES.includes(group.type)) {
+      if (!canManageAny) {
+        throw new ForbiddenException('Only BCC administration can remove a member from a Family or Corporate group.');
+      }
+      const seat = await db
+        .selectFrom('group_delegates')
+        .select(['status'])
+        .where('group_entity_id', '=', groupEntityId)
+        .where('user_id', '=', userId)
+        .where('removed_at', 'is', null)
+        .executeTakeFirst();
+      if (seat?.status === 'INVITED' || seat?.status === 'ACCEPTED') {
+        throw new ConflictException(
+          'This person holds a Family/Corporate seat; use the administrative member revocation (with a reason) instead.',
+        );
+      }
+    }
 
     if (group.primary_contact_user_id === userId) {
       throw new ConflictException(

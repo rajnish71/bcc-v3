@@ -329,6 +329,37 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .btn-approve:hover:not(:disabled) { opacity: 0.85; }
 .btn-reject:hover:not(:disabled)  { opacity: 0.75; }
 
+/* Family / Corporate payment panel — reuses the card's existing tokens */
+:global(.pending-card__payment) {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+:global(.pay-link) {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 8px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--ink-600);
+}
+:global(.btn-pay) {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  color: var(--ink-900);
+  cursor: pointer;
+}
+:global(.btn-pay:disabled) { opacity: 0.5; cursor: not-allowed; }
+:global(.btn-pay:hover:not(:disabled)) { background: var(--surface-2); }
+
 .pending-card__status {
   font-family: var(--font-body);
   font-size: 12px;
@@ -1027,6 +1058,54 @@ body.modal-open { overflow: hidden; }
     class_code: string | null;
     applied_at: string | null;
     owner_type: string;
+    activation_mode: string | null;
+    contribution_state: string | null;
+    // Family / Corporate (owner_type GROUP) only
+    group_name: string | null;
+    group_type_name: string | null;
+    group_head_name: string | null;
+    group_head_email: string | null;
+    group_contribution_id: number | null;
+    group_contribution_state: string | null;
+    group_contribution_amount_paise: number | null;
+    group_payment_link_url: string | null;
+  }
+
+  // Backend stays authoritative (recordStageDecision refuses an unpaid
+  // approval); this only avoids offering an action that cannot succeed.
+  function awaitingPayment(r: PendingRow): boolean {
+    if (r.owner_type === 'GROUP') return r.group_contribution_state !== 'COMPLETED';
+    return r.activation_mode === 'PAYMENT_REQUIRED' && r.contribution_state !== 'COMPLETED';
+  }
+
+  function esc(v: unknown): string {
+    return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  }
+
+  // Family / Corporate payment panel: state + the one next payment action.
+  // Amounts are display-only; the backend reads them from the Contribution.
+  function groupPaymentHtml(r: PendingRow): string {
+    if (r.owner_type !== 'GROUP') return '';
+    const state = r.group_contribution_state;
+    const amount = r.group_contribution_amount_paise != null
+      ? `₹${(Number(r.group_contribution_amount_paise) / 100).toLocaleString('en-IN')}` : '';
+    let action = '';
+    if (!r.group_contribution_id) {
+      action = `<button class="btn-pay" data-pay-action="contribution" data-id="${r.id}">Create contribution</button>`;
+    } else if (state === 'AWAITING_SETTLEMENT' || (state === 'SETTLEMENT_IN_PROGRESS' && !r.group_payment_link_url)) {
+      action = `<button class="btn-pay" data-pay-action="link" data-cid="${r.group_contribution_id}">Create payment link</button>`;
+    } else if (state === 'FAILED' || state === 'ABANDONED') {
+      action = `<button class="btn-pay" data-pay-action="regenerate" data-cid="${r.group_contribution_id}">Regenerate payment link</button>`;
+    }
+    const link = r.group_payment_link_url && state === 'SETTLEMENT_IN_PROGRESS'
+      ? `<input class="pay-link" type="text" readonly value="${esc(r.group_payment_link_url)}" aria-label="Payment link" />
+         <button class="btn-pay" data-pay-action="copy" data-url="${esc(r.group_payment_link_url)}">Copy link</button>`
+      : '';
+    return `
+      <div class="pending-card__payment" id="pay-${r.id}">
+        <span class="pending-card__class">Payment: ${esc(state === 'COMPLETED' ? 'Paid' : state ?? 'No contribution')}${amount ? ` · ${amount}` : ''}</span>
+        ${link}${action}
+      </div>`;
   }
 
   async function loadPending() {
@@ -1047,7 +1126,17 @@ body.modal-open { overflow: hidden; }
       const rows: PendingRow[] = await res.json() as PendingRow[];
       if (!rows.length) { show(empty); return; }
 
-      list.innerHTML = rows.map(r => `
+      list.innerHTML = rows.map(r => (r.owner_type === 'GROUP' ? `
+        <div class="pending-card" data-id="${r.id}">
+          <div class="pending-card__info">
+            <div class="pending-card__name">${esc(r.group_name ?? 'Group application')}</div>
+            <div class="pending-card__meta">
+              Head: ${esc(r.group_head_name ?? '—')} · ${esc(r.group_head_email ?? '—')}
+              ${r.applied_at ? ` · Applied ${fmtDate(r.applied_at)}` : ''}
+            </div>
+          </div>
+          <span class="pending-card__class">${esc(r.group_type_name ?? 'Group')}</span>
+          ${groupPaymentHtml(r)}` : `
         <div class="pending-card" data-id="${r.id}">
           <div class="pending-card__info">
             <div class="pending-card__name">${r.full_name ?? r.username ?? 'Unknown'}</div>
@@ -1057,8 +1146,9 @@ body.modal-open { overflow: hidden; }
             </div>
           </div>
           ${r.class_name ? `<span class="pending-card__class">${r.class_name}</span>` : ''}
+          ${awaitingPayment(r) ? `<span class="pending-card__class">Awaiting payment${r.contribution_state ? ` (${r.contribution_state})` : ''}</span>` : ''}`) + `
           <div class="pending-card__actions">
-            <button class="btn-approve" data-action="approve" data-id="${r.id}">Approve</button>
+            <button class="btn-approve" data-action="approve" data-id="${r.id}" ${awaitingPayment(r) ? 'disabled title="Payment not yet completed"' : ''}>Approve</button>
             <button class="btn-reject"  data-action="reject"  data-id="${r.id}">Reject</button>
           </div>
           <span class="pending-card__status" id="status-${r.id}" hidden></span>
@@ -1066,6 +1156,48 @@ body.modal-open { overflow: hidden; }
       `).join('');
 
       show(list);
+
+      // Family / Corporate payment actions (separate attribute so they never
+      // reach the approve/reject handler below). Every call goes to existing
+      // backend routes; none carries an amount or a payment state.
+      list.addEventListener('click', async (e) => {
+        const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-pay-action]');
+        if (!btn) return;
+        const payAction = btn.dataset.payAction;
+        if (payAction === 'copy') {
+          try { await navigator.clipboard.writeText(btn.dataset.url ?? ''); btn.textContent = 'Copied'; }
+          catch { btn.textContent = 'Copy failed — select the link'; }
+          return;
+        }
+        btn.disabled = true;
+        const post = (path: string) => fetch(`${API}${path}`, { method: 'POST', headers: authHeaders(), body: '{}' });
+        try {
+          let res: Response;
+          if (payAction === 'contribution') {
+            res = await post(`/membership/${btn.dataset.id}/group-contribution`);
+          } else {
+            const cid = btn.dataset.cid;
+            if (payAction === 'regenerate') {
+              const retry = await post(`/financial/contributions/${cid}/settlement/retry`);
+              if (!retry.ok) { res = retry; } else { res = await post(`/financial/contributions/${cid}/settlement/payment-link`); }
+            } else {
+              res = await post(`/financial/contributions/${cid}/settlement/payment-link`);
+            }
+          }
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({})) as { message?: string };
+            btn.textContent = `Error: ${err.message ?? res.status}`;
+            btn.disabled = false;
+            return;
+          }
+          // Re-render from the server's authoritative state. (A full reload,
+          // not loadPending(): the list's click listeners are attached there.)
+          window.location.reload();
+        } catch {
+          btn.textContent = 'Network error';
+          btn.disabled = false;
+        }
+      });
 
       list.addEventListener('click', async (e) => {
         const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-action]');

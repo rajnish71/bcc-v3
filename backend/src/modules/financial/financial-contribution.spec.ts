@@ -1086,10 +1086,21 @@ describe('initiateProviderSettlement() — idempotency (Step 18 Part 11)', () =>
   it('checks for an existing active_settlement_reference before ever calling the provider', () => {
     const methodStart = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('async initiateProviderSettlement(');
     const body = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(methodStart, methodStart + 5000);
-    const existingCheckIdx = body.indexOf('this.readActiveSettlementReference(contributionId)');
+    // Row-locked read of the whole active attempt (reference + hosted URL,
+    // migration 0104) -- also refuses to reuse a payment-link reference as
+    // a Checkout order id.
+    const existingCheckIdx = body.indexOf('this.readActiveAttempt(contributionId)');
     const providerCallIdx = body.indexOf('this.provider.createOrder(');
     expect(existingCheckIdx).toBeGreaterThan(-1);
     expect(providerCallIdx).toBeGreaterThan(existingCheckIdx);
+  });
+
+  it('readActiveAttempt() locks the row with FOR UPDATE', () => {
+    const start = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('private async readActiveAttempt(');
+    const end = FINANCIAL_CONTRIBUTION_SERVICE_SRC.indexOf('private async persistActiveSettlementReference(');
+    const body = FINANCIAL_CONTRIBUTION_SERVICE_SRC.slice(start, end);
+    expect(start).toBeGreaterThan(-1);
+    expect(body).toContain('.forUpdate()');
   });
 
   it('readActiveSettlementReference() locks the row with FOR UPDATE', () => {

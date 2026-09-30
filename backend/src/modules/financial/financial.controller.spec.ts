@@ -372,12 +372,21 @@ describe('FinancialController retry-settlement route (Step 12, real source inspe
     expect(retryDecorators).not.toContain('RequirePermissions');
   });
 
-  it('retry-settlement enforces ownership before calling the service', () => {
+  // Family/Corporate: authorization widened from payer-only to payer-or-
+  // verifier (same model as the payment-link route) so staff who issue a
+  // hosted link can reopen the same Contribution after it expires. The check
+  // must still run BEFORE the service call.
+  it('retry-settlement enforces payer-or-verifier authorization before calling the service', () => {
     const retryBody = CONTROLLER_SRC.slice(
       CONTROLLER_SRC.indexOf('async retrySettlement'),
-      CONTROLLER_SRC.indexOf('async retrySettlement') + 400,
+      CONTROLLER_SRC.indexOf('// ── Payment proof upload (Step 13)'),
     );
-    expect(retryBody).toContain('this.assertOwnedContribution(id, actor.sub)');
+    const authIdx = retryBody.indexOf('throw new ForbiddenException(');
+    const callIdx = retryBody.indexOf('this.financialService.retrySettlement(');
+    expect(retryBody).toContain('Number(contribution.payer_user_id) === actor.sub');
+    expect(retryBody).toContain('this.isVerifier(actor.sub)');
+    expect(authIdx).toBeGreaterThan(-1);
+    expect(callIdx).toBeGreaterThan(authIdx);
   });
 
   it('retry-settlement routes exclusively through FinancialContributionService, not a direct write', () => {
@@ -686,5 +695,43 @@ describe('Evidence response shape (Step 11, real source inspection)', () => {
     const occurrences = CONTROLLER_SRC.match(/toEvidenceResponse\(/g) ?? [];
     // one definition + at least two call sites (list, get)
     expect(occurrences.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ── Payment-link route (hosted settlement, real source inspection) ─────────
+
+describe('FinancialController payment-link route (real source inspection)', () => {
+  const ROUTE = "@Post('contributions/:id/settlement/payment-link')";
+  const decorators = CONTROLLER_SRC.slice(CONTROLLER_SRC.indexOf(ROUTE), CONTROLLER_SRC.indexOf('async createPaymentLink'));
+  const handler = CONTROLLER_SRC.slice(
+    CONTROLLER_SRC.indexOf('async createPaymentLink'),
+    CONTROLLER_SRC.indexOf('// ── Contribution status (Step 20)'),
+  );
+
+  it('exists under the generic contribution path and requires authentication', () => {
+    expect(CONTROLLER_SRC).toContain(ROUTE);
+    expect(decorators).toContain('AccessTokenGuard');
+  });
+
+  it('accepts no request body -- amount/currency can never be client-supplied', () => {
+    expect(handler).not.toContain('@Body()');
+    expect(handler).not.toMatch(/dto\./);
+  });
+
+  it('is payer-or-verifier: reuses financial.settlement.verify, no new permission', () => {
+    expect(handler).toContain('payer_user_id');
+    expect(handler).toContain('this.isVerifier(actor.sub)');
+    expect(handler).toContain('ForbiddenException');
+    expect(decorators).not.toContain('RequirePermissions');
+  });
+
+  it('routes exclusively through FinancialContributionService.initiateProviderPaymentLink()', () => {
+    expect(handler).toContain('this.financialService.initiateProviderPaymentLink(');
+    expect(handler).not.toMatch(/insertInto\(|updateTable\(/);
+    expect(handler).not.toContain('paymentLink.create(');
+  });
+
+  it('never activates, approves or numbers anything', () => {
+    expect(handler).not.toMatch(/activate|approve|membership_number/i);
   });
 });

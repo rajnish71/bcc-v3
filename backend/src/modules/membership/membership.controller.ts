@@ -12,6 +12,7 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Req, UseGuards } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import * as argon2 from 'argon2';
+import { sql } from 'kysely';
 import { requestAuditContext } from '../financial/audit/request-provenance.util';
 import { db } from '../../database/db';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
@@ -112,6 +113,23 @@ export class MembershipController {
     });
   }
 
+  // Family / Corporate: create (idempotently) the application's Financial
+  // Contribution. Same permission that files group applications (they are
+  // only ever created on-behalf today). Returns the contribution id for the
+  // generic Financial Engine routes (e.g. .../settlement/payment-link);
+  // never approves, activates or numbers the membership.
+  @Post(':id/group-contribution')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.application.create_for_others')
+  async createGroupContribution(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.lifecycle.createGroupApplicationContribution(id, requestAuditContext('ADMIN', req, actor));
+  }
+
   // -- Activation / payment -------------------------------------------
 
   @Post(':id/activate')
@@ -182,6 +200,31 @@ export class MembershipController {
   async renew(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
     await this.lifecycle.renewFromExpired(id, actor.sub, 'ADMIN');
     return { ok: true };
+  }
+
+  // Family / Corporate renewal: step 1 -- the term's PAY-001 renewal
+  // obligation (idempotent; paid via the generic payment-link route).
+  @Post(':id/group-renewal-contribution')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.lifecycle.renew')
+  async createGroupRenewalContribution(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.lifecycle.createGroupRenewalContribution(id, requestAuditContext('ADMIN', req, actor));
+  }
+
+  // Family / Corporate renewal: step 2 -- refused unless that renewal
+  // Contribution is COMPLETED. Extends the group and its members' existing
+  // records; creates no record and allocates no number.
+  @Post(':id/group-renew')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.lifecycle.renew')
+  async renewGroup(@CurrentUser() actor: AccessTokenPayload, @Param('id', ParseIntPipe) id: number) {
+    return this.lifecycle.renewGroup(id, actor.sub);
   }
 
   // -- Termination -------------------------------------------------------
@@ -354,7 +397,30 @@ export class MembershipController {
       .selectFrom('memberships as m')
       .leftJoin('users as u', 'u.id', 'm.user_id')
       .leftJoin('membership_classes as mc', 'mc.id', 'm.membership_class_id')
-      .select([
+      // Family / Corporate applications have no user/class: surface the
+      // group entity + type, and the application Contribution (id, state,
+      // live payment link) so staff can see payment state and hand the
+      // link to the head. The link URL is never secret (PAY-001 0104).
+      .leftJoin('group_entities as ge', 'ge.id', 'm.group_entity_id')
+      .leftJoin('group_membership_types as gmt', 'gmt.id', 'm.group_membership_type_id')
+      .leftJoin('users as gu', 'gu.id', 'ge.primary_contact_user_id')
+      .leftJoin('financial_contributions as gfc', (join) =>
+        join
+          .onRef('gfc.business_reference_id', '=', 'm.id')
+          .on('gfc.business_module', '=', 'MEMBERSHIP')
+          .on('m.owner_type', '=', 'GROUP')
+          .on(sql`gfc.idempotency_key = CONCAT('MEMBERSHIP-', m.id, '-CONTRIBUTION')`),
+      )
+      .select((eb) => [
+        'ge.name as group_name',
+        'ge.type as group_type',
+        'gmt.name as group_type_name',
+        'gu.full_name as group_head_name',
+        'gu.email as group_head_email',
+        'gfc.id as group_contribution_id',
+        'gfc.state as group_contribution_state',
+        'gfc.amount_paise as group_contribution_amount_paise',
+        'gfc.active_settlement_url as group_payment_link_url',
         'm.id',
         'm.user_id',
         'm.lifecycle_state',
@@ -366,6 +432,18 @@ export class MembershipController {
         'u.email',
         'mc.name as class_name',
         'mc.code as class_code',
+        'mc.activation_mode as activation_mode',
+        // Latest Financial Contribution state (same lookup as
+        // FinancialContributionService.findLatestForBusinessReference) so the
+        // Admin Console can withhold Approve until payment is COMPLETED.
+        eb
+          .selectFrom('financial_contributions as fc')
+          .select('fc.state')
+          .where('fc.business_module', '=', 'MEMBERSHIP')
+          .whereRef('fc.business_reference_id', '=', 'm.id')
+          .orderBy('fc.created_at', 'desc')
+          .limit(1)
+          .as('contribution_state'),
       ])
       .where('m.lifecycle_state', '=', 'PENDING')
       .orderBy('m.applied_at', 'asc')

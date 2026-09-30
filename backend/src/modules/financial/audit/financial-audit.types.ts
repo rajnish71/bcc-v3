@@ -47,7 +47,14 @@ export interface FinancialAuditMetadata {
   // row carries the WINNING reference instead (OBS-06).
   discardedProviderOrderReference?: string;
   isRetry?: boolean;
+  // Present only when the provider attempt is a hosted payment link rather
+  // than an embedded-Checkout order (PROVIDER_ORDER_CREATED/FAILED rows are
+  // reused for both; absent means the pre-existing Orders path).
+  settlementChannel?: SettlementChannel;
 }
+
+export const SETTLEMENT_CHANNELS = ['PAYMENT_LINK'] as const;
+export type SettlementChannel = (typeof SETTLEMENT_CHANNELS)[number];
 
 // Section 13: only the fields required by the current operation should be
 // passed. Built once per HTTP request by buildRequestProvenance() and

@@ -30,8 +30,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { Selectable } from 'kysely';
-import { db, MembershipsTable } from '../../../database/db';
+import type { Kysely, Selectable } from 'kysely';
+import { db, type DB, MembershipsTable } from '../../../database/db';
 import { toMysqlDatetime } from '../../identity/shared/token-hash.util';
 import { FinancialContributionService } from '../../financial/financial-contribution.service';
 import type { AuditContext } from '../../financial/audit/financial-audit.types';
@@ -42,6 +42,23 @@ import { logMembershipAudit } from '../shared/membership-audit.util';
 
 type LifecycleState = 'PENDING' | 'APPROVED' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'TERMINATED' | 'REJECTED';
 type MembershipRow = Selectable<MembershipsTable>;
+
+// Group entity kinds that run the frozen Family/Corporate lifecycle
+// (PAY -> APPROVE -> INVITE/ASSIGN -> ACTIVATE -> NUMBER). INSTITUTIONAL
+// pricing/benefits are undefined (MEM-008 §8) and it has no lifecycle here.
+export const GROUP_LIFECYCLE_ENTITY_TYPES = ['FAMILY', 'CORPORATE'] as const;
+
+// Deterministic PAY-001 idempotency keys for a GROUP relationship's
+// obligations: one application fee, then one renewal fee per term (keyed by
+// the term's end date, so each term's renewal is exactly one obligation).
+export function groupApplicationContributionKey(groupMembershipId: number): string {
+  return `MEMBERSHIP-${groupMembershipId}-CONTRIBUTION`;
+}
+export function groupRenewalContributionKey(groupMembershipId: number, termEndsAt: Date): string {
+  const d = termEndsAt;
+  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  return `MEMBERSHIP-${groupMembershipId}-RENEWAL-${ymd}`;
+}
 
 export interface ApplyMembershipParams {
   ownerType: 'INDIVIDUAL' | 'GROUP';
@@ -212,6 +229,11 @@ export class MembershipLifecycleService {
         );
       }
 
+      // Validate the Financial Obligation (fee + payer) BEFORE writing the
+      // application, so a configuration gap never leaves an unpayable
+      // PENDING application behind.
+      await this.resolveGroupObligation(params.groupMembershipTypeId!, params.groupEntityId!);
+
       const existingOpen = await db
         .selectFrom('memberships')
         .select('id')
@@ -262,10 +284,17 @@ export class MembershipLifecycleService {
     // class, the financial obligation is created NOW, while the application is
     // still PENDING -- not at approval time. Administrative approval is the
     // FINAL admission decision and must happen only once payment is already
-    // COMPLETED (see approve() below). AUTO_AFTER_APPROVAL/MANUAL classes and
-    // GROUP applications are untouched -- see createApplicationContribution().
+    // COMPLETED (see approve() below). AUTO_AFTER_APPROVAL/MANUAL classes are
+    // untouched -- see createApplicationContribution().
     if (params.ownerType === 'INDIVIDUAL' && params.membershipClassId != null) {
       await this.createApplicationContribution(id, params.membershipClassId, params.userId!, auditContext);
+    }
+
+    // Family / Corporate (frozen lifecycle: PAY -> APPROVE -> INVITE/ASSIGN
+    // -> ACTIVATE -> NUMBER): the group's Financial Contribution is created
+    // at application, exactly like a PAYMENT_REQUIRED individual application.
+    if (params.ownerType === 'GROUP') {
+      await this.createGroupApplicationContribution(id, auditContext);
     }
 
     return { id, uuid };
@@ -339,6 +368,119 @@ export class MembershipLifecycleService {
   }
 
   // ======================================================================
+  // Creates (idempotently) the Financial Obligation -> Contribution for a
+  // GROUP (Family / Corporate) membership application.
+  //
+  // Frozen lifecycle: payment precedes approval, so the obligation exists
+  // from application onward -- apply() calls this for every GROUP
+  // application, and it is also exposed (idempotent) for staff to recover
+  // an application filed before this rule existed. PENDING only: an
+  // application that is already decided can no longer acquire its
+  // application obligation.
+  //
+  // Same conventions as createApplicationContribution() for INDIVIDUAL:
+  //  • businessModule 'MEMBERSHIP' + businessReferenceId = memberships.id,
+  //    whose row already identifies owner_type=GROUP, group_entity_id and
+  //    group_membership_type_id (Family vs Corporate) -- no new reference
+  //    scheme, and reject()/getMembershipContribution() resolve it unchanged.
+  //  • Deterministic idempotency key MEMBERSHIP-{id}-CONTRIBUTION: a repeat
+  //    call returns the SAME Contribution (PAY-001: one obligation -> one
+  //    Contribution); a failed/expired payment attempt is retried on it,
+  //    never by creating another.
+  //  • Amount: group_type_entitlements.fee_inr only (MEM-008 via
+  //    EntitlementService) -- never hard-coded. A missing fee is a loud
+  //    configuration error, not a silent zero-value (free) obligation.
+  //  • Payer: the group's PRIMARY_CONTACT user.
+  //
+  // Financial state only: this never approves, activates, numbers, or
+  // touches delegates. Positive value -> AWAITING_SETTLEMENT (payment is
+  // started separately, e.g. via a hosted payment link); zero value ->
+  // existing PAY-001 §12 path.
+  async createGroupApplicationContribution(
+    membershipId: number,
+    auditContext?: AuditContext,
+  ): Promise<{ contributionId: number; state: string; amountPaise: number; currency: string }> {
+    const membership = await this.requireState(membershipId, ['PENDING']);
+    if (
+      membership.owner_type !== 'GROUP' ||
+      membership.group_membership_type_id == null ||
+      membership.group_entity_id == null
+    ) {
+      throw new BadRequestException(`Membership ${membershipId} is not a GROUP membership application.`);
+    }
+
+    const { groupTypeName, amountPaise, payerUserId } = await this.resolveGroupObligation(
+      membership.group_membership_type_id,
+      membership.group_entity_id,
+    );
+
+    const { id: contributionId } = await this.financialService.createContribution({
+      payerUserId,
+      businessModule: 'MEMBERSHIP',
+      businessReferenceId: membershipId,
+      purpose: `${groupTypeName} fee`,
+      amountPaise,
+      idempotencyKey: groupApplicationContributionKey(membershipId),
+    }, auditContext);
+
+    // Only a freshly-created Contribution is advanced; a repeat call leaves
+    // an existing one exactly where the Financial Engine has it.
+    const existing = await this.financialService.getContribution(contributionId);
+    if (existing.state === 'CREATED') {
+      await db
+        .updateTable('memberships')
+        .set({ pending_contribution_id: contributionId })
+        .where('id', '=', membershipId)
+        .execute();
+      if (amountPaise === 0) {
+        await this.financialService.processZeroValueContribution(contributionId);
+      } else {
+        await this.financialService.transitionContribution(contributionId, 'AWAITING_SETTLEMENT');
+      }
+    }
+
+    const current = await this.financialService.getContribution(contributionId);
+    return {
+      contributionId,
+      state: String(current.state),
+      amountPaise: Number(current.amount_paise),
+      currency: String(current.currency),
+    };
+  }
+
+  // Business-Module side of a Family/Corporate Financial Obligation: WHY and
+  // HOW MUCH (PAY-001 §OWNERSHIP RULE). Amount = group_type_entitlements
+  // .fee_inr only (never hard-coded; missing/invalid is a loud configuration
+  // error, never a silent free obligation). Payer = the group's primary
+  // contact (the operational head). Also used by apply() to validate BEFORE
+  // the application row is written.
+  private async resolveGroupObligation(
+    groupMembershipTypeId: number,
+    groupEntityId: number,
+  ): Promise<{ groupTypeName: string; amountPaise: number; payerUserId: number }> {
+    const groupType = await db
+      .selectFrom('group_membership_types')
+      .select(['name'])
+      .where('id', '=', groupMembershipTypeId)
+      .executeTakeFirstOrThrow();
+
+    const feeInrRaw = await this.entitlementService.getGroupTypeConfigValue(groupMembershipTypeId, 'fee_inr');
+    const feeInr = feeInrRaw != null && feeInrRaw.trim() !== '' ? Number(feeInrRaw) : NaN;
+    if (!Number.isFinite(feeInr) || feeInr < 0) {
+      throw new ConflictException(
+        `Membership configuration is incomplete: "${groupType.name}" has no valid fee_inr in group_type_entitlements.`,
+      );
+    }
+
+    const payerUserId = await this.groupPrimaryContact(groupEntityId);
+    if (!payerUserId) {
+      throw new ConflictException(`Group entity ${groupEntityId} has no primary contact to act as payer.`);
+    }
+
+    return { groupTypeName: groupType.name, amountPaise: Math.round(feeInr * 100), payerUserId };
+  }
+
+  // ======================================================================
   // Resolves the Financial Contribution associated with a membership
   // application, if any -- used by approve() to verify the financial
   // precondition and by reject() to decide whether a refund/cancellation is
@@ -376,14 +518,21 @@ export class MembershipLifecycleService {
   //                           produced it (PART 8).
   //   MANUAL               -> stays APPROVED; MEMBERSHIP_APPLICATION_APPROVED
   //                           is sent; admin explicitly calls activate().
-  //   GROUP / no class     -> stays APPROVED (no activation_mode defined for
-  //                           group types yet; conservative default).
+  //   GROUP (Family/Corp.) -> approval REFUSED until the group's Financial
+  //                           Contribution is COMPLETED and configured
+  //                           verification is satisfied (see
+  //                           assertGroupApprovalPreconditions()). Stays
+  //                           APPROVED: the head then invites members, and
+  //                           the group becomes ACTIVE only when its first
+  //                           member record is activated (activate()).
   // ======================================================================
-  async approve(
+  // Read-only approval precondition, shared by approve() and by
+  // ApplicationWorkflowService.recordStageDecision(). The latter calls it
+  // BEFORE persisting an approval-stage row, so a refused approval never
+  // leaves a stale stage decision behind (membership 112 incident).
+  async assertApprovalPreconditions(
     membershipId: number,
-    actorUserId: number,
-    opts?: { expiresAtOverride?: string },
-  ): Promise<{ finalState: 'APPROVED' | 'ACTIVE' }> {
+  ): Promise<{ membership: MembershipRow; activationMode: string | null }> {
     const membership = await this.requireState(membershipId, ['PENDING']);
 
     const cls = membership.membership_class_id != null
@@ -406,6 +555,84 @@ export class MembershipLifecycleService {
         );
       }
     }
+
+    if (membership.owner_type === 'GROUP') {
+      await this.assertGroupApprovalPreconditions(membership);
+    }
+
+    return { membership, activationMode: cls?.activation_mode ?? null };
+  }
+
+  // Family / Corporate approval gate (frozen lifecycle: PAY -> APPROVE).
+  // Read-only; every check runs before approve() writes anything.
+  //   1. PENDING                           -- requireState() above
+  //   2. group type is FAMILY or CORPORATE
+  //   3. the application's Financial Contribution exists
+  //   4. ... and is COMPLETED (PAY-001: settled + receipted). Checked by its
+  //      own idempotency key, so a later obligation can never stand in for it.
+  //   5. required verification: every document type listed in the group
+  //      type's `required_document_types` configuration (comma-separated,
+  //      group_type_entitlements -- configuration, not code) has an
+  //      uploaded document on this application that staff reviewed ACCEPTED.
+  //      No configured list = no document requirement beyond (1)-(4).
+  // No membership state, no number, no delegate is touched here.
+  private async assertGroupApprovalPreconditions(membership: MembershipRow): Promise<void> {
+    const membershipId = Number(membership.id);
+    const groupType = membership.group_membership_type_id != null
+      ? await db
+          .selectFrom('group_membership_types')
+          .select(['entity_type', 'name'])
+          .where('id', '=', membership.group_membership_type_id)
+          .executeTakeFirst()
+      : undefined;
+    if (!groupType || !(GROUP_LIFECYCLE_ENTITY_TYPES as readonly string[]).includes(groupType.entity_type)) {
+      throw new ConflictException(
+        `Membership ${membershipId} cannot be approved: only Family and Corporate group memberships have an approval lifecycle.`,
+      );
+    }
+
+    const contribution = await this.financialService.findByIdempotencyKey(groupApplicationContributionKey(membershipId));
+    if (!contribution || contribution.state !== 'COMPLETED') {
+      throw new ConflictException(
+        `Membership ${membershipId} cannot be approved: its ${groupType.name} Financial Contribution is ` +
+        `${contribution ? `in state '${contribution.state}'` : 'missing'}; approval requires COMPLETED.`,
+      );
+    }
+
+    const requiredRaw = await this.entitlementService.getGroupTypeConfigValue(
+      membership.group_membership_type_id!,
+      'required_document_types',
+    );
+    const requiredTypes = (requiredRaw ?? '')
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+    if (requiredTypes.length === 0) return;
+
+    const accepted = await db
+      .selectFrom('membership_application_documents')
+      .select(['document_type'])
+      .where('membership_id', '=', membershipId)
+      .where('upload_status', '=', 'UPLOADED')
+      .where('review_status', '=', 'ACCEPTED')
+      .execute();
+    const acceptedTypes = new Set(accepted.map((d) => d.document_type));
+    const missing = requiredTypes.filter((t) => !acceptedTypes.has(t));
+    if (missing.length > 0) {
+      throw new ConflictException(
+        `Membership ${membershipId} cannot be approved: required ${groupType.name} verification is incomplete ` +
+        `(no accepted document for: ${missing.join(', ')}).`,
+      );
+    }
+  }
+
+  async approve(
+    membershipId: number,
+    actorUserId: number,
+    opts?: { expiresAtOverride?: string },
+  ): Promise<{ finalState: 'APPROVED' | 'ACTIVE' }> {
+    const { membership, activationMode } = await this.assertApprovalPreconditions(membershipId);
+    const cls = { activation_mode: activationMode };
 
     // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
     // roll back as one transaction. Authorization/approval semantics above
@@ -548,25 +775,53 @@ export class MembershipLifecycleService {
       // config. undefined (the default) preserves existing behaviour exactly.
       expiresAtOverride?: string;
     },
-  ): Promise<{ membershipNumber: string }> {
+  ): Promise<{ membershipNumber: string | null }> {
     const membership = await this.requireState(membershipId, ['APPROVED']);
+
+    // Family/Corporate GROUP row: never activated on its own. Human Authority
+    // ruling: the Group becomes ACTIVE only when its FIRST individual member
+    // is successfully activated (in that member's activation transaction,
+    // below) -- and it is never numbered (MEM-007 MP-002).
+    if (membership.owner_type === 'GROUP') {
+      throw new ConflictException(
+        `Group membership ${membershipId} cannot be activated directly; it becomes ACTIVE when its first member is activated.`,
+      );
+    }
+
+    // A Family/Corporate MEMBER's own record: only activatable once the
+    // whole chain before it holds (group approved + paid, seat accepted).
+    const isGroupMember = membership.parent_membership_id != null;
+    if (isGroupMember) {
+      await this.assertGroupMemberActivationPreconditions(membership);
+    }
 
     const now = new Date();
     const joinYear  = opts?.joinYear  ?? now.getFullYear();
     const joinMonth = opts?.joinMonth ?? (now.getMonth() + 1);
 
-    const expiresAt = opts?.expiresAtOverride ?? await this.computeExpiry(membership, now);
+    // A group member's validity is the group relationship's term (resolved
+    // inside the transaction below, where the group row is locked); every
+    // other membership keeps its own class-based expiry.
+    const expiresAt = isGroupMember
+      ? null
+      : opts?.expiresAtOverride ?? await this.computeExpiry(membership, now);
 
     // F-013: audit write moved inside the existing transaction (no second
     // transaction introduced) so lifecycle transition + number assignment +
     // audit commit/roll back together.
     const { membershipNumber } = await db.transaction().execute(async (trx) => {
+      // First activated member activates the group relationship (unnumbered)
+      // in the SAME transaction; later members inherit its expiry.
+      const effectiveExpiresAt = isGroupMember
+        ? await this.activateGroupRelationshipInTrx(trx, Number(membership.parent_membership_id), now, actor)
+        : expiresAt;
+
       await trx
         .updateTable('memberships')
         .set({
           lifecycle_state: 'ACTIVE',
           activated_at: toMysqlDatetime(now),
-          expires_at: expiresAt,
+          expires_at: effectiveExpiresAt,
           last_payment_status: opts?.paymentId ? 'SUCCEEDED' : 'NONE',
           pending_contribution_id: null,
         })
@@ -640,6 +895,11 @@ export class MembershipLifecycleService {
   // omits the amount variable.
   // ======================================================================
   async recordPaymentFailure(membershipId: number, failedAmountPaise?: number, notes?: string): Promise<void> {
+    // A Family/Corporate RENEWAL payment attempt that failed: the group is
+    // ACTIVE/EXPIRED, the renewal Contribution stays retryable (PAY-001), and
+    // nothing about the membership changes -- record it only.
+    if (await this.recordGroupRenewalPaymentEvent(membershipId, 'PAYMENT_FAILED', notes)) return;
+
     const membership = await this.requireState(membershipId, ['PENDING']);
 
     // F-013: mutation + existing PAYMENT_FAILED audit write commit/roll
@@ -692,6 +952,11 @@ export class MembershipLifecycleService {
   // actor: no human initiated this, so actorType is SYSTEM with no
   // actorUserId (F-002 system-actor governance decision).
   async recordPaymentReceived(membershipId: number): Promise<void> {
+    // A Family/Corporate RENEWAL fee settled: recorded only. The term is
+    // extended exclusively by an administrator via renewGroup() -- payment
+    // never renews, approves, or activates by itself.
+    if (await this.recordGroupRenewalPaymentEvent(membershipId, 'PAYMENT_RECEIVED')) return;
+
     const membership = await this.requireState(membershipId, ['PENDING', 'REJECTED']);
 
     if (membership.lifecycle_state === 'REJECTED') {
@@ -713,6 +978,29 @@ export class MembershipLifecycleService {
     });
 
     await this.notifyMember(membership, 'MEMBERSHIP_PAYMENT_RECEIVED');
+  }
+
+  // Returns true (after recording an audit row) iff the financial event is
+  // for a Family/Corporate GROUP relationship that is past its application
+  // (ACTIVE or EXPIRED) -- i.e. a renewal obligation. Application-stage
+  // events (PENDING/REJECTED) fall through to the existing handling.
+  private async recordGroupRenewalPaymentEvent(
+    membershipId: number,
+    eventType: 'PAYMENT_RECEIVED' | 'PAYMENT_FAILED',
+    notes?: string,
+  ): Promise<boolean> {
+    const membership = await this.getOrThrow(membershipId);
+    if (membership.owner_type !== 'GROUP' || !['ACTIVE', 'EXPIRED'].includes(membership.lifecycle_state)) {
+      return false;
+    }
+    await logMembershipAudit({
+      membershipId,
+      eventType,
+      actorType: 'SYSTEM',
+      newValue: { obligation: 'GROUP_RENEWAL' },
+      notes: notes ?? null,
+    });
+    return true;
   }
 
   // ======================================================================
@@ -830,6 +1118,15 @@ export class MembershipLifecycleService {
   ): Promise<void> {
     const membership = await this.requireState(membershipId, ['EXPIRED']);
 
+    // Family/Corporate: the group relationship renews only through its paid
+    // PAY-001 renewal obligation (renewGroup()), and its members renew WITH
+    // it -- never individually, and never without payment.
+    if (membership.owner_type === 'GROUP' || membership.parent_membership_id != null) {
+      throw new ConflictException(
+        `Membership ${membershipId} belongs to a Family/Corporate group; renew the group membership (paid renewal) instead.`,
+      );
+    }
+
     // Grace-period enforcement. INTERPRETATION FLAG: spec 02.8 defines a
     // grace period but does not spell out what happens after it lapses; the
     // reading implemented here is renew-within-grace, re-apply-after-grace.
@@ -873,6 +1170,148 @@ export class MembershipLifecycleService {
     await this.notifyMember(membership, 'MEMBERSHIP_RENEWED', {
       membership_number: membership.membership_number ?? '',
     });
+  }
+
+  // ======================================================================
+  // Family / Corporate RENEWAL (group relationship -- PAY-001 obligation)
+  //
+  // Frozen rule: the group renews; its members' records do NOT get
+  // duplicated and NO number is ever allocated or changed by renewal.
+  //   1. createGroupRenewalContribution(): one PAY-001 obligation per term
+  //      (idempotency key carries the term's end date), same fee source
+  //      (group_type_entitlements.fee_inr), same payer (primary contact).
+  //      Paid through the existing Payment Link infrastructure.
+  //   2. renewGroup(): admin action, REFUSED unless that term's renewal
+  //      Contribution is COMPLETED. Extends the group relationship and every
+  //      linked member record that is ACTIVE or EXPIRED (never TERMINATED/
+  //      SUSPENDED/APPROVED ones) to the same new term end. Same rows, same
+  //      numbers.
+  // ======================================================================
+  private async requireRenewableGroup(membershipId: number): Promise<MembershipRow & { expires_at: Date }> {
+    const group = await this.requireState(membershipId, ['ACTIVE', 'EXPIRED']);
+    if (group.owner_type !== 'GROUP' || group.group_membership_type_id == null || group.group_entity_id == null) {
+      throw new BadRequestException(`Membership ${membershipId} is not a Family/Corporate group membership.`);
+    }
+    if (!group.expires_at) {
+      throw new ConflictException(`Group membership ${membershipId} has no term end; it cannot be renewed.`);
+    }
+    return group as MembershipRow & { expires_at: Date };
+  }
+
+  async createGroupRenewalContribution(
+    membershipId: number,
+    auditContext?: AuditContext,
+  ): Promise<{ contributionId: number; state: string; amountPaise: number; currency: string }> {
+    const group = await this.requireRenewableGroup(membershipId);
+    const { groupTypeName, amountPaise, payerUserId } = await this.resolveGroupObligation(
+      group.group_membership_type_id!,
+      group.group_entity_id!,
+    );
+    const termEndsAt = new Date(group.expires_at as unknown as string);
+
+    const { id: contributionId } = await this.financialService.createContribution({
+      payerUserId,
+      businessModule: 'MEMBERSHIP',
+      businessReferenceId: membershipId,
+      purpose: `${groupTypeName} renewal fee`,
+      amountPaise,
+      idempotencyKey: groupRenewalContributionKey(membershipId, termEndsAt),
+    }, auditContext);
+
+    const created = await this.financialService.getContribution(contributionId);
+    if (created.state === 'CREATED') {
+      if (amountPaise === 0) {
+        await this.financialService.processZeroValueContribution(contributionId);
+      } else {
+        await this.financialService.transitionContribution(contributionId, 'AWAITING_SETTLEMENT');
+      }
+    }
+    const current = await this.financialService.getContribution(contributionId);
+    return {
+      contributionId,
+      state: String(current.state),
+      amountPaise: Number(current.amount_paise),
+      currency: String(current.currency),
+    };
+  }
+
+  async renewGroup(membershipId: number, actorUserId: number): Promise<{ expiresAt: string | null; renewedMemberIds: number[] }> {
+    const group = await this.requireRenewableGroup(membershipId);
+    const termEndsAt = new Date(group.expires_at as unknown as string);
+
+    const contribution = await this.financialService.findByIdempotencyKey(
+      groupRenewalContributionKey(membershipId, termEndsAt),
+    );
+    if (!contribution || contribution.state !== 'COMPLETED') {
+      throw new ConflictException(
+        `Group membership ${membershipId} cannot be renewed: its renewal Financial Contribution is ` +
+        `${contribution ? `in state '${contribution.state}'` : 'missing'}; renewal requires COMPLETED.`,
+      );
+    }
+
+    // Same grace rule as renewFromExpired(): lapsed beyond grace = re-apply.
+    if (group.lifecycle_state === 'EXPIRED') {
+      const graceDays = await this.gracePeriodDays(group);
+      const graceEnd = new Date(termEndsAt);
+      graceEnd.setDate(graceEnd.getDate() + graceDays);
+      if (new Date() > graceEnd) {
+        throw new ConflictException(
+          `The ${graceDays}-day renewal grace period ended on ${graceEnd.toISOString().slice(0, 10)}. A new group membership application is required.`,
+        );
+      }
+    }
+
+    // The new term runs from the later of today and the current term end, so
+    // an early renewal never shortens the paid-for term.
+    const base = termEndsAt > new Date() ? termEndsAt : new Date();
+    const newExpiry = await this.computeExpiry(group, base);
+
+    const renewedMemberIds = await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('memberships')
+        .set({ lifecycle_state: 'ACTIVE', expires_at: newExpiry, last_payment_status: 'SUCCEEDED' })
+        .where('id', '=', membershipId)
+        .execute();
+      await logMembershipAudit(
+        {
+          membershipId,
+          eventType: 'LIFECYCLE_TRANSITION',
+          actorType: 'ADMIN',
+          actorUserId,
+          oldValue: { state: group.lifecycle_state, expiresAt: group.expires_at },
+          newValue: { state: 'ACTIVE', note: 'group renewal', expiresAt: newExpiry, contributionId: Number(contribution.id) },
+        },
+        trx,
+      );
+
+      const members = await trx
+        .selectFrom('memberships')
+        .select(['id', 'lifecycle_state', 'expires_at'])
+        .where('parent_membership_id', '=', membershipId)
+        .where('lifecycle_state', 'in', ['ACTIVE', 'EXPIRED'])
+        .execute();
+      for (const m of members) {
+        await trx
+          .updateTable('memberships')
+          .set({ lifecycle_state: 'ACTIVE', expires_at: newExpiry })
+          .where('id', '=', m.id)
+          .execute();
+        await logMembershipAudit(
+          {
+            membershipId: Number(m.id),
+            eventType: 'LIFECYCLE_TRANSITION',
+            actorType: 'ADMIN',
+            actorUserId,
+            oldValue: { state: m.lifecycle_state, expiresAt: m.expires_at },
+            newValue: { state: 'ACTIVE', note: 'renewed with group', groupMembershipId: membershipId, expiresAt: newExpiry },
+          },
+          trx,
+        );
+      }
+      return members.map((m) => Number(m.id));
+    });
+
+    return { expiresAt: newExpiry, renewedMemberIds };
   }
 
   // ======================================================================
@@ -963,6 +1402,12 @@ export class MembershipLifecycleService {
 
     if (membership.owner_type !== 'INDIVIDUAL') {
       throw new BadRequestException('Class change is only supported for INDIVIDUAL memberships.');
+    }
+    // A Family/Corporate member's record has no membership class (MEM-006:
+    // group types are not classes); moving it into one would silently detach
+    // it from its group. Not a class change -- refuse.
+    if (membership.parent_membership_id != null) {
+      throw new BadRequestException('A Family/Corporate member record has no membership class to change.');
     }
     if (membership.membership_class_id === newClassId) {
       throw new ConflictException('The membership is already in the requested class.');
@@ -1069,6 +1514,117 @@ export class MembershipLifecycleService {
   // ======================================================================
   // Shared helpers
   // ======================================================================
+  // ----------------------------------------------------------------------
+  // Family / Corporate activation helpers
+  // ----------------------------------------------------------------------
+
+  // The group relationship may only ever become ACTIVE once it is a
+  // Family/Corporate group whose application Contribution is COMPLETED.
+  // Approval already required this; re-checked so activation can never
+  // bypass payment even on a path that skipped approve().
+  private async assertGroupRelationshipPayable(group: MembershipRow): Promise<void> {
+    const groupId = Number(group.id);
+    const groupType = group.group_membership_type_id != null
+      ? await db
+          .selectFrom('group_membership_types')
+          .select(['entity_type'])
+          .where('id', '=', group.group_membership_type_id)
+          .executeTakeFirst()
+      : undefined;
+    if (!groupType || !(GROUP_LIFECYCLE_ENTITY_TYPES as readonly string[]).includes(groupType.entity_type)) {
+      throw new ConflictException(`Membership ${groupId}: only Family and Corporate group memberships can be activated.`);
+    }
+    const contribution = await this.financialService.findByIdempotencyKey(groupApplicationContributionKey(groupId));
+    if (!contribution || contribution.state !== 'COMPLETED') {
+      throw new ConflictException(
+        `Membership ${groupId} cannot be activated: its Financial Contribution is ` +
+        `${contribution ? `in state '${contribution.state}'` : 'missing'}; activation requires COMPLETED.`,
+      );
+    }
+  }
+
+  // A member record may only be activated (and so numbered) when:
+  //   • its group relationship is APPROVED or ACTIVE (never PENDING,
+  //     REJECTED, EXPIRED, SUSPENDED or TERMINATED) and paid;
+  //   • its seat on the group roster is ACCEPTED and points at THIS record
+  //     (an INVITED seat, or one revoked by an administrator, never numbers).
+  private async assertGroupMemberActivationPreconditions(member: MembershipRow): Promise<void> {
+    const memberId = Number(member.id);
+    const group = await this.getOrThrow(Number(member.parent_membership_id));
+    if (group.owner_type !== 'GROUP' || !['APPROVED', 'ACTIVE'].includes(group.lifecycle_state)) {
+      throw new ConflictException(
+        `Membership ${memberId} cannot be activated: its group membership ${group.id} is ${group.lifecycle_state}; ` +
+        `it must be APPROVED or ACTIVE.`,
+      );
+    }
+    await this.assertGroupRelationshipPayable(group);
+
+    const seat = await db
+      .selectFrom('group_delegates')
+      .select(['status', 'member_membership_id'])
+      .where('group_entity_id', '=', group.group_entity_id!)
+      .where('user_id', '=', member.user_id!)
+      .executeTakeFirst();
+    if (!seat || seat.status !== 'ACCEPTED' || Number(seat.member_membership_id) !== memberId) {
+      throw new ConflictException(
+        `Membership ${memberId} cannot be activated: the member's group seat is ` +
+        `${seat?.status ?? 'missing'}; activation requires an ACCEPTED seat.`,
+      );
+    }
+  }
+
+  // Row-locks the group relationship and, if still APPROVED, activates it
+  // (UNNUMBERED -- see activate()). Returns the group's term end, which every
+  // member record shares. Never touches numbering.
+  private async activateGroupRelationshipInTrx(
+    trx: Kysely<DB>,
+    groupId: number,
+    now: Date,
+    actor: { type: 'SYSTEM' | 'ADMIN'; userId?: number | null },
+  ): Promise<string | null> {
+    const group = await trx
+      .selectFrom('memberships')
+      .selectAll()
+      .where('id', '=', groupId)
+      .forUpdate()
+      .executeTakeFirstOrThrow();
+
+    if (group.lifecycle_state === 'ACTIVE') {
+      return group.expires_at ? toMysqlDatetime(new Date(group.expires_at as unknown as string)) : null;
+    }
+    if (group.lifecycle_state !== 'APPROVED') {
+      throw new ConflictException(`Group membership ${groupId} is ${group.lifecycle_state}; it cannot be activated.`);
+    }
+
+    const expiresAt = await this.computeExpiry(group, now);
+    await trx
+      .updateTable('memberships')
+      .set({
+        lifecycle_state: 'ACTIVE',
+        activated_at: toMysqlDatetime(now),
+        expires_at: expiresAt,
+        last_payment_status: 'SUCCEEDED',
+        pending_contribution_id: null,
+      })
+      .where('id', '=', groupId)
+      .where('lifecycle_state', '=', 'APPROVED')
+      .execute();
+
+    await logMembershipAudit(
+      {
+        membershipId: groupId,
+        eventType: 'LIFECYCLE_TRANSITION',
+        actorType: actor.type,
+        actorUserId: actor.userId ?? null,
+        oldValue: { state: 'APPROVED' },
+        newValue: { state: 'ACTIVE', numbered: false },
+        notes: 'Group relationship activated; members hold their own numbered records (MEM-007 MP-002).',
+      },
+      trx,
+    );
+    return expiresAt;
+  }
+
   private async requireState(membershipId: number, allowed: LifecycleState[]): Promise<MembershipRow> {
     const membership = await this.getOrThrow(membershipId);
     if (!allowed.includes(membership.lifecycle_state)) {

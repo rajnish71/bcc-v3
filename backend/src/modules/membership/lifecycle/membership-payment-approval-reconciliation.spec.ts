@@ -162,7 +162,8 @@ describe('C. Contribution COMPLETED leaves Membership PENDING, unnumbered', () =
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('D. approve() enforces COMPLETED as a precondition for PAYMENT_REQUIRED classes', () => {
-  const APPROVE_FN = slice(LIFECYCLE_SRC, 'async approve(', "await this.notifyMember(membership, 'MEMBERSHIP_APPLICATION_APPROVED');");
+  // Gate lives in assertApprovalPreconditions() (shared with recordStageDecision), called first by approve().
+  const APPROVE_FN = slice(LIFECYCLE_SRC, 'async assertApprovalPreconditions(', "await this.notifyMember(membership, 'MEMBERSHIP_APPLICATION_APPROVED');");
 
   it('the financial precondition check happens BEFORE any state write (no stranded APPROVED on rejection)', () => {
     const preconditionIdx = APPROVE_FN.indexOf("cls?.activation_mode === 'PAYMENT_REQUIRED'");

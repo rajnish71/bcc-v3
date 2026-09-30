@@ -334,6 +334,17 @@ export interface GroupDelegatesTable {
   role: Generated<string>;
   added_at: ColumnType<Date, string | undefined, string>;
   removed_at: ColumnType<Date | null, string | null, string | null>;
+  // Migration 0105 -- Family/Corporate seat state. NULL = roster row with no
+  // membership seat (pre-0105 rows; the primary contact's contact row).
+  status: Nullable<'INVITED' | 'ACCEPTED' | 'REVOKED_BY_ADMIN'>;
+  group_membership_id: Nullable<number>;
+  member_membership_id: Nullable<number>;
+  invited_by_user_id: Nullable<number>;
+  invited_at: ColumnType<Date | null, string | null | undefined, string | null>;
+  accepted_at: ColumnType<Date | null, string | null | undefined, string | null>;
+  revoked_at: ColumnType<Date | null, string | null | undefined, string | null>;
+  revoked_by_user_id: Nullable<number>;
+  revocation_reason: Nullable<string>;
 }
 
 export interface MembershipsTable {
@@ -344,6 +355,9 @@ export interface MembershipsTable {
   group_entity_id: number | null;
   membership_class_id: number | null;
   group_membership_type_id: number | null;
+  // Migration 0105 -- set only on a Family/Corporate MEMBER's own record
+  // (owner_type INDIVIDUAL, no class): the GROUP relationship row it belongs to.
+  parent_membership_id: Nullable<number>;
   lifecycle_state: 'PENDING' | 'APPROVED' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'TERMINATED' | 'REJECTED';
   join_year: number | null;
   join_month: number | null;
@@ -493,6 +507,10 @@ export interface FinancialContributionsTable {
   // Settlement Provider order reference (e.g. a Razorpay order id).
   // Meaningful only while state = 'SETTLEMENT_IN_PROGRESS'; NULL otherwise.
   active_settlement_reference: Nullable<string>;
+  // Migration 0104 -- hosted settlement URL (e.g. a Razorpay Payment Link
+  // short_url) for the current attempt. Same lifetime as
+  // active_settlement_reference; NULL for Checkout/Orders attempts.
+  active_settlement_url: Nullable<string>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
   updated_at: Generated<ColumnType<Date, string | undefined, string>>;
 }

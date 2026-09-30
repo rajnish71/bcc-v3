@@ -139,6 +139,51 @@ export class FinancialController {
     };
   }
 
+  // ── Hosted payment link initiation ──────────────────────────────────────
+  //
+  // Creates (or, for the live attempt, returns) a provider-hosted payment
+  // link for a Contribution. The request carries NOTHING but the
+  // contribution id -- amount and currency are read from the Contribution
+  // itself (PAY-001: the Business Module's obligation, never the client).
+  //
+  // Authorization: the payer, OR a holder of the existing
+  // financial.settlement.verify permission (finance staff who hand the link
+  // to a payer who does not use the Hub themselves -- e.g. an application
+  // filed on-behalf). Same payer-or-verifier model as the evidence read
+  // routes below; no new permission is introduced.
+  //
+  // Never settles, activates, approves or numbers anything: settlement is
+  // resolved exclusively by the signed Razorpay webhook.
+
+  @Post('contributions/:id/settlement/payment-link')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard)
+  async createPaymentLink(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: FastifyRequest,
+  ) {
+    const contribution = await this.financialService.getContribution(id);
+    const isPayer = Number(contribution.payer_user_id) === actor.sub;
+    if (!isPayer && !(await this.isVerifier(actor.sub))) {
+      throw new ForbiddenException('You do not have access to this financial contribution.');
+    }
+    const link = await this.financialService.initiateProviderPaymentLink(
+      id,
+      auditContext(isPayer ? 'MEMBER' : 'ADMIN', req, actor),
+    );
+    return {
+      contributionId: link.contributionId,
+      state: link.contributionState,
+      provider: link.providerName,
+      paymentLinkReference: link.providerLinkReference,
+      paymentLinkUrl: link.hostedUrl,
+      amountPaise: link.amountPaise,
+      currency: link.currency,
+      reused: link.reused,
+    };
+  }
+
   // ── Contribution status (Step 20) ────────────────────────────────────────
   //
   // Owner-only read of a Contribution's current authoritative state. This is
@@ -177,10 +222,20 @@ export class FinancialController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: FastifyRequest,
   ) {
-    await this.assertOwnedContribution(id, actor.sub);
+    // Payer, or a financial.settlement.verify holder -- the same model as the
+    // payment-link route: staff who issue a hosted link for a payer (e.g. a
+    // Family/Corporate head) must be able to reopen the SAME Contribution
+    // after that link expired/was cancelled, so a fresh link can be issued.
+    // Retry only reopens (FAILED/ABANDONED -> AWAITING_SETTLEMENT); it never
+    // settles or creates anything.
+    const contribution = await this.financialService.getContribution(id);
+    const isPayer = Number(contribution.payer_user_id) === actor.sub;
+    if (!isPayer && !(await this.isVerifier(actor.sub))) {
+      throw new ForbiddenException('You do not have access to this financial contribution.');
+    }
     const { contributionState } = await this.financialService.retrySettlement(
       id,
-      auditContext('MEMBER', req, actor),
+      auditContext(isPayer ? 'MEMBER' : 'ADMIN', req, actor),
     );
     return { contributionId: id, state: contributionState };
   }

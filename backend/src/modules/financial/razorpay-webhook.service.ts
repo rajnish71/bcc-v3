@@ -35,7 +35,29 @@ import { verifyRazorpaySignature } from './razorpay-webhook-signature.util';
 // not yet captured). Every other event type is acknowledged and ignored.
 const EVENT_SUCCESS = 'payment.captured';
 const EVENT_FAILURE = 'payment.failed';
-const HANDLED_EVENT_TYPES: ReadonlySet<string> = new Set([EVENT_SUCCESS, EVENT_FAILURE]);
+
+// Hosted Payment Link attempts (financial_contributions.active_settlement_url
+// set, active_settlement_reference = the plink_ id) resolve ONLY through
+// these link-level events:
+//   payment_link.paid      -> SUCCEEDED (the link's single, full payment --
+//                             links are created with accept_partial=false)
+//   payment_link.expired   -> ABANDONED (the attempt ended without payment;
+//   payment_link.cancelled    PAY-001: retryable via a new link on the SAME
+//                             Contribution)
+// A payment.failed for a link's payment is deliberately NOT an attempt
+// outcome: the hosted link stays payable after a failed try, so failing the
+// Contribution there would let a later payment_link.paid land on a
+// Contribution that is no longer SETTLEMENT_IN_PROGRESS. Such payment.*
+// events carry the link's internal order id, never the plink_ id, so they
+// can never match a link attempt below (they are recorded as unmatched in
+// the inbox, with no financial effect). payment_link.partially_paid cannot
+// occur (accept_partial=false) and is ignored like any other event.
+const EVENT_LINK_PAID = 'payment_link.paid';
+const EVENT_LINK_EXPIRED = 'payment_link.expired';
+const EVENT_LINK_CANCELLED = 'payment_link.cancelled';
+const LINK_EVENT_TYPES: ReadonlySet<string> = new Set([EVENT_LINK_PAID, EVENT_LINK_EXPIRED, EVENT_LINK_CANCELLED]);
+
+const HANDLED_EVENT_TYPES: ReadonlySet<string> = new Set([EVENT_SUCCESS, EVENT_FAILURE, ...LINK_EVENT_TYPES]);
 
 const MAX_ERROR_LENGTH = 2000;
 
@@ -46,6 +68,24 @@ interface RazorpayPaymentEntity {
   currency?: string;
   error_code?: string | null;
   error_description?: string | null;
+}
+
+interface RazorpayPaymentLinkEntity {
+  id?: string;
+  amount?: number;
+  currency?: string;
+  status?: string;
+}
+
+// Provider-event -> generic settlement outcome, before contribution matching.
+interface ResolvedOutcome {
+  matchReference: string;     // compared against active_settlement_reference
+  matchLabel: string;         // 'order' | 'payment link' -- diagnostics only
+  providerReference: string;  // financial_transactions.provider_reference (idempotency key)
+  amountPaise: number;
+  currency: string;
+  result: 'SUCCEEDED' | 'FAILED' | 'ABANDONED';
+  failureReason: string | null;
 }
 
 export interface RazorpayWebhookInput {
@@ -160,10 +200,11 @@ export class RazorpayWebhookService {
       return;
     }
 
-    const payload = event.payload as { payment?: { entity?: RazorpayPaymentEntity } } | undefined;
-    const payment = payload?.payment?.entity;
-    if (!payment?.id || !payment.order_id) {
-      await this.markFailed(inboxId, `Event '${eventType}' payload missing payment id/order_id.`);
+    const resolved = LINK_EVENT_TYPES.has(eventType)
+      ? this.resolvePaymentLinkEvent(eventType, event)
+      : this.resolvePaymentEvent(eventType, event);
+    if (typeof resolved === 'string') {
+      await this.markFailed(inboxId, resolved);
       return;
     }
 
@@ -178,12 +219,12 @@ export class RazorpayWebhookService {
     let contributionId = await this.readStoredContributionId(inboxId);
     if (contributionId === null) {
       const contribution = await this.financialService.findContributionByActiveSettlementReference(
-        payment.order_id,
+        resolved.matchReference,
       );
       if (!contribution) {
         await this.markFailed(
           inboxId,
-          `No SETTLEMENT_IN_PROGRESS contribution matches order '${payment.order_id}'.`,
+          `No SETTLEMENT_IN_PROGRESS contribution matches ${resolved.matchLabel} '${resolved.matchReference}'.`,
         );
         return;
       }
@@ -204,7 +245,7 @@ export class RazorpayWebhookService {
       return;
     }
 
-    const webhookAmount = Number(payment.amount);
+    const webhookAmount = resolved.amountPaise;
     if (webhookAmount !== Number(contribution.amount_paise)) {
       await this.markFailed(
         inboxId,
@@ -213,32 +254,28 @@ export class RazorpayWebhookService {
       return;
     }
 
-    const webhookCurrency = String(payment.currency ?? '').toUpperCase();
+    const webhookCurrency = resolved.currency.toUpperCase();
     if (webhookCurrency !== String(contribution.currency).toUpperCase()) {
       await this.markFailed(
         inboxId,
-        `Currency mismatch: webhook '${payment.currency}' vs contribution '${contribution.currency}'.`,
+        `Currency mismatch: webhook '${resolved.currency}' vs contribution '${contribution.currency}'.`,
       );
       return;
     }
-
-    const result: 'SUCCEEDED' | 'FAILED' = eventType === EVENT_SUCCESS ? 'SUCCEEDED' : 'FAILED';
 
     // The EXISTING settlement outcome path (PAY-001 §ABSOLUTE ARCHITECTURAL
     // RULE) -- owns the Financial Transaction, Contribution state,
     // Receipt, and Business Events. providerReference is the Razorpay
     // PAYMENT id (per-attempt uniqueness for financial_transactions);
     // active_settlement_reference already holds the ORDER id separately
-    // (PAY-001 Step 19 Part 13).
+    // (PAY-001 Step 19 Part 13). For an expired/cancelled payment link there
+    // is no payment, so the plink_ id itself is the per-attempt reference.
     await this.financialService.recordSettlementOutcome(contributionId, {
       provider: RAZORPAY_PROVIDER_NAME,
-      providerReference: payment.id,
-      result,
+      providerReference: resolved.providerReference,
+      result: resolved.result,
       amountPaise: webhookAmount,
-      failureReason:
-        result === 'FAILED'
-          ? (payment.error_description ?? payment.error_code ?? 'Razorpay payment failed')
-          : null,
+      failureReason: resolved.failureReason,
     }, {
       // No actor user/session/IP: Razorpay, not a member, is the caller.
       actorType: 'WEBHOOK',
@@ -247,6 +284,72 @@ export class RazorpayWebhookService {
     });
 
     await this.markProcessed(inboxId, contributionId);
+  }
+
+  // ── Provider payload -> generic outcome ──────────────────────────────────
+  // Each returns either the resolved outcome or a diagnostic string for the
+  // inbox row. Pure reads of the verified payload; no DB access.
+
+  private resolvePaymentEvent(eventType: string, event: Record<string, unknown>): ResolvedOutcome | string {
+    const payload = event.payload as { payment?: { entity?: RazorpayPaymentEntity } } | undefined;
+    const payment = payload?.payment?.entity;
+    if (!payment?.id || !payment.order_id) {
+      return `Event '${eventType}' payload missing payment id/order_id.`;
+    }
+    const result: 'SUCCEEDED' | 'FAILED' = eventType === EVENT_SUCCESS ? 'SUCCEEDED' : 'FAILED';
+    return {
+      matchReference: payment.order_id,
+      matchLabel: 'order',
+      providerReference: payment.id,
+      amountPaise: Number(payment.amount),
+      currency: String(payment.currency ?? ''),
+      result,
+      failureReason:
+        result === 'FAILED'
+          ? (payment.error_description ?? payment.error_code ?? 'Razorpay payment failed')
+          : null,
+    };
+  }
+
+  private resolvePaymentLinkEvent(eventType: string, event: Record<string, unknown>): ResolvedOutcome | string {
+    const payload = event.payload as
+      | { payment_link?: { entity?: RazorpayPaymentLinkEntity }; payment?: { entity?: RazorpayPaymentEntity } }
+      | undefined;
+    const link = payload?.payment_link?.entity;
+    if (!link?.id) {
+      return `Event '${eventType}' payload missing payment_link id.`;
+    }
+
+    if (eventType === EVENT_LINK_PAID) {
+      // The settled amount/currency are the PAYMENT's, exactly as for
+      // payment.captured -- never the link's advertised amount.
+      const payment = payload?.payment?.entity;
+      if (!payment?.id) {
+        return `Event '${eventType}' payload missing payment id.`;
+      }
+      return {
+        matchReference: link.id,
+        matchLabel: 'payment link',
+        providerReference: payment.id,
+        amountPaise: Number(payment.amount),
+        currency: String(payment.currency ?? ''),
+        result: 'SUCCEEDED',
+        failureReason: null,
+      };
+    }
+
+    // expired / cancelled: no payment exists. The link's own amount/currency
+    // are still validated against the Contribution below, so a foreign or
+    // tampered link can never close this attempt.
+    return {
+      matchReference: link.id,
+      matchLabel: 'payment link',
+      providerReference: link.id,
+      amountPaise: Number(link.amount),
+      currency: String(link.currency ?? ''),
+      result: 'ABANDONED',
+      failureReason: eventType === EVENT_LINK_EXPIRED ? 'Payment link expired' : 'Payment link cancelled',
+    };
   }
 
   // ── Inbox bookkeeping ────────────────────────────────────────────────────

@@ -36,6 +36,27 @@ export interface SettlementOrderResult {
   providerPublicKeyId?: string;
 }
 
+// Generic hosted payment-link input (e.g. a Razorpay Payment Link). Same
+// genericity rule as SettlementOrderInput: the amount/currency are the
+// Contribution's own authoritative values, never recomputed by a provider,
+// and no Business-Module-specific field exists here.
+export interface SettlementPaymentLinkInput {
+  contributionId: number;
+  amountPaise: number;
+  currency: string;
+  referenceId: string;   // Business-Engine-generated, <=40 chars, unique per settlement attempt
+  description: string;   // the Contribution's human-readable purpose
+  expiresAt?: Date | null; // Business-Module expiry policy (financial_contributions.expires_at), if any
+  metadata?: Record<string, string | number>;
+}
+
+export interface SettlementPaymentLinkResult {
+  providerLinkReference: string; // e.g. a Razorpay plink_ id
+  hostedUrl: string;             // payer-facing URL; never contains a secret
+  amountPaise: number;
+  currency: string;
+}
+
 // Generic refund-initiation input. No Membership/Event/Contest-specific
 // field exists here -- same genericity rule as SettlementOrderInput.
 // providerPaymentReference is the ORIGINAL successful settlement attempt's
@@ -103,6 +124,14 @@ export interface SettlementProvider {
   // construction stays entirely inside the concrete adapter, exactly like
   // createOrder().
   refund(input: RefundInput): Promise<RefundResult>;
+
+  // Optional hosted payment-link settlement (payer settles via a provider-
+  // hosted page instead of an embedded checkout). Link creation is the
+  // START of a settlement attempt, never an outcome -- only the signed
+  // webhook may resolve it. cancelPaymentLink() is used only to withdraw a
+  // link the Financial Engine could not durably attach to a Contribution.
+  createPaymentLink?(input: SettlementPaymentLinkInput): Promise<SettlementPaymentLinkResult>;
+  cancelPaymentLink?(providerLinkReference: string): Promise<void>;
 
   // OBS-08: optional, read-only, on-demand forensic reconciliation only.
   // Must never mutate provider or platform state; callers never persist the

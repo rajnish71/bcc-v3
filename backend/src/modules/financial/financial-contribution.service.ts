@@ -36,7 +36,7 @@ import {
   type SettlementProvider,
 } from './settlement-provider.interface';
 import { FinancialAuditService } from './audit/financial-audit.service';
-import type { AuditContext } from './audit/financial-audit.types';
+import type { AuditContext, FinancialAuditMetadata } from './audit/financial-audit.types';
 
 // Callers that do not (yet) thread HTTP provenance through -- e.g. Business
 // Module services invoking createContribution() -- are recorded as SYSTEM
@@ -202,6 +202,20 @@ export class FinancialContributionService {
       .executeTakeFirst();
   }
 
+  // Looks up ONE specific obligation's Contribution by the deterministic
+  // idempotency key its Business Module created it with. Needed where a
+  // single business record legitimately owns more than one obligation over
+  // time (e.g. a group membership's application fee, then a renewal fee per
+  // term), so "latest for business reference" is not the question being
+  // asked. Read-only; never used by any state-machine path.
+  async findByIdempotencyKey(idempotencyKey: string) {
+    return db
+      .selectFrom('financial_contributions')
+      .selectAll()
+      .where('idempotency_key', '=', idempotencyKey)
+      .executeTakeFirst();
+  }
+
   // ── State machine ─────────────────────────────────────────────────────────
 
   // Transitions a contribution to a new state, validating the move against
@@ -265,7 +279,7 @@ export class FinancialContributionService {
       .updateTable('financial_contributions')
       .set({
         state: newState,
-        ...(leavingSettlementInProgress ? { active_settlement_reference: null } : {}),
+        ...(leavingSettlementInProgress ? { active_settlement_reference: null, active_settlement_url: null } : {}),
       })
       .where('id', '=', id)
       .execute();
@@ -677,7 +691,16 @@ export class FinancialContributionService {
     // SETTLEMENT_STARTED via the existing Step 17 outbox path.
     const { contributionState } = await this.startSettlement(contributionId, auditContext);
 
-    const existingReference = await this.readActiveSettlementReference(contributionId);
+    const activeAttempt = await this.readActiveAttempt(contributionId);
+    if (activeAttempt.url) {
+      // The current attempt is a hosted payment link (0104) -- its reference
+      // is not an Orders-API id and must never be handed to Checkout, and a
+      // second, parallel attempt must not be opened while the link is live.
+      throw new ConflictException(
+        `Contribution ${contributionId} already has an active payment link for this settlement attempt.`,
+      );
+    }
+    const existingReference = activeAttempt.reference;
     if (existingReference) {
       const contribution = await this.getContribution(contributionId);
       // No business write on this branch -- the audit row is the only write.
@@ -809,6 +832,207 @@ export class FinancialContributionService {
     };
   }
 
+  // ── Provider payment-link initiation (hosted settlement) ──────────────────
+  //
+  // Same PAY-001 semantics as initiateProviderSettlement() above, for a
+  // provider-hosted payment link instead of an embedded Checkout order:
+  //  • Amount/currency come ONLY from the Contribution row -- no caller ever
+  //    supplies them (the HTTP route takes nothing but a contribution id).
+  //  • Link creation is the START of an attempt (AWAITING_SETTLEMENT →
+  //    SETTLEMENT_IN_PROGRESS via the reused startSettlement()); it never
+  //    writes a Financial Transaction, Receipt, SETTLED or COMPLETED -- only
+  //    the signed webhook, through recordSettlementOutcome(), may do that.
+  //  • Idempotent per attempt: while the attempt is live, a repeated call
+  //    returns the persisted link (reference + hosted URL) and never
+  //    creates a second, independently payable link.
+  //  • Retry: once the attempt resolves FAILED/ABANDONED (e.g. link
+  //    expired/cancelled), applyTransition() has already cleared both
+  //    columns; retrySettlement() reopens the SAME Contribution and the next
+  //    call here creates a fresh link. No new Contribution is ever created.
+  //  • No lock is held across the provider call (Step 18 Part 13); the
+  //    persist is the same conditional, row-locked UPDATE the Orders path
+  //    uses. A link that cannot be attached (lost race / persist failure) is
+  //    best-effort cancelled at the provider -- unlike an unused order, an
+  //    orphaned link would otherwise stay payable.
+  //
+  // Audit reuses the existing PROVIDER_ORDER_CREATED / PROVIDER_ORDER_FAILED
+  // vocabulary, tagged settlementChannel = 'PAYMENT_LINK'.
+  async initiateProviderPaymentLink(
+    contributionId: number,
+    auditContext: AuditContext = SYSTEM_AUDIT,
+  ): Promise<{
+    contributionId: number;
+    contributionState: ContributionState;
+    providerName: string;
+    providerLinkReference: string;
+    hostedUrl: string;
+    amountPaise: number;
+    currency: string;
+    reused: boolean;
+  }> {
+    if (!this.provider.createPaymentLink) {
+      throw new ConflictException(
+        `Settlement Provider '${this.provider.providerName}' does not support payment links.`,
+      );
+    }
+
+    // Validated BEFORE any state write, so an unpayable Contribution is
+    // never moved into SETTLEMENT_IN_PROGRESS by this call.
+    const contribution = await this.getContribution(contributionId);
+    const amountPaise = Number(contribution.amount_paise);
+    const currency = String(contribution.currency);
+    if (!Number.isInteger(amountPaise) || amountPaise <= 0) {
+      throw new ConflictException(
+        `Contribution ${contributionId} has amount ${contribution.amount_paise}; only a positive-value ` +
+        `contribution can be settled through a payment link.`,
+      );
+    }
+    if (!/^[A-Z]{3}$/.test(currency)) {
+      throw new ConflictException(`Contribution ${contributionId} has an invalid currency '${currency}'.`);
+    }
+    const expiresAt = contribution.expires_at ? new Date(contribution.expires_at as unknown as string) : null;
+    // Razorpay requires expire_by >= 15 minutes ahead; expiry POLICY itself
+    // belongs to the Business Module (PAY-001 §OWNERSHIP MATRIX) -- this only
+    // refuses to open a link the Contribution would outlive by minutes.
+    if (expiresAt && expiresAt.getTime() < Date.now() + 16 * 60 * 1000) {
+      throw new ConflictException(
+        `Contribution ${contributionId} expires at ${expiresAt.toISOString()}; too close to expiry for a payment link.`,
+      );
+    }
+
+    // Reused unchanged: state validation (404, zero-value, terminal states,
+    // AWAITING_SETTLEMENT only), idempotent if already in progress.
+    const { contributionState } = await this.startSettlement(contributionId, auditContext);
+
+    const active = await this.readActiveAttempt(contributionId);
+    if (active.reference && active.url) {
+      await this.audit.record(db, {
+        eventType: 'PROVIDER_ORDER_CREATED',
+        contributionId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerOrderRef: active.reference,
+        resultingState: contributionState,
+        metadata: { providerOrderOutcome: 'REUSED', settlementChannel: 'PAYMENT_LINK' },
+      });
+      return {
+        contributionId,
+        contributionState,
+        providerName: this.provider.providerName,
+        providerLinkReference: active.reference,
+        hostedUrl: active.url,
+        amountPaise,
+        currency,
+        reused: true,
+      };
+    }
+    if (active.reference) {
+      // An embedded-Checkout order is the live attempt -- never open a
+      // second, parallel payable attempt alongside it.
+      throw new ConflictException(
+        `Contribution ${contributionId} already has an active checkout order for this settlement attempt.`,
+      );
+    }
+
+    const referenceId = `FC-${contributionId}-${randomUUID().replace(/-/g, '').slice(0, 8)}`;
+
+    let link;
+    try {
+      link = await this.provider.createPaymentLink({
+        contributionId,
+        amountPaise,
+        currency,
+        referenceId,
+        description: String(contribution.purpose),
+        expiresAt,
+        metadata: {
+          businessModule: String(contribution.business_module),
+          businessReferenceId: Number(contribution.business_reference_id),
+          contributionId,
+          ...(auditContext.provenance?.requestId ? { bccRequestId: auditContext.provenance.requestId } : {}),
+        },
+      });
+    } catch (err) {
+      await this.markSettlementAttemptFailed(contributionId, auditContext, null, { settlementChannel: 'PAYMENT_LINK' });
+      throw err;
+    }
+
+    let persisted: boolean;
+    try {
+      persisted = await this.persistActiveSettlementReference(
+        contributionId,
+        link.providerLinkReference,
+        referenceId,
+        auditContext,
+        link.hostedUrl,
+      );
+    } catch (err) {
+      await this.withdrawPaymentLink(link.providerLinkReference);
+      await this.markSettlementAttemptFailed(contributionId, auditContext, link.providerLinkReference, {
+        settlementChannel: 'PAYMENT_LINK',
+      });
+      throw err;
+    }
+
+    if (!persisted) {
+      await this.withdrawPaymentLink(link.providerLinkReference);
+      const winner = await this.readActiveAttempt(contributionId);
+      await this.audit.record(db, {
+        eventType: 'PROVIDER_ORDER_CREATED',
+        contributionId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerOrderRef: winner.reference,
+        resultingState: contributionState,
+        metadata: {
+          providerOrderOutcome: 'DISCARDED_LOST_RACE',
+          discardedProviderOrderReference: link.providerLinkReference,
+          settlementChannel: 'PAYMENT_LINK',
+        },
+      });
+      if (winner.reference && winner.url) {
+        return {
+          contributionId,
+          contributionState,
+          providerName: this.provider.providerName,
+          providerLinkReference: winner.reference,
+          hostedUrl: winner.url,
+          amountPaise,
+          currency,
+          reused: true,
+        };
+      }
+      // The concurrent attempt is an Orders checkout, or already resolved.
+      // Our link has been withdrawn; never hand out an unattached link.
+      throw new ConflictException(
+        `A concurrent settlement attempt changed contribution ${contributionId}; retry the request.`,
+      );
+    }
+
+    return {
+      contributionId,
+      contributionState,
+      providerName: this.provider.providerName,
+      providerLinkReference: link.providerLinkReference,
+      hostedUrl: link.hostedUrl,
+      amountPaise,
+      currency,
+      reused: false,
+    };
+  }
+
+  // Best-effort: a link that could not be attached to its Contribution is
+  // cancelled so it can never be paid. A failure here is swallowed -- the
+  // link was never returned to any caller, and the original error (if any)
+  // is what the caller must see.
+  private async withdrawPaymentLink(providerLinkReference: string): Promise<void> {
+    try {
+      await this.provider.cancelPaymentLink?.(providerLinkReference);
+    } catch {
+      // See method comment.
+    }
+  }
+
   // Step 18A — order-initiation failure recovery. Moves a Contribution
   // stuck mid-attempt (provider.createOrder() threw, or the reference
   // could not be persisted) from SETTLEMENT_IN_PROGRESS to FAILED, using
@@ -834,6 +1058,7 @@ export class FinancialContributionService {
     contributionId: number,
     auditContext: AuditContext,
     providerOrderRef: string | null,
+    metadata?: FinancialAuditMetadata,
   ): Promise<void> {
     try {
       let pending: PendingFinancialEvent | null = null;
@@ -847,6 +1072,7 @@ export class FinancialContributionService {
           providerOrderRef,
           previousState: 'SETTLEMENT_IN_PROGRESS',
           resultingState: 'FAILED',
+          ...(metadata ? { metadata } : {}),
         });
       });
       if (pending) await this.publishPending([pending]);
@@ -869,6 +1095,22 @@ export class FinancialContributionService {
     });
   }
 
+  // Row-locked read of the whole current attempt: its provider reference
+  // and, for a hosted payment link, its URL (0104). Both null unless the
+  // Contribution is SETTLEMENT_IN_PROGRESS.
+  private async readActiveAttempt(contributionId: number): Promise<{ reference: string | null; url: string | null }> {
+    return db.transaction().execute(async (trx) => {
+      const row = await trx
+        .selectFrom('financial_contributions')
+        .select(['active_settlement_reference', 'active_settlement_url', 'state'])
+        .where('id', '=', contributionId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!row || row.state !== 'SETTLEMENT_IN_PROGRESS') return { reference: null, url: null };
+      return { reference: row.active_settlement_reference ?? null, url: row.active_settlement_url ?? null };
+    });
+  }
+
   // Conditional, row-locked persist: only succeeds if no other request has
   // already written a reference for this attempt. Returns false on a lost
   // race (Step 18 Part 11 concurrency note above).
@@ -877,11 +1119,16 @@ export class FinancialContributionService {
     reference: string,
     receiptReference: string,
     auditContext: AuditContext,
+    // Hosted payment-link URL (0104); omitted for an Orders/Checkout attempt.
+    settlementUrl?: string,
   ): Promise<boolean> {
     return db.transaction().execute(async (trx) => {
       const result = await trx
         .updateTable('financial_contributions')
-        .set({ active_settlement_reference: reference })
+        .set({
+          active_settlement_reference: reference,
+          ...(settlementUrl !== undefined ? { active_settlement_url: settlementUrl } : {}),
+        })
         .where('id', '=', contributionId)
         .where('state', '=', 'SETTLEMENT_IN_PROGRESS')
         .where('active_settlement_reference', 'is', null)
@@ -896,7 +1143,10 @@ export class FinancialContributionService {
           providerOrderRef: reference,
           providerReceiptRef: receiptReference,
           resultingState: 'SETTLEMENT_IN_PROGRESS',
-          metadata: { providerOrderOutcome: 'CREATED' },
+          metadata: {
+            providerOrderOutcome: 'CREATED',
+            ...(settlementUrl !== undefined ? { settlementChannel: 'PAYMENT_LINK' as const } : {}),
+          },
         });
       }
       return persisted;

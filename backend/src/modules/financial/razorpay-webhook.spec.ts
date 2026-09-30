@@ -164,9 +164,13 @@ describe('RAZORPAY_WEBHOOK_SECRET never leaves razorpay-webhook.service.ts (Step
 // ── H. Event selection ──────────────────────────────────────────────────────
 
 describe('Event selection (Step 19 Part 14/15/25 — Event Selection)', () => {
-  it('handles exactly payment.captured and payment.failed', () => {
+  it('handles payment.captured / payment.failed (Orders) and payment_link.paid / expired / cancelled (hosted links)', () => {
     expect(WEBHOOK_SERVICE_SRC).toContain("'payment.captured'");
     expect(WEBHOOK_SERVICE_SRC).toContain("'payment.failed'");
+    expect(WEBHOOK_SERVICE_SRC).toContain("'payment_link.paid'");
+    expect(WEBHOOK_SERVICE_SRC).toContain("'payment_link.expired'");
+    expect(WEBHOOK_SERVICE_SRC).toContain("'payment_link.cancelled'");
+    expect(WEBHOOK_SERVICE_SRC).not.toContain("'payment_link.partially_paid'");
   });
 
   it('does not treat payment.authorized as a successful settlement', () => {

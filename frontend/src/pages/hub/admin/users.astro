@@ -1108,7 +1108,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
         <span class="role-tag">${r.roleName}</span>
       `).join('');
 
-      const canApprove = state === 'PENDING';
+      const canApprove = state === 'PENDING' && !(u.activationMode === 'PAYMENT_REQUIRED' && u.contributionState !== 'COMPLETED');
       const canActivate = state === 'APPROVED';
       const canSuspend = state === 'ACTIVE';
       const canReinstate = state === 'SUSPENDED';
@@ -1611,7 +1611,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     let reason = '';
 
     if (action === 'approve') {
-      targetMids = selectedUsers.filter(u => u.lifecycleState === 'PENDING').map(u => String(u.membershipId));
+      targetMids = selectedUsers.filter(u => u.lifecycleState === 'PENDING' && !(u.activationMode === 'PAYMENT_REQUIRED' && u.contributionState !== 'COMPLETED')).map(u => String(u.membershipId));
     } else if (action === 'activate') {
       targetMids = selectedUsers.filter(u => u.lifecycleState === 'APPROVED').map(u => String(u.membershipId));
     } else if (action === 'suspend') {

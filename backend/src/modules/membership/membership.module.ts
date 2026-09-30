@@ -14,6 +14,7 @@ import { EntitlementController } from './entitlements/entitlement.controller';
 import { RecognitionService } from './recognition/recognition.service';
 import { RecognitionController } from './recognition/recognition.controller';
 import { GroupService } from './groups/group.service';
+import { GroupMembershipService } from './groups/group-membership.service';
 import { GroupController } from './groups/group.controller';
 import { ApplicationWorkflowService } from './application/application-workflow.service';
 import { ApplicationWorkflowController } from './application/application-workflow.controller';
@@ -50,6 +51,7 @@ import { MembershipAdminController } from './admin/membership-admin.controller';
     EntitlementService,
     RecognitionService,
     GroupService,
+    GroupMembershipService,
     ApplicationWorkflowService,
     VotingRegisterService,
     MembershipCardService,

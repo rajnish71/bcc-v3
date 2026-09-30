@@ -133,7 +133,9 @@ describe('MembershipLifecycleService.activate() (F-013, detailed)', () => {
 // ── 4. approve(): atomicity-only change, authorization/financial untouched ─
 
 describe('MembershipLifecycleService.approve() (F-013, authorization boundary preserved)', () => {
-  const body = methodBody(SERVICE_SRC, 'async approve(', ['async reject(']);
+  // The financial precondition lives in assertApprovalPreconditions() (shared with
+  // recordStageDecision), which approve() calls first -- inspect both together.
+  const body = methodBody(SERVICE_SRC, 'async assertApprovalPreconditions(', ['async reject(']);
 
   it('the PAYMENT_REQUIRED financial precondition check still runs before any state write, outside the transaction', () => {
     const trxOpenIndex = body.indexOf('async (trx) => {');

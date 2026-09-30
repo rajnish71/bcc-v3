@@ -37,6 +37,7 @@ export class FinancialAuditService {
           providerOrderOutcome: input.metadata.providerOrderOutcome,
           discardedProviderOrderReference: input.metadata.discardedProviderOrderReference,
           isRetry: input.metadata.isRetry,
+          settlementChannel: input.metadata.settlementChannel,
         })
       : null;
 

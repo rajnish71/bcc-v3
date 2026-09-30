@@ -1,0 +1,211 @@
+---
+/**
+ * hub/membership/group.astro — Family / Corporate membership workspace
+ * Route: /hub/membership/group/
+ *
+ * Shell: HubLayout (HUB-ARCH-001) — this page owns only its workspace.
+ *
+ * Frozen lifecycle: PAY → APPROVE → INVITE/ASSIGN → ACTIVATE → NUMBER.
+ *   • Invitee: sees invitations waiting for them and can accept. Accepting
+ *     creates their own membership record; BCC activates it and allocates
+ *     their membership number (MEM-007) — acceptance never does.
+ *   • Head (primary contact): sees the group, its members/invitations and
+ *     remaining capacity, and can invite once BCC has approved the group.
+ *     There is deliberately NO remove/revoke/replace control: only BCC
+ *     administration can remove a member.
+ *
+ * All data from existing API routes (api/v1/membership/groups/...).
+ */
+import HubLayout from '../../../layouts/HubLayout.astro';
+---
+
+<HubLayout title="Family & Corporate Membership" description="Invitations and members of your Family or Corporate membership.">
+  <div class="grp">
+    <h2 class="grp__title">Family &amp; Corporate Membership</h2>
+    <p class="grp__lede">
+      Your group pays and is reviewed by BCC first. After approval, the head of the group invites members;
+      each member accepts, and BCC activates their individual membership and issues their own membership number.
+    </p>
+
+    <section class="grp__section" aria-labelledby="grp-inv-h">
+      <h3 id="grp-inv-h" class="grp__h">Invitations for you</h3>
+      <div id="grp-invitations" class="grp__body">Loading…</div>
+    </section>
+
+    <section class="grp__section" aria-labelledby="grp-head-h">
+      <h3 id="grp-head-h" class="grp__h">Groups you manage</h3>
+      <div id="grp-headof" class="grp__body">Loading…</div>
+    </section>
+  </div>
+</HubLayout>
+
+<script>
+  const API = '/api/v1/membership/groups';
+
+  function headers(): Record<string, string> {
+    const t = localStorage.getItem('bcc_token');
+    return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : {};
+  }
+
+  function esc(v: unknown): string {
+    return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  }
+
+  function fmtDate(v: unknown): string {
+    if (!v) return '—';
+    const d = new Date(String(v));
+    return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  const STATUS_LABEL: Record<string, string> = {
+    INVITED: 'Invited — awaiting acceptance',
+    ACCEPTED: 'Member',
+    REVOKED_BY_ADMIN: 'Removed by BCC',
+  };
+
+  async function api(path: string, init: RequestInit = {}) {
+    const res = await fetch(`${API}${path}`, { headers: headers(), ...init });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((body as { message?: string }).message ?? `Error ${res.status}`);
+    return body;
+  }
+
+  function renderInvitations(el: HTMLElement, invitations: Array<Record<string, unknown>>) {
+    if (!invitations.length) { el.textContent = 'No pending invitations.'; return; }
+    el.innerHTML = invitations.map((i) => `
+      <div class="grp-row">
+        <div class="grp-row__main">
+          <div class="grp-row__name">${esc(i.name)}</div>
+          <div class="grp-row__meta">${esc(i.type === 'FAMILY' ? 'Family' : 'Corporate')} membership · invited ${fmtDate(i.invitedAt)}</div>
+        </div>
+        <button class="grp-btn" data-accept="${esc(i.invitationId)}">Accept invitation</button>
+      </div>`).join('');
+    el.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-accept]');
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        await api(`/invitations/${btn.dataset.accept}/accept`, { method: 'POST', body: '{}' });
+        btn.replaceWith(Object.assign(document.createElement('span'), {
+          className: 'grp-note',
+          textContent: 'Accepted — BCC will activate your membership and issue your membership number.',
+        }));
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = (err as Error).message;
+      }
+    });
+  }
+
+  async function renderGroup(host: HTMLElement, groupMembershipId: number) {
+    const data = await api(`/memberships/${groupMembershipId}/members`) as {
+      group: { lifecycleState: string; type: string; name: string; expiresAt: string | null; canInvite: boolean };
+      capacity: { max: number; used: number; remaining: number };
+      members: Array<Record<string, unknown>>;
+    };
+    const g = data.group;
+    const rows = data.members.map((m) => `
+      <tr>
+        <td>${esc(m.fullName)}</td>
+        <td>${esc(STATUS_LABEL[String(m.status)] ?? m.status)}</td>
+        <td class="grp-mono">${esc(m.membershipNumber ?? '—')}</td>
+      </tr>`).join('');
+    const inviteForm = g.canInvite && data.capacity.remaining > 0 ? `
+      <form class="grp-invite" data-group="${groupMembershipId}">
+        <label class="grp-invite__label" for="grp-inv-${groupMembershipId}">Invite a registered BCC user (email or username)</label>
+        <div class="grp-invite__row">
+          <input id="grp-inv-${groupMembershipId}" name="identifier" required minlength="2" maxlength="255" autocomplete="off" />
+          <button class="grp-btn" type="submit">Send invitation</button>
+        </div>
+        <div class="grp-note" data-msg></div>
+      </form>`
+      : `<p class="grp-note">${g.canInvite ? 'All member places are taken.' : 'Invitations open once BCC has approved this membership.'}</p>`;
+
+    host.insertAdjacentHTML('beforeend', `
+      <div class="grp-card">
+        <div class="grp-row__name">${esc(g.name)} · ${esc(g.type === 'FAMILY' ? 'Family' : 'Corporate')} membership</div>
+        <div class="grp-row__meta">Status: ${esc(g.lifecycleState)}${g.expiresAt ? ` · valid until ${fmtDate(g.expiresAt)}` : ''}
+          · Members: ${data.capacity.used} of ${data.capacity.max} (${data.capacity.remaining} remaining)</div>
+        ${rows ? `<table class="grp-table"><thead><tr><th>Name</th><th>Status</th><th>Membership no.</th></tr></thead><tbody>${rows}</tbody></table>` : ''}
+        <p class="grp-note">Members can only be removed by BCC administration.</p>
+        ${inviteForm}
+      </div>`);
+  }
+
+  async function init() {
+    const invEl = document.getElementById('grp-invitations');
+    const headEl = document.getElementById('grp-headof');
+    if (!invEl || !headEl) return;
+    try {
+      const mine = await api('/memberships/mine') as {
+        headOf: Array<{ membershipId: number }>;
+        invitations: Array<Record<string, unknown>>;
+      };
+      renderInvitations(invEl, mine.invitations);
+      if (!mine.headOf.length) { headEl.textContent = 'You do not manage a Family or Corporate membership.'; }
+      else {
+        headEl.textContent = '';
+        for (const g of mine.headOf) await renderGroup(headEl, g.membershipId);
+      }
+      headEl.addEventListener('submit', async (e) => {
+        const form = (e.target as HTMLElement).closest<HTMLFormElement>('form.grp-invite');
+        if (!form) return;
+        e.preventDefault();
+        const msg = form.querySelector<HTMLElement>('[data-msg]');
+        const input = form.querySelector<HTMLInputElement>('input[name="identifier"]');
+        try {
+          await api(`/memberships/${form.dataset.group}/invitations`, {
+            method: 'POST',
+            body: JSON.stringify({ identifier: input?.value ?? '' }),
+          });
+          window.location.reload();
+        } catch (err) {
+          if (msg) msg.textContent = (err as Error).message;
+        }
+      });
+    } catch (err) {
+      invEl.textContent = (err as Error).message;
+      headEl.textContent = '';
+    }
+  }
+
+  init();
+</script>
+
+<style>
+  .grp { max-width: 960px; }
+  .grp__title { font-family: var(--font-display); font-size: 28px; color: var(--ink-900); margin: 0 0 8px; }
+  .grp__lede { font-family: var(--font-body); font-size: 14px; color: var(--ink-600); margin: 0 0 24px; max-width: 70ch; }
+  .grp__section { margin-bottom: 32px; }
+  .grp__h { font-family: var(--font-display); font-size: 18px; color: var(--ink-900); margin: 0 0 12px; }
+  .grp__body { font-family: var(--font-body); font-size: 14px; color: var(--ink-600); }
+
+  /* Runtime-created nodes: :global() per CLAUDE.md §4.4 */
+  :global(.grp-row), :global(.grp-card) {
+    background: var(--surface-0);
+    border: 1px solid var(--hairline);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+  }
+  :global(.grp-row) { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  :global(.grp-row__main) { flex: 1 1 auto; min-width: 160px; }
+  :global(.grp-row__name) { font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--ink-900); }
+  :global(.grp-row__meta) { font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin-top: 3px; }
+  :global(.grp-note) { font-family: var(--font-body); font-size: 12px; color: var(--ink-400); margin: 8px 0 0; }
+  :global(.grp-mono) { font-family: var(--font-mono); font-size: 12px; }
+  :global(.grp-btn) {
+    font-family: var(--font-body); font-size: 12px; font-weight: 600; padding: 6px 14px;
+    background: transparent; border: 1px solid var(--ink-900); color: var(--ink-900); cursor: pointer;
+  }
+  :global(.grp-btn:disabled) { opacity: 0.5; cursor: not-allowed; }
+  :global(.grp-table) { width: 100%; border-collapse: collapse; margin-top: 12px; font-family: var(--font-body); font-size: 13px; }
+  :global(.grp-table th), :global(.grp-table td) { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--hairline); }
+  :global(.grp-table th) { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-400); }
+  :global(.grp-invite) { margin-top: 16px; }
+  :global(.grp-invite__label) { display: block; font-family: var(--font-body); font-size: 12px; color: var(--ink-600); margin-bottom: 6px; }
+  :global(.grp-invite__row) { display: flex; gap: 8px; flex-wrap: wrap; }
+  :global(.grp-invite__row input) {
+    flex: 1 1 220px; min-width: 0; font-family: var(--font-body); font-size: 13px; padding: 6px 8px;
+    border: 1px solid var(--hairline); background: var(--surface-0); color: var(--ink-900);
+  }
+</style>

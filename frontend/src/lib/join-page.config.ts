@@ -213,14 +213,14 @@ export const PUBLIC_TIERS: PublicTier[] = [
     name: 'Family',
     badge: 'FAMILY',
     who: 'Households where photography is a shared pursuit.',
-    eligibility: 'Up to 4 members at the same address. Each receives an individual profile and membership number.',
+    eligibility: 'Up to 4 members at the same address. Arranged with BCC: payment, BCC review, then members are invited and activated — each with their own membership number.',
     // Fallback only -- membership.astro overrides this at build time from
     // GET /api/v1/membership/public/classes (group_type_entitlements.fee_inr).
     annual: '₹6,000',
     period: 'for 2 years',
     benefits: [
       'All Individual benefits per member',
-      'Shared family membership number',
+      'Individual membership number for each member',
       'Joint activity registrations',
       'Family photowalk priority',
     ],
@@ -233,7 +233,7 @@ export const PUBLIC_TIERS: PublicTier[] = [
     name: 'Corporate',
     badge: 'CORPORATE',
     who: 'Businesses and organisations supporting the photography community.',
-    eligibility: 'Any registered entity. Five nominated individuals receive Individual membership.',
+    eligibility: 'Any registered entity. Arranged with BCC: payment, BCC review, then up to five nominated individuals are invited and activated — each with their own membership number.',
     // Fallback only -- see family tier comment above.
     annual: '₹5,000',
     period: 'per year',
@@ -267,7 +267,11 @@ export const JOIN_FAQS: JoinFaq[] = [
   },
   {
     q: 'Does Family membership include children?',
-    a: 'Yes. Family membership covers up to four members residing at the same address, including children. Each family member receives an individual profile and their own membership number.',
+    a: 'Yes. Family membership covers up to four members residing at the same address, including children. Each family member receives an individual profile and, once their membership is activated, their own membership number.',
+  },
+  {
+    q: 'How do Family and Corporate memberships work?',
+    a: 'They are arranged with BCC rather than through online sign-up. The family or organisation pays the membership contribution first; BCC then reviews and approves the membership. After approval, the head of the family or the organisation’s contact invites each member, each member accepts, and BCC activates their individual membership — issuing every member their own membership number. There is no shared membership number.',
   },
   {
     q: 'What if my application is not approved?',
@@ -283,7 +287,7 @@ export const JOIN_FAQS: JoinFaq[] = [
   },
   {
     q: 'What payment methods are accepted?',
-    a: 'All major methods are accepted — UPI, net banking, debit and credit cards, and mobile wallets. Payment is collected only after your application is reviewed and approved.',
+    a: 'All major methods are accepted — UPI, net banking, debit and credit cards, and mobile wallets. For paid memberships, payment is made when you apply and BCC reviews your application after payment; if it is not approved, the contribution is refunded in full.',
   },
 ];
 

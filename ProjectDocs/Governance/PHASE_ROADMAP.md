@@ -1,8 +1,8 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
 **Status:** AUTHORITATIVE — Living Roadmap
-**Version:** 2.6
-**Last Updated:** 2026-07-15 — IDENTITY-001 Identity Completion Architecture implemented by Claude Code
+**Version:** 2.9
+**Last Updated:** 2026-09-30 — Membership Expansion — Family & Corporate Membership registered and deployed to production (8f26c53)
 
 ---
 
@@ -21,6 +21,57 @@ Detailed implementation belongs to the Platform Specification.
 Governance belongs to MEM-006 and MEM-007.
 
 This document governs **when** work happens, not **how** it is implemented.
+
+---
+
+# AUGUST 2026 REMEDIATION PROGRAMME
+
+**This is a temporary remediation sequencing layer. It does not replace the permanent Platform Development Roadmap below.** After Track 7 closes, normal feature development resumes from the then-current PHASE_ROADMAP state (Phase E and onward).
+
+Source: `ProjectDocs/Audits/BCC_V3_August_Audit_Blocks_1-15_Consolidated.md` and successor audit blocks.
+
+## Track 0 — Governance Closeout — ✅ CLOSED
+
+- 0.1 — MEM-007 — ✅ CLOSED / VERIFIED
+- 0.2 — MEM-008 — ✅ CLOSED / VERIFIED
+- 0.3 — ADMIN-ARCH-001 — ✅ CLOSED / VERIFIED — closure does **not** mean adoption. ADMIN-ARCH-001 exists in the working tree (`ProjectDocs/Architecture/ADMIN_CONSOLE_ARCHITECTURE_FREEZE_v1.0_ADMIN-ARCH-001.md`) but remains **untracked/unadopted and not authoritative**. Its Actor+Target principle, if ever adopted, is module-scoped to the Member Management surface only.
+- 0.4 — PHASE_ROADMAP — ✅ CLOSED / VERIFIED (this reconciliation)
+
+## Track 1 — F-001 / F-030 Residual Reconciliation — 🚧 CURRENT / NEXT
+
+- F-001/F-030 (stuck `SETTLEMENT_IN_PROGRESS` contributions on rejected memberships) — root-caused to a pre-fix Razorpay auto-capture defect, fixed by commit `5c87792` (deployed 2026-08-14). Residual reconciliation of the two already-affected memberships (87, 88) remains open pending a specification decision; historical reconciliation is deferred unless separately authorized.
+
+## Track 2 — F-010 Change Control / Authorized Manual Operations — 🔜 FUTURE / DEFERRED
+
+- F-010 (membership 84 manual QA change, no audit trail) — authorized manual change-control gap, not yet closed.
+- QA/test-account lifecycle and production access boundary — not yet started.
+
+## Track 3 — Remaining Authorized Financial Resilience — 🔜 FUTURE / DEFERRED
+
+- F-002 (system-actor refund for rejected-membership settlements) — ✅ implemented, commit `472bf6d`.
+- F-003 (no outbox-recovery worker / expiry-processing job) — open; zero production impact recorded at last audit.
+- F-004 (webhook/reconciliation tests are static source-pattern checks, not runtime tests) — open.
+- F-005/F-006 — only in scope **if an actual required behaviour is established**; not to be invented. F-005 (this roadmap being stale on payment status) is addressed by this reconciliation. F-006 (webhook-driven refund `PROCESSING → COMPLETED` path) status not re-verified in this pass — treat as open until confirmed.
+
+## Track 4 — Admin Financial Visibility — 🔜 FUTURE / DEFERRED
+
+- Read-only admin financial reconciliation surface — confirmed absent (Audit Blocks 5, 14). Not started.
+
+## Track 5 — Production DB / Operational Security — 🔜 FUTURE / DEFERRED
+
+- Least-privilege DB access and controlled production access boundary — not yet started.
+
+## Track 6 — Specific Remaining Auditability Gaps — 🔜 FUTURE / DEFERRED
+
+Scope limited to already-established remediation gaps only — **no new forensic audit**:
+
+- F-011 (canonical identity-domain writes bypassing `identity_audit_log`) — ✅ **RESOLVED**. Five commits at HEAD (`21cfa52`, `321f53a`, `4546868`, `8048e66`, `5a37054`) add audit logging to each of the five write paths the audit identified: self-service password reset, self-service password change, email changes, password hash migrations, admin password resets. This corrects the prior 🟡-open status recorded in the audit consolidation.
+- F-015/F-016/F-017/F-018/F-019/F-020 — generalized/related audit-atomicity and coverage gaps from the same sweep; not verified as closed by this reconciliation pass — treat as still open until independently checked.
+- F-012 (no canonical path to clear `force_password_reset`) and F-033/F-034 (admin password-reset permission boundary, forced-reset enforcement) — appear to have associated fix commits (`bcaf569`, `1829b5e`) at HEAD; not independently re-verified in this pass.
+
+## Track 7 — Final August Remediation Closure — 🔜 FUTURE / DEFERRED
+
+Not reached. Pending feature development (Stage 3 / Phase F onward, below) resumes only after Track 7 closes.
 
 ---
 
@@ -442,6 +493,31 @@ Soft Launch Activities
 
 ---
 
+### MEM-008 Portfolio Cap & Public Exposure Enforcement
+
+**Status:** ✅ IMPLEMENTATION COMPLETE — ✅ DEPLOYED / OPERATIONAL CLOSEOUT
+
+Owner-authorized MEM-008 amendment establishes:
+
+- Basic Member: maximum 5 publicly visible portfolio photos.
+- Student Member: maximum 10 publicly visible portfolio photos.
+- Basic and Student members do not receive Public Gallery access.
+
+Implementation:
+
+- Public exposure is enforced through the entitlement/policy layer.
+- Portfolio selection is explicit through `photos.portfolio_selected`.
+- The system never automatically selects, promotes, orders, or trims photos.
+- If stored selection exceeds the applicable cap, no selected photos are publicly exposed until the member reconciles the selection to the cap.
+- Four owner-authorized individual overrides provide unlimited portfolio + public gallery while retaining BASIC_MEMBER class.
+- Pranil Kishnani has a temporary individual portfolio restriction pending separate minor-policy decision.
+- Migration 0103 establishes the applicable individual overrides/restriction.
+- Membership comparison UI is reconciled to the amended MEM-008 policy.
+
+Status: Deployed to production on 2026-09-29 — migration 0103 applied (17:47 UTC) and commit `3d7d415` deployed via GitHub Actions (17:58 UTC). Verified in production (read-only, 2026-09-30): Basic cap 5 / Student cap 10 with no Public Gallery served by the public membership API and page; `photos.portfolio_selected` present; the 0103 individual overrides/restriction are in place. The Pranil Kishnani restriction remains pending its separate minor-policy decision.
+
+---
+
 ## FEEDBACK STAGE 5 — Pre-Soft-Launch Polish
 
 **Status:** 🚧 P0 BLOCKERS OUTSTANDING — F5.1–F5.4 complete; P0 issues must be resolved before soft launch
@@ -492,31 +568,6 @@ Soft Launch Activities
 Architecture authority: `ProjectDocs/Architecture/Identity_Architecture_Freeze_v1_IDENTITY-ARCH-001.md`
 
 HUB-ARCH-001 updated: Amendment 001 (FD-016, FD-017, FD-018) records HubLayout as Identity Guard.
-
-### MEM-008 Portfolio Cap & Public Exposure Enforcement
-
-**Status:** 🚧 PENDING DEPLOYMENT
-
-Owner-authorized MEM-008 amendment establishes:
-
-- Basic Member: maximum 5 publicly visible portfolio photos.
-- Student Member: maximum 10 publicly visible portfolio photos.
-- Basic and Student members do not receive Public Gallery access.
-
-Implementation:
-
-- Public exposure is enforced through the entitlement/policy layer.
-- Portfolio selection is explicit through `photos.portfolio_selected`.
-- The system never automatically selects, promotes, orders, or trims photos.
-- If stored selection exceeds the applicable cap, no selected photos are publicly exposed until the member reconciles the selection to the cap.
-- Four owner-authorized individual overrides provide unlimited portfolio + public gallery while retaining BASIC_MEMBER class.
-- Pranil Kishnani has a temporary individual portfolio restriction pending separate minor-policy decision.
-- Migration 0103 establishes the applicable individual overrides/restriction.
-- Membership comparison UI is reconciled to the amended MEM-008 policy.
-
-Status: Pending production deployment.
-
----
 
 ---
 
@@ -616,9 +667,111 @@ V6 visual refresh only.
 
 ---
 
+## Membership Expansion — Family & Corporate Membership
+
+**Status:** ✅ IMPLEMENTATION COMPLETE — ✅ DEPLOYED / OPERATIONAL CLOSEOUT
+
+Family and Corporate Group Membership support has been implemented and reconciled against MEM-006, MEM-007, MEM-008 and PAY-001.
+
+Scope completed:
+
+- Family Group Membership
+- Corporate Group Membership
+- Group-level financial contribution and Razorpay Payment Link flow
+- Payment-before-approval lifecycle gate
+- BCC approval workflow
+- Group member invitation / assignment
+- Invitation acceptance
+- Individual Membership records linked to Group Membership
+- First-member activation triggering Group activation
+- Individual Membership Number allocation through the existing unified numbering pool
+- Group remains unnumbered
+- Shared Group membership term
+- Group renewal extending existing member records in place
+- Admin-only member revocation
+- Permanent non-reusable Membership Numbers
+- Configurable Corporate verification requirements
+
+Frozen operational lifecycle:
+
+**PAY → APPROVE → INVITE → ACCEPT → ACTIVATE → NUMBER**
+
+Authority:
+
+- MEM-006 — Membership Constitution
+- MEM-007 — Membership Numbering Constitution
+- MEM-008 — Membership Plans, Benefits & Lifecycle Constitution
+- PAY-001 — Financial Contribution & Transaction Architecture
+
+Implementation verification:
+
+- 57/57 Family & Corporate lifecycle tests passed
+- Full backend suite: 38 suites / 1,159 tests passed
+- TypeScript clean
+- Nest build successful
+- Deployed to production and verified (see Production deployment below)
+
+Production deployment (2026-09-30):
+
+- Commit `8f26c53` deployed to production via the existing GitHub Actions / deploy.sh pipeline (atomic frontend publish, PM2 backend restart).
+- Migrations 0104 and 0105 applied to production in order (0104 before 0105) and verified, before the backend deploy, after a pre-migration database backup.
+- Production verification passed: production confirmed running `8f26c53`; application started cleanly against 0104 + 0105 with no schema or startup errors.
+- Frontend and backend verification passed.
+- No production business data was modified during verification.
+- Implementation, migration and deployment are complete.
+
+Remaining operational items:
+
+- Corporate verification document configuration, if/when Human Authority defines the required document type
+- Any required UI/navigation polish is tracked separately and does not block the core lifecycle implementation
+
+This workstream does not create a new Phase 2 module and does not alter existing Phase/Module sequencing.
+
+---
+
 # CONTINUATION OF ORIGINAL ROADMAP
 
 After completion of the V6 UI Migration, continue with the remaining platform modules.
+
+---
+
+## Module 04 — Events & Activity Management
+
+**Status:** ✅ CORE COMPLETE — 🚧 RECONCILIATION OUTSTANDING
+
+Documentation of already-built history — not new feature development, not gated by
+Track 7. Canonical Activity model (`events` + `event_registrations` +
+`event_invite_list` + `event_volunteer_slots` + `event_volunteers`, migration 0033)
+implemented ahead of this roadmap entry; three demo activities live since F5.1
+(migration 0054).
+
+Architecture authority: `EVENT-ARCH-001 — Events & Activity Management Architecture`.
+
+Confirmed complete:
+- Canonical Activity + Activity Type (classification) + common lifecycle
+  (DRAFT/PUBLISHED/CANCELLED/COMPLETED)
+- Eligibility engine, registration, waitlist, volunteer subsystem, invite list
+- Communication integration (5 notification type-keys via `CommunicationService.dispatch()`)
+
+Outstanding reconciliation (implementation gaps against an already-defined
+architecture, not open architecture decisions):
+- PAY-001 wiring — `event_registrations.fee_paid_paise` to be replaced by a call to
+  the now-live `FinancialContributionService.createContribution()` (PAY-001/Module 11
+  is ✅ COMPLETE per Module 11 below — this is Module 04's consumption gap, not a
+  Financial Engine gap)
+- Canonical Photo integration — `events.banner_r2_key` to be replaced by a
+  `cover_photo_id` reference into the Canonical Photo model
+- Public `/activities` page to consume the live Events API instead of static frontend seed data
+- Admin Events frontend (backend RBAC surface already exists, unused) — note
+  ADMIN-ARCH-001 exists in the working tree (Track 0.3 above) but is untracked/
+  unadopted and scoped to Member Management only; it does not currently govern
+  the Module 04 admin surface
+- Module 04 backend test suite
+- Historical Activity record mode (see EVENT-ARCH-001 §10)
+
+This entry supersedes no other roadmap sequencing. Module 04 remains excluded from
+the "remaining Phase 2 platform modules" line below because its core is already
+implemented.
 
 ---
 
@@ -664,15 +817,20 @@ Membership Card redesign (Module 02 revisit)
 
 ## Module 11 — Financial Core
 
-Expand the existing financial system with
+**Foundational Financial Engine (PAY-001) — ✅ COMPLETE.** PAY-001 (`ProjectDocs/Architecture/PAY-001-Financial_Contribution_and_Transaction_Architecture_v1.md`) is Approved/Frozen/Authoritative and is built: Financial Obligation → Financial Contribution → Settlement → Financial Transaction → Receipt, provider-independent, immutable transactions, zero-value contributions, offline settlement — implemented across migrations `0088`–`0096` (financial engine, settlement evidence, event outbox, webhook inbox, refunds) and the `backend/src/modules/financial` module. Membership↔Financial integration and Razorpay settlement are live in production (webhook handling, auto-capture, refund automation).
+
+**Razorpay is no longer future work — it is live, with remaining resilience items tracked under the August 2026 Remediation Programme (Track 1/3 above):** outbox-recovery worker (F-003), runtime regression test coverage (F-004), and any further refund-completion path work (F-006) only if an actual required behaviour is established.
+
+**Offline settlement is architecturally supported by PAY-001** (bank transfer, cash, cheque, and future offline methods). A specific offline-settlement UI/workflow (e.g. UPI transaction-ID entry, admin approve/disapprove screen) is **not yet specified or authorized** — treat as FUTURE / TO BE SPECIFIED, not current work.
+
+Remaining expansion (not yet started):
 
 - Event Fees
 - Contest Entry Fees
 - Expense Recording
 - Event P&L
-- INR Ledger
-- Razorpay Integration
-- Receipt Generation
+- INR Ledger (reporting/export)
+- Receipt Generation (beyond current settlement receipts, if additional formats are required)
 
 ---
 

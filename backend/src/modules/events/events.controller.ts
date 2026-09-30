@@ -9,6 +9,7 @@
 //
 // AUTHENTICATED (AccessTokenGuard only -- any Registered User):
 //   POST /api/v1/events/:id/registrations          participate (no body)
+//   GET  /api/v1/events/:id/registrations/me       caller's own active registration
 //   DELETE /api/v1/events/:id/registrations/:regId cancel own registration
 //
 // COORDINATOR / ADMIN (AccessTokenGuard + RbacGuard):
@@ -54,6 +55,7 @@ import {
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { RbacGuard } from '../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../identity/rbac/permissions.decorator';
+import { requestAuditContext } from '../financial/audit/request-provenance.util';
 
 @Controller('api/v1/events')
 export class EventsController {
@@ -130,7 +132,12 @@ export class EventsController {
     @Body() dto: CancelEventDto,
     @Req() req: any,
   ) {
-    return this.events.cancelEvent(id, dto.reason, req.user.sub);
+    return this.events.cancelEvent(
+      id,
+      dto.reason,
+      req.user.sub,
+      requestAuditContext('ADMIN', req, req.user),
+    );
   }
 
   // Admin view of all events (any state)
@@ -180,6 +187,17 @@ export class EventsController {
     return this.events.registerForEvent(id, req.user.sub);
   }
 
+  // The caller's own active registration (or null) -- read-only, identity
+  // from the token. Wrapped in an object so "none" is an explicit value.
+  @UseGuards(AccessTokenGuard)
+  @Get(':id/registrations/me')
+  async getMyRegistration(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+  ) {
+    return { registration: await this.events.getMyRegistration(id, req.user.sub) };
+  }
+
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   @Delete(':id/registrations/:regId')
@@ -190,7 +208,14 @@ export class EventsController {
     @Req() req: any,
   ) {
     // hasAdminPermission = false: service will verify actor owns the registration
-    return this.events.cancelRegistration(eventId, regId, req.user.sub, dto, false);
+    return this.events.cancelRegistration(
+      eventId,
+      regId,
+      req.user.sub,
+      dto,
+      false,
+      requestAuditContext('MEMBER', req, req.user),
+    );
   }
 
   // =========================================================================
@@ -235,7 +260,14 @@ export class EventsController {
     @Body() dto: CancelRegistrationDto,
     @Req() req: any,
   ) {
-    return this.events.cancelRegistration(eventId, regId, req.user.sub, dto, true);
+    return this.events.cancelRegistration(
+      eventId,
+      regId,
+      req.user.sub,
+      dto,
+      true,
+      requestAuditContext('ADMIN', req, req.user),
+    );
   }
 
   // =========================================================================

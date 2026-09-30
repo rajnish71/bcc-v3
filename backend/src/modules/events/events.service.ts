@@ -72,6 +72,7 @@ import { CommunicationService } from '../shared/communication/communication.serv
 import { FinancialContributionService } from '../financial/financial-contribution.service';
 import type { FinancialEngineEventPayload } from '../financial/financial.events';
 import type { RefundActor } from '../financial/financial.types';
+import type { AuditContext } from '../financial/audit/financial-audit.types';
 import {
   EVENT_REGISTRATION_BUSINESS_MODULE,
   SEAT_HOLDING_STATUSES,
@@ -517,10 +518,13 @@ export class EventsService {
     return this.getEvent(id);
   }
 
+  // auditContext: request provenance for PAY-001's financial audit log only
+  // (coordinator action -> ADMIN, built by the controller).
   async cancelEvent(
     id: number,
     reason: string | undefined,
     actorId: number,
+    auditContext?: AuditContext,
   ): Promise<{ cancelled: number }> {
     const event = await this.loadEvent(id);
     if (event.state === 'CANCELLED') {
@@ -552,6 +556,7 @@ export class EventsService {
         r,
         `Activity cancelled${reason ? `: ${reason}` : ''}`,
         actor,
+        auditContext,
       );
     }
 
@@ -1018,15 +1023,18 @@ export class EventsService {
   // positive-value COMPLETED Contribution is refundable; requestRefund() is
   // itself idempotent and records provider failures rather than throwing.
   // Any unexpected error is logged, never allowed to block a cancellation.
+  // auditContext omitted -> PAY-001 derives it from the actor (SYSTEM for
+  // the listener's automatic refund).
   private async requestRegistrationRefund(
     contributionId: number,
     reason: string,
     actor: RefundActor,
+    auditContext?: AuditContext,
   ): Promise<void> {
     try {
       const contribution = await this.financial.getContribution(contributionId);
       if (contribution.state !== 'COMPLETED' || Number(contribution.amount_paise) === 0) return;
-      await this.financial.requestRefund(contributionId, reason, actor);
+      await this.financial.requestRefund(contributionId, reason, actor, auditContext);
     } catch (err) {
       this.logger.error(
         `Refund request for contribution ${contributionId} failed: ${(err as Error).message}`,
@@ -1047,6 +1055,7 @@ export class EventsService {
     reg: { id: number; event_id: number; user_id: number | null },
     reason: string,
     actor: RefundActor,
+    auditContext?: AuditContext,
   ): Promise<number | null> {
     if (!reg.user_id) return null;
     const contribution = await this.financial.findByIdempotencyKey(
@@ -1060,9 +1069,34 @@ export class EventsService {
         this.logger.warn(`cancelContribution(${id}) not applied: ${err.message}`),
       );
     } else if (contribution.state === 'COMPLETED') {
-      await this.requestRegistrationRefund(id, reason, actor);
+      await this.requestRegistrationRefund(id, reason, actor, auditContext);
     }
     return id;
+  }
+
+  // The caller's own active (non-CANCELLED) registration for an Activity, or
+  // null. Read-only: never creates or repairs anything (the POST resume does
+  // that). Lets the Activity page offer "Complete payment" to the member who
+  // holds a PENDING_PAYMENT seat even when the Activity otherwise looks full.
+  async getMyRegistration(eventId: number, userId: number): Promise<RegistrationResult | null> {
+    const reg = await db
+      .selectFrom('event_registrations')
+      .selectAll()
+      .where('event_id', '=', eventId)
+      .where('user_id', '=', userId)
+      .where('status', '!=', 'CANCELLED')
+      .orderBy('id', 'desc')
+      .executeTakeFirst();
+    if (!reg) return null;
+
+    let payment: RegistrationPayment | null = null;
+    if (reg.status === 'PENDING_PAYMENT') {
+      const contribution = await this.financial.findByIdempotencyKey(
+        eventRegistrationContributionKey(eventId, userId, Number(reg.id)),
+      );
+      if (contribution) payment = toPayment(contribution);
+    }
+    return toRegistrationResult(reg, payment, false);
   }
 
   async cancelRegistration(
@@ -1071,6 +1105,9 @@ export class EventsService {
     actorId: number,
     dto: CancelRegistrationDto,
     hasAdminPermission: boolean,
+    // Who is cancelling, for PAY-001's financial audit log: MEMBER for the
+    // self-service route, ADMIN for the coordinator route (controller-built).
+    auditContext?: AuditContext,
   ): Promise<{ ok: boolean }> {
     const reg = await db
       .selectFrom('event_registrations')
@@ -1090,7 +1127,12 @@ export class EventsService {
     // Contribution FIRST, then the registration (Membership reject() order).
     const actor: RefundActor = { actorType: 'HUMAN', actorUserId: actorId };
     const refundReason = `Activity registration cancelled${dto.reason ? `: ${dto.reason}` : ''}`;
-    const contributionId = await this.resolveContributionForCancellation(reg, refundReason, actor);
+    const contributionId = await this.resolveContributionForCancellation(
+      reg,
+      refundReason,
+      actor,
+      auditContext,
+    );
 
     // Locked flip: serialises with applyContributionCompleted() so the seat
     // decision uses the status actually being cancelled.
@@ -1122,7 +1164,7 @@ export class EventsService {
     // The registration is now CANCELLED, so a COMPLETED Contribution is owed
     // back -- a no-op if the refund was already requested.
     if (contributionId !== null) {
-      await this.requestRegistrationRefund(contributionId, refundReason, actor);
+      await this.requestRegistrationRefund(contributionId, refundReason, actor, auditContext);
     }
 
     if (reg.user_id) {

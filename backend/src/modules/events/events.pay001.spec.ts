@@ -136,6 +136,8 @@ jest.mock('../shared/communication/communication.service', () => ({
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { EventsFinancialListener } from './financial/events-financial.listener';
+import { EventsController } from './events.controller';
+import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { FinancialEventBus } from '../financial/financial-event-bus.service';
 import { FINANCIAL_EVENT_TYPES } from '../financial/financial.events';
 import {
@@ -522,10 +524,12 @@ describe('CONTRIBUTION_COMPLETED handling', () => {
     expect(fin.requestRefund).not.toHaveBeenCalled();
     await completePayment(r.id);
     await completePayment(r.id);
-    expect(fin.requestRefund).toHaveBeenCalledWith(c.id, expect.any(String), {
-      actorType: 'SYSTEM',
-      actorUserId: null,
-    });
+    expect(fin.requestRefund).toHaveBeenCalledWith(
+      c.id,
+      expect.any(String),
+      { actorType: 'SYSTEM', actorUserId: null },
+      undefined,
+    );
     expect(c.refunded).toBe(true);
     expect(reg(r.id).status).toBe('CANCELLED');
     expect(dispatched('EVENT_REGISTRATION_CONFIRMED')).toHaveLength(0);
@@ -541,6 +545,7 @@ describe('CONTRIBUTION_COMPLETED handling', () => {
       expect.any(Number),
       expect.any(String),
       { actorType: 'SYSTEM', actorUserId: null },
+      undefined,
     );
     expect(reg(r.id).status).toBe('PENDING_PAYMENT');
     expect(dispatched('EVENT_REGISTRATION_CONFIRMED')).toHaveLength(0);
@@ -691,6 +696,7 @@ describe('registration cancellation', () => {
       c.id,
       expect.stringContaining('cannot attend'),
       { actorType: 'HUMAN', actorUserId: 7 },
+      undefined,
     );
     expect(reg(r.id).status).toBe('CANCELLED');
   });
@@ -704,6 +710,7 @@ describe('registration cancellation', () => {
       expect.any(Number),
       expect.any(String),
       { actorType: 'HUMAN', actorUserId: 99 },
+      undefined,
     );
   });
 
@@ -748,6 +755,7 @@ describe('Activity cancellation', () => {
       paidC.id,
       expect.any(String),
       { actorType: 'HUMAN', actorUserId: 99 },
+      undefined,
     );
     expect(contributionFor(reg(unpaid.id))!.state).toBe('CANCELLED');
     expect(contributionFor(reg(inflight.id))!.state).toBe(
@@ -920,6 +928,171 @@ describe('EventsModule wiring', () => {
       expect(Reflect.getMetadata('providers', EventsModule)).toContain(
         Listener,
       );
+    });
+  });
+});
+
+// ── Fix 1 backend: caller's own registration (read-only) ────────────────────
+describe('getMyRegistration (GET :id/registrations/me)', () => {
+  it('returns the own PENDING_PAYMENT registration of the caller with its payment, creating nothing', async () => {
+    const ev = paidEvent({ capacity: 1, waitlist_enabled: 0 });
+    const r = await svc.registerForEvent(ev, 7);
+    fin.createContribution.mockClear();
+    fin.transitionContribution.mockClear();
+
+    const mine = await svc.getMyRegistration(ev, 7);
+
+    expect(mine).toMatchObject({
+      id: r.id,
+      status: 'PENDING_PAYMENT',
+      resumed: false,
+    });
+    expect(mine!.payment).toEqual(r.payment);
+    expect(fin.createContribution).not.toHaveBeenCalled();
+    expect(fin.transitionContribution).not.toHaveBeenCalled();
+    expect(regs(ev)).toHaveLength(1);
+  });
+
+  it('another user with no registration gets null (and cannot register past capacity)', async () => {
+    const ev = paidEvent({ capacity: 1, waitlist_enabled: 0 });
+    await svc.registerForEvent(ev, 7);
+    await expect(svc.getMyRegistration(ev, 8)).resolves.toBeNull();
+    await expect(svc.registerForEvent(ev, 8)).rejects.toThrow(
+      ConflictException,
+    );
+  });
+
+  it('ignores CANCELLED rows of the caller', async () => {
+    const ev = paidEvent();
+    seedReg(ev, 7, 'CANCELLED');
+    await expect(svc.getMyRegistration(ev, 7)).resolves.toBeNull();
+  });
+
+  it('returns REGISTERED without payment details', async () => {
+    const ev = paidEvent();
+    const r = await svc.registerForEvent(ev, 7);
+    await completePayment(r.id);
+    const mine = await svc.getMyRegistration(ev, 7);
+    expect(mine).toMatchObject({ status: 'REGISTERED', payment: null });
+  });
+
+  it('route is authenticated and reads identity from the token', async () => {
+    const guards =
+      Reflect.getMetadata(
+        '__guards__',
+        EventsController.prototype.getMyRegistration,
+      ) ?? [];
+    expect(guards).toContain(AccessTokenGuard);
+    const events = { getMyRegistration: jest.fn(async () => null) };
+    const ctrl = new EventsController(events as any);
+    await expect(
+      ctrl.getMyRegistration(11, { user: { sub: 7 } }),
+    ).resolves.toEqual({ registration: null });
+    expect(events.getMyRegistration).toHaveBeenCalledWith(11, 7);
+  });
+});
+
+// ── Fix 3: refund audit actor ───────────────────────────────────────────────
+describe('refund audit context', () => {
+  const memberCtx = {
+    actorType: 'MEMBER' as const,
+    provenance: { actorUserId: 7 },
+  };
+  const adminCtx = {
+    actorType: 'ADMIN' as const,
+    provenance: { actorUserId: 99 },
+  };
+
+  it('member self-cancel -> HUMAN/member requested_by and MEMBER audit context for that member', async () => {
+    const ev = paidEvent();
+    const r = await svc.registerForEvent(ev, 7);
+    const c = await completePayment(r.id);
+    await svc.cancelRegistration(ev, r.id, 7, {}, false, memberCtx);
+    expect(fin.requestRefund).toHaveBeenCalledWith(
+      c.id,
+      expect.any(String),
+      { actorType: 'HUMAN', actorUserId: 7 },
+      memberCtx,
+    );
+    expect(c.refunded).toBe(true);
+    expect(reg(r.id).status).toBe('CANCELLED');
+  });
+
+  it('coordinator cancellation keeps the ADMIN audit context', async () => {
+    const ev = paidEvent();
+    const r = await svc.registerForEvent(ev, 7);
+    const c = await completePayment(r.id);
+    await svc.cancelRegistration(ev, r.id, 99, {}, true, adminCtx);
+    expect(fin.requestRefund).toHaveBeenCalledWith(
+      c.id,
+      expect.any(String),
+      { actorType: 'HUMAN', actorUserId: 99 },
+      adminCtx,
+    );
+  });
+
+  it('Activity cancellation refunds with the coordinator ADMIN audit context', async () => {
+    const ev = paidEvent();
+    const r = await svc.registerForEvent(ev, 7);
+    const c = await completePayment(r.id);
+    await svc.cancelEvent(ev, 'rain', 99, adminCtx);
+    expect(fin.requestRefund).toHaveBeenCalledWith(
+      c.id,
+      expect.any(String),
+      { actorType: 'HUMAN', actorUserId: 99 },
+      adminCtx,
+    );
+  });
+
+  it('automatic late-success refund stays SYSTEM (no human audit context)', async () => {
+    const ev = paidEvent();
+    const r = await svc.registerForEvent(ev, 7);
+    contributionFor(reg(r.id))!.state = 'SETTLEMENT_IN_PROGRESS';
+    await svc.cancelRegistration(ev, r.id, 7, {}, false, memberCtx);
+    fin.requestRefund.mockClear();
+    await completePayment(r.id);
+    expect(fin.requestRefund).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(String),
+      { actorType: 'SYSTEM', actorUserId: null },
+      undefined,
+    );
+  });
+
+  it('controller builds MEMBER context for self-cancel and ADMIN for coordinator routes', async () => {
+    const events = {
+      cancelRegistration: jest.fn(async () => ({ ok: true })),
+      cancelEvent: jest.fn(async () => ({ cancelled: 0 })),
+    };
+    const ctrl = new EventsController(events as any);
+    const req = (sub: number) => ({
+      user: { sub, sid: 'sess' },
+      id: 'req-1',
+      ip: '1.2.3.4',
+      headers: { 'user-agent': 'jest' },
+      routeOptions: { url: '/api/v1/events/:id/registrations/:regId' },
+    });
+
+    await ctrl.cancelRegistration(11, 1, {}, req(7));
+    await ctrl.adminCancelRegistration(11, 1, {}, req(99));
+    await ctrl.cancelEvent(11, { reason: 'x' }, req(99));
+
+    const selfCtx = (events.cancelRegistration.mock.calls[0] as any[])[5];
+    const adminRegCtx = (events.cancelRegistration.mock.calls[1] as any[])[5];
+    const eventCtx = (events.cancelEvent.mock.calls[0] as any[])[3];
+    expect(selfCtx).toMatchObject({
+      actorType: 'MEMBER',
+      provenance: { actorUserId: 7, sessionId: 'sess', requestId: 'req-1' },
+    });
+    expect((events.cancelRegistration.mock.calls[0] as any[])[4]).toBe(false);
+    expect(adminRegCtx).toMatchObject({
+      actorType: 'ADMIN',
+      provenance: { actorUserId: 99 },
+    });
+    expect((events.cancelRegistration.mock.calls[1] as any[])[4]).toBe(true);
+    expect(eventCtx).toMatchObject({
+      actorType: 'ADMIN',
+      provenance: { actorUserId: 99 },
     });
   });
 });

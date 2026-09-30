@@ -379,6 +379,11 @@ const robots = !event ? 'noindex, nofollow' : undefined;
   // Paid (FLAT) registration settles through PAY-001 (shared Razorpay helper);
   // this page never decides that a payment succeeded.
   import { payContribution } from '../../lib/razorpay-checkout';
+  import {
+    PAYMENT_SUCCESS_MESSAGE,
+    afterPaymentView,
+    registrationButtonState,
+  } from '../../lib/activity-registration';
   const slug = window.location.pathname.split('/').filter(Boolean).pop();
 
   const TYPE_LABEL: Record<string, string> = {
@@ -413,7 +418,23 @@ const robots = !event ? 'noindex, nofollow' : undefined;
     return ev.historical_date_note ? `${ev.historical_date_note} (${t})` : t;
   }
 
-  function setRegistration(ev: any) {
+  // The signed-in member's own active registration status for this Activity
+  // (null when signed out, none, or unavailable).
+  async function fetchOwnStatus(eventId: number): Promise<string | null> {
+    if (!token()) return null;
+    try {
+      const res = await fetch(`/api/v1/events/${eventId}/registrations/me`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (!res.ok) return null;
+      const body = await res.json();
+      return body.registration?.status ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  function setRegistration(ev: any, ownStatus: string | null) {
     const btn = $('register-btn') as HTMLButtonElement;
     const sub = $('reg-status-sub');
     const fresh = btn.cloneNode(false) as HTMLButtonElement; // drop stale listeners
@@ -436,24 +457,30 @@ const robots = !event ? 'noindex, nofollow' : undefined;
     }
     const paid = ev.fee_type === 'FLAT';
     const feeLabel = paid ? `₹${(ev.base_fee_paise / 100).toLocaleString('en-IN')}` : '';
-    const full = ev.capacity != null && ev.registration_count >= ev.capacity;
-    if (full && !ev.waitlist_enabled) {
-      b.textContent = 'Full';
+    // The member's own held (PENDING_PAYMENT) seat takes precedence over "Full".
+    const state = registrationButtonState(ev, ownStatus);
+    if (state.action === 'FULL') {
+      b.textContent = state.label;
       b.disabled = true;
       sub.textContent = 'No places remaining for this activity.';
       return;
     }
 
-    b.disabled = false;
-    b.textContent = full ? 'Join waitlist' : 'Register';
-    if (!token()) {
+    b.disabled = !state.enabled;
+    b.textContent = state.label;
+    // A click re-checks the member's own status after payment instead of
+    // re-registering (set once PAY-001 has reported COMPLETED).
+    let checkingPayment = false;
+    if (state.action === 'RESUME_PAYMENT') {
+      sub.textContent = `Your place is held. Pay ${feeLabel} to confirm your registration.`;
+    } else if (!token()) {
       sub.innerHTML = '';
       const a = document.createElement('a');
       a.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
       a.textContent = 'Sign in';
       a.style.cssText = 'color:var(--gold-600);text-decoration:underline;';
       sub.append(a, ' with your BCC account to register.');
-    } else if (paid && !full) {
+    } else if (paid && state.action === 'REGISTER') {
       sub.textContent = `Participation fee ${feeLabel}, paid securely online.`;
     }
 
@@ -465,12 +492,15 @@ const robots = !event ? 'noindex, nofollow' : undefined;
         sub.textContent = `You are number ${body.waitlist_position} on the waitlist.`;
       } else if (body.status === 'REGISTERED') {
         b.textContent = 'Registered';
-        sub.textContent = paid
-          ? 'Payment received. You are registered; a confirmation is on its way.'
+        // Paid confirmation: this session's payment flow, or a resumed
+        // registration the backend just confirmed from a COMPLETED payment.
+        sub.textContent = afterPayment || (paid && body.resumed)
+          ? PAYMENT_SUCCESS_MESSAGE
           : 'You are registered. A confirmation is on its way.';
       } else if (body.status === 'PENDING_PAYMENT' && afterPayment) {
         // Paid, but the registration is not confirmed yet: never re-open
         // checkout automatically.
+        checkingPayment = true;
         b.disabled = false;
         b.textContent = 'Check payment status';
         sub.textContent = 'Payment received. Your registration is being confirmed; please check again shortly.';
@@ -502,7 +532,7 @@ const robots = !event ? 'noindex, nofollow' : undefined;
         return;
       }
       if (state === 'COMPLETED') {
-        await submit(true);
+        await showAfterPayment(true);
         return;
       }
       b.disabled = false;
@@ -518,6 +548,24 @@ const robots = !event ? 'noindex, nofollow' : undefined;
       }
     }
 
+    // After PAY-001 reports the Contribution COMPLETED, the member's own
+    // registration status (not a response message) decides the outcome.
+    // The Financial Engine listener has usually already confirmed it; if not,
+    // one resume re-submission lets the backend self-heal it.
+    async function showAfterPayment(allowResume: boolean) {
+      const view = afterPaymentView(await fetchOwnStatus(ev.id));
+      if (view.resume && allowResume) {
+        await submit(true);
+        return;
+      }
+      checkingPayment = !view.resume ? view.enabled : true;
+      b.textContent = view.resume ? 'Check payment status' : view.label;
+      b.disabled = view.resume ? false : !view.enabled;
+      sub.textContent = view.resume
+        ? 'Payment received. Your registration is being confirmed; please check again shortly.'
+        : view.sub;
+    }
+
     async function submit(afterPayment = false) {
       b.disabled = true;
       try {
@@ -530,6 +578,9 @@ const robots = !event ? 'noindex, nofollow' : undefined;
           await applyRegistration(body, afterPayment);
         } else if (res.status === 401) {
           window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
+        } else if (res.status === 409 && afterPayment) {
+          // Confirmed by the listener between our status read and this call.
+          await showAfterPayment(false);
         } else {
           sub.textContent = body.message || 'Registration could not be completed.';
           b.disabled = res.status !== 409 ? false : true;
@@ -546,11 +597,12 @@ const robots = !event ? 'noindex, nofollow' : undefined;
         window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
         return;
       }
-      await submit();
+      if (checkingPayment) await showAfterPayment(true);
+      else await submit();
     });
   }
 
-  function render(ev: any) {
+  function render(ev: any, ownStatus: string | null) {
     $('event-title').textContent = ev.title;
     document.title = `${ev.title} | Bhopal Camera Club`;
     $('event-location').textContent = ev.location_name ?? '';
@@ -585,7 +637,7 @@ const robots = !event ? 'noindex, nofollow' : undefined;
     $('event-provenance').hidden = !(historical && ev.historical_source_note);
     $('event-provenance-text').textContent = ev.historical_source_note ?? '';
 
-    setRegistration(ev);
+    setRegistration(ev, ownStatus);
   }
 
   // Activity Gallery: Canonical Photos linked to this Activity. Hidden when the
@@ -639,7 +691,8 @@ const robots = !event ? 'noindex, nofollow' : undefined;
       const res = await fetch(`/api/v1/events/${encodeURIComponent(slug)}`);
       if (!res.ok) throw new Error(`Activities API ${res.status}`);
       const ev = await res.json();
-      render(ev);
+      const open = ev.state === 'PUBLISHED' && !ev.is_historical;
+      render(ev, open ? await fetchOwnStatus(ev.id) : null);
       void loadGallery(ev.id);
     } catch {
       const btn = $('register-btn') as HTMLButtonElement;

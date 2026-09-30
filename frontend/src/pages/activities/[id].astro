@@ -376,6 +376,9 @@ const robots = !event ? 'noindex, nofollow' : undefined;
   // Refreshes live values from the Activity API and drives registration.
   // Registration requires a signed-in Registered User; membership is enforced
   // server-side only when the Activity's eligibility rules require it.
+  // Paid (FLAT) registration settles through PAY-001 (shared Razorpay helper);
+  // this page never decides that a payment succeeded.
+  import { payContribution } from '../../lib/razorpay-checkout';
   const slug = window.location.pathname.split('/').filter(Boolean).pop();
 
   const TYPE_LABEL: Record<string, string> = {
@@ -431,12 +434,8 @@ const robots = !event ? 'noindex, nofollow' : undefined;
       sub.textContent = ev.cancellation_reason || 'This activity has been cancelled.';
       return;
     }
-    if (ev.fee_type !== 'FREE') {
-      b.textContent = 'Paid registration coming soon';
-      b.disabled = true;
-      sub.textContent = 'Online payment for activities is not available yet.';
-      return;
-    }
+    const paid = ev.fee_type === 'FLAT';
+    const feeLabel = paid ? `₹${(ev.base_fee_paise / 100).toLocaleString('en-IN')}` : '';
     const full = ev.capacity != null && ev.registration_count >= ev.capacity;
     if (full && !ev.waitlist_enabled) {
       b.textContent = 'Full';
@@ -454,13 +453,72 @@ const robots = !event ? 'noindex, nofollow' : undefined;
       a.textContent = 'Sign in';
       a.style.cssText = 'color:var(--gold-600);text-decoration:underline;';
       sub.append(a, ' with your BCC account to register.');
+    } else if (paid && !full) {
+      sub.textContent = `Participation fee ${feeLabel}, paid securely online.`;
     }
 
-    b.addEventListener('click', async () => {
-      if (!token()) {
-        window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
+    // Shows the outcome of a registration response. PENDING_PAYMENT (a paid
+    // Activity) continues straight into PAY-001 checkout.
+    async function applyRegistration(body: any, afterPayment: boolean) {
+      if (body.status === 'WAITLISTED') {
+        b.textContent = 'On the waitlist';
+        sub.textContent = `You are number ${body.waitlist_position} on the waitlist.`;
+      } else if (body.status === 'REGISTERED') {
+        b.textContent = 'Registered';
+        sub.textContent = paid
+          ? 'Payment received. You are registered; a confirmation is on its way.'
+          : 'You are registered. A confirmation is on its way.';
+      } else if (body.status === 'PENDING_PAYMENT' && afterPayment) {
+        // Paid, but the registration is not confirmed yet: never re-open
+        // checkout automatically.
+        b.disabled = false;
+        b.textContent = 'Check payment status';
+        sub.textContent = 'Payment received. Your registration is being confirmed; please check again shortly.';
+      } else if (body.status === 'PENDING_PAYMENT' && body.payment) {
+        await startPayment(body.payment.financial_contribution_id);
+      }
+    }
+
+    // Payment is owned by PAY-001: the Contribution's state is the only
+    // authority. After checkout the registration is re-submitted, which
+    // resumes the same registration and returns its confirmed status once
+    // the Contribution is COMPLETED.
+    async function startPayment(contributionId: number) {
+      b.disabled = true;
+      sub.textContent = 'Opening secure payment…';
+      let state: string;
+      try {
+        state = await payContribution({
+          apiBase: '/api/v1',
+          token: token() ?? '',
+          contributionId,
+          description: `Activity registration: ${ev.title}`,
+          onVerifying: () => { sub.textContent = 'Verifying payment…'; },
+        });
+      } catch {
+        b.disabled = false;
+        b.textContent = 'Complete payment';
+        sub.textContent = 'Could not start payment. Please try again.';
         return;
       }
+      if (state === 'COMPLETED') {
+        await submit(true);
+        return;
+      }
+      b.disabled = false;
+      if (state === 'FAILED' || state === 'ABANDONED') {
+        b.textContent = 'Retry payment';
+        sub.textContent = 'Payment did not complete. You can try again.';
+      } else if (state === 'DISMISSED') {
+        b.textContent = 'Complete payment';
+        sub.textContent = `Your place is held. Pay ${feeLabel} to confirm your registration.`;
+      } else {
+        b.textContent = 'Check payment status';
+        sub.textContent = 'We could not confirm your payment yet. Please check again shortly.';
+      }
+    }
+
+    async function submit(afterPayment = false) {
       b.disabled = true;
       try {
         const res = await fetch(`/api/v1/events/${ev.id}/registrations`, {
@@ -469,10 +527,7 @@ const robots = !event ? 'noindex, nofollow' : undefined;
         });
         const body = await res.json().catch(() => ({}));
         if (res.status === 201) {
-          b.textContent = body.status === 'WAITLISTED' ? 'On the waitlist' : 'Registered';
-          sub.textContent = body.status === 'WAITLISTED'
-            ? `You are number ${body.waitlist_position} on the waitlist.`
-            : 'You are registered. A confirmation is on its way.';
+          await applyRegistration(body, afterPayment);
         } else if (res.status === 401) {
           window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
         } else {
@@ -484,6 +539,14 @@ const robots = !event ? 'noindex, nofollow' : undefined;
         sub.textContent = 'Network error. Please try again.';
         b.disabled = false;
       }
+    }
+
+    b.addEventListener('click', async () => {
+      if (!token()) {
+        window.location.href = `/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
+      await submit();
     });
   }
 

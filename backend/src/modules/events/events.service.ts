@@ -27,13 +27,23 @@
 //   On cancellation of a REGISTERED row: promote the earliest WAITLISTED
 //   row synchronously (no cron/worker queue -- RAM-conscious Phase 2a).
 //
-// FEES / PAYMENTS:
+// FEES / PAYMENTS (EVENT-ARCH-001 §7, PAY-001):
 //   fee_type FREE | FLAT only. This module establishes the business reason
-//   and amount (fee_type + base_fee_paise). PAY-001 owns Financial
-//   Contribution, Settlement, Transaction and Receipt. Until Module 04 is
-//   wired to FinancialContributionService, registration for FLAT Activities
-//   is refused rather than confirmed without payment. The legacy
-//   event_registrations.fee_paid_paise column is not written or exposed.
+//   and amount (fee_type + base_fee_paise) and the registration lifecycle.
+//   PAY-001 owns Financial Contribution, Settlement, Transaction, Receipt
+//   and Refund -- this module never talks to a Settlement Provider.
+//   Every registration row gets one Financial Contribution
+//   (business_module 'EVENT_REGISTRATION', business_reference_id =
+//   event_registrations.id, deterministic idempotency key -- events.types.ts):
+//     FREE -> zero-value Contribution (processZeroValueContribution()).
+//     FLAT -> PENDING_PAYMENT (holds a seat) + Contribution made payable
+//             (AWAITING_SETTLEMENT). The row becomes REGISTERED only via
+//             handleContributionCompleted(), driven by the Financial
+//             Engine's CONTRIBUTION_COMPLETED (EventsFinancialListener) or
+//             the user-triggered resume self-heal reading the same state.
+//   A FLAT waitlist entry carries no Contribution until it is promoted.
+//   The legacy event_registrations.fee_paid_paise column is neither written
+//   nor read: the Contribution state is the only financial truth.
 //
 // OUT OF SCOPE (deactivated at the API layer; tables/columns retained):
 //   volunteer subsystem, RECURRING occurrence, MEMBER_DISCOUNTED fee mode.
@@ -50,14 +60,23 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { sql } from 'kysely';
-import { db } from '../../database/db';
+import { sql, type Kysely } from 'kysely';
+import { db, type DB } from '../../database/db';
 import { toMysqlDatetime } from '../identity/shared/token-hash.util';
 import { ikUrl } from '../shared/storage/imagekit.util';
 import { CommunicationService } from '../shared/communication/communication.service';
+import { FinancialContributionService } from '../financial/financial-contribution.service';
+import type { FinancialEngineEventPayload } from '../financial/financial.events';
+import type { RefundActor } from '../financial/financial.types';
+import {
+  EVENT_REGISTRATION_BUSINESS_MODULE,
+  SEAT_HOLDING_STATUSES,
+  eventRegistrationContributionKey,
+} from './events.types';
 import type { CreateEventDto } from './dto/create-event.dto';
 import type { UpdateEventDto } from './dto/update-event.dto';
 import type {
@@ -121,7 +140,37 @@ function dateLabel(row: any): string {
   return 'Date unknown';
 }
 
-export type DatePrecision = 'EXACT' | 'MONTH' | 'YEAR' | 'UNKNOWN';
+function toPayment(contribution: {
+  id: number;
+  amount_paise: number;
+  currency: string;
+}): RegistrationPayment {
+  return {
+    financial_contribution_id: Number(contribution.id),
+    amount_paise: Number(contribution.amount_paise),
+    currency: String(contribution.currency),
+  };
+}
+
+function toRegistrationResult(
+  reg: any,
+  payment: RegistrationPayment | null,
+  resumed: boolean,
+): RegistrationResult {
+  return {
+    id: reg.id,
+    uuid: reg.uuid,
+    event_id: reg.event_id,
+    registration_type: reg.registration_type,
+    status: reg.status,
+    waitlist_position: reg.waitlist_position,
+    registered_at: toDate(reg.registered_at).toISOString(),
+    payment,
+    resumed,
+  };
+}
+
+export type DatePrecision ='EXACT' | 'MONTH' | 'YEAR' | 'UNKNOWN';
 
 // Public visibility: DRAFT is never public. CANCELLED is reachable by direct
 // link only (detail) and never listed.
@@ -229,6 +278,19 @@ export interface RegistrationResult {
   status: string;
   waitlist_position: number | null;
   registered_at: string;
+  // Present only while status is PENDING_PAYMENT: what the frontend needs to
+  // continue payment through the PAY-001 settlement routes. The authoritative
+  // payment state is read from PAY-001 (GET /api/v1/financial/contributions/:id).
+  payment: RegistrationPayment | null;
+  // true when an existing PENDING_PAYMENT registration was returned instead
+  // of a new one being created (idempotent resume).
+  resumed: boolean;
+}
+
+export interface RegistrationPayment {
+  financial_contribution_id: number;
+  amount_paise: number;
+  currency: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -237,7 +299,12 @@ export interface RegistrationResult {
 
 @Injectable()
 export class EventsService {
-  constructor(private readonly comm: CommunicationService) {}
+  private readonly logger = new Logger(EventsService.name);
+
+  constructor(
+    private readonly comm: CommunicationService,
+    private readonly financial: FinancialContributionService,
+  ) {}
 
   // =========================================================================
   // EVENT CRUD
@@ -387,6 +454,24 @@ export class EventsService {
       if (isHistorical && feeType !== 'FREE') {
         throw new BadRequestException('A historical Activity cannot carry a fee');
       }
+      // Existing registrations carry PAY-001 obligations at the fee they were
+      // created with; changing the fee (amount or FREE <-> FLAT) would make
+      // those obligations and the idempotent resume inconsistent.
+      const feeChanged =
+        feeType !== event.fee_type || Number(fee) !== Number(event.base_fee_paise);
+      if (feeChanged) {
+        const holder = await db
+          .selectFrom('event_registrations')
+          .select('id')
+          .where('event_id', '=', id)
+          .where('status', '!=', 'CANCELLED')
+          .executeTakeFirst();
+        if (holder) {
+          throw new BadRequestException(
+            'The fee cannot be changed while the Activity has active registrations',
+          );
+        }
+      }
       patch.fee_type = feeType;
       patch.base_fee_paise = fee;
     }
@@ -442,29 +527,46 @@ export class EventsService {
       throw new BadRequestException('Event is already cancelled');
     }
 
+    // The Activity is flipped to CANCELLED BEFORE any Contribution is
+    // resolved, so a settlement completing during the loop below is caught
+    // by applyContributionCompleted()'s "Activity CANCELLED -> refund" branch
+    // instead of confirming a seat on a cancelled Activity.
     await db
       .updateTable('events')
       .set({ state: 'CANCELLED', cancellation_reason: reason ?? null })
       .where('id', '=', id)
       .execute();
 
+    // PAY-001 resolution for every non-cancelled registration (refund owed
+    // for COMPLETED, cancel for not-yet-paid, leave in-flight/failed alone).
+    // Registration rows themselves are not changed (existing semantics).
+    const active = await db
+      .selectFrom('event_registrations')
+      .select(['id', 'event_id', 'user_id'])
+      .where('event_id', '=', id)
+      .where('status', '!=', 'CANCELLED')
+      .execute();
+    const actor: RefundActor = { actorType: 'HUMAN', actorUserId: actorId };
+    for (const r of active) {
+      await this.resolveContributionForCancellation(
+        r,
+        `Activity cancelled${reason ? `: ${reason}` : ''}`,
+        actor,
+      );
+    }
+
     const registrants = await db
       .selectFrom('event_registrations')
       .select(['user_id', 'guest_email', 'guest_name'])
       .where('event_id', '=', id)
-      .where('status', 'in', ['REGISTERED', 'WAITLISTED'])
+      .where('status', 'in', ['REGISTERED', 'WAITLISTED', 'PENDING_PAYMENT'])
       .execute();
 
     let notified = 0;
     for (const r of registrants) {
       if (r.user_id) {
-        const user = await db
-          .selectFrom('users')
-          .select(['full_name'])
-          .where('id', '=', r.user_id)
-          .executeTakeFirst();
         await this.comm.dispatch('EVENT_CANCELLED', r.user_id, {
-          first_name: user?.full_name?.split(' ')[0] ?? 'Member',
+          first_name: await this.firstName(r.user_id),
           event_title: event.title,
           event_date: dateLabel(event),
           cancellation_reason: reason ?? 'The event has been cancelled.',
@@ -571,7 +673,7 @@ export class EventsService {
           eb.fn.countAll<number>().as('cnt'),
         ])
         .where('event_id', 'in', ids)
-        .where('status', 'in', ['REGISTERED', 'ATTENDED'])
+        .where('status', 'in', SEAT_HOLDING_STATUSES)
         .groupBy('event_id')
         .execute();
       for (const c of counts) {
@@ -613,6 +715,13 @@ export class EventsService {
 
   // Participation is by Registered User. Membership is checked only when the
   // Activity's eligibility_mode requires it (assertEligibility).
+  //
+  // FREE -> REGISTERED | WAITLISTED, then a zero-value PAY-001 Contribution.
+  // FLAT -> PENDING_PAYMENT (seat held) + payable Contribution, or WAITLISTED
+  //         (no Contribution). Never REGISTERED here: only settlement
+  //         completion (applyContributionCompleted) confirms a paid seat.
+  // A repeat call by a user who already has a PENDING_PAYMENT row resumes
+  // that registration (same row, same Contribution) instead of a 409.
   async registerForEvent(
     eventId: number,
     actorId: number,
@@ -625,112 +734,335 @@ export class EventsService {
     if (event.state !== 'PUBLISHED') {
       throw new BadRequestException('This event is not open for registration');
     }
-    if (event.fee_type !== 'FREE') {
-      // PAY-001 owns settlement; do not confirm a paid registration without it.
-      throw new ConflictException(
-        'Paid Activities cannot accept registration yet: payment is not connected',
-      );
+    if (event.fee_type !== 'FREE' && event.fee_type !== 'FLAT') {
+      throw new ConflictException('This Activity uses an unsupported fee mode');
     }
+    const isPaid = event.fee_type === 'FLAT';
 
     await this.assertEligibility(event, actorId);
 
-    // Guard: no duplicate active registration
-    const existing = await db
-      .selectFrom('event_registrations')
-      .select('id')
-      .where('event_id', '=', eventId)
-      .where('user_id', '=', actorId)
-      .where('status', 'not in', ['CANCELLED'])
-      .executeTakeFirst();
-    if (existing) {
-      throw new ConflictException('You are already registered for this event');
-    }
+    // Duplicate + capacity checks and the insert are serialised per Activity
+    // by locking the events row, so two concurrent requests can neither
+    // double-register one user nor oversell the last seat.
+    type Placement = { resumeId: number } | { registrationId: number };
+    const placed = await db.transaction().execute(async (trx): Promise<Placement> => {
+      await trx
+        .selectFrom('events')
+        .select('id')
+        .where('id', '=', eventId)
+        .forUpdate()
+        .executeTakeFirst();
 
-    const activeCount = await this.countActiveRegistrations(eventId);
-    const isFull = event.capacity !== null && activeCount >= (event.capacity as number);
-
-    let status: 'REGISTERED' | 'WAITLISTED' = 'REGISTERED';
-    let waitlistPosition: number | null = null;
-
-    if (isFull) {
-      if (!event.waitlist_enabled) {
-        throw new ConflictException(
-          'This event is at full capacity and has no waitlist',
-        );
+      const existing = await trx
+        .selectFrom('event_registrations')
+        .select(['id', 'status'])
+        .where('event_id', '=', eventId)
+        .where('user_id', '=', actorId)
+        .where('status', '!=', 'CANCELLED')
+        .executeTakeFirst();
+      if (existing) {
+        if (existing.status === 'PENDING_PAYMENT') {
+          return { resumeId: Number(existing.id) };
+        }
+        throw new ConflictException('You are already registered for this event');
       }
-      status = 'WAITLISTED';
-      waitlistPosition = await this.nextWaitlistPosition(eventId);
+
+      const activeCount = await this.countActiveRegistrations(eventId, trx);
+      const isFull = event.capacity !== null && activeCount >= (event.capacity as number);
+
+      let status: 'REGISTERED' | 'WAITLISTED' | 'PENDING_PAYMENT' = isPaid
+        ? 'PENDING_PAYMENT'
+        : 'REGISTERED';
+      let waitlistPosition: number | null = null;
+
+      if (isFull) {
+        if (!event.waitlist_enabled) {
+          throw new ConflictException(
+            'This event is at full capacity and has no waitlist',
+          );
+        }
+        status = 'WAITLISTED';
+        waitlistPosition = await this.nextWaitlistPosition(eventId, trx);
+      }
+
+      // registration_type 'MEMBER' is the legacy enum label for "registered
+      // user (user_id present)"; it does not imply membership.
+      // fee_paid_paise is deliberately not written (legacy, DB default 0).
+      const inserted = await trx
+        .insertInto('event_registrations')
+        .values({
+          uuid: randomUUID(),
+          event_id: eventId,
+          user_id: actorId,
+          guest_name: null,
+          guest_email: null,
+          guest_phone: null,
+          registration_type: 'MEMBER',
+          status,
+          waitlist_position: waitlistPosition,
+          checked_in_at: null,
+          checked_in_by: null,
+          registered_at: toMysqlDatetime(new Date()) as any,
+          cancelled_at: null,
+          cancellation_reason: null,
+        })
+        .executeTakeFirstOrThrow();
+      return { registrationId: Number(inserted.insertId) };
+    });
+
+    if ('resumeId' in placed) {
+      return this.resumePendingRegistration(placed.resumeId, event);
     }
 
-    const uuid = randomUUID();
-    const now = toMysqlDatetime(new Date()) as any;
+    const reg = await this.loadRegistration(placed.registrationId);
 
-    // registration_type 'MEMBER' is the legacy enum label for "registered
-    // user (user_id present)"; it does not imply membership.
-    await db
-      .insertInto('event_registrations')
-      .values({
-        uuid,
-        event_id: eventId,
-        user_id: actorId,
-        guest_name: null,
-        guest_email: null,
-        guest_phone: null,
-        registration_type: 'MEMBER',
-        status,
-        waitlist_position: waitlistPosition,
-        fee_paid_paise: 0,
-        checked_in_at: null,
-        checked_in_by: null,
-        registered_at: now,
-        cancelled_at: null,
-        cancellation_reason: null,
-      })
-      .execute();
+    // PAY-001 obligation, strictly after the registration commits (the
+    // Financial Engine opens its own transaction -- same discipline as
+    // MerchandiseOrderService.createOrder()).
+    let payment: RegistrationPayment | null = null;
+    if (!isPaid) {
+      // A valid FREE registration is never rolled back over a financial
+      // record failure; the deterministic key makes a later repair idempotent.
+      await this.ensureRegistrationContribution(reg, event).catch((err: Error) =>
+        this.logger.error(
+          `Zero-value Contribution for event registration ${reg.id} failed: ${err.message}`,
+        ),
+      );
+    } else if (reg.status === 'PENDING_PAYMENT') {
+      // Not caught: the user sees the failure, and re-submitting resumes the
+      // same PENDING_PAYMENT row and repairs the Contribution idempotently.
+      const contribution = await this.ensureRegistrationContribution(reg, event);
+      payment = toPayment(contribution);
+    }
 
-    const reg = await db
-      .selectFrom('event_registrations')
-      .selectAll()
-      .where('uuid', '=', uuid)
-      .executeTakeFirstOrThrow();
-
-    const user = await db
-      .selectFrom('users')
-      .select(['full_name'])
-      .where('id', '=', actorId)
-      .executeTakeFirst();
-    const firstName = user?.full_name?.split(' ')[0] ?? 'Member';
-    const eventDate = dateLabel(event);
     const eventUrl = `${process.env.FRONTEND_BASE_URL ?? ''}/activities/${event.slug}`;
 
-    if (status === 'REGISTERED') {
+    if (reg.status === 'REGISTERED') {
       await this.comm.dispatch('EVENT_REGISTRATION_CONFIRMED', actorId, {
-        first_name: firstName,
+        first_name: await this.firstName(actorId),
         event_title: event.title,
-        event_date: eventDate,
+        event_date: dateLabel(event),
         event_location: event.location_name ?? 'TBD',
         what_to_bring: event.what_to_bring ?? '',
         event_url: eventUrl,
       });
-    } else {
+    } else if (reg.status === 'WAITLISTED') {
       await this.comm.dispatch('EVENT_REGISTRATION_WAITLISTED', actorId, {
-        first_name: firstName,
+        first_name: await this.firstName(actorId),
         event_title: event.title,
-        event_date: eventDate,
-        waitlist_position: String(waitlistPosition ?? ''),
+        event_date: dateLabel(event),
+        waitlist_position: String(reg.waitlist_position ?? ''),
         event_url: eventUrl,
       });
     }
+    // PENDING_PAYMENT: no confirmation until PAY-001 settlement completes.
 
-    return {
-      id: reg.id,
-      uuid: reg.uuid,
-      event_id: reg.event_id,
-      registration_type: reg.registration_type,
-      status: reg.status,
-      waitlist_position: reg.waitlist_position,
-      registered_at: toDate(reg.registered_at).toISOString(),
-    };
+    return toRegistrationResult(reg, payment, false);
+  }
+
+  // Idempotent resume of the caller's own PENDING_PAYMENT registration:
+  // re-derives the same Contribution (created/repaired if missing or still
+  // CREATED) and, if PAY-001 already reports it COMPLETED, applies the same
+  // completion handler the Financial Engine event would have (governance
+  // decision D3 -- user-triggered self-heal, not a poller; covers a lost
+  // in-process event since the outbox has no replay worker).
+  private async resumePendingRegistration(
+    registrationId: number,
+    event: any,
+  ): Promise<RegistrationResult> {
+    let reg = await this.loadRegistration(registrationId);
+    const contribution = await this.ensureRegistrationContribution(reg, event);
+
+    if (contribution.state === 'COMPLETED') {
+      await this.applyContributionCompleted(
+        registrationId,
+        Number(contribution.id),
+        Number(contribution.amount_paise),
+      );
+      reg = await this.loadRegistration(registrationId);
+    }
+
+    return toRegistrationResult(
+      reg,
+      reg.status === 'PENDING_PAYMENT' ? toPayment(contribution) : null,
+      true,
+    );
+  }
+
+  // Finds (or creates) the one PAY-001 Contribution for a registration row
+  // and makes sure it is out of CREATED: zero-value -> COMPLETED via the
+  // standard zero-value path; positive -> AWAITING_SETTLEMENT (the state
+  // PAY-001's Razorpay order route requires). Same CREATED ->
+  // AWAITING_SETTLEMENT / zero-value split as Merchandise and Membership.
+  // Lookup-before-create keeps a resume from replaying createContribution()
+  // with a different amount.
+  private async ensureRegistrationContribution(
+    reg: { id: number; event_id: number; user_id: number | null },
+    event: { title: string; fee_type: string; base_fee_paise: number },
+  ) {
+    if (!reg.user_id) {
+      throw new ConflictException('A registration without a user cannot carry a Financial Contribution');
+    }
+    const idempotencyKey = eventRegistrationContributionKey(
+      Number(reg.event_id),
+      Number(reg.user_id),
+      Number(reg.id),
+    );
+    let contribution = await this.financial.findByIdempotencyKey(idempotencyKey);
+    if (!contribution) {
+      const amountPaise = event.fee_type === 'FREE' ? 0 : Number(event.base_fee_paise);
+      const { id } = await this.financial.createContribution({
+        payerUserId: Number(reg.user_id),
+        businessModule: EVENT_REGISTRATION_BUSINESS_MODULE,
+        businessReferenceId: Number(reg.id),
+        purpose: amountPaise === 0 ? 'Activity registration' : `Activity registration: ${event.title}`,
+        amountPaise,
+        idempotencyKey,
+      });
+      contribution = await this.financial.getContribution(id);
+    }
+
+    const id = Number(contribution.id);
+    if (Number(contribution.amount_paise) === 0) {
+      if (contribution.state === 'CREATED' || contribution.state === 'AWAITING_SETTLEMENT') {
+        await this.financial.processZeroValueContribution(id);
+        contribution = await this.financial.getContribution(id);
+      }
+    } else if (contribution.state === 'CREATED') {
+      await this.financial.transitionContribution(id, 'AWAITING_SETTLEMENT');
+      contribution = await this.financial.getContribution(id);
+    }
+    return contribution;
+  }
+
+  // Entry point for EventsFinancialListener (CONTRIBUTION_COMPLETED).
+  async handleContributionCompleted(payload: FinancialEngineEventPayload): Promise<void> {
+    if (payload.businessModule !== EVENT_REGISTRATION_BUSINESS_MODULE) return;
+    await this.applyContributionCompleted(
+      payload.businessReferenceId,
+      payload.contributionId,
+      payload.amountPaise,
+    );
+  }
+
+  // The single, idempotent completion handler (listener + resume self-heal).
+  //   PENDING_PAYMENT on a live Activity -> REGISTERED + confirmation (once:
+  //     the row is locked and only this transition dispatches).
+  //   REGISTERED / ATTENDED / WAITLISTED / NO_SHOW -> no-op.
+  //   CANCELLED registration or CANCELLED Activity -> automatic SYSTEM refund
+  //     (Membership F-002 late-success precedent). requestRefund() is
+  //     idempotent per Contribution, so redelivery never double-refunds.
+  //   zero-value -> no-op (FREE rows are confirmed at registration).
+  private async applyContributionCompleted(
+    registrationId: number,
+    contributionId: number,
+    amountPaise: number,
+  ): Promise<void> {
+    if (Number(amountPaise) === 0) return;
+
+    const outcome = await db.transaction().execute(async (trx) => {
+      const reg = await trx
+        .selectFrom('event_registrations')
+        .select(['id', 'event_id', 'status'])
+        .where('id', '=', registrationId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!reg) return 'UNKNOWN' as const;
+
+      const event = await trx
+        .selectFrom('events')
+        .select(['state'])
+        .where('id', '=', reg.event_id)
+        .executeTakeFirst();
+
+      if (reg.status === 'CANCELLED' || event?.state === 'CANCELLED') return 'REFUND' as const;
+      if (reg.status !== 'PENDING_PAYMENT') return 'NOOP' as const;
+
+      await trx
+        .updateTable('event_registrations')
+        .set({ status: 'REGISTERED', waitlist_position: null })
+        .where('id', '=', registrationId)
+        .execute();
+      return 'CONFIRMED' as const;
+    });
+
+    if (outcome === 'UNKNOWN') {
+      this.logger.error(`CONTRIBUTION_COMPLETED for unknown event registration ${registrationId}.`);
+      return;
+    }
+    if (outcome === 'REFUND') {
+      await this.requestRegistrationRefund(
+        contributionId,
+        'Automatic refund: settlement completed after the Activity registration or Activity was cancelled',
+        { actorType: 'SYSTEM', actorUserId: null },
+      );
+      return;
+    }
+    if (outcome !== 'CONFIRMED') return;
+
+    const reg = await this.loadRegistration(registrationId);
+    const event = await this.loadEvent(reg.event_id);
+    if (reg.user_id) {
+      await this.comm.dispatch('EVENT_REGISTRATION_CONFIRMED', reg.user_id, {
+        first_name: await this.firstName(reg.user_id),
+        event_title: event.title,
+        event_date: dateLabel(event),
+        event_location: event.location_name ?? 'TBD',
+        what_to_bring: event.what_to_bring ?? '',
+        event_url: `${process.env.FRONTEND_BASE_URL ?? ''}/activities/${event.slug}`,
+      });
+    }
+  }
+
+  // Module 04 decides a refund is owed; PAY-001 processes it. Only a
+  // positive-value COMPLETED Contribution is refundable; requestRefund() is
+  // itself idempotent and records provider failures rather than throwing.
+  // Any unexpected error is logged, never allowed to block a cancellation.
+  private async requestRegistrationRefund(
+    contributionId: number,
+    reason: string,
+    actor: RefundActor,
+  ): Promise<void> {
+    try {
+      const contribution = await this.financial.getContribution(contributionId);
+      if (contribution.state !== 'COMPLETED' || Number(contribution.amount_paise) === 0) return;
+      await this.financial.requestRefund(contributionId, reason, actor);
+    } catch (err) {
+      this.logger.error(
+        `Refund request for contribution ${contributionId} failed: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  // Resolves a registration's Contribution before the registration (or its
+  // Activity) is cancelled, per PAY-001 state:
+  //   CREATED / AWAITING_SETTLEMENT -> cancelContribution() (no money moved)
+  //   COMPLETED (positive)          -> requestRefund() (decision D2)
+  //   SETTLEMENT_IN_PROGRESS        -> left alone; a late completion is
+  //                                    refunded by applyContributionCompleted()
+  //   FAILED / ABANDONED / terminal -> left as-is (no valid PAY-001 transition)
+  // Returns the positive-value Contribution id (if any) for the post-cancel
+  // re-check.
+  private async resolveContributionForCancellation(
+    reg: { id: number; event_id: number; user_id: number | null },
+    reason: string,
+    actor: RefundActor,
+  ): Promise<number | null> {
+    if (!reg.user_id) return null;
+    const contribution = await this.financial.findByIdempotencyKey(
+      eventRegistrationContributionKey(Number(reg.event_id), Number(reg.user_id), Number(reg.id)),
+    );
+    if (!contribution || Number(contribution.amount_paise) === 0) return null;
+    const id = Number(contribution.id);
+
+    if (contribution.state === 'CREATED' || contribution.state === 'AWAITING_SETTLEMENT') {
+      await this.financial.cancelContribution(id, reason).catch((err: Error) =>
+        this.logger.warn(`cancelContribution(${id}) not applied: ${err.message}`),
+      );
+    } else if (contribution.state === 'COMPLETED') {
+      await this.requestRegistrationRefund(id, reason, actor);
+    }
+    return id;
   }
 
   async cancelRegistration(
@@ -755,35 +1087,55 @@ export class EventsService {
       throw new ForbiddenException('You can only cancel your own registration');
     }
 
-    const wasRegistered = reg.status === 'REGISTERED';
-    const now = toMysqlDatetime(new Date()) as any;
+    // Contribution FIRST, then the registration (Membership reject() order).
+    const actor: RefundActor = { actorType: 'HUMAN', actorUserId: actorId };
+    const refundReason = `Activity registration cancelled${dto.reason ? `: ${dto.reason}` : ''}`;
+    const contributionId = await this.resolveContributionForCancellation(reg, refundReason, actor);
 
-    await db
-      .updateTable('event_registrations')
-      .set({
-        status: 'CANCELLED',
-        cancelled_at: now,
-        cancellation_reason: dto.reason ?? null,
-      })
-      .where('id', '=', registrationId)
-      .execute();
+    // Locked flip: serialises with applyContributionCompleted() so the seat
+    // decision uses the status actually being cancelled.
+    const priorStatus = await db.transaction().execute(async (trx) => {
+      const locked = await trx
+        .selectFrom('event_registrations')
+        .select(['status'])
+        .where('id', '=', registrationId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!locked || locked.status === 'CANCELLED') return null;
+      await trx
+        .updateTable('event_registrations')
+        .set({
+          status: 'CANCELLED',
+          cancelled_at: toMysqlDatetime(new Date()) as any,
+          cancellation_reason: dto.reason ?? null,
+        })
+        .where('id', '=', registrationId)
+        .execute();
+      return locked.status;
+    });
+    if (priorStatus === null) {
+      throw new BadRequestException('Registration is already cancelled');
+    }
+
+    // Settlement may have completed between the resolution above and the
+    // flip (a SETTLEMENT_IN_PROGRESS attempt the listener confirmed first).
+    // The registration is now CANCELLED, so a COMPLETED Contribution is owed
+    // back -- a no-op if the refund was already requested.
+    if (contributionId !== null) {
+      await this.requestRegistrationRefund(contributionId, refundReason, actor);
+    }
 
     if (reg.user_id) {
       const event = await this.loadEvent(eventId);
-      const user = await db
-        .selectFrom('users')
-        .select(['full_name'])
-        .where('id', '=', reg.user_id)
-        .executeTakeFirst();
       await this.comm.dispatch('EVENT_REGISTRATION_CANCELLED_SELF', reg.user_id, {
-        first_name: user?.full_name?.split(' ')[0] ?? 'Member',
+        first_name: await this.firstName(reg.user_id),
         event_title: event.title,
         event_date: dateLabel(event),
         events_url: `${process.env.FRONTEND_BASE_URL ?? ''}/activities`,
       });
     }
 
-    if (wasRegistered) {
+    if (priorStatus === 'REGISTERED' || priorStatus === 'PENDING_PAYMENT') {
       await this.promoteWaitlist(eventId);
     }
 
@@ -806,6 +1158,9 @@ export class EventsService {
     if (reg.status === 'CANCELLED') {
       throw new BadRequestException('Cannot check in a cancelled registration');
     }
+    if (reg.status === 'PENDING_PAYMENT') {
+      throw new BadRequestException('Cannot check in a registration awaiting payment');
+    }
     if (reg.status === 'ATTENDED') return { ok: true }; // idempotent
 
     const now = toMysqlDatetime(new Date()) as any;
@@ -818,6 +1173,9 @@ export class EventsService {
     return { ok: true };
   }
 
+  // Financial state is a READ-ONLY view sourced from PAY-001
+  // (financial_contributions via business_module/business_reference_id);
+  // Module 04 never owns or writes it.
   async listRegistrations(
     eventId: number,
     filter: { status?: string; limit?: number; offset?: number },
@@ -830,6 +1188,11 @@ export class EventsService {
     let q = db
       .selectFrom('event_registrations')
       .leftJoin('users', 'users.id', 'event_registrations.user_id')
+      .leftJoin('financial_contributions as fc', (join) =>
+        join
+          .onRef('fc.business_reference_id', '=', 'event_registrations.id')
+          .on('fc.business_module', '=', EVENT_REGISTRATION_BUSINESS_MODULE),
+      )
       .select([
         'event_registrations.id',
         'event_registrations.uuid',
@@ -844,6 +1207,9 @@ export class EventsService {
         'users.id as member_id',
         'users.full_name as member_name',
         'users.email as member_email',
+        'fc.id as financial_contribution_id',
+        'fc.state as financial_state',
+        'fc.amount_paise as financial_amount_paise',
       ])
       .where('event_registrations.event_id', '=', eventId);
 
@@ -869,6 +1235,8 @@ export class EventsService {
     return {
       items: rows.map((r) => ({
         ...r,
+        financial_amount_paise:
+          r.financial_amount_paise == null ? null : Number(r.financial_amount_paise),
         checked_in_at: isoOrNull(r.checked_in_at),
         registered_at: toDate(r.registered_at).toISOString(),
       })),
@@ -925,19 +1293,44 @@ export class EventsService {
     return row;
   }
 
-  private async countActiveRegistrations(eventId: number): Promise<number> {
-    const r = await db
+  private async loadRegistration(id: number) {
+    return db
+      .selectFrom('event_registrations')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirstOrThrow();
+  }
+
+  private async firstName(userId: number): Promise<string> {
+    const user = await db
+      .selectFrom('users')
+      .select(['full_name'])
+      .where('id', '=', userId)
+      .executeTakeFirst();
+    return user?.full_name?.split(' ')[0] ?? 'Member';
+  }
+
+  // Seats: REGISTERED + ATTENDED + PENDING_PAYMENT (a held, unpaid seat is
+  // never sold twice). WAITLISTED / CANCELLED / NO_SHOW do not count.
+  private async countActiveRegistrations(
+    eventId: number,
+    executor: Kysely<DB> = db,
+  ): Promise<number> {
+    const r = await executor
       .selectFrom('event_registrations')
       .select((eb) => eb.fn.countAll<number>().as('cnt'))
       .where('event_id', '=', eventId)
-      .where('status', 'in', ['REGISTERED', 'ATTENDED'])
+      .where('status', 'in', SEAT_HOLDING_STATUSES)
       .executeTakeFirst();
     return Number(r?.cnt ?? 0);
   }
 
-  private async nextWaitlistPosition(eventId: number): Promise<number> {
+  private async nextWaitlistPosition(
+    eventId: number,
+    executor: Kysely<DB> = db,
+  ): Promise<number> {
     // Get the highest current waitlist_position and increment by 1
-    const rows = await db
+    const rows = await executor
       .selectFrom('event_registrations')
       .select('waitlist_position')
       .where('event_id', '=', eventId)
@@ -949,40 +1342,67 @@ export class EventsService {
     return (maxPos as number) + 1;
   }
 
+  // FREE: WAITLISTED -> REGISTERED + EVENT_SLOT_AVAILABLE (unchanged).
+  // FLAT: WAITLISTED -> PENDING_PAYMENT (seat held) + payable Contribution.
+  //   Never REGISTERED here -- confirmation comes only from PAY-001
+  //   settlement completion. EVENT_SLOT_AVAILABLE is NOT sent for a paid
+  //   promotion: its seeded copy (seed_0008) says the registration "is
+  //   confirmed", which would be false before payment.
   private async promoteWaitlist(eventId: number): Promise<void> {
     const event = await this.loadEvent(eventId);
     if (!event.capacity) return;
-    // Never confirm a legacy waitlisted row on a paid Activity without PAY-001.
-    if (event.fee_type !== 'FREE') return;
+    const isPaid = event.fee_type === 'FLAT';
+    if (event.fee_type !== 'FREE' && !isPaid) return;
+    // A cancelled Activity never takes on new paid obligations.
+    if (isPaid && event.state === 'CANCELLED') return;
 
-    const activeCount = await this.countActiveRegistrations(eventId);
-    if (activeCount >= (event.capacity as number)) return;
-
-    const next = await db
-      .selectFrom('event_registrations')
-      .selectAll()
-      .where('event_id', '=', eventId)
-      .where('status', '=', 'WAITLISTED')
-      .orderBy('waitlist_position', 'asc')
-      .limit(1)
-      .executeTakeFirst();
-
-    if (!next) return;
-
-    await db
-      .updateTable('event_registrations')
-      .set({ status: 'REGISTERED', waitlist_position: null })
-      .where('id', '=', next.id)
-      .execute();
-
-    if (next.user_id) {
-      const user = await db
-        .selectFrom('users')
-        .select(['full_name'])
-        .where('id', '=', next.user_id)
+    const promoted = await db.transaction().execute(async (trx) => {
+      await trx
+        .selectFrom('events')
+        .select('id')
+        .where('id', '=', eventId)
+        .forUpdate()
         .executeTakeFirst();
-      await this.comm.dispatch('EVENT_SLOT_AVAILABLE', next.user_id, {
-        first_name: user?.full_name?.split(' ')[0] ?? 'Member',
+
+      const activeCount = await this.countActiveRegistrations(eventId, trx);
+      if (activeCount >= (event.capacity as number)) return null;
+
+      let nextQ = trx
+        .selectFrom('event_registrations')
+        .selectAll()
+        .where('event_id', '=', eventId)
+        .where('status', '=', 'WAITLISTED');
+      // A paid seat needs a payer: legacy identity-less GUEST rows are skipped.
+      if (isPaid) nextQ = nextQ.where('user_id', 'is not', null);
+      const next = await nextQ
+        .orderBy('waitlist_position', 'asc')
+        .limit(1)
+        .executeTakeFirst();
+      if (!next) return null;
+
+      await trx
+        .updateTable('event_registrations')
+        .set({ status: isPaid ? 'PENDING_PAYMENT' : 'REGISTERED', waitlist_position: null })
+        .where('id', '=', next.id)
+        .execute();
+      return next;
+    });
+
+    if (!promoted) return;
+
+    if (isPaid) {
+      // After commit; a failure is repaired by the user's resume.
+      await this.ensureRegistrationContribution(promoted, event).catch((err: Error) =>
+        this.logger.error(
+          `Contribution for promoted event registration ${promoted.id} failed: ${err.message}`,
+        ),
+      );
+      return;
+    }
+
+    if (promoted.user_id) {
+      await this.comm.dispatch('EVENT_SLOT_AVAILABLE', promoted.user_id, {
+        first_name: await this.firstName(promoted.user_id),
         event_title: event.title,
         event_date: dateLabel(event),
         event_url: `${process.env.FRONTEND_BASE_URL ?? ''}/activities/${event.slug}`,

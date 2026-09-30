@@ -1,5 +1,6 @@
 // Stage 1 review: participation is by Registered User; membership is consulted
-// only where eligibility requires it; paid (FLAT) Activities never confirm.
+// only where eligibility requires it. Paid (FLAT) registration and promotion
+// through PAY-001 are covered by events.pay001.spec.ts.
 
 jest.mock('kysely', () => ({ sql: () => ({}) }));
 // Chainable query stub: every builder call returns itself; terminal calls
@@ -24,7 +25,7 @@ import { EventsService } from './events.service';
 import { EventsController } from './events.controller';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 
-const svc = () => new EventsService({ dispatch: jest.fn() } as any);
+const svc = () => new EventsService({ dispatch: jest.fn() } as any, {} as any);
 const withEvent = (s: EventsService, ev: Record<string, unknown>) =>
   jest.spyOn(s as any, 'loadEvent').mockResolvedValue({ state: 'PUBLISHED', fee_type: 'FREE', eligibility_mode: 'OPEN', is_historical: 0, ...ev });
 
@@ -56,25 +57,10 @@ describe('membership is consulted only where eligibility requires it', () => {
 describe('registration guards', () => {
   beforeEach(() => insertInto.mockClear());
 
-  it('refuses FLAT Activities and writes nothing', async () => {
-    const s = svc();
-    withEvent(s, { fee_type: 'FLAT' });
-    await expect(s.registerForEvent(1, 7)).rejects.toThrow(ConflictException);
-    expect(insertInto).not.toHaveBeenCalled();
-  });
-
   it('refuses historical Activities and writes nothing', async () => {
     const s = svc();
     withEvent(s, { is_historical: 1, state: 'COMPLETED' });
     await expect(s.registerForEvent(1, 7)).rejects.toThrow(BadRequestException);
     expect(insertInto).not.toHaveBeenCalled();
-  });
-
-  it('never promotes a waitlisted row on a paid Activity', async () => {
-    const s = svc();
-    withEvent(s, { fee_type: 'FLAT', capacity: 5 });
-    const count = jest.spyOn(s as any, 'countActiveRegistrations');
-    await (s as any).promoteWaitlist(1);
-    expect(count).not.toHaveBeenCalled(); // guard returns before any promotion work
   });
 });

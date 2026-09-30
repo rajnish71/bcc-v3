@@ -898,7 +898,7 @@ export type EventState = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';
 export type EligibilityMode =
   | 'OPEN' | 'MEMBERS_ONLY' | 'SPECIFIC_CLASSES'
   | 'INVITE_ONLY' | 'CONSTITUTIONAL_MEMBERS_ONLY';
-export type RegistrationStatus = 'REGISTERED' | 'WAITLISTED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
+export type RegistrationStatus = 'REGISTERED' | 'WAITLISTED' | 'PENDING_PAYMENT' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
 export type VolunteerStatus = 'APPLIED' | 'CONFIRMED' | 'CHECKED_IN' | 'NO_SHOW' | 'CANCELLED';
 
 export interface EventsTable {

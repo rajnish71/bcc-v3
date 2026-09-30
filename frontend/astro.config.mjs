@@ -20,7 +20,8 @@ export default defineConfig({
           path === '/verify/' || path === '/verify-email/' ||
           path === '/photographers/_profile/' ||
           path === '/photographers/test/' ||
-          path === '/showcase/placeholder/'
+          path === '/showcase/placeholder/' ||
+          path === '/activities/_activity/'
         );
       },
     }),

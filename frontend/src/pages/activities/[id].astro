@@ -9,8 +9,11 @@
  *
  * Participation is by Registered User. Membership is never required by this
  * page itself -- the API applies the Activity's own eligibility rules.
- * KNOWN LIMITATION (Stage 2 follow-up): pages are statically generated, so an
- * Activity published after a build has no detail route until the next deploy.
+ * Pages are statically generated for the Activities known at build time. An
+ * Activity published after a build is served by the '_activity' shell: Nginx
+ * try_files falls back to /activities/_activity/index.html for any unknown
+ * /activities/<slug-or-id>/ path (same pattern as /photographers/_profile/),
+ * and the client script loads the Activity named in the URL from the API.
  * There is no seed fallback; if the API is unreachable the page says so.
  *
  * Historical Activities show a date that is never more precise than what is
@@ -32,7 +35,9 @@ export async function getStaticPaths() {
     // Backend unreachable at build time: no Activity pages are generated.
   }
 
-  const paths: { params: { id: string }; props: { event: any } }[] = [];
+  const paths: { params: { id: string }; props: { event: any } }[] = [
+    { params: { id: '_activity' }, props: { event: null } }, // Nginx fallback shell — served for any unknown Activity
+  ];
   for (const it of items) {
     let event: any = null;
     try {
@@ -74,11 +79,15 @@ const description = event?.description ?? '';
 const feeText = !event ? '—' : event.fee_type === 'FREE' ? 'Free' : `₹${(event.base_fee_paise / 100).toLocaleString('en-IN')}`;
 const gear: string[] = (event?.what_to_bring ?? '').split(/[\n,]+/).map((x: string) => x.trim()).filter(Boolean);
 const isHistorical = Boolean(event?.is_historical);
+// '_activity' (the Nginx fallback shell) and any page built without Activity
+// data are generic shells — never indexable.
+const robots = !event ? 'noindex, nofollow' : undefined;
 ---
 
 <BaseLayout
   title={title}
   description={description || `${typeLabel} — Bhopal Camera Club`}
+  robots={robots}
 >
   <!-- Event Page Hero -->
   <div class="event-hero surface-white">
@@ -556,7 +565,13 @@ const isHistorical = Boolean(event?.is_historical);
   }
 
   async function load() {
-    if (!slug) return;
+    // The shell's own URL names no Activity; fall through to "Unavailable".
+    if (!slug || slug === '_activity') {
+      const btn = $('register-btn') as HTMLButtonElement;
+      btn.textContent = 'Unavailable';
+      btn.disabled = true;
+      return;
+    }
     try {
       const res = await fetch(`/api/v1/events/${encodeURIComponent(slug)}`);
       if (!res.ok) throw new Error(`Activities API ${res.status}`);

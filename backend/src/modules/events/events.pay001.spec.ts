@@ -784,13 +784,57 @@ describe('waitlist promotion', () => {
     expect(reg(b.id).status).toBe('REGISTERED');
   });
 
-  it('FREE promotion is unchanged (REGISTERED + EVENT_SLOT_AVAILABLE)', async () => {
+  it('FLAT promotion sends EVENT_SLOT_PAYMENT_REQUIRED (not confirmation) to the promoted user', async () => {
+    const ev = paidEvent({ capacity: 1 });
+    const a = await svc.registerForEvent(ev, 7);
+    const b = await svc.registerForEvent(ev, 8);
+    comm.dispatch.mockClear();
+
+    await svc.cancelRegistration(ev, a.id, 7, {}, false);
+
+    const sent = dispatched('EVENT_SLOT_PAYMENT_REQUIRED');
+    expect(sent).toHaveLength(1);
+    expect(sent[0][1]).toBe(8);
+    expect(sent[0][2]).toEqual(
+      expect.objectContaining({
+        event_title: 'Dawn Walk',
+        fee_amount: '₹500',
+        event_url: expect.stringContaining('/activities/dawn-walk'),
+      }),
+    );
+    expect(dispatched('EVENT_SLOT_AVAILABLE')).toHaveLength(0);
+    expect(dispatched('EVENT_REGISTRATION_CONFIRMED')).toHaveLength(0);
+    // Sent only after the Contribution is payable.
+    expect(contributionFor(reg(b.id))!.state).toBe('AWAITING_SETTLEMENT');
+  });
+
+  it('FLAT promotion: CONTRIBUTION_COMPLETED then confirms exactly once, even on duplicate delivery', async () => {
+    const ev = paidEvent({ capacity: 1 });
+    const a = await svc.registerForEvent(ev, 7);
+    const b = await svc.registerForEvent(ev, 8);
+    await svc.cancelRegistration(ev, a.id, 7, {}, false);
+    comm.dispatch.mockClear();
+
+    await completePayment(b.id);
+    await completePayment(b.id); // duplicate FinancialEventBus delivery
+
+    expect(reg(b.id).status).toBe('REGISTERED');
+    const confirmed = dispatched('EVENT_REGISTRATION_CONFIRMED');
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0][1]).toBe(8);
+    expect(dispatched('EVENT_SLOT_PAYMENT_REQUIRED')).toHaveLength(0); // not re-sent
+    expect(fin.requestRefund).not.toHaveBeenCalled();
+  });
+
+  it('FREE promotion is unchanged (REGISTERED + EVENT_SLOT_AVAILABLE, no payment notice)', async () => {
     const ev = seedEvent({ capacity: 1 });
     const a = await svc.registerForEvent(ev, 7);
     const b = await svc.registerForEvent(ev, 8);
     await svc.cancelRegistration(ev, a.id, 7, {}, false);
     expect(reg(b.id).status).toBe('REGISTERED');
     expect(dispatched('EVENT_SLOT_AVAILABLE')).toHaveLength(1);
+    expect(dispatched('EVENT_SLOT_AVAILABLE')[0][1]).toBe(8);
+    expect(dispatched('EVENT_SLOT_PAYMENT_REQUIRED')).toHaveLength(0);
   });
 
   it('PENDING_PAYMENT consumes capacity', async () => {

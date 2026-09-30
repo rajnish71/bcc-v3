@@ -1343,11 +1343,12 @@ export class EventsService {
   }
 
   // FREE: WAITLISTED -> REGISTERED + EVENT_SLOT_AVAILABLE (unchanged).
-  // FLAT: WAITLISTED -> PENDING_PAYMENT (seat held) + payable Contribution.
-  //   Never REGISTERED here -- confirmation comes only from PAY-001
-  //   settlement completion. EVENT_SLOT_AVAILABLE is NOT sent for a paid
-  //   promotion: its seeded copy (seed_0008) says the registration "is
-  //   confirmed", which would be false before payment.
+  // FLAT: WAITLISTED -> PENDING_PAYMENT (seat held) + payable Contribution
+  //   + EVENT_SLOT_PAYMENT_REQUIRED ("a place is held; pay to confirm").
+  //   Never REGISTERED here -- confirmation (EVENT_REGISTRATION_CONFIRMED)
+  //   comes only from PAY-001 settlement completion. EVENT_SLOT_AVAILABLE is
+  //   NOT sent for a paid promotion: its seeded copy (seed_0008) says the
+  //   registration "has been confirmed", which would be false before payment.
   private async promoteWaitlist(eventId: number): Promise<void> {
     const event = await this.loadEvent(eventId);
     if (!event.capacity) return;
@@ -1391,12 +1392,23 @@ export class EventsService {
     if (!promoted) return;
 
     if (isPaid) {
-      // After commit; a failure is repaired by the user's resume.
+      // After commit; a failure is repaired by the user's resume, which is
+      // exactly where the payment-required notification sends them -- so it
+      // is sent either way.
       await this.ensureRegistrationContribution(promoted, event).catch((err: Error) =>
         this.logger.error(
           `Contribution for promoted event registration ${promoted.id} failed: ${err.message}`,
         ),
       );
+      if (promoted.user_id) {
+        await this.comm.dispatch('EVENT_SLOT_PAYMENT_REQUIRED', promoted.user_id, {
+          first_name: await this.firstName(promoted.user_id),
+          event_title: event.title,
+          event_date: dateLabel(event),
+          fee_amount: `₹${(Number(event.base_fee_paise) / 100).toLocaleString('en-IN')}`,
+          event_url: `${process.env.FRONTEND_BASE_URL ?? ''}/activities/${event.slug}`,
+        });
+      }
       return;
     }
 

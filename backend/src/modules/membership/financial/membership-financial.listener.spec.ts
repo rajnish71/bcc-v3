@@ -494,3 +494,53 @@ describe('Deterministic idempotency key', () => {
     expect(key).toBe('MEMBERSHIP-42-CONTRIBUTION');
   });
 });
+
+// ── Settlement correction (HA rulings 1/2) ────────────────────────────────
+//
+// Source-verified: the listener threads the Financial Engine event's
+// contributionId into both lifecycle calls so a settlement-correction
+// Contribution can be recognised (record-only); behaviour for every other
+// Contribution is exercised end-to-end in
+// lifecycle/membership-settlement-correction.spec.ts.
+
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+const LISTENER_SRC = readFileSync(join(__dirname, 'membership-financial.listener.ts'), 'utf8').replace(/\r\n/g, '\n');
+
+describe('Settlement correction context', () => {
+  it('CONTRIBUTION_COMPLETED passes membershipId AND contributionId to recordPaymentReceived()', () => {
+    expect(LISTENER_SRC).toMatch(/\.recordPaymentReceived\(membershipId, payload\.contributionId\)/);
+  });
+
+  it('SETTLEMENT_FAILED passes membershipId, amountPaise and contributionId to recordPaymentFailure()', () => {
+    expect(LISTENER_SRC).toMatch(
+      /\.recordPaymentFailure\(\s*membershipId,\s*payload\.amountPaise,\s*undefined,\s*payload\.contributionId,\s*\)/,
+    );
+  });
+
+  it('still filters on businessModule MEMBERSHIP and never approves/activates/renews', () => {
+    expect(LISTENER_SRC).toContain("const MEMBERSHIP_BUSINESS_MODULE = 'MEMBERSHIP';");
+    const code = LISTENER_SRC.replace(/^\s*\/\/.*$/gm, '');
+    expect(code).not.toMatch(/\.(approve|activate|renewFromExpired|renewGroup)\(/);
+  });
+
+  it('lifecycle failures stay caught: neither handler can crash the event emitter loop', () => {
+    expect((LISTENER_SRC.match(/\.catch\(\(err: Error\)/g) ?? []).length).toBe(2);
+  });
+
+  it('every Financial Engine event payload carries the contributionId the correction branch needs', () => {
+    const payload: FinancialEngineEventPayload = {
+      eventType: FINANCIAL_EVENT_TYPES.CONTRIBUTION_COMPLETED,
+      contributionId: 5001,
+      businessModule: 'MEMBERSHIP',
+      businessReferenceId: 99,
+      amountPaise: 120000,
+      currency: 'INR',
+      contributionState: 'COMPLETED',
+      occurredAt: new Date(),
+    };
+    expect(payload.contributionId).toBe(5001);
+    expect(isForMembership(payload.businessModule)).toBe(true);
+  });
+});

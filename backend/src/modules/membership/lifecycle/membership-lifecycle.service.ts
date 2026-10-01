@@ -60,6 +60,23 @@ export function groupRenewalContributionKey(groupMembershipId: number, termEndsA
   return `MEMBERSHIP-${groupMembershipId}-RENEWAL-${ymd}`;
 }
 
+// Settlement correction (HA rulings 1/2, 2026-10-01): one genuine-payment
+// obligation per original Contribution whose settlement was not genuine
+// (e.g. captured through the Razorpay TEST account). The key binds the
+// correction to exactly one (membership, original Contribution) pair.
+export function settlementCorrectionContributionKey(membershipId: number, originalContributionId: number): string {
+  return `MEMBERSHIP-${membershipId}-CORRECTION-${originalContributionId}`;
+}
+const SETTLEMENT_CORRECTION_KEY = /^MEMBERSHIP-(\d+)-CORRECTION-(\d+)$/;
+
+// Parses a settlement-correction idempotency key; null for every other key.
+export function parseSettlementCorrectionKey(
+  idempotencyKey: string,
+): { membershipId: number; originalContributionId: number } | null {
+  const match = SETTLEMENT_CORRECTION_KEY.exec(idempotencyKey);
+  return match ? { membershipId: Number(match[1]), originalContributionId: Number(match[2]) } : null;
+}
+
 export interface ApplyMembershipParams {
   ownerType: 'INDIVIDUAL' | 'GROUP';
   // INDIVIDUAL -> membershipClassId required; GROUP -> groupMembershipTypeId
@@ -894,7 +911,17 @@ export class MembershipLifecycleService {
   // When called from the admin endpoint without an amount, the notification
   // omits the amount variable.
   // ======================================================================
-  async recordPaymentFailure(membershipId: number, failedAmountPaise?: number, notes?: string): Promise<void> {
+  async recordPaymentFailure(
+    membershipId: number,
+    failedAmountPaise?: number,
+    notes?: string,
+    contributionId?: number,
+  ): Promise<void> {
+    // A settlement-correction payment attempt that failed: the membership is
+    // already ACTIVE and is never touched; the correction Contribution stays
+    // retryable (PAY-001) -- record it only.
+    if (await this.recordSettlementCorrectionPaymentEvent(membershipId, contributionId, 'PAYMENT_FAILED')) return;
+
     // A Family/Corporate RENEWAL payment attempt that failed: the group is
     // ACTIVE/EXPIRED, the renewal Contribution stays retryable (PAY-001), and
     // nothing about the membership changes -- record it only.
@@ -951,7 +978,11 @@ export class MembershipLifecycleService {
   // difference from the human-rejection refund path in reject() is the
   // actor: no human initiated this, so actorType is SYSTEM with no
   // actorUserId (F-002 system-actor governance decision).
-  async recordPaymentReceived(membershipId: number): Promise<void> {
+  async recordPaymentReceived(membershipId: number, contributionId?: number): Promise<void> {
+    // A settlement-correction payment settled: recorded only. It never
+    // approves, activates, renews, numbers, or changes validity.
+    if (await this.recordSettlementCorrectionPaymentEvent(membershipId, contributionId, 'PAYMENT_RECEIVED')) return;
+
     // A Family/Corporate RENEWAL fee settled: recorded only. The term is
     // extended exclusively by an administrator via renewGroup() -- payment
     // never renews, approves, or activates by itself.
@@ -1001,6 +1032,187 @@ export class MembershipLifecycleService {
       notes: notes ?? null,
     });
     return true;
+  }
+
+  // Returns true (after recording an audit row) iff contributionId is this
+  // membership's settlement-correction Contribution. Every other
+  // Contribution -- application, complimentary, group, or none supplied --
+  // falls through to the existing handling unchanged.
+  private async recordSettlementCorrectionPaymentEvent(
+    membershipId: number,
+    contributionId: number | undefined,
+    outcome: 'PAYMENT_RECEIVED' | 'PAYMENT_FAILED',
+  ): Promise<boolean> {
+    if (contributionId == null) return false;
+    const contribution = await this.financialService.getContribution(contributionId);
+    if (String(contribution.business_module) !== 'MEMBERSHIP') return false;
+    const parsed = parseSettlementCorrectionKey(String(contribution.idempotency_key));
+    if (!parsed || parsed.membershipId !== membershipId) return false;
+
+    await logMembershipAudit({
+      membershipId,
+      eventType: outcome === 'PAYMENT_RECEIVED'
+        ? 'SETTLEMENT_CORRECTION_PAYMENT_RECEIVED'
+        : 'SETTLEMENT_CORRECTION_PAYMENT_FAILED',
+      actorType: 'SYSTEM',
+      newValue: {
+        correctionContributionId: contributionId,
+        originalContributionId: parsed.originalContributionId,
+        contributionState: String(contribution.state),
+      },
+    });
+    return true;
+  }
+
+  // ======================================================================
+  // Settlement correction (HA rulings 1/2, 2026-10-01; Option I)
+  //
+  // For an ACTIVE INDIVIDUAL membership whose application fee was settled
+  // through a settlement later determined (by administrative/HA authority)
+  // not to represent genuine received funds -- e.g. captured through the
+  // Razorpay TEST account. Creates ONE new, ordinary Financial Obligation
+  // -> Contribution for the same payer, amount and currency, made payable
+  // (AWAITING_SETTLEMENT) through the existing payment-link route, and asks
+  // the Financial Engine to annotate the original settlement (append-only).
+  //
+  // Never touches the membership row: no lifecycle transition, no
+  // activation/renewal, no expiry computation, no number allocation. The
+  // original Contribution, Transaction, Receipt and webhook record are
+  // never modified and no refund is requested.
+  //
+  // Idempotent: the deterministic key binds one correction to one original
+  // Contribution; every step re-runs safely after a partial failure.
+  // ======================================================================
+  async createSettlementCorrectionContribution(
+    membershipId: number,
+    originalContributionId: number,
+    reason: string,
+    actorUserId: number,
+    auditContext: AuditContext,
+  ): Promise<{
+    correctionContributionId: number;
+    originalContributionId: number;
+    state: string;
+    amountPaise: number;
+    currency: string;
+  }> {
+    const trimmedReason = (reason ?? '').trim();
+    if (!trimmedReason) {
+      throw new BadRequestException('A correction reason is required.');
+    }
+
+    const membership = await this.getOrThrow(membershipId);
+    if (membership.owner_type !== 'INDIVIDUAL' || membership.user_id == null) {
+      throw new BadRequestException(`Membership ${membershipId} is not an INDIVIDUAL membership.`);
+    }
+    if (membership.parent_membership_id != null) {
+      throw new BadRequestException(`Membership ${membershipId} belongs to a Family/Corporate group.`);
+    }
+    if (membership.lifecycle_state !== 'ACTIVE') {
+      throw new ConflictException(
+        `Membership ${membershipId} is in state '${membership.lifecycle_state}'; a settlement correction requires ACTIVE.`,
+      );
+    }
+
+    // Financial evidence (read-only), checked before anything is written.
+    const evidence = await this.financialService.getSettlementReconciliationEvidence(originalContributionId);
+    const original = evidence.contribution;
+    if (
+      String(original.business_module) !== 'MEMBERSHIP' ||
+      Number(original.business_reference_id) !== membershipId
+    ) {
+      throw new BadRequestException(
+        `Contribution ${originalContributionId} does not belong to membership ${membershipId}.`,
+      );
+    }
+    // Only the membership's application fee can be corrected -- never a
+    // complimentary, renewal, or another correction Contribution.
+    if (String(original.idempotency_key) !== `MEMBERSHIP-${membershipId}-CONTRIBUTION`) {
+      throw new BadRequestException(
+        `Contribution ${originalContributionId} is not the membership application fee for membership ${membershipId}.`,
+      );
+    }
+    if (original.state !== 'COMPLETED') {
+      throw new ConflictException(
+        `Contribution ${originalContributionId} is in state '${original.state}'; a correction requires COMPLETED.`,
+      );
+    }
+    if (!evidence.transaction || String(evidence.transaction.provider) !== 'RAZORPAY') {
+      throw new ConflictException(
+        `Contribution ${originalContributionId} has no SUCCEEDED RAZORPAY Financial Transaction.`,
+      );
+    }
+    if (evidence.refund) {
+      throw new ConflictException(`Contribution ${originalContributionId} already has a refund record.`);
+    }
+    if (!evidence.webhook) {
+      throw new ConflictException(
+        `Contribution ${originalContributionId} has no processed payment.captured delivery for its settlement.`,
+      );
+    }
+
+    const amountPaise = Number(original.amount_paise);
+    const currency = String(original.currency);
+    const { id: correctionContributionId } = await this.financialService.createContribution({
+      payerUserId: Number(original.payer_user_id),
+      businessModule: 'MEMBERSHIP',
+      businessReferenceId: membershipId,
+      purpose: `Membership fee — genuine payment replacing a gateway test-mode transaction (ref FC-${originalContributionId})`,
+      amountPaise,
+      currency,
+      idempotencyKey: settlementCorrectionContributionKey(membershipId, originalContributionId),
+    }, auditContext);
+
+    const created = await this.financialService.getContribution(correctionContributionId);
+    if (created.state === 'CREATED') {
+      await this.financialService.transitionContribution(correctionContributionId, 'AWAITING_SETTLEMENT');
+    }
+
+    await this.financialService.annotateSettlementReconciliation(
+      originalContributionId,
+      {
+        classification: 'TEST_MODE_NON_GENUINE_SETTLEMENT',
+        reason: trimmedReason,
+        correctionContributionId,
+      },
+      auditContext,
+    );
+
+    // A membership has exactly one application-fee Contribution (checked
+    // above), so it can carry at most one settlement correction: one
+    // authorization row per membership is the idempotency boundary.
+    const alreadyAuthorized = await db
+      .selectFrom('membership_audit_log')
+      .select('id')
+      .where('membership_id', '=', membershipId)
+      .where('event_type', '=', 'SETTLEMENT_CORRECTION_AUTHORIZED')
+      .executeTakeFirst();
+    if (!alreadyAuthorized) {
+      await logMembershipAudit({
+        membershipId,
+        eventType: 'SETTLEMENT_CORRECTION_AUTHORIZED',
+        actorType: 'ADMIN',
+        actorUserId,
+        newValue: {
+          correctionContributionId,
+          originalContributionId,
+          originalTransactionId: Number(evidence.transaction.id),
+          originalProviderPaymentRef: evidence.transaction.provider_reference,
+          providerAccountId: evidence.webhook.providerAccountId,
+          settlementClassification: 'TEST_MODE_NON_GENUINE_SETTLEMENT',
+        },
+        notes: trimmedReason,
+      });
+    }
+
+    const current = await this.financialService.getContribution(correctionContributionId);
+    return {
+      correctionContributionId,
+      originalContributionId,
+      state: String(current.state),
+      amountPaise: Number(current.amount_paise),
+      currency: String(current.currency),
+    };
   }
 
   // ======================================================================

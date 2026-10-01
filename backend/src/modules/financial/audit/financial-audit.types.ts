@@ -26,6 +26,10 @@ export const FINANCIAL_AUDIT_EVENT_TYPES = [
   'SETTLEMENT_EVIDENCE_REJECTED',
   'SETTLEMENT_OUTCOME_RECORDED',
   'REFUND_REQUESTED',
+  // HA ruling D1 (2026-10-01): append-only reconciliation annotation on a
+  // COMPLETED Contribution whose settlement is later determined not to
+  // represent genuine received funds. Records only -- never a transition.
+  'SETTLEMENT_RECONCILIATION_ANNOTATED',
 ] as const;
 
 export type FinancialAuditEventType = (typeof FINANCIAL_AUDIT_EVENT_TYPES)[number];
@@ -51,10 +55,20 @@ export interface FinancialAuditMetadata {
   // than an embedded-Checkout order (PROVIDER_ORDER_CREATED/FAILED rows are
   // reused for both; absent means the pre-existing Orders path).
   settlementChannel?: SettlementChannel;
+  // SETTLEMENT_RECONCILIATION_ANNOTATED only (HA ruling D1).
+  settlementClassification?: SettlementClassification;
+  // The Settlement Provider account that processed the annotated settlement,
+  // read from the original verified webhook payload -- never a credential.
+  providerAccountId?: string;
+  correctionContributionId?: number;
+  reconciliationReason?: string;
 }
 
 export const SETTLEMENT_CHANNELS = ['PAYMENT_LINK'] as const;
 export type SettlementChannel = (typeof SETTLEMENT_CHANNELS)[number];
+
+export const SETTLEMENT_CLASSIFICATIONS = ['TEST_MODE_NON_GENUINE_SETTLEMENT'] as const;
+export type SettlementClassification = (typeof SETTLEMENT_CLASSIFICATIONS)[number];
 
 // Section 13: only the fields required by the current operation should be
 // passed. Built once per HTTP request by buildRequestProvenance() and

@@ -38,6 +38,10 @@ export class FinancialAuditService {
           discardedProviderOrderReference: input.metadata.discardedProviderOrderReference,
           isRetry: input.metadata.isRetry,
           settlementChannel: input.metadata.settlementChannel,
+          settlementClassification: input.metadata.settlementClassification,
+          providerAccountId: input.metadata.providerAccountId,
+          correctionContributionId: input.metadata.correctionContributionId,
+          reconciliationReason: input.metadata.reconciliationReason,
         })
       : null;
 

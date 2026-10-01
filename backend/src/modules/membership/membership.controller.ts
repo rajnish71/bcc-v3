@@ -26,6 +26,7 @@ import { ApplicationWorkflowService } from './application/application-workflow.s
 import { ApplyMembershipDto } from './dto/apply-membership.dto';
 import { ApplyOnBehalfDto } from './dto/apply-on-behalf.dto';
 import { RejectMembershipDto } from './dto/reject-membership.dto';
+import { SettlementCorrectionDto } from './dto/settlement-correction.dto';
 import { SuspendMembershipDto } from './dto/suspend-membership.dto';
 import { TerminateMembershipDto } from './dto/terminate-membership.dto';
 import { SELF_SERVICE_CLASS_CODES } from './dto/submit-membership-form.dto';
@@ -214,6 +215,32 @@ export class MembershipController {
     @Req() req: FastifyRequest,
   ) {
     return this.lifecycle.createGroupRenewalContribution(id, requestAuditContext('ADMIN', req, actor));
+  }
+
+  // Settlement correction (HA rulings 1/2): for an ACTIVE INDIVIDUAL
+  // membership whose application fee was settled through a non-genuine
+  // (Razorpay TEST account) settlement. Creates one ordinary genuine-payment
+  // Contribution (idempotent per original) and an append-only reconciliation
+  // annotation on the original; paid via the generic payment-link route.
+  // Never changes the membership, its number, or its validity. Both
+  // permissions are required so the same actor can raise the payment link.
+  @Post(':id/settlement-correction')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('membership.lifecycle.renew', 'financial.settlement.verify')
+  async createSettlementCorrection(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SettlementCorrectionDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.lifecycle.createSettlementCorrectionContribution(
+      id,
+      dto.originalContributionId,
+      dto.reason,
+      actor.sub,
+      requestAuditContext('ADMIN', req, actor),
+    );
   }
 
   // Family / Corporate renewal: step 2 -- refused unless that renewal

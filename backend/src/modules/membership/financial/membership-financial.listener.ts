@@ -46,8 +46,11 @@ export class MembershipFinancialListener implements OnModuleInit {
   // emitter loop.
   private handleContributionCompleted(payload: FinancialEngineEventPayload): void {
     const membershipId = payload.businessReferenceId;
+    // contributionId lets the lifecycle recognise a settlement-correction
+    // Contribution (record-only); every other Contribution keeps the
+    // existing behaviour.
     this.lifecycle
-      .recordPaymentReceived(membershipId)
+      .recordPaymentReceived(membershipId, payload.contributionId)
       .catch((err: Error) =>
         this.logger.error(
           `recordPaymentReceived(${membershipId}) failed after CONTRIBUTION_COMPLETED: ${err.message}`,
@@ -58,7 +61,12 @@ export class MembershipFinancialListener implements OnModuleInit {
   private handleSettlementFailed(payload: FinancialEngineEventPayload): void {
     const membershipId = payload.businessReferenceId;
     this.lifecycle
-      .recordPaymentFailure(membershipId, payload.amountPaise)
+      .recordPaymentFailure(
+        membershipId,
+        payload.amountPaise,
+        undefined,
+        payload.contributionId,
+      )
       .catch((err: Error) =>
         this.logger.error(
           `recordPaymentFailure(${membershipId}) failed after SETTLEMENT_FAILED: ${err.message}`,

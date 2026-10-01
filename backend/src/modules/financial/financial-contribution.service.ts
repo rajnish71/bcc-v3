@@ -36,7 +36,7 @@ import {
   type SettlementProvider,
 } from './settlement-provider.interface';
 import { FinancialAuditService } from './audit/financial-audit.service';
-import type { AuditContext, FinancialAuditMetadata } from './audit/financial-audit.types';
+import type { AuditContext, FinancialAuditMetadata, SettlementClassification } from './audit/financial-audit.types';
 
 // Callers that do not (yet) thread HTTP provenance through -- e.g. Business
 // Module services invoking createContribution() -- are recorded as SYSTEM
@@ -214,6 +214,152 @@ export class FinancialContributionService {
       .selectAll()
       .where('idempotency_key', '=', idempotencyKey)
       .executeTakeFirst();
+  }
+
+  // ── Settlement reconciliation annotation (HA rulings D1/D2, Option I) ─────
+  //
+  // Read-only evidence for a COMPLETED Contribution's settlement: its single
+  // SUCCEEDED Financial Transaction, any refund row, and the PROCESSED
+  // payment.captured webhook delivery that settled it. Lets a Business
+  // Module validate a reconciliation request BEFORE it creates anything.
+  async getSettlementReconciliationEvidence(contributionId: number, executor: Kysely<DB> = db) {
+    const contribution = await this.getContribution(contributionId, executor);
+
+    const transaction = await executor
+      .selectFrom('financial_transactions')
+      .selectAll()
+      .where('contribution_id', '=', contributionId)
+      .where('outcome', '=', 'SUCCEEDED')
+      .executeTakeFirst();
+
+    const refund = await executor
+      .selectFrom('financial_refunds')
+      .select(['id', 'status'])
+      .where('contribution_id', '=', contributionId)
+      .executeTakeFirst();
+
+    let webhook: { inboxId: number; providerAccountId: string | null; providerOrderRef: string | null } | null = null;
+    if (transaction?.provider_reference) {
+      const deliveries = await executor
+        .selectFrom('settlement_webhook_inbox')
+        .select(['id', 'payload'])
+        .where('contribution_id', '=', contributionId)
+        .where('event_type', '=', 'payment.captured')
+        .where('status', '=', 'PROCESSED')
+        .execute();
+      for (const delivery of deliveries) {
+        const captured = readCapturedPayment(delivery.payload);
+        if (captured && captured.paymentId === transaction.provider_reference) {
+          webhook = {
+            inboxId: Number(delivery.id),
+            providerAccountId: captured.accountId,
+            providerOrderRef: captured.orderId,
+          };
+          break;
+        }
+      }
+    }
+
+    return { contribution, transaction: transaction ?? null, refund: refund ?? null, webhook };
+  }
+
+  // Writes exactly ONE immutable financial_audit_log row recording that a
+  // COMPLETED Contribution's settlement did not represent genuine received
+  // funds, and which later Contribution collects the genuine payment.
+  //
+  // RECORD-ONLY (PAY-001 Principle 10): the original Contribution, its
+  // Financial Transaction, Receipt, webhook inbox row and refund state are
+  // never updated or deleted, and no state transition occurs -- previous
+  // and resulting state are both COMPLETED. Whether a genuine replacement
+  // payment is still outstanding is derived from correctionContributionId's
+  // own state, never stored here.
+  //
+  // Idempotent: the original Contribution row is locked FOR UPDATE and an
+  // existing annotation for it is returned instead of writing a second one.
+  async annotateSettlementReconciliation(
+    originalContributionId: number,
+    input: {
+      classification: SettlementClassification;
+      reason: string;
+      correctionContributionId: number;
+    },
+    auditContext: AuditContext,
+  ): Promise<{ annotated: boolean }> {
+    const reason = input.reason.trim();
+    if (!reason) {
+      throw new BadRequestException('A reconciliation reason is required.');
+    }
+    if (input.correctionContributionId === originalContributionId) {
+      throw new BadRequestException('A Contribution cannot be its own correction.');
+    }
+
+    return db.transaction().execute(async (trx) => {
+      const original = await trx
+        .selectFrom('financial_contributions')
+        .select(['id', 'state'])
+        .where('id', '=', originalContributionId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!original) {
+        throw new NotFoundException(`Financial contribution ${originalContributionId} not found.`);
+      }
+
+      const existing = await trx
+        .selectFrom('financial_audit_log')
+        .select('id')
+        .where('contribution_id', '=', originalContributionId)
+        .where('event_type', '=', 'SETTLEMENT_RECONCILIATION_ANNOTATED')
+        .executeTakeFirst();
+      if (existing) return { annotated: false };
+
+      if (original.state !== 'COMPLETED') {
+        throw new ConflictException(
+          `Contribution ${originalContributionId} is in state '${original.state}'; only a COMPLETED settlement can be reconciled.`,
+        );
+      }
+
+      const correction = await trx
+        .selectFrom('financial_contributions')
+        .select('id')
+        .where('id', '=', input.correctionContributionId)
+        .executeTakeFirst();
+      if (!correction) {
+        throw new NotFoundException(`Correction contribution ${input.correctionContributionId} not found.`);
+      }
+
+      const evidence = await this.getSettlementReconciliationEvidence(originalContributionId, trx);
+      if (!evidence.transaction) {
+        throw new ConflictException(`Contribution ${originalContributionId} has no SUCCEEDED Financial Transaction.`);
+      }
+      if (evidence.refund) {
+        throw new ConflictException(`Contribution ${originalContributionId} already has a refund record.`);
+      }
+      if (!evidence.webhook) {
+        throw new ConflictException(
+          `Contribution ${originalContributionId} has no processed payment.captured delivery for its settlement.`,
+        );
+      }
+
+      await this.audit.record(trx, {
+        eventType: 'SETTLEMENT_RECONCILIATION_ANNOTATED',
+        contributionId: originalContributionId,
+        transactionId: Number(evidence.transaction.id),
+        webhookInboxId: evidence.webhook.inboxId,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        providerOrderRef: evidence.webhook.providerOrderRef,
+        providerPaymentRef: evidence.transaction.provider_reference,
+        previousState: 'COMPLETED',
+        resultingState: 'COMPLETED',
+        metadata: {
+          settlementClassification: input.classification,
+          ...(evidence.webhook.providerAccountId ? { providerAccountId: evidence.webhook.providerAccountId } : {}),
+          correctionContributionId: input.correctionContributionId,
+          reconciliationReason: reason,
+        },
+      });
+      return { annotated: true };
+    });
   }
 
   // ── State machine ─────────────────────────────────────────────────────────
@@ -1516,4 +1662,28 @@ export class FinancialContributionService {
       }
     }
   }
+}
+
+// Extracts the identifiers of a verified Razorpay payment.captured delivery
+// already stored in settlement_webhook_inbox. mysql2 returns JSON columns
+// pre-parsed; a string payload is parsed defensively. Never throws.
+function readCapturedPayment(
+  payload: unknown,
+): { paymentId: string | null; orderId: string | null; accountId: string | null } | null {
+  let event: unknown = payload;
+  if (typeof event === 'string') {
+    try {
+      event = JSON.parse(event);
+    } catch {
+      return null;
+    }
+  }
+  if (!event || typeof event !== 'object') return null;
+  const root = event as { account_id?: unknown; payload?: { payment?: { entity?: { id?: unknown; order_id?: unknown } } } };
+  const entity = root.payload?.payment?.entity;
+  return {
+    paymentId: typeof entity?.id === 'string' ? entity.id : null,
+    orderId: typeof entity?.order_id === 'string' ? entity.order_id : null,
+    accountId: typeof root.account_id === 'string' ? root.account_id : null,
+  };
 }

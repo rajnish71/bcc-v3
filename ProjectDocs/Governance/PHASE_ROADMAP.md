@@ -1,8 +1,10 @@
 # BCC Unified Platform V3 — Phase Roadmap
 
 **Status:** AUTHORITATIVE — Living Roadmap
-**Version:** 2.9
-**Last Updated:** 2026-09-30 — Membership Expansion — Family & Corporate Membership registered and deployed to production (8f26c53)
+**Version:** 3.0
+**Last Updated:** 2026-10-01 — Module 04 Activity Domain amendment applied (MODULE-04-MASTERPLAN-001 v1.1; EVENT-ARCH-001 v1.1)
+
+**Version note:** v3.0 applies the Human Authority-approved "PHASE_ROADMAP v2.9 Module 04 Amendment" (`ProjectDocs/Plans/PHASE_ROADMAP-v2.9-MODULE04-AMENDMENT (1).md`). That amendment was drafted against v2.8; the v2.9 label had already been used by the 2026-09-30 consolidation (Family & Corporate Membership), so Human Authority directed the result to be labelled v3.0. The amendment changes sequencing and module boundaries only; it does not amend MEM-006, MEM-007, MEM-008, TECH-STACK-FREEZE or any other frozen authority.
 
 ---
 
@@ -640,6 +642,8 @@ Scope includes
 - Certificate Types
 - Exhibition Types
 
+Module 04 dependency: a required Module 04 taxonomy slice (Activity/Contest/Exhibition types) is a G2 prerequisite for Contest/Exhibition development. It is a governance artifact — Claude AI drafts it; Rajnish adopts it. This roadmap records only its sequencing requirement.
+
 ---
 
 ## PHASE I — Remaining Public Pages
@@ -735,43 +739,93 @@ After completion of the V6 UI Migration, continue with the remaining platform mo
 
 ---
 
-## Module 04 — Events & Activity Management
+## Module 04 — Events & Activity Management (Activity Domain)
 
-**Status:** ✅ CORE COMPLETE — 🚧 RECONCILIATION OUTSTANDING
+**Status:** CORE IMPLEMENTED — MASTERPLAN FROZEN — G1 REMEDIATION PENDING
 
-Documentation of already-built history — not new feature development, not gated by
-Track 7. Canonical Activity model (`events` + `event_registrations` +
-`event_invite_list` + `event_volunteer_slots` + `event_volunteers`, migration 0033)
-implemented ahead of this roadmap entry; three demo activities live since F5.1
-(migration 0054).
+Authorities: `MODULE-04-MASTERPLAN-001 v1.1` (`ProjectDocs/Plans/MODULE-04-MASTERPLAN-001_v1.1.md`) and `EVENT-ARCH-001 v1.1` (`ProjectDocs/Architecture/EVENTS_ACTIVITY_MANAGEMENT_ARCHITECTURE_FREEZE_v1.0_EVENT-ARCH-001.md`). Architecture detail lives there, not in this roadmap.
 
-Architecture authority: `EVENT-ARCH-001 — Events & Activity Management Architecture`.
+The Module 04 Activity Domain comprises three separate peer implementation modules:
 
-Confirmed complete:
-- Canonical Activity + Activity Type (classification) + common lifecycle
-  (DRAFT/PUBLISHED/CANCELLED/COMPLETED)
-- Eligibility engine, registration, waitlist, volunteer subsystem, invite list
-- Communication integration (5 notification type-keys via `CommunicationService.dispatch()`)
+- **Activity Core** — the existing Module 04 `events` implementation
+- **Module 03 — Contest Engine** (Phase 2b, below)
+- **Module 07 — Exhibition Engine** (Phase 3, below)
 
-Outstanding reconciliation (implementation gaps against an already-defined
-architecture, not open architecture decisions):
-- PAY-001 wiring — `event_registrations.fee_paid_paise` to be replaced by a call to
-  the now-live `FinancialContributionService.createContribution()` (PAY-001/Module 11
-  is ✅ COMPLETE per Module 11 below — this is Module 04's consumption gap, not a
-  Financial Engine gap)
-- Canonical Photo integration — `events.banner_r2_key` to be replaced by a
-  `cover_photo_id` reference into the Canonical Photo model
-- Public `/activities` page to consume the live Events API instead of static frontend seed data
-- Admin Events frontend (backend RBAC surface already exists, unused) — note
-  ADMIN-ARCH-001 exists in the working tree (Track 0.3 above) but is untracked/
-  unadopted and scoped to Member Management only; it does not currently govern
-  the Module 04 admin surface
-- Module 04 backend test suite
-- Historical Activity record mode (see EVENT-ARCH-001 §10)
+Contest and Exhibition are not Activity subtypes and must not be implemented through `event_type`. Module numbers remain unchanged. Activity Core remains the existing `events` module; its tables, routes, `event.*` permission prefix and `EVENT_REGISTRATION` concept are not renamed.
 
-This entry supersedes no other roadmap sequencing. Module 04 remains excluded from
-the "remaining Phase 2 platform modules" line below because its core is already
-implemented.
+Activity Core — implemented foundation: canonical Activity model; lifecycle DRAFT/PUBLISHED/CANCELLED/COMPLETED; eligibility; registration; waitlist; invite list; communication integration; PAY-001 integration (✅ deployed — commits `56ce7d8`, `a96179e`, `c348405`; migrations 0107/0108); historical Activity support (migration 0102); volunteer capability (dormant). Activity/photo integration pending reconciliation (S4).
+
+### G1 — Activity Core reconciliation (= Masterplan S1 + S2)
+
+Reconciliation/safety remediation covered by the existing Module 04 reconciliation exemption (documentation and reconciliation of already-built history — not new feature development, not gated by Track 7):
+
+1. Registration time guard — reject registration at/after `starts_at`
+2. Cancellation guard — reject cancellation of COMPLETED/CANCELLED/historical Activities
+3. Admin registration-cancellation permission `event.registration.manage`
+4. Check-in guard — REGISTERED only, under Activity lock
+5. Check-in undo restores REGISTERED
+6. Correct admin cancellation notification
+7. Activity-domain audit trail with actor capture
+8. Lifecycle timestamps/actors and registration-window fields
+9. Historical/archive and unpublish guards
+10. Unit tests for the above
+
+### G2 — prerequisites for Contest/Exhibition development
+
+- Photo architecture reconciliation
+- `EligibilityPolicy` extraction and approved eligibility modes
+- In-process job runner with MySQL advisory lock (no new standing process)
+- Real MySQL integration tests in CI
+- PAY-001 `EXPIRED` and refund behaviour verification
+- R2 key-format verification for blind judging
+- Required PHASE H taxonomy slice (Claude AI drafts; Rajnish adopts)
+- EVENT-ARCH-001 v1.1 adoption
+- CONTEST-ARCH-001 adoption before Contest implementation
+- EXHIBITION-ARCH-001 adoption before Exhibition implementation
+
+### Track 7 gate
+
+Track 7 remains **🔜 FUTURE / DEFERRED** and remains the gate for new feature development. No Track 7 closure is implied by this entry.
+
+- S1, S2 and S4 are reconciliation work — permitted under the existing Module 04 reconciliation exemption.
+- S3 (governance/document adoption of EVENT-ARCH-001 v1.1 and this amendment) occurs before S4.
+- S5 new capabilities and S6 are feature/governance work — gated until Track 7 closes.
+- S5 payment-hold expiry is additionally conditional on Financial Engine expiry processing (Track 3 F-003); Module 04 must not implement a workaround.
+- S7–S9 retain Module 03 / Phase 2b placement; S10–S11 retain Module 07 / Phase 3 placement; each requires its own architecture gate.
+
+### Activity Core completion (after applicable gates)
+
+Refund-window implementation; payment-hold expiry using PAY-001 `EXPIRED`; staff assignment; attendance/NO_SHOW; waitlist promotion; date/venue change notifications; admin/self-service cancellation surfaces; exports; remaining archive/SEO/public integration as sequenced. MEM-008 Activity benefits (priority registration, configured Activity discounts, student-specific Activity eligibility) are implemented through the configurable entitlement system — no discount percentage or entitlement decision is hard-coded.
+
+### Sequencing
+
+```text
+MASTERPLAN FREEZE
+      ↓
+EVENT-ARCH-001 v1.1 + PHASE_ROADMAP amendment
+      ↓
+G1 — Activity Core safety remediation + audit/lifecycle foundation (S1 + S2)
+      ↓
+Photo reconciliation (S4)
+      ↓
+[Track 7 closure required for new feature work]
+      ↓
+Activity Core completion (S5)
+      ↓
+Cross-domain foundations (S6)
+      ↓
+CONTEST-ARCH-001 FREEZE → Contest Engine MVP — Module 03 / Phase 2b
+      ↓
+Module 12 read-API integration on its own roadmap
+      ↓
+EXHIBITION-ARCH-001 FREEZE → Exhibition Engine MVP — Module 07 / Phase 3
+```
+
+### Prohibited sequencing shortcuts
+
+Building Contest or Exhibition as `event_type`; Contest entries or Exhibition submissions in `event_registrations`; `events.engine`; generic polymorphic submission/container tables; new Activity lifecycle states; stored print derivatives; a new standing service/process for Module 04; permissions derived from membership class or recognition; entry/judging codes derived from membership numbers, user IDs or photo IDs; implementing Contest before CONTEST-ARCH-001 or Exhibition before EXHIBITION-ARCH-001 is adopted.
+
+Module 04 Activity Core remains excluded from the "remaining Phase 2 platform modules" line below because its core is already implemented.
 
 ---
 
@@ -783,9 +837,11 @@ These are the only remaining Phase 2 platform modules.
 
 ## Module 03 — Contest Management Engine
 
+**Activity Domain placement:** Contest Engine portion of the Module 04 Activity Domain (peer of Activity Core — not an Activity type). Remains **Phase 2b**.
+
 - 15+ Contest Formats
-- Submission Management
-- Eligibility Enforcement (MEM-006)
+- Submission Management (Contest entries — never Activity registrations)
+- Eligibility Enforcement (MEM-006 / MEM-008, via `EligibilityPolicy`)
 - Blind / Double Blind Judging
 - Multi-round Evaluation
 - Results Management
@@ -794,8 +850,15 @@ These are the only remaining Phase 2 platform modules.
 
 Dependencies
 
-- Module 11
+- Module 04 Activity Core foundations and G2 gate (see Module 04 above)
+- Module 11 (PAY-001 / Financial Engine)
 - Module 17
+- Photo Architecture reconciliation
+- `EligibilityPolicy`
+- PHASE H taxonomy slice
+- CONTEST-ARCH-001 adoption — Contest implementation begins only after the G2 gate and CONTEST-ARCH-001 adoption
+
+Contest ownership scope and the day-one table inventory are indicative until CONTEST-ARCH-001 is adopted (see MODULE-04-MASTERPLAN-001 v1.1 §5).
 
 ---
 
@@ -811,7 +874,8 @@ Dependencies
 
 Dependency
 
-Membership Card redesign (Module 02 revisit)
+- Consumes published Contest/Exhibition read APIs (Module 04 S9 exposes Contest read APIs only; it does not authorize Module 12 implementation — Module 12 follows its own roadmap and architecture).
+- Membership Card redesign (Module 02 revisit) — retained only for Membership Certificates where it is a legitimate dependency. The obsolete Membership Card dependency does not block Contest/Exhibition unless independently confirmed as real.
 
 ---
 
@@ -823,10 +887,11 @@ Membership Card redesign (Module 02 revisit)
 
 **Offline settlement is architecturally supported by PAY-001** (bank transfer, cash, cheque, and future offline methods). A specific offline-settlement UI/workflow (e.g. UPI transaction-ID entry, admin approve/disapprove screen) is **not yet specified or authorized** — treat as FUTURE / TO BE SPECIFIED, not current work.
 
+Module 11 remains the Financial Engine (PAY-001). No Event Fees engine is created inside Module 11: Activity registration fees are already wired as PAY-001 obligations initiated by Module 04 Activity Core (`EVENT_REGISTRATION`), and Contest Entry Fees are obligations initiated by the Contest Engine and processed through PAY-001. Provider execution remains inside the Financial Engine.
+
 Remaining expansion (not yet started):
 
-- Event Fees
-- Contest Entry Fees
+- Contest Entry Fees (initiated by Module 03, processed via PAY-001)
 - Expense Recording
 - Event P&L
 - INR Ledger (reporting/export)
@@ -842,8 +907,8 @@ Modules
 
 - Module 09 — Community & Social Engagement
 - Module 10 — Volunteer Management
-- Module 07 — Exhibition Management
-- Module 14 — Digital Archive
+- Module 07 — Exhibition Management — Exhibition Engine portion of the Module 04 Activity Domain (peer of Activity Core — not an Activity type). Remains Phase 3. EXHIBITION-ARCH-001 adoption required before implementation. Exhibition submissions are never Activity registrations; artwork sales remain outside the Exhibition Engine. Contest/Exhibition archives apply the adopted PHOTO-ARCH-001 ruling and MEM-008 privacy/exposure rules; the exact archive exposure model is resolved in the relevant architecture freeze.
+- Module 14 — Digital Archive — owns cross-domain browsing/archive navigation; Activity, Contest and Exhibition engines own their own domain archives and read APIs.
 - Module 16 — Mobile PWA
 - Migration Track D — Legacy Site Decommission
 

@@ -1188,6 +1188,12 @@ const maxYear = new Date().getFullYear() + 1;
   background:repeating-linear-gradient(-45deg,#2A2320 0,#2A2320 6px,#1A1614 6px,#1A1614 12px);
 }
 .ps-cover-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+/* global.css `img { display:block }` overrides the UA [hidden] rule; without
+   this guard the empty-src placeholders render as broken-image icons. */
+#ph-avatar-img[hidden],
+#ph-cover-img[hidden],
+#ps-avatar-thumb-img[hidden],
+#ps-cover-thumb-img[hidden] { display: none; }
 
 .ps-url-row {
   display:flex; align-items:center; gap:8px; flex-wrap:wrap;

@@ -471,6 +471,10 @@ const jsonLd = displayName
   color: rgba(255,255,255,0.9);
 }
 .ph-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+/* global.css `img { display:block }` overrides the UA [hidden] rule; without
+   this guard the empty-src placeholders render as broken-image icons. */
+.cover-img[hidden],
+.ph-avatar-img[hidden] { display: none; }
 
 /* Identity */
 .ph-identity { flex: 1; padding-bottom: 4px; min-width: 200px; }

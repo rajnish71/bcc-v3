@@ -38,6 +38,7 @@ const PUBLIC_CLASS_MASK: Record<string, string> = {
   BASIC_MEMBER:      'basic',
   STUDENT_MEMBER:    'student',
   INDIVIDUAL_MEMBER: 'individual',
+  INDIVIDUAL_BIENNIAL: 'individual', // MEM-008 §5: 2-year term of Individual, same public class
   FULL_MEMBER:       'full',
   LIFE_MEMBER:       'life',
   PATRON_MEMBER:     'patron',

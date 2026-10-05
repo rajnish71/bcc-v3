@@ -41,6 +41,7 @@ const PUBLIC_CLASS_MASK: Record<string, string> = {
   LIFE_MEMBER:       'life',
   PATRON_MEMBER:     'patron',
   FOUNDING_MEMBER:   'founding',
+  LEGACY_MEMBER:     'legacy',   // MEM-008 §2: Legacy Member Badge / Legacy Recognition
 };
 
 // Recognition display labels

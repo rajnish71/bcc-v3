@@ -15,6 +15,9 @@
 //   GET    /api/v1/gallery/photos                  list own photos
 //   PATCH  /api/v1/gallery/photos/:uuid            update metadata
 //   DELETE /api/v1/gallery/photos/:uuid            soft delete
+//
+// SUPER ADMIN (AccessTokenGuard + RbacGuard, gallery.photo.hard_delete):
+//   DELETE /api/v1/gallery/admin/photos/:id      Hard Delete (PHOTO-ARCH-002 P13)
 //   POST   /api/v1/gallery/photos/:uuid/tags/:tagId   assign tag
 //   DELETE /api/v1/gallery/photos/:uuid/tags/:tagId   remove tag
 //   GET    /api/v1/gallery/photos/:uuid/tags          list photo's tags
@@ -45,6 +48,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { GalleryService } from './gallery.service';
+import { PhotoHardDeleteService } from './photo-hard-delete.service';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
 import { RbacGuard } from '../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../identity/rbac/permissions.decorator';
@@ -56,7 +60,10 @@ import { HERO_DESTINATIONS } from './hero-destinations.config';
 
 @Controller('api/v1/gallery')
 export class GalleryController {
-  constructor(private readonly gallery: GalleryService) {}
+  constructor(
+    private readonly gallery: GalleryService,
+    private readonly hardDeleteSvc: PhotoHardDeleteService,
+  ) {}
 
   // =========================================================================
   // PUBLIC -- no auth required
@@ -371,6 +378,19 @@ export class GalleryController {
   @Delete('photos/:uuid')
   async deletePhoto(@Param('uuid') uuid: string, @Req() req: any) {
     await this.gallery.deletePhoto(req.user.sub, uuid);
+  }
+
+  /**
+   * Hard Delete a Canonical Photo by its platform ID -- permanent and
+   * irreversible (PHOTO-ARCH-002 Principle 13). Permission granted to the
+   * Super Admin role only (migration 0109). Never returns storage keys.
+   */
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('gallery.photo.hard_delete')
+  @HttpCode(HttpStatus.OK)
+  @Delete('admin/photos/:id')
+  async hardDeletePhoto(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    return this.hardDeleteSvc.hardDelete(req.user.sub, id);
   }
 
   // =========================================================================

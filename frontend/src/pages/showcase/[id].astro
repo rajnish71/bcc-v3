@@ -1613,7 +1613,55 @@ const ogImageAlt = photo?.title
 
   function adminHide()   { if (confirm('Hide this photo from public view?')) alert('Photo hidden (stub — backend action required).'); }
   function adminFlag()   { alert('Photo flagged for review (stub).'); }
-  function adminDelete() { if (confirm('Permanently delete this photo? This cannot be undone.')) alert('Photo deletion (stub — backend action required).'); }
+  // Hard Delete (PHOTO-ARCH-002 Principle 13). Authorization is enforced
+  // server-side (gallery.photo.hard_delete, Super Admin only); this panel's
+  // visibility is a convenience, not a gate.
+  let adminDeleteInFlight = false;
+  async function adminDelete() {
+    if (adminDeleteInFlight) return;
+    const title = photoData?.title || 'this photo';
+    if (!confirm(
+      `Permanently delete "${title}"?\n\n` +
+      'The original file and every record of this photograph (comments, reactions, tags, album and editorial placements) ' +
+      'will be removed. This is irreversible — it cannot be recovered.'
+    )) return;
+    if (prompt('Type DELETE to confirm permanent deletion.') !== 'DELETE') {
+      alert('Deletion cancelled.');
+      return;
+    }
+    const btn = document.querySelector('.btn-admin-delete');
+    adminDeleteInFlight = true;
+    if (btn) { btn.setAttribute('disabled', 'true'); btn.textContent = 'Deleting…'; }
+    try {
+      const res = await fetch(`${API}/gallery/admin/photos/${encodeURIComponent(photoId)}`, {
+        method: 'DELETE',
+        headers: tok() ? { 'Authorization': `Bearer ${tok()}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.master_asset_deleted === false
+          ? 'Photo deleted. The stored file could not be removed and has been logged for cleanup.'
+          : 'Photo permanently deleted.');
+        window.location.href = '/showcase/';
+        return;
+      }
+      const body = await res.json().catch(() => ({}));
+      const detail = typeof body.message === 'string' ? body.message : '';
+      const messages = {
+        400: 'Invalid photo reference.',
+        401: 'Your session has expired. Please sign in again.',
+        403: 'Only a Super Admin can permanently delete photos.',
+        404: 'This photo no longer exists — it may already have been deleted.',
+        409: detail || 'This photo cannot be deleted because its file is in use elsewhere.',
+      };
+      alert(messages[res.status] || 'Deletion failed due to a server error. Nothing was deleted — please try again.');
+    } catch {
+      alert('Network error — the deletion request could not be sent. Please try again.');
+    } finally {
+      adminDeleteInFlight = false;
+      if (btn) { btn.removeAttribute('disabled'); btn.textContent = 'Delete Photo (irreversible)'; }
+    }
+  }
   window.adminHide   = adminHide;
   window.adminFlag   = adminFlag;
   window.adminDelete = adminDelete;

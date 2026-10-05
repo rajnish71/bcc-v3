@@ -149,12 +149,9 @@ describe('confirmUpload() oversize-path wiring (real source inspection)', () => 
     expect(CONFIRM_UPLOAD_SRC).toMatch(/exceeds the 20\s?MB limit/i);
   });
 
-  it('does not synchronously delete the R2 object on the oversize path (R2Service exposes no delete method)', () => {
-    const r2ServiceSrc = readFileSync(
-      join(__dirname, '../shared/storage/r2.service.ts'),
-      'utf8',
-    );
-    expect(r2ServiceSrc).not.toMatch(/async\s+delete\w*\(/i);
+  // R2Service.deleteObject() now exists for Super Admin Hard Delete
+  // (photo-hard-delete.service.ts); the oversize path must still not use it.
+  it('does not synchronously delete the R2 object on the oversize path', () => {
     expect(CONFIRM_UPLOAD_SRC).not.toMatch(/\.delete(Object)?\(/i);
   });
 

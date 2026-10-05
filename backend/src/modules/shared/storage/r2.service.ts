@@ -14,7 +14,7 @@
 // configured yet; only document upload endpoints hard-require it.
 
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const PRESIGN_TTL_SECONDS = 15 * 60;
@@ -87,5 +87,14 @@ export class R2Service {
       if (status === 404) return { exists: false, sizeBytes: null };
       throw err;
     }
+  }
+
+  // Permanent removal of one object (PHOTO-ARCH-002 Principle 13, Hard
+  // Delete). S3/R2 DeleteObject is idempotent: deleting a key that is
+  // already gone succeeds, so a retry after a partial failure is safe.
+  // Callers resolve the objectKey server-side -- never from client input.
+  async deleteObject(objectKey: string): Promise<void> {
+    const client = this.ensureClient();
+    await client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: objectKey }));
   }
 }

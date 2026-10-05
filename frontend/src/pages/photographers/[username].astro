@@ -1308,7 +1308,16 @@ async function loadProfile() {
   if (profile.coverUrl) {
     const coverImg = document.getElementById('cover-img') as HTMLImageElement | null;
     const coverDefault = document.getElementById('cover-default');
-    if (coverImg) { coverImg.src = profile.coverUrl; coverImg.hidden = false; }
+    if (coverImg) {
+      // Failed load → restore the striped default. `once` prevents a loop.
+      coverImg.addEventListener('error', () => {
+        coverImg.hidden = true;
+        coverImg.removeAttribute('src');
+        if (coverDefault) coverDefault.style.display = '';
+      }, { once: true });
+      coverImg.src = profile.coverUrl;
+      coverImg.hidden = false;
+    }
     if (coverDefault) coverDefault.style.display = 'none';
   }
 

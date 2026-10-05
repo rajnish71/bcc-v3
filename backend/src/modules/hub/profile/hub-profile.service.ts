@@ -7,7 +7,7 @@ import {
 import { randomUUID } from 'crypto';
 import { db } from '../../../database/db';
 import { R2Service } from '../../shared/storage/r2.service';
-import { ikUrl, extFromMime } from '../../shared/storage/imagekit.util';
+import { ikUrl, extFromMime, COVER_DELIVERY_TR, AVATAR_DELIVERY_TR } from '../../shared/storage/imagekit.util';
 import type { UpdateProfileDto } from './dto/update-profile.dto';
 import type { UpdateSocialDto } from './dto/update-social.dto';
 import type { UpdateGearDto } from './dto/update-gear.dto';
@@ -52,7 +52,7 @@ export class HubProfileService {
     // Avatar — use ORIGINAL variant; fall back to THUMB
     const avatar = await db
       .selectFrom('user_avatars')
-      .select(['imagekit_url', 'size_variant'])
+      .select(['r2_key', 'size_variant'])
       .where('user_id', '=', userId)
       .where(eb => eb.or([
         eb('size_variant', '=', 'ORIGINAL'),
@@ -69,7 +69,7 @@ export class HubProfileService {
     // Active cover
     const cover = await db
       .selectFrom('user_cover_photos')
-      .select(['imagekit_url'])
+      .select(['r2_key'])
       .where('user_id', '=', userId)
       .where('is_active', '=', true)
       .executeTakeFirst();
@@ -170,8 +170,8 @@ export class HubProfileService {
     return {
       // Identity
       username: user.username,
-      avatarUrl: avatar?.imagekit_url ?? null,
-      coverUrl: cover?.imagekit_url ?? null,
+      avatarUrl: avatar ? ikUrl(avatar.r2_key, AVATAR_DELIVERY_TR) : null,
+      coverUrl: cover ? ikUrl(cover.r2_key, COVER_DELIVERY_TR) : null,
       membershipTier: membership?.class_code ?? null,
       membershipNumber: membership?.membership_number ?? null,
       membershipNumberDisplay,
@@ -459,7 +459,7 @@ export class HubProfileService {
       })
       .execute();
 
-    return { avatarUrl: imagekitUrl };
+    return { avatarUrl: ikUrl(r2Key, AVATAR_DELIVERY_TR) };
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -502,6 +502,6 @@ export class HubProfileService {
       })
       .execute();
 
-    return { coverUrl: imagekitUrl };
+    return { coverUrl: ikUrl(r2Key, COVER_DELIVERY_TR) };
   }
 }

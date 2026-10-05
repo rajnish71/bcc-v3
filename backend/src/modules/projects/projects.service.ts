@@ -9,12 +9,13 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 import { db } from '../../database/db';
+import { ikUrl, AVATAR_DELIVERY_TR } from '../shared/storage/imagekit.util';
 
 interface ContributorRow {
   user_id: string;
   username: string | null;
   full_name: string;
-  avatar_url: string | null;
+  avatar_r2_key: string | null;
   photo_count: string;
 }
 
@@ -87,7 +88,7 @@ export class ProjectsService {
         u.id                   AS user_id,
         u.username,
         u.full_name,
-        av.imagekit_url        AS avatar_url,
+        av.r2_key              AS avatar_r2_key,
         COUNT(DISTINCT p.id)   AS photo_count
       FROM users u
       JOIN photos p              ON p.owner_user_id = u.id
@@ -98,7 +99,7 @@ export class ProjectsService {
       WHERE pt.tag_key  = ${projectTag}
         AND p.status     = 'ACTIVE'
         AND p.visibility = 'PUBLIC'
-      GROUP BY u.id, u.username, u.full_name, av.imagekit_url
+      GROUP BY u.id, u.username, u.full_name, av.r2_key
       ORDER BY RAND()
     `.execute(db);
 
@@ -107,7 +108,7 @@ export class ProjectsService {
         userId:     Number(r.user_id),
         username:   r.username ?? null,
         name:       r.full_name,
-        avatarUrl:  r.avatar_url ?? null,
+        avatarUrl:  r.avatar_r2_key ? ikUrl(r.avatar_r2_key, AVATAR_DELIVERY_TR) : null,
         photoCount: Number(r.photo_count),
       })),
     };

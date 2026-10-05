@@ -1819,9 +1819,22 @@ function showCover(src: string) {
   const stripeSmall = document.getElementById('ps-cover-stripe-sm');
   const imgSmall = document.getElementById('ps-cover-thumb-img') as HTMLImageElement | null;
   if (stripe) stripe.style.display = 'none';
-  if (img) { img.src = src; img.hidden = false; }
+  // ph-cover-stripe is a permanently hidden stub — never restore it.
+  if (img) { onCoverError(img, null); img.src = src; img.hidden = false; }
   if (stripeSmall) stripeSmall.style.display = 'none';
-  if (imgSmall) { imgSmall.src = src; imgSmall.hidden = false; }
+  if (imgSmall) { onCoverError(imgSmall, stripeSmall); imgSmall.src = src; imgSmall.hidden = false; }
+}
+
+// Failed cover load → restore the striped default. Replaces any earlier
+// handler (showCover runs again after each upload); the handler clears itself
+// before touching src, so it can never loop.
+function onCoverError(img: HTMLImageElement, stripe: HTMLElement | null) {
+  img.onerror = () => {
+    img.onerror = null;
+    img.hidden = true;
+    img.removeAttribute('src');
+    if (stripe) stripe.style.display = '';
+  };
 }
 
 // ── Tab navigation + IntersectionObserver ─────────────────────────────────

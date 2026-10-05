@@ -74,6 +74,19 @@ export function watermarkedDisplay(r2Key: string): string {
 }
 
 /**
+ * Delivery transforms for member profile media (cover banner, avatar).
+ *
+ * ImageKit refuses to deliver an untransformed original above 25 MP
+ * (HTTP 400, ik-error: ELIMIT) even when the file is well under the upload
+ * byte limit -- e.g. an 8256x4640 cover. A bounded resize is always served.
+ * c-at_max preserves the whole image and its aspect ratio (no crop, no
+ * upscale). The DB keeps the canonical untransformed URL; apply these at
+ * response time via ikUrl(r2Key, ...).
+ */
+export const COVER_DELIVERY_TR  = 'w-1920,c-at_max,q-80';
+export const AVATAR_DELIVERY_TR = 'w-800,h-800,c-at_max,q-80';
+
+/**
  * R2 object key for a member-uploaded photo.
  * Format: photos/{userId}/{year}/{month}/{uuid}.{ext}
  *

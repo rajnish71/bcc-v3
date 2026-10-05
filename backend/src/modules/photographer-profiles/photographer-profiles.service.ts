@@ -23,6 +23,7 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../../database/db';
+import { ikUrl, COVER_DELIVERY_TR, AVATAR_DELIVERY_TR } from '../shared/storage/imagekit.util';
 import { PortfolioExposureService, exposedPhotoPredicate } from '../gallery/portfolio-exposure.service';
 import type { ExposureSet } from '../gallery/portfolio-exposure.policy';
 
@@ -209,7 +210,7 @@ export class PhotographerProfilesService {
         'u.city',
         'm.join_year',
         'mc.code as class_code',
-        'av.imagekit_url as avatar_url',
+        'av.r2_key as avatar_r2_key',
       ])
       .orderBy(
         opts.sort === 'joined' ? 'm.join_year' : 'u.full_name',
@@ -270,7 +271,7 @@ export class PhotographerProfilesService {
         memberClass: maskClass(r.class_code),
         memberSince: r.join_year ?? null,
         photoCount:  photoMap[r.id] ?? 0,
-        avatarUrl:   r.avatar_url ?? null,
+        avatarUrl:   r.avatar_r2_key ? ikUrl(r.avatar_r2_key, AVATAR_DELIVERY_TR) : null,
       }));
 
     if (photoSort) {
@@ -325,7 +326,7 @@ export class PhotographerProfilesService {
         'm.join_year',
         'm.membership_number',
         'mc.code as class_code',
-        'av.imagekit_url as avatar_url',
+        'av.r2_key as avatar_r2_key',
       ])
       .executeTakeFirst();
 
@@ -355,7 +356,7 @@ export class PhotographerProfilesService {
     // Cover photo
     const cover = await db
       .selectFrom('user_cover_photos')
-      .select(['imagekit_url'])
+      .select(['r2_key'])
       .where('user_id', '=', user.id)
       .where('is_active', '=', true)
       .executeTakeFirst();
@@ -416,8 +417,8 @@ export class PhotographerProfilesService {
         memberClass:           maskClass(user.class_code),
         memberSince:           user.join_year ?? null,
         photoCount:            Number(countRow?.cnt ?? 0),
-        avatarUrl:             user.avatar_url ?? null,
-        coverUrl:              cover?.imagekit_url ?? null,
+        avatarUrl:             user.avatar_r2_key ? ikUrl(user.avatar_r2_key, AVATAR_DELIVERY_TR) : null,
+        coverUrl:              cover ? ikUrl(cover.r2_key, COVER_DELIVERY_TR) : null,
         websiteUrl:            user.website_url ?? null,
         photographyGenres:     (user.photography_genres as unknown as string[] | null) ?? [],
         areasOfExpertise:      (user.areas_of_expertise as unknown as string[] | null) ?? [],

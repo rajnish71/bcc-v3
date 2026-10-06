@@ -17,9 +17,24 @@
 //   • Retires any outstanding temp identifier for the membership.
 //   • Rolls back entirely on any failure (caller's transaction).
 //
-// Membership number format (MEM-007 §5):
+// Membership number format:
 //   'BCC' || joinYear || LPAD(joinMonth, 2, '0') || LPAD(serial, 5, '0')
-//   e.g. BCC20260800053  (serial 53, activated August 2026)
+//   e.g. BCC20261000053  (serial 53, application created October 2026)
+//
+// Where YYYY/MM comes from -- three distinct authorities:
+//   • MEM-007 §5 defines the format and its "original joining year/month"
+//     semantics for HISTORICAL numbering normalization (now CLOSED). It does
+//     not itself define the operational source of YYYY/MM.
+//   • HA Decision B3 (2026-10-06): for new individual membership
+//     registrations after historical numbering closed, YYYY/MM is derived
+//     from the membership registration/application creation date
+//     (memberships.applied_at) -- not account creation, approval, or
+//     activation. resolveNumberPrefix() (number-prefix.ts) is the single
+//     derivation.
+//   • MEM-007 §8 still governs WHEN the number is allocated: as the final
+//     step of activation (this method, called from activate()).
+//   Once numbered, join_year / join_month are frozen with the number
+//   (trg_membership_number_immutable, migration 0111).
 //
 // Historical migration note:
 //   Serials 1–52 were bulk-assigned by migration 0078. The pool counter

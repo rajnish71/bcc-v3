@@ -38,6 +38,7 @@ import type { AuditContext } from '../../financial/audit/financial-audit.types';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
+import { resolveNumberPrefix } from '../numbering/number-prefix';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 import { assertNoBlockingIndividualMembership, isRelease1RenewalClass } from '../renewal/renewal-policy';
 import { expireClosedRenewalOperations } from '../renewal/renewal-obligation-expiry';
@@ -787,16 +788,16 @@ export class MembershipLifecycleService {
   //
   // MEM-007 MP-004: assigns a permanent sequential membership number
   // atomically within the same transaction as the lifecycle transition.
-  // joinYear / joinMonth default to the current calendar date when not
-  // supplied; callers may override for administrative back-dating.
+  // MEM-007 §8: allocation happens here, as the final step of activation.
+  // HA Decision B3: the number's YYYY/MM is the membership registration/
+  // application creation date (applied_at) -- never the approval or
+  // activation date -- and no caller may override it.
   // ======================================================================
   async activate(
     membershipId: number,
     actor: { type: 'SYSTEM' | 'ADMIN'; userId?: number | null },
     opts?: {
       paymentId?: number | null;
-      joinYear?: number;
-      joinMonth?: number;
       // Explicit one-off validity override for an authorized administrative
       // grant (e.g. a time-boxed complimentary period) that must not reuse
       // the class's normal renewal_term_months. Every other membership keeps
@@ -825,8 +826,13 @@ export class MembershipLifecycleService {
     }
 
     const now = new Date();
-    const joinYear  = opts?.joinYear  ?? now.getFullYear();
-    const joinMonth = opts?.joinMonth ?? (now.getMonth() + 1);
+    // HA B3 governs new INDIVIDUAL registrations. A Family/Corporate member's
+    // own record keeps its pre-B3 behaviour (activation date) unchanged until
+    // the Human Authority rules on its YYYY/MM source -- its applied_at is the
+    // seat-acceptance time, not a registration of its own.
+    const { joinYear, joinMonth } = isGroupMember
+      ? { joinYear: now.getFullYear(), joinMonth: now.getMonth() + 1 }
+      : resolveNumberPrefix(membership);
 
     // A group member's validity is the group relationship's term (resolved
     // inside the transaction below, where the group row is locked); every

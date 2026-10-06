@@ -7,8 +7,9 @@
  *
  * OVERRIDES (take precedence over wireframe):
  *   1. Name fields (Title/First/Middle/Last) are READ-ONLY — edit via Account Settings.
- *   2. year_joined_bcc is TEMPORARILY USER-EDITABLE (V6 13 Amendment 002).
- *      Will revert to membership application date after full platform launch.
+ *   2. year_joined_bcc is a USER-EDITABLE, NON-AUTHORITATIVE self-declaration
+ *      (V6 13 Amendment 002). It never writes memberships.join_year / tenure /
+ *      Membership Number (HA B1–B3, 2026-10-06).
  *   3. Public URL prefix: bcc.bhopal.info/photographers/{username}
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
@@ -412,7 +413,7 @@ const maxYear = new Date().getFullYear() + 1;
         <label class="ps-label" for="field-year-joined">Year Joined BCC</label>
         <input class="form-input" type="number" id="field-year-joined" name="yearJoinedBcc"
           min="1990" max={String(maxYear)} placeholder="e.g. 2019" />
-        <div class="ps-hint">Temporary — will be replaced by membership application date after full launch.</div>
+        <div class="ps-hint">Self-declared profile detail. It does not change your membership record, Membership Number or “Member since”.</div>
       </div>
     </div>
 

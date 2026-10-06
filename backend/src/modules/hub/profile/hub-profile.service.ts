@@ -19,6 +19,7 @@ const PROTECTED_FIELDS = new Set([
   'username', 'email', 'full_name', 'name_title', 'first_name',
   'middle_name', 'last_name',
   'membership_number', 'membership_tier',
+  'join_year', 'join_month', 'number_serial', 'number_assigned_at',
 ]);
 
 @Injectable()
@@ -323,16 +324,12 @@ export class HubProfileService {
       .where('id', '=', userId)
       .execute();
 
-    // Sync yearJoinedBcc → memberships.join_year (temporary amendment — Phase E migration window).
-    // memberships.join_year is what the public photographer profile displays as "Member since YYYY".
-    if (dto.yearJoinedBcc !== undefined && dto.yearJoinedBcc !== null) {
-      await db
-        .updateTable('memberships')
-        .set({ join_year: dto.yearJoinedBcc } as any)
-        .where('user_id', '=', userId)
-        .where('lifecycle_state', '=', 'ACTIVE')
-        .execute();
-    }
+    // Membership date ownership (HA B1–B3): profile save is an identity/profile
+    // operation only and NEVER writes the memberships table. users.year_joined_bcc
+    // is a non-authoritative self-declaration; it must not influence
+    // memberships.join_year / join_month, the Membership Number, tenure, or
+    // public "Member since". Those are owned by the membership lifecycle and
+    // MembershipNumberingService.
 
     return { saved: true, savedAt: new Date().toISOString() };
   }

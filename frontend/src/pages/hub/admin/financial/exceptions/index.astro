@@ -1,0 +1,86 @@
+---
+/**
+ * hub/admin/financial/exceptions/index.astro — Exceptions (Track 4, READ ONLY)
+ * Route: /hub/admin/financial/exceptions/
+ *
+ * Each category is a canonical PAY-001 state predicate — no heuristic
+ * "stuck"/"delayed" thresholds. Awaiting-settlement overdue is exactly
+ * state = AWAITING_SETTLEMENT and expires_at < now. Data:
+ * GET /api/v1/financial/admin/exceptions?category=…
+ */
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import '../../../../../styles/financial-admin.css';
+
+const CATEGORIES: Array<[string, string]> = [
+  ['AWAITING_SETTLEMENT_OVERDUE', 'Awaiting settlement — past expiry'],
+  ['SETTLEMENT_IN_PROGRESS', 'Settlement in progress'],
+  ['FAILED', 'Failed'],
+  ['ABANDONED', 'Abandoned'],
+  ['REFUND_PROCESSING', 'Refund processing'],
+  ['REFUND_FAILED', 'Refund failed'],
+  ['EVIDENCE_PENDING_REVIEW', 'Evidence pending review'],
+];
+---
+
+<HubLayout title="Financial Exceptions" description="Read-only financial exception visibility.">
+  <div class="fin-admin">
+    <section class="admin-section">
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial</div>
+      <h2 class="section-title">Exceptions</h2>
+      <p class="section-hint">Contributions currently in a canonical exception state. Read-only — resolution happens through the existing operational workflows.</p>
+
+      <form class="filter-bar" id="x-filters">
+        <label>Category
+          <select name="category" id="x-category">
+            {CATEGORIES.map(([value, text]) => <option value={value}>{text}</option>)}
+          </select>
+        </label>
+        <button type="submit" class="btn-action">Show</button>
+      </form>
+
+      <div id="x-loading" class="state-loading">Loading exceptions…</div>
+      <div id="x-error" class="state-error" hidden></div>
+      <div id="x-table"></div>
+      <div id="x-pager" class="pager"></div>
+    </section>
+  </div>
+</HubLayout>
+
+<script>
+  import { getJson, contributionsTable, renderPager, showError, type ContributionItem, type Page } from '../../../../../lib/financial-admin';
+
+  const select = document.getElementById('x-category') as HTMLSelectElement;
+  const params = new URLSearchParams(window.location.search);
+  const category = params.get('category') ?? 'AWAITING_SETTLEMENT_OVERDUE';
+  select.value = category;
+
+  async function load(page: number) {
+    const loading = document.getElementById('x-loading')!;
+    const table = document.getElementById('x-table')!;
+    loading.hidden = false;
+    try {
+      const data = await getJson<Page<ContributionItem> & { counts: Record<string, number> }>(
+        `/exceptions?${new URLSearchParams({ category, page: String(page) })}`,
+      );
+      // Append the live count to each category option.
+      for (const opt of Array.from(select.options)) {
+        const n = data.counts[opt.value];
+        if (n !== undefined) opt.textContent = `${opt.textContent?.replace(/ \(\d+\)$/, '')} (${n})`;
+      }
+      table.innerHTML = contributionsTable(data.items);
+      renderPager(document.getElementById('x-pager')!, data, load);
+    } catch (err) {
+      table.innerHTML = '';
+      showError(document.getElementById('x-error')!, err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+
+  document.getElementById('x-filters')!.addEventListener('submit', (e) => {
+    e.preventDefault();
+    window.location.search = `category=${encodeURIComponent(select.value)}`;
+  });
+
+  load(1);
+</script>

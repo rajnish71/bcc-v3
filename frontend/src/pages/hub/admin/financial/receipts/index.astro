@@ -1,0 +1,64 @@
+---
+/**
+ * hub/admin/financial/receipts/index.astro — Receipts (Track 4, READ ONLY)
+ * Route: /hub/admin/financial/receipts/
+ *
+ * Lists issued receipts (one per completed contribution). Contributions
+ * with no receipt do not appear here and are shown as "No receipt issued"
+ * on the Contributions views. Data: GET /api/v1/financial/admin/receipts.
+ */
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import '../../../../../styles/financial-admin.css';
+---
+
+<HubLayout title="Receipts" description="Read-only receipt visibility.">
+  <div class="fin-admin">
+    <section class="admin-section">
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial</div>
+      <h2 class="section-title">Receipts</h2>
+      <p class="section-hint">Receipts issued on completed contributions.</p>
+      <div id="rc-loading" class="state-loading">Loading receipts…</div>
+      <div id="rc-error" class="state-error" hidden></div>
+      <div id="rc-table"></div>
+      <div id="rc-pager" class="pager"></div>
+    </section>
+  </div>
+</HubLayout>
+
+<script>
+  import { getJson, esc, money, dateTime, contributorCell, renderPager, showError, DETAIL_HREF, type Contributor, type Page } from '../../../../../lib/financial-admin';
+
+  interface ReceiptItem {
+    reference: string; receiptNumber: string; amountPaise: number; currency: string; issuedAt: string | null;
+    contribution: { reference: string; businessModule: string };
+    contributor: Contributor;
+  }
+
+  async function load(page: number) {
+    const loading = document.getElementById('rc-loading')!;
+    const table = document.getElementById('rc-table')!;
+    loading.hidden = false;
+    try {
+      const data = await getJson<Page<ReceiptItem>>(`/receipts?page=${page}`);
+      table.innerHTML = data.items.length
+        ? `<div class="data-table-wrap"><table class="data-table">
+            <thead><tr><th>Receipt number</th><th>Contributor</th><th>Module</th><th>Amount</th><th>Issued</th><th>Contribution</th></tr></thead>
+            <tbody>${data.items.map((r) => `<tr>
+              <td class="mono">${esc(r.receiptNumber)}</td>
+              <td>${contributorCell(r.contributor)}</td>
+              <td><span class="tag-pill">${esc(r.contribution.businessModule)}</span></td>
+              <td class="mono num">${esc(money(r.amountPaise, r.currency))}</td>
+              <td class="mono">${esc(dateTime(r.issuedAt))}</td>
+              <td><a class="mono ref-link" href="${DETAIL_HREF}?ref=${encodeURIComponent(r.contribution.reference)}">${esc(r.contribution.reference.slice(0, 8))}…</a></td>
+            </tr>`).join('')}</tbody></table></div>`
+        : '<div class="state-empty">No receipts issued.</div>';
+      renderPager(document.getElementById('rc-pager')!, data, load);
+    } catch (err) {
+      table.innerHTML = '';
+      showError(document.getElementById('rc-error')!, err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+  load(1);
+</script>

@@ -1,0 +1,99 @@
+---
+/**
+ * hub/admin/financial/refunds/index.astro — Refund Visibility (Track 4, READ ONLY)
+ * Route: /hub/admin/financial/refunds/
+ *
+ * Lists financial_refunds records exactly as stored (one per contribution).
+ * No refund initiation, approval, retry or provider call exists on this
+ * page. Data: GET /api/v1/financial/admin/refunds.
+ */
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import '../../../../../styles/financial-admin.css';
+
+const STATUSES = ['REQUESTED', 'PROCESSING', 'COMPLETED', 'FAILED'];
+---
+
+<HubLayout title="Refunds" description="Read-only refund visibility.">
+  <div class="fin-admin">
+    <section class="admin-section">
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial</div>
+      <h2 class="section-title">Refunds</h2>
+      <p class="section-hint">Read-only view of recorded refunds.</p>
+
+      <form class="filter-bar" id="r-filters">
+        <label>Status
+          <select name="status">
+            <option value="">All statuses</option>
+            {STATUSES.map((s) => <option value={s}>{s}</option>)}
+          </select>
+        </label>
+        <button type="submit" class="btn-action">Apply</button>
+      </form>
+
+      <div id="r-loading" class="state-loading">Loading refunds…</div>
+      <div id="r-error" class="state-error" hidden></div>
+      <div id="r-table"></div>
+      <div id="r-pager" class="pager"></div>
+    </section>
+  </div>
+</HubLayout>
+
+<script>
+  import { getJson, esc, money, dateTime, pill, contributorCell, renderPager, showError, DETAIL_HREF, type Contributor, type Page } from '../../../../../lib/financial-admin';
+
+  interface RefundItem {
+    reference: string; amountPaise: number; currency: string; provider: string | null; providerReference: string | null;
+    status: string; reason: string | null; failureReason: string | null; requestedByType: string;
+    requestedAt: string | null; resolvedAt: string | null;
+    contribution: { reference: string; businessModule: string; state: string };
+    contributor: Contributor;
+  }
+
+  const form = document.getElementById('r-filters') as HTMLFormElement;
+  const params = new URLSearchParams(window.location.search);
+  (form.elements.namedItem('status') as HTMLSelectElement).value = params.get('status') ?? '';
+  const dash = '<span class="muted">—</span>';
+
+  async function load(page: number) {
+    const loading = document.getElementById('r-loading')!;
+    const table = document.getElementById('r-table')!;
+    loading.hidden = false;
+    try {
+      const qs = new URLSearchParams({ page: String(page) });
+      const status = params.get('status');
+      if (status) qs.set('status', status);
+      const data = await getJson<Page<RefundItem>>(`/refunds?${qs}`);
+      table.innerHTML = data.items.length
+        ? `<div class="data-table-wrap"><table class="data-table">
+            <thead><tr><th>Contribution</th><th>Contributor</th><th>Module</th><th>Amount</th><th>Status</th>
+              <th>Provider</th><th>Requested by</th><th>Requested</th><th>Resolved</th><th>Failure reason</th></tr></thead>
+            <tbody>${data.items.map((r) => `<tr>
+              <td><a class="mono ref-link" href="${DETAIL_HREF}?ref=${encodeURIComponent(r.contribution.reference)}">${esc(r.contribution.reference.slice(0, 8))}…</a><div class="cell-sub">${pill(r.contribution.state)}</div></td>
+              <td>${contributorCell(r.contributor)}</td>
+              <td><span class="tag-pill">${esc(r.contribution.businessModule)}</span></td>
+              <td class="mono num">${esc(money(r.amountPaise, r.currency))}</td>
+              <td>${pill(r.status)}</td>
+              <td>${r.provider ? esc(r.provider) : dash}${r.providerReference ? `<div class="cell-sub mono">${esc(r.providerReference)}</div>` : ''}</td>
+              <td>${esc(r.requestedByType)}</td>
+              <td class="mono">${esc(dateTime(r.requestedAt))}</td>
+              <td class="mono">${esc(dateTime(r.resolvedAt))}</td>
+              <td>${r.failureReason ? esc(r.failureReason) : dash}</td>
+            </tr>`).join('')}</tbody></table></div>`
+        : '<div class="state-empty">No refunds recorded.</div>';
+      renderPager(document.getElementById('r-pager')!, data, load);
+    } catch (err) {
+      table.innerHTML = '';
+      showError(document.getElementById('r-error')!, err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const s = String(new FormData(form).get('status') ?? '');
+    window.location.search = s ? `status=${encodeURIComponent(s)}` : '';
+  });
+
+  load(1);
+</script>

@@ -1,0 +1,124 @@
+---
+/**
+ * hub/admin/financial/contributions/index.astro — Contributions (Track 4, READ ONLY)
+ * Route: /hub/admin/financial/contributions/
+ *
+ * Paginated Financial Contributions, filterable by canonical state and by
+ * business_module (options come from the overview API — never hard-coded).
+ * With ?q= the page shows Unified Financial Search results instead
+ * (GET /api/v1/financial/admin/search — fixed fields only).
+ */
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import '../../../../../styles/financial-admin.css';
+
+const STATES = [
+  'CREATED', 'AWAITING_SETTLEMENT', 'SETTLEMENT_IN_PROGRESS', 'SETTLED', 'COMPLETED',
+  'FAILED', 'CANCELLED', 'EXPIRED', 'ABANDONED', 'REFUNDED',
+];
+---
+
+<HubLayout title="Contributions" description="Read-only financial contributions.">
+  <div class="fin-admin">
+    <section class="admin-section">
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial</div>
+      <h2 class="section-title" id="c-title">Contributions</h2>
+
+      <form class="filter-bar" id="c-filters">
+        <label>Search
+          <input type="search" name="q" maxlength="64" placeholder="Reference, receipt no., provider ref., name, membership no." />
+        </label>
+        <label>State
+          <select name="state">
+            <option value="">All states</option>
+            {STATES.map((s) => <option value={s}>{s}</option>)}
+          </select>
+        </label>
+        <label>Business module
+          <select name="businessModule" id="c-module">
+            <option value="">All modules</option>
+          </select>
+        </label>
+        <button type="submit" class="btn-action">Apply</button>
+      </form>
+
+      <div id="c-loading" class="state-loading">Loading contributions…</div>
+      <div id="c-error" class="state-error" hidden></div>
+      <div id="c-table"></div>
+      <div id="c-pager" class="pager"></div>
+    </section>
+  </div>
+</HubLayout>
+
+<script>
+  import { getJson, contributionsTable, renderPager, showError, type ContributionItem, type Page } from '../../../../../lib/financial-admin';
+
+  const form = document.getElementById('c-filters') as HTMLFormElement;
+  const params = new URLSearchParams(window.location.search);
+  const q = (params.get('q') ?? '').trim();
+
+  (form.elements.namedItem('q') as HTMLInputElement).value = q;
+  (form.elements.namedItem('state') as HTMLSelectElement).value = params.get('state') ?? '';
+
+  async function loadModules() {
+    try {
+      const o = await getJson<{ contributionsByBusinessModule: Array<{ businessModule: string }> }>('/overview');
+      const select = document.getElementById('c-module') as HTMLSelectElement;
+      for (const m of o.contributionsByBusinessModule) {
+        const opt = document.createElement('option');
+        opt.value = m.businessModule;
+        opt.textContent = m.businessModule;
+        select.appendChild(opt);
+      }
+      select.value = params.get('businessModule') ?? '';
+    } catch { /* filter options are optional; list load reports access errors */ }
+  }
+
+  async function load(page: number) {
+    const loading = document.getElementById('c-loading')!;
+    const errorEl = document.getElementById('c-error')!;
+    const table = document.getElementById('c-table')!;
+    loading.hidden = false;
+    errorEl.hidden = true;
+    try {
+      const qs = new URLSearchParams({ page: String(page) });
+      let path: string;
+      if (q) {
+        qs.set('q', q);
+        path = `/search?${qs}`;
+        document.getElementById('c-title')!.textContent = 'Search results';
+      } else {
+        const state = params.get('state');
+        const mod = params.get('businessModule');
+        if (state) qs.set('state', state);
+        if (mod) qs.set('businessModule', mod);
+        path = `/contributions?${qs}`;
+      }
+      const data = await getJson<Page<ContributionItem>>(path);
+      table.innerHTML = contributionsTable(data.items);
+      renderPager(document.getElementById('c-pager')!, data, load);
+    } catch (err) {
+      table.innerHTML = '';
+      showError(errorEl, err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const next = new URLSearchParams();
+    const nq = String(fd.get('q') ?? '').trim();
+    if (nq) next.set('q', nq);
+    else {
+      const s = String(fd.get('state') ?? '');
+      const m = String(fd.get('businessModule') ?? '');
+      if (s) next.set('state', s);
+      if (m) next.set('businessModule', m);
+    }
+    window.location.search = next.toString();
+  });
+
+  loadModules();
+  load(1);
+</script>

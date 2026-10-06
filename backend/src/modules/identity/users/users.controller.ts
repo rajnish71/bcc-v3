@@ -12,10 +12,13 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AccessTokenPayload } from '../auth/token.util';
 import { RbacGuard } from '../rbac/rbac.guard';
 import { RequirePermissions } from '../rbac/permissions.decorator';
+import { RbacService } from '../rbac/rbac.service';
 import { resolvePortalState } from './session-mapper';
 
 @Controller('api/v1/users')
 export class UsersController {
+  constructor(private readonly rbac: RbacService) {}
+
   @Get('me')
   @UseGuards(AccessTokenGuard)
   async me(@CurrentUser() user: AccessTokenPayload) {
@@ -40,6 +43,10 @@ export class UsersController {
       .executeTakeFirstOrThrow();
 
     const portalState = await resolvePortalState(user.sub);
+    // Navigation hint only (Hub "Financial" workspace group, Track 4) --
+    // server-side RbacGuard on every financial admin route remains the
+    // authorization boundary.
+    const financialRead = await this.rbac.hasPermission(user.sub, 'financial.read');
 
     return {
       id: row.id,
@@ -56,6 +63,7 @@ export class UsersController {
       registrationMethod: row.registration_method,
       ui: {
         portalState,
+        financialRead,
       },
     };
   }

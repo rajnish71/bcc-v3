@@ -230,6 +230,7 @@ const activeRoute = Astro.url.pathname;
     // Identity guard: fetch /users/me before revealing hub (IDENTITY-ARCH-001)
     let identityStatus = 'IDENTITY_COMPLETE';
     let portalState: string | undefined = undefined;
+    let financialRead = false;
     try {
       const res = await fetch(`${API}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -245,11 +246,12 @@ const activeRoute = Astro.url.pathname;
         fullName?: string;
         username?: string;
         identityStatus?: string;
-        ui?: { portalState: string };
+        ui?: { portalState: string; financialRead?: boolean };
       };
 
       identityStatus = user.identityStatus ?? 'IDENTITY_COMPLETE';
       portalState = user.ui?.portalState;
+      financialRead = user.ui?.financialRead === true;
 
       // IDENTITY-ARCH-001: IDENTITY_PENDING → redirect before revealing Hub
       if (identityStatus === 'IDENTITY_PENDING') {
@@ -279,6 +281,9 @@ const activeRoute = Astro.url.pathname;
     const role = portalState ? portalState.toLowerCase() : getRoleFromToken(token);
     const frame = document.getElementById('hub-frame');
     if (frame) frame.setAttribute('data-hub-role', role);
+    // Track 4: Financial workspace group visibility (navigation only --
+    // the financial admin API enforces financial.read server-side).
+    if (frame) frame.setAttribute('data-hub-financial', financialRead ? 'true' : 'false');
 
     // Reveal the hub shell
     const loading = document.getElementById('hub-loading');

@@ -149,6 +149,14 @@ const mobileActive = {
       <div data-elevated-items></div>
     </div>
 
+    <!-- Financial workspace group (hidden; revealed by JS only when /users/me
+         reports financial.read -- Track 4. Server-side RbacGuard remains the
+         authorization boundary.) -->
+    <div class="hub-rail__group hub-rail__elevated" data-financial-group hidden>
+      <div class="hub-rail__group-label" data-financial-label></div>
+      <div data-financial-items></div>
+    </div>
+
     <!-- Sign Out -->
     <div class="hub-rail__footer">
       <button type="button" class="hub-rail__signout" id="hub-signout">Sign Out</button>
@@ -209,6 +217,7 @@ const mobileActive = {
         })}
         <!-- Elevated items injected here by JS -->
         <div data-elevated-dropdown hidden></div>
+        <div data-financial-dropdown hidden></div>
       </div>
     </div>
 
@@ -329,6 +338,7 @@ const mobileActive = {
       <a href="/hub/membership/"  class="hub-sheet__item">Membership &amp; Billing</a>
       <!-- Elevated items injected here by JS -->
       <div data-elevated-sheet hidden></div>
+      <div data-financial-sheet hidden></div>
     </div>
   </div>
 
@@ -861,18 +871,45 @@ function isRouteActive(href: string): boolean {
   return path.startsWith(href);
 }
 
+// Overview is active only on its own path, not on every financial sub-page.
+function isFinancialActive(href: string): boolean {
+  const path = window.location.pathname;
+  if (href === '/hub/admin/financial/') return path === href || path === '/hub/admin/financial';
+  return path.startsWith(href);
+}
+
+// Financial workspace group -- gated by the financial.read permission
+// (ui.financialRead from /users/me), independent of portal role, so a
+// Financial Authority sees it and a Coordinator does not.
+const FINANCIAL_CONFIG = {
+  label: 'FINANCIAL',
+  items: [
+    { name: 'Overview',      href: '/hub/admin/financial/' },
+    { name: 'Contributions', href: '/hub/admin/financial/contributions/' },
+    { name: 'Refunds',       href: '/hub/admin/financial/refunds/' },
+    { name: 'Receipts',      href: '/hub/admin/financial/receipts/' },
+    { name: 'Exceptions',    href: '/hub/admin/financial/exceptions/' },
+  ],
+};
+
 function applyElevation(role: string) {
   const cfg = ELEVATED_CONFIG[role];
   if (!cfg) return;
+  renderGroup(cfg, 'elevated');
+}
 
+function renderGroup(
+  cfg: { label: string; items: Array<{ name: string; href: string }> },
+  key: 'elevated' | 'financial',
+) {
   // Rail
-  const group = document.querySelector<HTMLElement>('[data-elevated-group]');
-  const labelEl = document.querySelector<HTMLElement>('[data-elevated-label]');
-  const itemsEl = document.querySelector<HTMLElement>('[data-elevated-items]');
+  const group = document.querySelector<HTMLElement>(`[data-${key}-group]`);
+  const labelEl = document.querySelector<HTMLElement>(`[data-${key}-label]`);
+  const itemsEl = document.querySelector<HTMLElement>(`[data-${key}-items]`);
   if (group && labelEl && itemsEl) {
     labelEl.textContent = cfg.label;
     itemsEl.innerHTML = cfg.items.map(item => {
-      const active = isRouteActive(item.href);
+      const active = key === 'financial' ? isFinancialActive(item.href) : isRouteActive(item.href);
       return `<a href="${item.href}" class="hub-rail__item${active ? ' hub-rail__item--active' : ''}" ${active ? 'aria-current="page"' : ''}>
         <span class="hub-rail__dot${active ? ' hub-rail__dot--active' : ''}"></span>${item.name}
       </a>`;
@@ -881,7 +918,7 @@ function applyElevation(role: string) {
   }
 
   // Tablet dropdown
-  const dropdownEl = document.querySelector<HTMLElement>('[data-elevated-dropdown]');
+  const dropdownEl = document.querySelector<HTMLElement>(`[data-${key}-dropdown]`);
   if (dropdownEl) {
     dropdownEl.innerHTML =
       `<div class="hub-tabs-dropdown__divider" role="separator"></div>` +
@@ -893,7 +930,7 @@ function applyElevation(role: string) {
   }
 
   // Mobile More sheet
-  const sheetEl = document.querySelector<HTMLElement>('[data-elevated-sheet]');
+  const sheetEl = document.querySelector<HTMLElement>(`[data-${key}-sheet]`);
   if (sheetEl) {
     sheetEl.innerHTML =
       `<div class="hub-sheet__group-label">${cfg.label}</div>` +
@@ -915,5 +952,11 @@ if (frame) {
     if (r && r !== 'member') applyElevation(r);
   });
   observer.observe(frame, { attributes: true, attributeFilter: ['data-hub-role'] });
+
+  if (frame.getAttribute('data-hub-financial') === 'true') renderGroup(FINANCIAL_CONFIG, 'financial');
+  const financialObserver = new MutationObserver(() => {
+    if (frame.getAttribute('data-hub-financial') === 'true') renderGroup(FINANCIAL_CONFIG, 'financial');
+  });
+  financialObserver.observe(frame, { attributes: true, attributeFilter: ['data-hub-financial'] });
 }
 </script>

@@ -1,0 +1,114 @@
+---
+/**
+ * hub/admin/financial/index.astro — Financial Overview (Track 4, READ ONLY)
+ * Route: /hub/admin/financial/
+ *
+ * Canonical PAY-001 counts only — contributions by state and business
+ * module, completed-contribution totals, refunds by status, receipts issued,
+ * exception counts. No accounting concepts. Data: GET
+ * /api/v1/financial/admin/overview (financial.read, enforced server-side).
+ * Navigation is owned by HubSidebar (Financial workspace group).
+ */
+import HubLayout from '../../../../layouts/HubLayout.astro';
+import '../../../../styles/financial-admin.css';
+---
+
+<HubLayout title="Financial Overview" description="Read-only financial visibility.">
+  <div class="fin-admin">
+    <section class="admin-section">
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial</div>
+      <h2 class="section-title">Financial Overview</h2>
+      <p class="section-hint">Read-only. Counts reflect the current canonical state of each Financial Contribution.</p>
+
+      <form class="filter-bar" id="fin-search" role="search">
+        <label>Search
+          <input type="search" name="q" minlength="2" maxlength="64" required
+                 placeholder="Reference, receipt no., provider ref., name, username, membership no." />
+        </label>
+        <button type="submit" class="btn-action">Search</button>
+      </form>
+
+      <div id="ov-loading" class="state-loading">Loading overview…</div>
+      <div id="ov-error" class="state-error" hidden></div>
+    </section>
+
+    <section class="admin-section" id="ov-body" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Contributions by state</div>
+      <div class="stats-grid" id="ov-states"></div>
+      <div class="breakdown-row" id="ov-modules"></div>
+    </section>
+
+    <section class="admin-section" id="ov-completed-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Completed contributions</div>
+      <p class="section-hint">Total amount of contributions currently in state COMPLETED, by currency.</p>
+      <div class="stats-grid" id="ov-completed"></div>
+    </section>
+
+    <section class="admin-section" id="ov-refunds-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Refunds &amp; receipts</div>
+      <div class="stats-grid" id="ov-refunds"></div>
+    </section>
+
+    <section class="admin-section" id="ov-exceptions-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Exceptions</div>
+      <div class="stats-grid" id="ov-exceptions"></div>
+    </section>
+  </div>
+</HubLayout>
+
+<script>
+  import { getJson, esc, label, money, showError } from '../../../../lib/financial-admin';
+
+  interface Overview {
+    contributionsByState: Record<string, number>;
+    contributionsByBusinessModule: Array<{ businessModule: string; count: number }>;
+    completedContributions: Array<{ currency: string; count: number; amountPaise: number }>;
+    refundsByStatus: Record<string, number>;
+    refundAmounts: Array<{ status: string; currency: string; count: number; amountPaise: number }>;
+    receiptsIssued: number;
+    exceptions: Record<string, number>;
+  }
+
+  const card = (value: string, text: string, href?: string, warn = false) =>
+    `<${href ? `a href="${href}"` : 'div'} class="stat-card">
+       <span class="stat-card__value${warn ? ' stat-card__value--warn' : ''}">${esc(value)}</span>
+       <span class="stat-card__label">${esc(text)}</span>
+     </${href ? 'a' : 'div'}>`;
+
+  document.getElementById('fin-search')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = String(new FormData(e.currentTarget as HTMLFormElement).get('q') ?? '').trim();
+    if (q.length >= 2) window.location.href = `/hub/admin/financial/contributions/?q=${encodeURIComponent(q)}`;
+  });
+
+  async function load() {
+    const loading = document.getElementById('ov-loading')!;
+    try {
+      const o = await getJson<Overview>('/overview');
+      document.getElementById('ov-states')!.innerHTML = Object.entries(o.contributionsByState)
+        .map(([s, n]) => card(String(n), label(s), `/hub/admin/financial/contributions/?state=${s}`))
+        .join('');
+      document.getElementById('ov-modules')!.innerHTML = o.contributionsByBusinessModule
+        .map((m) => `<a class="breakdown-pill" href="/hub/admin/financial/contributions/?businessModule=${encodeURIComponent(m.businessModule)}">${esc(m.businessModule)} <strong>${m.count}</strong></a>`)
+        .join('');
+      document.getElementById('ov-completed')!.innerHTML = o.completedContributions.length
+        ? o.completedContributions.map((c) => card(money(c.amountPaise, c.currency), `${c.count} completed · ${c.currency}`)).join('')
+        : '<div class="state-empty">No completed contributions.</div>';
+      document.getElementById('ov-refunds')!.innerHTML =
+        Object.entries(o.refundsByStatus)
+          .map(([s, n]) => card(String(n), `Refunds ${label(s)}`, `/hub/admin/financial/refunds/?status=${s}`))
+          .join('') + card(String(o.receiptsIssued), 'Receipts issued', '/hub/admin/financial/receipts/');
+      document.getElementById('ov-exceptions')!.innerHTML = Object.entries(o.exceptions)
+        .map(([c, n]) => card(String(n), label(c), `/hub/admin/financial/exceptions/?category=${c}`, n > 0))
+        .join('');
+      ['ov-body', 'ov-completed-wrap', 'ov-refunds-wrap', 'ov-exceptions-wrap'].forEach((id) => {
+        document.getElementById(id)!.hidden = false;
+      });
+    } catch (err) {
+      showError(document.getElementById('ov-error')!, err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+  load();
+</script>

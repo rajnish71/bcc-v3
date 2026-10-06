@@ -23,6 +23,9 @@ export interface FakeOp {
   // tests can assert a business write and its audit row share one transaction.
   txId: number | null;
   result?: unknown;
+  // Recorded for pagination assertions (Track 4 admin financial tests).
+  limit?: number;
+  offset?: number;
 }
 
 export type Responder = (op: FakeOp) => unknown;
@@ -105,6 +108,8 @@ export class FakeDb {
         if (prop === 'values') return (v: Record<string, unknown>) => { op.values = v; return self; };
         if (prop === 'set') return (v: Record<string, unknown>) => { op.set = v; return self; };
         if (prop === 'where') return (a: unknown, b: unknown, c: unknown) => { op.wheres.push([a, b, c]); return self; };
+        if (prop === 'limit') return (n: number) => { op.limit = n; return self; };
+        if (prop === 'offset') return (n: number) => { op.offset = n; return self; };
         if (prop === 'execute') {
           return async () => {
             const r = await run();

@@ -1,0 +1,155 @@
+---
+/**
+ * hub/admin/financial/contributions/detail/index.astro — Contribution Detail
+ * (Track 4, READ ONLY)
+ * Route: /hub/admin/financial/contributions/detail/?ref=<contribution UUID>
+ *
+ * Static output cannot pre-render per-contribution paths, so the UUID is a
+ * query parameter (no Nginx rewrite required). Data:
+ * GET /api/v1/financial/admin/contributions/:reference.
+ *
+ * Shows what exists — nothing is fabricated: no receipt → "No receipt
+ * issued"; no transaction → "No financial transaction recorded"; no refund
+ * record → "No refund record". Evidence is shown as review STATE only.
+ */
+import HubLayout from '../../../../../../layouts/HubLayout.astro';
+import '../../../../../../styles/financial-admin.css';
+---
+
+<HubLayout title="Contribution Detail" description="Read-only financial contribution detail.">
+  <div class="fin-admin">
+    <section class="admin-section">
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial · Contribution</div>
+      <h2 class="section-title mono" id="d-title">Contribution</h2>
+      <a href="/hub/admin/financial/contributions/" class="section-hint">← Back to contributions</a>
+      <div id="d-loading" class="state-loading">Loading contribution…</div>
+      <div id="d-error" class="state-error" hidden></div>
+      <div id="d-summary"></div>
+    </section>
+
+    <section class="admin-section" id="d-tx-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial transactions</div>
+      <div id="d-tx"></div>
+    </section>
+
+    <section class="admin-section" id="d-receipt-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Receipt &amp; refund</div>
+      <div id="d-receipt"></div>
+      <div id="d-refund"></div>
+    </section>
+
+    <section class="admin-section" id="d-evidence-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Settlement evidence</div>
+      <div id="d-evidence"></div>
+    </section>
+
+    <section class="admin-section" id="d-audit-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Financial audit trail</div>
+      <div id="d-audit"></div>
+    </section>
+  </div>
+</HubLayout>
+
+<script>
+  import {
+    getJson, esc, money, dateTime, pill, contributorCell, showError, NO_RECEIPT_LABEL,
+    type ContributionItem,
+  } from '../../../../../../lib/financial-admin';
+
+  interface Detail extends Omit<ContributionItem, 'receipt'> {
+    receipt: { reference: string; receiptNumber: string; amountPaise: number; currency: string; issuedAt: string | null } | null;
+    transactions: Array<{ reference: string; provider: string; providerReference: string | null; amountPaise: number; currency: string; outcome: string; failureReason: string | null; createdAt: string | null }>;
+    refund: { reference: string; amountPaise: number; currency: string; provider: string | null; providerReference: string | null; status: string; reason: string | null; failureReason: string | null; requestedByType: string; requestedAt: string | null; resolvedAt: string | null } | null;
+    settlementEvidence: Array<{ reference: string; claimedAmountPaise: number; paymentDate: string | null; submittedAt: string | null; reviewStatus: string; reviewedAt: string | null }>;
+    auditTrail: Array<{ eventType: string; previousState: string | null; resultingState: string | null; actorType: string; occurredAt: string | null }>;
+  }
+
+  const row = (k: string, v: string) =>
+    `<div class="detail-row"><span class="detail-row__key">${esc(k)}</span><span class="detail-row__value">${v}</span></div>`;
+  const table = (head: string[], rows: string[][]) => `
+    <div class="data-table-wrap"><table class="data-table">
+      <thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>`;
+  const dash = '<span class="muted">—</span>';
+
+  async function load() {
+    const ref = new URLSearchParams(window.location.search).get('ref') ?? '';
+    const loading = document.getElementById('d-loading')!;
+    try {
+      if (!ref) throw new Error('No contribution reference supplied.');
+      const d = await getJson<Detail>(`/contributions/${encodeURIComponent(ref)}`);
+      document.getElementById('d-title')!.textContent = d.reference;
+
+      document.getElementById('d-summary')!.innerHTML = `<div class="detail-grid">
+        ${row('State', pill(d.state))}
+        ${row('Amount', `<span class="mono">${esc(money(d.amountPaise, d.currency))}</span>`)}
+        ${row('Business module', `<span class="tag-pill">${esc(d.businessModule)}</span>`)}
+        ${row('Purpose', esc(d.purpose))}
+        ${row('Contributor', contributorCell(d.contributor))}
+        ${row('Created', esc(dateTime(d.createdAt)))}
+        ${row('Last updated', esc(dateTime(d.updatedAt)))}
+        ${row('Expires', esc(dateTime(d.expiresAt)))}
+        ${row('Latest evidence', d.evidenceStatus ? pill(d.evidenceStatus) : dash)}
+      </div>`;
+
+      document.getElementById('d-tx')!.innerHTML = d.transactions.length
+        ? table(['Reference', 'Provider', 'Provider reference', 'Amount', 'Outcome', 'Failure reason', 'Recorded'],
+            d.transactions.map((t) => [
+              `<span class="mono">${esc(t.reference.slice(0, 8))}…</span>`, esc(t.provider),
+              t.providerReference ? `<span class="mono">${esc(t.providerReference)}</span>` : dash,
+              `<span class="mono">${esc(money(t.amountPaise, t.currency))}</span>`, pill(t.outcome),
+              t.failureReason ? esc(t.failureReason) : dash, `<span class="mono">${esc(dateTime(t.createdAt))}</span>`,
+            ]))
+        : '<div class="state-empty">No financial transaction recorded.</div>';
+
+      document.getElementById('d-receipt')!.innerHTML = d.receipt
+        ? `<div class="detail-grid">
+             ${row('Receipt number', `<span class="mono">${esc(d.receipt.receiptNumber)}</span>`)}
+             ${row('Receipt amount', `<span class="mono">${esc(money(d.receipt.amountPaise, d.receipt.currency))}</span>`)}
+             ${row('Issued', esc(dateTime(d.receipt.issuedAt)))}
+           </div>`
+        : `<div class="state-empty">${NO_RECEIPT_LABEL}</div>`;
+
+      document.getElementById('d-refund')!.innerHTML = d.refund
+        ? `<div class="detail-grid">
+             ${row('Refund status', pill(d.refund.status))}
+             ${row('Refund amount', `<span class="mono">${esc(money(d.refund.amountPaise, d.refund.currency))}</span>`)}
+             ${row('Provider', d.refund.provider ? esc(d.refund.provider) : dash)}
+             ${row('Provider reference', d.refund.providerReference ? `<span class="mono">${esc(d.refund.providerReference)}</span>` : dash)}
+             ${row('Requested by', esc(d.refund.requestedByType))}
+             ${row('Requested', esc(dateTime(d.refund.requestedAt)))}
+             ${row('Resolved', esc(dateTime(d.refund.resolvedAt)))}
+             ${row('Reason', d.refund.reason ? esc(d.refund.reason) : dash)}
+             ${row('Failure reason', d.refund.failureReason ? esc(d.refund.failureReason) : dash)}
+           </div>`
+        : '<div class="state-empty">No refund record.</div>';
+
+      document.getElementById('d-evidence')!.innerHTML = d.settlementEvidence.length
+        ? table(['Reference', 'Claimed amount', 'Payment date', 'Submitted', 'Review status', 'Reviewed'],
+            d.settlementEvidence.map((e) => [
+              `<span class="mono">${esc(e.reference.slice(0, 8))}…</span>`,
+              `<span class="mono">${esc(money(e.claimedAmountPaise, d.currency))}</span>`,
+              esc(dateTime(e.paymentDate)), esc(dateTime(e.submittedAt)), pill(e.reviewStatus), esc(dateTime(e.reviewedAt)),
+            ]))
+        : '<div class="state-empty">No settlement evidence submitted.</div>';
+
+      document.getElementById('d-audit')!.innerHTML = d.auditTrail.length
+        ? table(['Event', 'Previous state', 'Resulting state', 'Actor type', 'When'],
+            d.auditTrail.map((a) => [
+              `<span class="mono">${esc(a.eventType)}</span>`, a.previousState ? pill(a.previousState) : dash,
+              a.resultingState ? pill(a.resultingState) : dash, esc(a.actorType), `<span class="mono">${esc(dateTime(a.occurredAt))}</span>`,
+            ]))
+        : '<div class="state-empty">No financial audit events retained for this contribution.</div>';
+
+      ['d-tx-wrap', 'd-receipt-wrap', 'd-evidence-wrap', 'd-audit-wrap'].forEach((id) => {
+        document.getElementById(id)!.hidden = false;
+      });
+    } catch (err) {
+      showError(document.getElementById('d-error')!, err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+  load();
+</script>

@@ -160,8 +160,11 @@ describe('No UPI/Bank provider identifiers or webhook/gateway code introduced (S
   });
 
   it('DTOs never accept a client-supplied provider or method field', () => {
-    expect(CONTROLLER_SRC).not.toContain('dto.provider');
-    expect(CONTROLLER_SRC).not.toContain('dto.method');
+    // dto.providerPaymentReference (admin reconciliation) is a provider-issued
+    // payment id that the engine verifies with the provider -- not a
+    // client-chosen provider/method, so only the bare field names are banned.
+    expect(CONTROLLER_SRC).not.toMatch(/dto\.provider\b/);
+    expect(CONTROLLER_SRC).not.toMatch(/dto\.method\b/);
   });
 });
 

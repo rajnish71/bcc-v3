@@ -23,6 +23,7 @@ import Razorpay from 'razorpay';
 import type {
   ProviderOrderSnapshot,
   ProviderPaymentSnapshot,
+  ProviderRefundSnapshot,
   RefundInput,
   RefundResult,
   SettlementOrderInput,
@@ -179,6 +180,22 @@ export class RazorpaySettlementProvider implements SettlementProvider {
       captured: typeof payment.captured === 'boolean' ? payment.captured : null,
       errorCode: payment.error_code ?? null,
       createdAt: payment.created_at !== undefined ? Number(payment.created_at) : null,
+      amountRefundedPaise: payment.amount_refunded !== undefined && payment.amount_refunded !== null
+        ? Number(payment.amount_refunded)
+        : null,
+      refundStatus: payment.refund_status ? String(payment.refund_status) : null,
+    };
+  }
+
+  async fetchRefund(providerRefundReference: string): Promise<ProviderRefundSnapshot> {
+    const refund = await this.ensureClient().refunds.fetch(providerRefundReference);
+    return {
+      id: refund.id,
+      paymentId: refund.payment_id ?? null,
+      amountPaise: Number(refund.amount),
+      currency: String(refund.currency),
+      status: String(refund.status),
+      createdAt: refund.created_at !== undefined ? Number(refund.created_at) : null,
     };
   }
 }

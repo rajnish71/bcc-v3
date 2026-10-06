@@ -42,6 +42,8 @@ export class FinancialAuditService {
           providerAccountId: input.metadata.providerAccountId,
           correctionContributionId: input.metadata.correctionContributionId,
           reconciliationReason: input.metadata.reconciliationReason,
+          settlementSource: input.metadata.settlementSource,
+          refundOutcomeSource: input.metadata.refundOutcomeSource,
         })
       : null;
 

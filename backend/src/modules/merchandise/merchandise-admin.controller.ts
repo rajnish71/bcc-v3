@@ -5,8 +5,12 @@
 // same pattern as financial.controller.ts's admin routes). No new admin
 // framework, no new authorization mechanism.
 
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { requestAuditContext } from '../financial/audit/request-provenance.util';
 import { AccessTokenGuard } from '../identity/auth/access-token.guard';
+import { CurrentUser } from '../identity/auth/current-user.decorator';
+import type { AccessTokenPayload } from '../identity/auth/token.util';
 import { RbacGuard } from '../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../identity/rbac/permissions.decorator';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
@@ -16,10 +20,15 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
+import { RefundOrderDto } from './dto/refund-order.dto';
 
 const PRODUCT_PERMISSION = 'merchandise.product.manage';
 const ORDER_PERMISSION = 'merchandise.order.manage';
 const COUPON_PERMISSION = 'merchandise.coupon.manage';
+// Refunds move money: the refund decision (order permission) AND the
+// financial verifier permission, same AND precedent as the membership
+// settlement-correction route.
+const FINANCIAL_VERIFY_PERMISSION = 'financial.settlement.verify';
 
 @Controller('api/v1/merchandise/admin')
 @UseGuards(AccessTokenGuard, RbacGuard)
@@ -79,6 +88,20 @@ export class MerchandiseAdminController {
   @RequirePermissions(ORDER_PERMISSION)
   async markPickedUp(@Param('id', ParseIntPipe) id: number, @Body() body: { pickupNotes?: string }) {
     return this.orders.markPickedUp(id, body?.pickupNotes ?? null);
+  }
+
+  // Delegates entirely to the Financial Engine's requestRefund(); the order
+  // becomes REFUNDED only when the engine reports CONTRIBUTION_REFUNDED.
+  @Post('orders/:id/refund')
+  @HttpCode(200)
+  @RequirePermissions(ORDER_PERMISSION, FINANCIAL_VERIFY_PERMISSION)
+  async refundOrder(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RefundOrderDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.orders.requestOrderRefund(id, dto.reason, actor.sub, requestAuditContext('ADMIN', req, actor));
   }
 
   // ── Coupons ───────────────────────────────────────────────────────────────

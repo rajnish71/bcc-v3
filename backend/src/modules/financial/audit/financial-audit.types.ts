@@ -30,6 +30,9 @@ export const FINANCIAL_AUDIT_EVENT_TYPES = [
   // COMPLETED Contribution whose settlement is later determined not to
   // represent genuine received funds. Records only -- never a transition.
   'SETTLEMENT_RECONCILIATION_ANNOTATED',
+  // A refund reached a terminal outcome (COMPLETED/FAILED), written only by
+  // FinancialContributionService.recordRefundOutcome().
+  'REFUND_OUTCOME_RECORDED',
 ] as const;
 
 export type FinancialAuditEventType = (typeof FINANCIAL_AUDIT_EVENT_TYPES)[number];
@@ -62,7 +65,18 @@ export interface FinancialAuditMetadata {
   providerAccountId?: string;
   correctionContributionId?: number;
   reconciliationReason?: string;
+  // SETTLEMENT_OUTCOME_RECORDED written by admin provider-verified
+  // reconciliation rather than by the webhook.
+  settlementSource?: SettlementSource;
+  // REFUND_OUTCOME_RECORDED only: which path observed the terminal outcome.
+  refundOutcomeSource?: RefundOutcomeSource;
 }
+
+export const SETTLEMENT_SOURCES = ['PROVIDER_RECONCILIATION'] as const;
+export type SettlementSource = (typeof SETTLEMENT_SOURCES)[number];
+
+export const REFUND_OUTCOME_SOURCES = ['WEBHOOK', 'PROVIDER_RECHECK', 'SYNC_RESPONSE'] as const;
+export type RefundOutcomeSource = (typeof REFUND_OUTCOME_SOURCES)[number];
 
 export const SETTLEMENT_CHANNELS = ['PAYMENT_LINK'] as const;
 export type SettlementChannel = (typeof SETTLEMENT_CHANNELS)[number];
@@ -94,6 +108,9 @@ export interface AuditContext {
   // Present only when this action was resolved by/for a specific settlement
   // webhook delivery (OBS-07).
   webhookInboxId?: number | null;
+  // Whitelisted metadata the caller wants on the resulting outcome row
+  // (still serialized only through FinancialAuditService's explicit list).
+  metadata?: FinancialAuditMetadata;
 }
 
 export interface FinancialAuditEventInput {

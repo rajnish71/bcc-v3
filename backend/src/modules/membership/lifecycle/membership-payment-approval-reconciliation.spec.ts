@@ -294,7 +294,7 @@ describe('G/H. FinancialContributionService.requestRefund(): idempotent, immutab
   const REFUND_FN = slice(
     FINANCIAL_CONTRIBUTION_SERVICE_SRC,
     'async requestRefund(',
-    '\n  // ── Zero-value path',
+    '\n  // ── Refund terminal outcome',
   );
 
   it('only a COMPLETED contribution may be refunded', () => {
@@ -324,11 +324,18 @@ describe('G/H. FinancialContributionService.requestRefund(): idempotent, immutab
   // COMPLETED and financial_refunds.status is the authoritative
   // "reversal in flight" signal.
   it('only transitions the Contribution to REFUNDED once the refund is COMPLETED -- never merely PROCESSING', () => {
-    const providerCallBlock = REFUND_FN.slice(REFUND_FN.indexOf('try {\n      const result = await this.provider.refund('));
-    const transitionIdx = providerCallBlock.indexOf("this.transitionContribution(contributionId, 'REFUNDED')");
-    expect(transitionIdx).toBeGreaterThan(-1);
-    const guardSlice = providerCallBlock.slice(0, transitionIdx);
-    expect(guardSlice).toContain("if (newStatus === 'COMPLETED')");
+    // requestRefund() never transitions the Contribution itself; a COMPLETED
+    // outcome is handed to recordRefundOutcome() only under the provider's
+    // definitive COMPLETED answer, and recordRefundOutcome() is the only
+    // place REFUNDED is reached (only for result === 'COMPLETED').
+    expect(REFUND_FN).not.toContain("transitionContribution(contributionId, 'REFUNDED')");
+    const completedIdx = REFUND_FN.search(/this\.recordRefundOutcome\(refundId, \{\s*result: 'COMPLETED'/);
+    expect(completedIdx).toBeGreaterThan(-1);
+    expect(REFUND_FN.slice(0, completedIdx)).toContain("if (result.status === 'COMPLETED') {");
+    const OUTCOME_FN = slice(FINANCIAL_CONTRIBUTION_SERVICE_SRC, 'async recordRefundOutcome(', 'async recheckRefund(');
+    const refundedIdx = OUTCOME_FN.indexOf("this.transitionContribution(contributionId, 'REFUNDED', trx)");
+    expect(refundedIdx).toBeGreaterThan(-1);
+    expect(OUTCOME_FN.slice(0, refundedIdx)).toContain("if (outcome.result === 'COMPLETED') {");
   });
 
   it('mirrored: PROCESSING outcome does not promote the Contribution to REFUNDED', () => {
@@ -340,13 +347,17 @@ describe('G/H. FinancialContributionService.requestRefund(): idempotent, immutab
   });
 
   it('never claims COMPLETED merely because the provider accepted the request -- only on a definitive provider outcome', () => {
-    expect(REFUND_FN).toContain("result.status === 'COMPLETED' ? 'COMPLETED' : 'PROCESSING'");
+    // Acceptance is recorded as PROCESSING; COMPLETED only via the guarded
+    // recordRefundOutcome() call.
+    expect(REFUND_FN).toMatch(/updateTable\('financial_refunds'\)[\s\S]*?status: 'PROCESSING'/);
+    expect(REFUND_FN).toContain("return { refundId, status: 'PROCESSING', alreadyRequested: false };");
   });
 
   it('a provider call failure is recorded as FAILED, not thrown -- the refund path is never silently lost', () => {
     const catchBlock = REFUND_FN.slice(REFUND_FN.lastIndexOf('} catch (err) {'));
-    expect(catchBlock).toContain("status: 'FAILED'");
-    expect(catchBlock).not.toContain('throw');
+    expect(catchBlock).toMatch(/this\.recordRefundOutcome\(refundId, \{\s*result: 'FAILED'/);
+    expect(catchBlock).toContain("return { refundId, status: 'FAILED', alreadyRequested: false };");
+    expect(catchBlock.slice(0, catchBlock.indexOf("status: 'FAILED', alreadyRequested"))).not.toContain('throw');
   });
 
   it('provider is contacted only for a contribution actually settled via this service\'s injected Settlement Provider', () => {

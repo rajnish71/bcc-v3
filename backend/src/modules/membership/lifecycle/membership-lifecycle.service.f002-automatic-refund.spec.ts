@@ -165,8 +165,11 @@ describe('F-002 Test 3: human/admin refund path (reject() on a COMPLETED Contrib
   it('provider refund mechanism, idempotency, and state-transition behaviour are untouched by the actor-shape change', () => {
     const REFUND_FN = slice(FINANCIAL_CONTRIBUTION_SERVICE_SRC, 'async requestRefund(', '\n  // ── Zero-value path');
     expect(REFUND_FN).toContain('await this.provider.refund({');
-    expect(REFUND_FN).toContain("if (newStatus === 'COMPLETED') {");
-    expect(REFUND_FN).toContain("await this.transitionContribution(contributionId, 'REFUNDED');");
+    // Terminal outcomes (and the COMPLETED -> REFUNDED transition) now resolve
+    // through the single recordRefundOutcome() path, only on a definitive
+    // provider COMPLETED answer.
+    expect(REFUND_FN).toContain("if (result.status === 'COMPLETED') {");
+    expect(REFUND_FN).toMatch(/this\.recordRefundOutcome\(refundId, \{\s*result: 'COMPLETED'/);
   });
 });
 

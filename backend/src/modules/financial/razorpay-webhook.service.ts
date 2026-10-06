@@ -21,7 +21,7 @@
 // so even a crash between a successful match and markProcessed() cannot
 // produce a second Financial Transaction on reprocessing (see process()).
 
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { db } from '../../database/db';
 import { toMysqlDatetime } from '../identity/shared/token-hash.util';
 import { FinancialContributionService } from './financial-contribution.service';
@@ -57,7 +57,20 @@ const EVENT_LINK_EXPIRED = 'payment_link.expired';
 const EVENT_LINK_CANCELLED = 'payment_link.cancelled';
 const LINK_EVENT_TYPES: ReadonlySet<string> = new Set([EVENT_LINK_PAID, EVENT_LINK_EXPIRED, EVENT_LINK_CANCELLED]);
 
-const HANDLED_EVENT_TYPES: ReadonlySet<string> = new Set([EVENT_SUCCESS, EVENT_FAILURE, ...LINK_EVENT_TYPES]);
+// Refund lifecycle: only the two TERMINAL refund events resolve a platform
+// refund, through FinancialContributionService.recordRefundOutcome().
+// refund.created is not an outcome and stays acknowledged-and-ignored like
+// any other unhandled event. A refund event never creates a refund: one
+// that matches no platform refund (e.g. a dashboard-initiated refund) is
+// recorded FAILED in the inbox with no financial effect -- PAY-001 leaves
+// the refund decision to the Business Module.
+const EVENT_REFUND_PROCESSED = 'refund.processed';
+const EVENT_REFUND_FAILED = 'refund.failed';
+const REFUND_EVENT_TYPES: ReadonlySet<string> = new Set([EVENT_REFUND_PROCESSED, EVENT_REFUND_FAILED]);
+
+const HANDLED_EVENT_TYPES: ReadonlySet<string> = new Set([
+  EVENT_SUCCESS, EVENT_FAILURE, ...LINK_EVENT_TYPES, ...REFUND_EVENT_TYPES,
+]);
 
 const MAX_ERROR_LENGTH = 2000;
 
@@ -68,6 +81,14 @@ interface RazorpayPaymentEntity {
   currency?: string;
   error_code?: string | null;
   error_description?: string | null;
+}
+
+interface RazorpayRefundEntity {
+  id?: string;
+  payment_id?: string | null;
+  amount?: number;
+  currency?: string;
+  status?: string;
 }
 
 interface RazorpayPaymentLinkEntity {
@@ -200,6 +221,11 @@ export class RazorpayWebhookService {
       return;
     }
 
+    if (REFUND_EVENT_TYPES.has(eventType)) {
+      await this.processRefundEvent(inboxId, eventType, event);
+      return;
+    }
+
     const resolved = LINK_EVENT_TYPES.has(eventType)
       ? this.resolvePaymentLinkEvent(eventType, event)
       : this.resolvePaymentEvent(eventType, event);
@@ -282,6 +308,73 @@ export class RazorpayWebhookService {
       webhookInboxId: inboxId,
       provenance: { requestId: input.requestId ?? null, route: input.route ?? null },
     });
+
+    await this.markProcessed(inboxId, contributionId);
+  }
+
+  // ── Refund outcome ───────────────────────────────────────────────────────
+  // Matches the verified refund event to the platform's own refund row and
+  // hands the terminal outcome to recordRefundOutcome() -- the single place a
+  // refund becomes COMPLETED/FAILED (and a Contribution REFUNDED). Writes
+  // nothing financial itself.
+  private async processRefundEvent(
+    inboxId: number,
+    eventType: string,
+    event: Record<string, unknown>,
+  ): Promise<void> {
+    const resolved = resolveRefundEvent(eventType, event);
+    if (typeof resolved === 'string') {
+      await this.markFailed(inboxId, resolved);
+      return;
+    }
+
+    const refund = await this.financialService.findRefundForProviderEvent(resolved.refundId, resolved.paymentId);
+    if (!refund) {
+      await this.markFailed(
+        inboxId,
+        `No platform refund matches provider refund '${resolved.refundId}' (payment '${resolved.paymentId ?? 'none'}'); not created automatically.`,
+      );
+      return;
+    }
+
+    const contributionId = Number(refund.contribution_id);
+    await this.storeMatchedContribution(inboxId, contributionId);
+
+    if (resolved.amountPaise !== Number(refund.amount_paise)) {
+      await this.markFailed(
+        inboxId,
+        `Amount mismatch: refund event ${resolved.amountPaise} paise vs platform refund ${refund.amount_paise} paise.`,
+      );
+      return;
+    }
+    if (resolved.currency.toUpperCase() !== String(refund.currency).toUpperCase()) {
+      await this.markFailed(
+        inboxId,
+        `Currency mismatch: refund event '${resolved.currency}' vs platform refund '${refund.currency}'.`,
+      );
+      return;
+    }
+
+    try {
+      await this.financialService.recordRefundOutcome(Number(refund.id), {
+        result: resolved.result,
+        providerRefundReference: resolved.refundId,
+        failureReason: resolved.result === 'FAILED' ? 'Razorpay reported the refund as failed' : null,
+      }, {
+        actorType: 'WEBHOOK',
+        webhookInboxId: inboxId,
+        metadata: { refundOutcomeSource: 'WEBHOOK' },
+      });
+    } catch (err) {
+      // A contradictory outcome / refund-id mismatch is deterministic --
+      // recorded as a diagnostic (no state change happened) rather than
+      // rethrown, so the provider does not keep redelivering it.
+      if (err instanceof ConflictException) {
+        await this.markFailed(inboxId, err.message);
+        return;
+      }
+      throw err;
+    }
 
     await this.markProcessed(inboxId, contributionId);
   }
@@ -397,4 +490,24 @@ export class RazorpayWebhookService {
       this.logger.error(`Failed to mark inbox row ${inboxId} FAILED: ${(err as Error).message}`);
     }
   }
+}
+
+// Refund event -> generic refund outcome (pure; exported for tests). Returns
+// the outcome or a diagnostic string for the inbox row.
+export function resolveRefundEvent(
+  eventType: string,
+  event: Record<string, unknown>,
+): { refundId: string; paymentId: string | null; amountPaise: number; currency: string; result: 'COMPLETED' | 'FAILED' } | string {
+  const payload = event.payload as { refund?: { entity?: RazorpayRefundEntity } } | undefined;
+  const refund = payload?.refund?.entity;
+  if (!refund?.id) {
+    return `Event '${eventType}' payload missing refund id.`;
+  }
+  return {
+    refundId: refund.id,
+    paymentId: refund.payment_id ?? null,
+    amountPaise: Number(refund.amount),
+    currency: String(refund.currency ?? ''),
+    result: eventType === EVENT_REFUND_PROCESSED ? 'COMPLETED' : 'FAILED',
+  };
 }

@@ -51,6 +51,7 @@ import { ApproveSettlementEvidenceDto } from './dto/approve-settlement-evidence.
 import { RejectSettlementEvidenceDto } from './dto/reject-settlement-evidence.dto';
 import { RequestEvidenceProofUploadDto } from './dto/request-evidence-proof-upload.dto';
 import { FinancialTraceQueryDto } from './dto/financial-trace-query.dto';
+import { ReconcileProviderSettlementDto } from './dto/reconcile-provider-settlement.dto';
 import { FinancialTraceService } from './audit/financial-trace.service';
 import { requestAuditContext as auditContext } from './audit/request-provenance.util';
 
@@ -375,6 +376,49 @@ export class FinancialController {
       auditContext('ADMIN', req, actor),
     );
     return { evidenceId, transactionId, reviewStatus: 'REJECTED' as const };
+  }
+
+  // ── Provider-verified settlement reconciliation ─────────────────────────
+  //
+  // Verifier-only. For a provider-captured payment whose settlement webhook
+  // never arrived: the engine verifies the payment with the provider against
+  // the Contribution's own active order, then records it through the
+  // existing recordSettlementOutcome() path. Never accepts an amount.
+
+  @Post('contributions/:id/settlement/reconcile-provider')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions(VERIFY_PERMISSION)
+  async reconcileProviderSettlement(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ReconcileProviderSettlementDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.financialService.reconcileProviderSettlement(
+      id,
+      dto.providerPaymentReference,
+      dto.reason,
+      auditContext('ADMIN', req, actor),
+    );
+  }
+
+  // ── Refund provider re-check ────────────────────────────────────────────
+  //
+  // Verifier-only, on demand (no scheduler). Resolves a PROCESSING refund
+  // whose terminal webhook was consumed before refund handling existed or
+  // never arrived; a provider 'pending' changes nothing.
+
+  @Post('refunds/:id/recheck')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions(VERIFY_PERMISSION)
+  async recheckRefund(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.financialService.recheckRefund(id, auditContext('ADMIN', req, actor));
   }
 
   // ── Forensic trace (OBS-09/OBS-10) ──────────────────────────────────────

@@ -13,11 +13,15 @@
 import { ServiceUnavailableException } from '@nestjs/common';
 
 const ordersCreate = jest.fn();
+const paymentsFetch = jest.fn();
+const refundsFetch = jest.fn();
 
 jest.mock('razorpay', () => {
   return jest.fn().mockImplementation((config: { key_id: string; key_secret: string }) => ({
     __config: config,
     orders: { create: ordersCreate },
+    payments: { fetch: paymentsFetch },
+    refunds: { fetch: refundsFetch },
   }));
 });
 
@@ -246,5 +250,51 @@ describe('RazorpaySettlementProvider — order-creation failure (Step 18 Part 14
     await expect(
       provider.createOrder({ contributionId: 1, amountPaise: 100, currency: 'INR', receiptReference: 'FC-1-jjjjjjjj' }),
     ).rejects.toThrow('Razorpay API: authentication failed');
+  });
+});
+
+describe('RazorpaySettlementProvider — read-only projections (reconciliation / refund re-check)', () => {
+  beforeEach(() => {
+    process.env.RAZORPAY_KEY_ID = 'rzp_test_projection';
+    process.env.RAZORPAY_KEY_SECRET = 'secret_projection';
+  });
+
+  it('fetchPayment() projects only the reconciliation fields, including the refund footprint', async () => {
+    paymentsFetch.mockResolvedValue({
+      id: 'pay_TfXMUcGMyRqRQh', order_id: 'order_TfXLc0jngBp5Ov', status: 'captured', amount: 1000, currency: 'INR',
+      method: 'upi', captured: true, error_code: null, created_at: 1790179320, amount_refunded: 0, refund_status: null,
+      vpa: 'someone@upi', email: 'member@example.com', contact: '+919999999999', notes: { a: 'b' },
+      card: { last4: '1111' }, bank: 'HDFC', acquirer_data: { rrn: '123' },
+    });
+    const snapshot = await new RazorpaySettlementProvider().fetchPayment('pay_TfXMUcGMyRqRQh');
+
+    expect(paymentsFetch).toHaveBeenCalledWith('pay_TfXMUcGMyRqRQh');
+    expect(snapshot).toEqual({
+      id: 'pay_TfXMUcGMyRqRQh', orderId: 'order_TfXLc0jngBp5Ov', status: 'captured', amountPaise: 1000, currency: 'INR',
+      method: 'upi', captured: true, errorCode: null, createdAt: 1790179320, amountRefundedPaise: 0, refundStatus: null,
+    });
+  });
+
+  it('fetchPayment() reports a provider-side refund', async () => {
+    paymentsFetch.mockResolvedValue({
+      id: 'pay_X', order_id: 'order_Y', status: 'refunded', amount: 1000, currency: 'INR', captured: true,
+      amount_refunded: 1000, refund_status: 'full',
+    });
+    const snapshot = await new RazorpaySettlementProvider().fetchPayment('pay_X');
+    expect(snapshot).toMatchObject({ status: 'refunded', amountRefundedPaise: 1000, refundStatus: 'full' });
+  });
+
+  it('fetchRefund() projects only id/payment/amount/currency/status/created and leaks nothing else', async () => {
+    refundsFetch.mockResolvedValue({
+      id: 'rfnd_TiE7huCUUcJfWa', payment_id: 'pay_TiE5mAvC6Eexep', amount: 1000, currency: 'INR', status: 'processed',
+      created_at: 1790241231, speed_processed: 'normal', notes: { reason: 'x' }, acquirer_data: { rrn: '9' }, receipt: null,
+    });
+    const snapshot = await new RazorpaySettlementProvider().fetchRefund('rfnd_TiE7huCUUcJfWa');
+
+    expect(refundsFetch).toHaveBeenCalledWith('rfnd_TiE7huCUUcJfWa');
+    expect(snapshot).toEqual({
+      id: 'rfnd_TiE7huCUUcJfWa', paymentId: 'pay_TiE5mAvC6Eexep', amountPaise: 1000, currency: 'INR',
+      status: 'processed', createdAt: 1790241231,
+    });
   });
 });

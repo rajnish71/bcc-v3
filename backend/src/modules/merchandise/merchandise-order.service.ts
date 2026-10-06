@@ -258,12 +258,72 @@ export class MerchandiseOrderService {
     return this.getOrder(orderId, actorId, isAdmin);
   }
 
+  // ── Refund (admin) ──────────────────────────────────────────────────────
+  //
+  // Merchandise owns only the DECISION that a refund is owed (PAY-001
+  // §OWNERSHIP MATRIX); the Financial Engine's requestRefund() creates the
+  // refund row and contacts the provider. Nothing here touches financial
+  // tables or calls Razorpay. The order stays PAID while the refund is
+  // REQUESTED/PROCESSING; only CONTRIBUTION_REFUNDED (handled by the existing
+  // handleContributionRefunded()) moves it to REFUNDED. Eligible only before
+  // fulfilment -- once goods are handed over a refund is a separate decision.
+  async requestOrderRefund(
+    orderId: number,
+    reason: string,
+    actorUserId: number,
+    auditContext?: AuditContext,
+  ): Promise<{ order: OrderResponse; refundId: number | null; refundStatus: string | null; alreadyRequested: boolean }> {
+    const order = await this.loadOrder(orderId);
+    const contributionId = order.financial_contribution_id;
+
+    if (order.status === 'REFUNDED') {
+      const refund = contributionId ? await this.financial.getRefundForContribution(contributionId) : null;
+      return {
+        order: await this.getOrder(orderId, actorUserId, true),
+        refundId: refund ? Number(refund.id) : null,
+        refundStatus: refund?.status ?? null,
+        alreadyRequested: true,
+      };
+    }
+    if (order.status !== 'PAID' || order.fulfilment_status !== 'PENDING') {
+      throw new ConflictException(
+        `Order ${orderId} in status '${order.status}' (fulfilment '${order.fulfilment_status}') is not eligible for refund; ` +
+        `only a PAID order awaiting fulfilment can be refunded here.`,
+      );
+    }
+    if (!contributionId) {
+      throw new ConflictException(`Order ${orderId} has no linked Financial Contribution.`);
+    }
+
+    const refund = await this.financial.requestRefund(
+      contributionId,
+      `Merchandise order #${orderId} refunded: ${reason.trim()}`,
+      { actorType: 'HUMAN', actorUserId },
+      auditContext,
+    );
+
+    return {
+      order: await this.getOrder(orderId, actorUserId, true),
+      refundId: refund.refundId,
+      refundStatus: refund.status,
+      alreadyRequested: refund.alreadyRequested,
+    };
+  }
+
   // ── Fulfilment (admin, pickup-only) ─────────────────────────────────────
 
   async markReadyForPickup(orderId: number): Promise<OrderResponse> {
     const order = await this.loadOrder(orderId);
     if (order.status !== 'PAID') {
       throw new ConflictException(`Order ${orderId} in status '${order.status}' is not ready to mark for pickup.`);
+    }
+    // Goods must not be handed over while the payment is being reversed (or
+    // already has been). A FAILED refund does not block fulfilment.
+    if (order.financial_contribution_id) {
+      const refund = await this.financial.getRefundForContribution(order.financial_contribution_id);
+      if (refund && refund.status !== 'FAILED') {
+        throw new ConflictException(`Order ${orderId} has a ${refund.status} refund; it cannot be prepared for pickup.`);
+      }
     }
     await db
       .updateTable('merchandise_orders')

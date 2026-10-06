@@ -6,11 +6,13 @@
 // No Business-Module-specific logic lives here; the engine is entirely generic.
 
 import {
+  BadGatewayException,
   BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { Kysely } from 'kysely';
@@ -33,8 +35,12 @@ import {
 import { FinancialEventBus } from './financial-event-bus.service';
 import {
   SETTLEMENT_PROVIDER,
+  type ProviderPaymentSnapshot,
+  type ProviderRefundSnapshot,
+  type RefundResult,
   type SettlementProvider,
 } from './settlement-provider.interface';
+import { RAZORPAY_PROVIDER_NAME } from './razorpay-settlement.provider';
 import { FinancialAuditService } from './audit/financial-audit.service';
 import type { AuditContext, FinancialAuditMetadata, SettlementClassification } from './audit/financial-audit.types';
 
@@ -42,6 +48,9 @@ import type { AuditContext, FinancialAuditMetadata, SettlementClassification } f
 // Module services invoking createContribution() -- are recorded as SYSTEM
 // with no request/session/IP. Never fabricated (remediation Section 11).
 const SYSTEM_AUDIT: AuditContext = { actorType: 'SYSTEM' };
+
+// The two terminal financial_refunds statuses (REQUESTED/PROCESSING are not).
+type RefundTerminalStatus = 'COMPLETED' | 'FAILED';
 
 // A committed-but-not-yet-published Business Event: the outbox row that
 // backs it (for marking dispatched_at) plus the canonical payload to hand
@@ -598,53 +607,397 @@ export class FinancialContributionService {
       return { refundId, status: 'REQUESTED', alreadyRequested: false };
     }
 
+    const syncAudit: AuditContext = { ...refundAudit, metadata: { refundOutcomeSource: 'SYNC_RESPONSE' } };
+
+    let result: RefundResult;
     try {
-      const result = await this.provider.refund({
+      result = await this.provider.refund({
         contributionId,
         providerPaymentReference: succeededTxn.provider_reference,
         amountPaise: Number(contribution.amount_paise),
         reason,
       });
-      const newStatus = result.status === 'COMPLETED' ? 'COMPLETED' : 'PROCESSING';
-
-      await db
-        .updateTable('financial_refunds')
-        .set({
-          provider: this.provider.providerName,
-          provider_reference: result.providerRefundReference,
-          status: newStatus,
-          resolved_at: newStatus === 'COMPLETED' ? toMysqlDatetime(new Date()) : null,
-        })
-        .where('id', '=', refundId)
-        .execute();
-
-      // COMPLETED -> REFUNDED (existing ALLOWED_TRANSITIONS entry) is only
-      // recorded once the reversal is CONFIRMED, not merely accepted --
-      // same "never claim an unobserved outcome" discipline as everywhere
-      // else in this file. While the refund is still PROCESSING (provider
-      // accepted it but bank-side crediting is unconfirmed), the
-      // Contribution deliberately stays COMPLETED; financial_refunds.status
-      // is the authoritative "a reversal is in flight" signal in the
-      // meantime. Promoting a PROCESSING refund to COMPLETED (and only then
-      // to REFUNDED) once the provider confirms is a known, explicitly
-      // out-of-scope follow-up (would need a refund webhook route) -- not
-      // invented here per the minimum-foundation instruction.
-      if (newStatus === 'COMPLETED') {
-        await this.transitionContribution(contributionId, 'REFUNDED');
-      }
-
-      return { refundId, status: newStatus, alreadyRequested: false };
     } catch (err) {
-      await db
-        .updateTable('financial_refunds')
-        .set({
-          status: 'FAILED',
-          failure_reason: (err instanceof Error ? err.message : 'Unknown refund error').slice(0, 500),
-        })
-        .where('id', '=', refundId)
-        .execute();
+      // The provider never accepted the request, so no provider refund id
+      // exists -- recorded FAILED through the same terminal-outcome path.
+      await this.recordRefundOutcome(refundId, {
+        result: 'FAILED',
+        providerRefundReference: null,
+        failureReason: err instanceof Error ? err.message : 'Unknown refund error',
+      }, syncAudit);
       return { refundId, status: 'FAILED', alreadyRequested: false };
     }
+
+    // Accepted: the reversal is in flight until a terminal outcome is
+    // observed. Contribution deliberately stays COMPLETED meanwhile;
+    // financial_refunds.status is the authoritative "reversal in flight"
+    // signal (PAY-001: never claim an unobserved outcome).
+    await db
+      .updateTable('financial_refunds')
+      .set({
+        provider: this.provider.providerName,
+        provider_reference: result.providerRefundReference,
+        status: 'PROCESSING',
+      })
+      .where('id', '=', refundId)
+      .execute();
+
+    // A synchronously-confirmed reversal resolves through the same single
+    // terminal path as the webhook and the provider re-check.
+    if (result.status === 'COMPLETED') {
+      await this.recordRefundOutcome(refundId, {
+        result: 'COMPLETED',
+        providerRefundReference: result.providerRefundReference,
+      }, syncAudit);
+      return { refundId, status: 'COMPLETED', alreadyRequested: false };
+    }
+
+    return { refundId, status: 'PROCESSING', alreadyRequested: false };
+  }
+
+  // ── Refund terminal outcome (the ONLY place a refund becomes terminal) ──────
+  //
+  // Called by requestRefund() (synchronous provider answer), the Razorpay
+  // refund webhook, and the admin provider re-check. Moves a REQUESTED/
+  // PROCESSING refund to COMPLETED or FAILED and, on COMPLETED only, the
+  // Contribution COMPLETED -> REFUNDED via the existing state machine (whose
+  // outbox row emits CONTRIBUTION_REFUNDED after COMMIT). The original
+  // Financial Transaction is never touched (PAY-001 Principle 10).
+  //
+  // Idempotent: the refund row is locked FOR UPDATE; a repeat of the same
+  // terminal outcome returns changed=false with no write, audit or event.
+  // A contradictory terminal outcome, or a provider refund id that differs
+  // from the one already recorded, is rejected (409) with no write. A NULL
+  // provider_reference (e.g. a webhook that beat requestRefund()'s own
+  // UPDATE) is established by the first verified outcome.
+  async recordRefundOutcome(
+    refundId: number,
+    outcome: { result: RefundTerminalStatus; providerRefundReference: string | null; failureReason?: string | null },
+    auditContext: AuditContext,
+  ): Promise<{ refundId: number; contributionId: number; refundStatus: RefundTerminalStatus; contributionState: ContributionState; changed: boolean }> {
+    const pending: PendingFinancialEvent[] = [];
+
+    const result = await db.transaction().execute(async (trx) => {
+      const refund = await trx
+        .selectFrom('financial_refunds')
+        .selectAll()
+        .where('id', '=', refundId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!refund) throw new NotFoundException(`Refund ${refundId} not found.`);
+
+      const contributionId = Number(refund.contribution_id);
+      const contribution = await trx
+        .selectFrom('financial_contributions')
+        .selectAll()
+        .where('id', '=', contributionId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!contribution) throw new NotFoundException(`Financial contribution ${contributionId} not found.`);
+      const currentState = contribution.state as ContributionState;
+
+      if (refund.status === 'COMPLETED' || refund.status === 'FAILED') {
+        if (refund.status !== outcome.result) {
+          throw new ConflictException(
+            `Refund ${refundId} is already '${refund.status}'; a contradictory '${outcome.result}' outcome is not applied.`,
+          );
+        }
+        return { refundId, contributionId, refundStatus: outcome.result, contributionState: currentState, changed: false };
+      }
+
+      if (refund.provider_reference && outcome.providerRefundReference
+        && refund.provider_reference !== outcome.providerRefundReference) {
+        throw new ConflictException(
+          `Refund ${refundId} is recorded against provider refund '${refund.provider_reference}', not '${outcome.providerRefundReference}'.`,
+        );
+      }
+      if (outcome.result === 'COMPLETED' && !outcome.providerRefundReference && !refund.provider_reference) {
+        throw new BadRequestException(`A COMPLETED refund outcome requires a provider refund reference.`);
+      }
+      if (outcome.result === 'COMPLETED' && currentState !== 'COMPLETED') {
+        throw new ConflictException(
+          `Contribution ${contributionId} is in state '${currentState}'; only a COMPLETED contribution can become REFUNDED.`,
+        );
+      }
+
+      await trx
+        .updateTable('financial_refunds')
+        .set({
+          status: outcome.result,
+          resolved_at: toMysqlDatetime(new Date()),
+          ...(outcome.result === 'FAILED'
+            ? { failure_reason: (outcome.failureReason ?? 'Refund failed at the Settlement Provider').slice(0, 500) }
+            : {}),
+          ...(!refund.provider_reference && outcome.providerRefundReference
+            ? { provider: refund.provider ?? this.provider.providerName, provider_reference: outcome.providerRefundReference }
+            : {}),
+        })
+        .where('id', '=', refundId)
+        .execute();
+
+      let resultingState = currentState;
+      if (outcome.result === 'COMPLETED') {
+        const refunded = await this.transitionContribution(contributionId, 'REFUNDED', trx);
+        if (refunded) pending.push(refunded);
+        resultingState = 'REFUNDED';
+      }
+
+      await this.audit.record(trx, {
+        eventType: 'REFUND_OUTCOME_RECORDED',
+        contributionId,
+        refundId,
+        webhookInboxId: auditContext.webhookInboxId ?? null,
+        actorType: auditContext.actorType,
+        provenance: auditContext.provenance,
+        previousState: currentState,
+        resultingState,
+        metadata: auditContext.metadata,
+      });
+
+      return { refundId, contributionId, refundStatus: outcome.result, contributionState: resultingState, changed: true };
+    });
+
+    if (pending.length) await this.publishPending(pending);
+    return result;
+  }
+
+  // Admin re-check of a refund still awaiting its terminal outcome (e.g. the
+  // webhook was consumed before refund handling existed, or never arrived).
+  // On demand only -- no scheduler. Provider 'pending' leaves everything
+  // unchanged.
+  async recheckRefund(
+    refundId: number,
+    auditContext: AuditContext,
+  ): Promise<{ refundId: number; contributionId: number; refundStatus: string; contributionState: ContributionState; changed: boolean; providerStatus: string }> {
+    const refund = await db
+      .selectFrom('financial_refunds')
+      .selectAll()
+      .where('id', '=', refundId)
+      .executeTakeFirst();
+    if (!refund) throw new NotFoundException(`Refund ${refundId} not found.`);
+    if (refund.status !== 'PROCESSING') {
+      throw new ConflictException(
+        `Refund ${refundId} is '${refund.status}'; only a PROCESSING refund can be re-checked with the provider.`,
+      );
+    }
+    if (!refund.provider_reference || refund.provider !== this.provider.providerName) {
+      throw new ConflictException(`Refund ${refundId} has no ${this.provider.providerName} refund reference to re-check.`);
+    }
+    if (!this.provider.fetchRefund) {
+      throw new ServiceUnavailableException('The configured Settlement Provider cannot look up refunds.');
+    }
+
+    let snapshot: ProviderRefundSnapshot;
+    try {
+      snapshot = await this.provider.fetchRefund(refund.provider_reference);
+    } catch (err) {
+      throw new BadGatewayException(
+        `Provider refund lookup failed: ${err instanceof Error ? err.message : 'unknown error'}`,
+      );
+    }
+
+    if (snapshot.id !== refund.provider_reference) {
+      throw new ConflictException(`Provider returned refund '${snapshot.id}', not '${refund.provider_reference}'.`);
+    }
+    if (snapshot.amountPaise !== Number(refund.amount_paise)
+      || snapshot.currency.toUpperCase() !== String(refund.currency).toUpperCase()) {
+      throw new ConflictException(
+        `Provider refund ${snapshot.amountPaise} ${snapshot.currency} does not match refund ${refund.amount_paise} ${refund.currency}.`,
+      );
+    }
+
+    const contributionId = Number(refund.contribution_id);
+    const terminal: RefundTerminalStatus | null =
+      snapshot.status === 'processed' ? 'COMPLETED' : snapshot.status === 'failed' ? 'FAILED' : null;
+    if (!terminal) {
+      const contribution = await this.getContribution(contributionId);
+      return {
+        refundId, contributionId, refundStatus: refund.status,
+        contributionState: contribution.state as ContributionState, changed: false, providerStatus: snapshot.status,
+      };
+    }
+
+    const outcome = await this.recordRefundOutcome(refundId, {
+      result: terminal,
+      providerRefundReference: snapshot.id,
+      failureReason: terminal === 'FAILED' ? 'Refund failed at the Settlement Provider' : null,
+    }, { ...auditContext, metadata: { refundOutcomeSource: 'PROVIDER_RECHECK' } });
+    return { ...outcome, providerStatus: snapshot.status };
+  }
+
+  // Read-only: the (at most one) refund row for a Contribution, so a Business
+  // Module can see whether a reversal is requested/in flight/done without
+  // reading financial tables itself.
+  async getRefundForContribution(contributionId: number) {
+    const row = await db
+      .selectFrom('financial_refunds')
+      .select(['id', 'status', 'provider_reference', 'failure_reason', 'requested_at', 'resolved_at'])
+      .where('contribution_id', '=', contributionId)
+      .executeTakeFirst();
+    return row ?? null;
+  }
+
+  // Locates the platform refund a provider refund event refers to: first by
+  // the provider refund id, then (refund id not yet stored) by the original
+  // payment id -> its SUCCEEDED transaction -> that Contribution's single
+  // refund row. Never creates a refund (PAY-001: the Business Module decides).
+  async findRefundForProviderEvent(providerRefundReference: string, providerPaymentReference: string | null) {
+    const byRefund = await db
+      .selectFrom('financial_refunds')
+      .selectAll()
+      .where('provider', '=', this.provider.providerName)
+      .where('provider_reference', '=', providerRefundReference)
+      .executeTakeFirst();
+    if (byRefund) return byRefund;
+    if (!providerPaymentReference) return undefined;
+
+    const txn = await db
+      .selectFrom('financial_transactions')
+      .select(['contribution_id'])
+      .where('provider', '=', this.provider.providerName)
+      .where('provider_reference', '=', providerPaymentReference)
+      .where('outcome', '=', 'SUCCEEDED')
+      .executeTakeFirst();
+    if (!txn) return undefined;
+
+    const byPayment = await db
+      .selectFrom('financial_refunds')
+      .selectAll()
+      .where('contribution_id', '=', Number(txn.contribution_id))
+      .executeTakeFirst();
+    // A row already bound to a DIFFERENT provider refund is not this event's.
+    if (byPayment?.provider_reference && byPayment.provider_reference !== providerRefundReference) return undefined;
+    return byPayment;
+  }
+
+  // ── Provider-verified settlement reconciliation ─────────────────────────────
+  //
+  // Admin path for a provider-captured payment whose settlement webhook was
+  // never received, leaving the Contribution SETTLEMENT_IN_PROGRESS with no
+  // Financial Transaction. Verifies the payment with the Settlement Provider
+  // (read-only fetchPayment) against the Contribution's own active order
+  // reference, then records it through the EXISTING recordSettlementOutcome()
+  // -- the same transaction/receipt/state/outbox path the webhook uses. No
+  // write happens before every check passes.
+  //
+  // Idempotent: a payment already recorded on this Contribution returns
+  // alreadyRecorded=true without contacting the provider; a concurrent
+  // webhook for the same payment is absorbed by recordSettlementOutcome()'s
+  // own row lock + (contribution_id, provider_reference) short-circuit.
+  async reconcileProviderSettlement(
+    contributionId: number,
+    providerPaymentReference: string,
+    reason: string,
+    auditContext: AuditContext,
+  ) {
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) throw new BadRequestException('A reconciliation reason is required.');
+
+    const contribution = await this.getContribution(contributionId);
+
+    const existing = await db
+      .selectFrom('financial_transactions')
+      .select(['id', 'outcome'])
+      .where('contribution_id', '=', contributionId)
+      .where('provider_reference', '=', providerPaymentReference)
+      .executeTakeFirst();
+    if (existing) {
+      if (existing.outcome !== 'SUCCEEDED') {
+        throw new ConflictException(
+          `Payment '${providerPaymentReference}' is already recorded on contribution ${contributionId} as '${existing.outcome}'.`,
+        );
+      }
+      return {
+        contributionId,
+        transactionId: Number(existing.id),
+        contributionState: contribution.state as ContributionState,
+        receiptNumber: await this.findReceiptNumber(contributionId),
+        alreadyRecorded: true,
+        provider: null,
+      };
+    }
+
+    if (contribution.state !== 'SETTLEMENT_IN_PROGRESS') {
+      throw new ConflictException(
+        `Contribution ${contributionId} is in state '${contribution.state}'; only a SETTLEMENT_IN_PROGRESS contribution can be reconciled.`,
+      );
+    }
+    const orderReference = contribution.active_settlement_reference;
+    if (!orderReference || !orderReference.startsWith('order_')) {
+      throw new ConflictException(
+        `Contribution ${contributionId}'s active settlement attempt is not a provider order; it cannot be reconciled by payment.`,
+      );
+    }
+    const succeeded = await db
+      .selectFrom('financial_transactions')
+      .select(['id'])
+      .where('contribution_id', '=', contributionId)
+      .where('outcome', '=', 'SUCCEEDED')
+      .executeTakeFirst();
+    if (succeeded) {
+      throw new ConflictException(`Contribution ${contributionId} already has a SUCCEEDED Financial Transaction.`);
+    }
+    if (this.provider.providerName !== RAZORPAY_PROVIDER_NAME || !this.provider.fetchPayment) {
+      throw new ServiceUnavailableException('The configured Settlement Provider does not support payment reconciliation.');
+    }
+
+    let payment: ProviderPaymentSnapshot;
+    try {
+      payment = await this.provider.fetchPayment(providerPaymentReference);
+    } catch (err) {
+      const status = (err as { statusCode?: number }).statusCode;
+      if (status === 400 || status === 404) {
+        throw new NotFoundException(`Provider payment '${providerPaymentReference}' was not found.`);
+      }
+      throw new BadGatewayException(
+        `Provider payment lookup failed: ${err instanceof Error ? err.message : 'unknown error'}`,
+      );
+    }
+
+    const amountPaise = Number(contribution.amount_paise);
+    const mismatch = providerPaymentMismatch(payment, {
+      paymentReference: providerPaymentReference,
+      orderReference,
+      amountPaise,
+      currency: String(contribution.currency),
+    });
+    if (mismatch) throw new ConflictException(`Payment '${providerPaymentReference}' cannot be reconciled: ${mismatch}`);
+
+    const { transactionId, contributionState } = await this.recordSettlementOutcome(contributionId, {
+      provider: this.provider.providerName,
+      providerReference: providerPaymentReference,
+      result: 'SUCCEEDED',
+      amountPaise,
+    }, {
+      ...auditContext,
+      metadata: { settlementSource: 'PROVIDER_RECONCILIATION', reconciliationReason: trimmedReason },
+    });
+
+    return {
+      contributionId,
+      transactionId,
+      contributionState,
+      receiptNumber: await this.findReceiptNumber(contributionId),
+      alreadyRecorded: false,
+      provider: {
+        paymentId: payment.id,
+        orderId: payment.orderId,
+        status: payment.status,
+        amountPaise: payment.amountPaise,
+        currency: payment.currency,
+        method: payment.method,
+        createdAt: payment.createdAt,
+      },
+    };
+  }
+
+  private async findReceiptNumber(contributionId: number): Promise<string | null> {
+    const receipt = await db
+      .selectFrom('receipts')
+      .select(['receipt_number'])
+      .where('contribution_id', '=', contributionId)
+      .executeTakeFirst();
+    return receipt?.receipt_number ?? null;
   }
 
   // ── Zero-value path ───────────────────────────────────────────────────────
@@ -1504,6 +1857,7 @@ export class FinancialContributionService {
         providerPaymentRef: outcome.providerReference,
         previousState: currentState,
         resultingState,
+        metadata: auditContext.metadata,
       });
 
       const businessModule = String(contribution.business_module);
@@ -1701,4 +2055,33 @@ function readCapturedPayment(
     orderId: typeof entity?.order_id === 'string' ? entity.order_id : null,
     accountId: typeof root.account_id === 'string' ? root.account_id : null,
   };
+}
+
+// Provider-verified reconciliation checks (pure; exported for tests). Returns
+// the first reason the provider's payment cannot settle this attempt, or
+// null when the payment is exactly the captured, unrefunded, full-amount
+// payment of the Contribution's own active order.
+export function providerPaymentMismatch(
+  payment: ProviderPaymentSnapshot,
+  expected: { paymentReference: string; orderReference: string; amountPaise: number; currency: string },
+): string | null {
+  if (payment.id !== expected.paymentReference) {
+    return `provider returned payment '${payment.id}'.`;
+  }
+  if (payment.orderId !== expected.orderReference) {
+    return `it belongs to order '${payment.orderId ?? 'none'}', not '${expected.orderReference}'.`;
+  }
+  if ((payment.amountRefundedPaise ?? 0) > 0 || payment.status === 'refunded' || payment.refundStatus) {
+    return 'a provider-side refund already exists for it; human review required.';
+  }
+  if (payment.status !== 'captured' || payment.captured === false) {
+    return `its provider status is '${payment.status}', not captured.`;
+  }
+  if (payment.amountPaise !== expected.amountPaise) {
+    return `amount ${payment.amountPaise} paise does not match contribution amount ${expected.amountPaise} paise.`;
+  }
+  if (payment.currency.toUpperCase() !== expected.currency.toUpperCase()) {
+    return `currency '${payment.currency}' does not match contribution currency '${expected.currency}'.`;
+  }
+  return null;
 }

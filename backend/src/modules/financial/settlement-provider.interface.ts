@@ -103,6 +103,21 @@ export interface ProviderPaymentSnapshot {
   captured: boolean | null;
   errorCode: string | null;
   createdAt: number | null;
+  // Provider-side refund footprint on this payment -- lets provider-verified
+  // reconciliation refuse a payment that was already (partly) reversed.
+  amountRefundedPaise?: number | null;
+  refundStatus?: string | null;
+}
+
+// Read-only refund projection for refund-completion re-checks. status is the
+// provider's own value (Razorpay: 'pending' | 'processed' | 'failed').
+export interface ProviderRefundSnapshot {
+  id: string;
+  paymentId: string | null;
+  amountPaise: number;
+  currency: string;
+  status: string;
+  createdAt: number | null;
 }
 
 export interface SettlementProvider {
@@ -138,4 +153,5 @@ export interface SettlementProvider {
   // result.
   fetchOrder?(providerOrderReference: string): Promise<ProviderOrderSnapshot>;
   fetchPayment?(providerPaymentReference: string): Promise<ProviderPaymentSnapshot>;
+  fetchRefund?(providerRefundReference: string): Promise<ProviderRefundSnapshot>;
 }

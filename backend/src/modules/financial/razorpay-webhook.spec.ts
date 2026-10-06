@@ -177,9 +177,12 @@ describe('Event selection (Step 19 Part 14/15/25 — Event Selection)', () => {
     expect(WEBHOOK_SERVICE_SRC).not.toContain("'payment.authorized'");
   });
 
-  it('does not implement refund, dispute, or subscription events', () => {
+  it('handles only the two terminal refund events, and no dispute or subscription events', () => {
     const lowered = WEBHOOK_SERVICE_SRC.toLowerCase();
-    expect(lowered).not.toContain('refund.');
+    const refundEvents = (WEBHOOK_SERVICE_SRC.match(/'refund\.[a-z_]+'/g) ?? []).sort();
+    expect(refundEvents).toEqual(["'refund.failed'", "'refund.processed'"]);
+    // refund.created is acknowledged-and-ignored, never an outcome.
+    expect(WEBHOOK_SERVICE_SRC).not.toContain("'refund.created'");
     expect(lowered).not.toContain('dispute.');
     expect(lowered).not.toContain('subscription.');
   });
@@ -311,8 +314,10 @@ describe('N. Scope discipline (Step 19 §O/26/28)', () => {
     });
   });
 
-  it('no refund-related code', () => {
-    expect(WEBHOOK_SERVICE_SRC.toLowerCase()).not.toContain('refund');
+  it('refund events never initiate, create or write refunds -- they only resolve one via recordRefundOutcome()', () => {
+    expect(WEBHOOK_SERVICE_SRC).not.toMatch(/\.refund\(|requestRefund\(/);
+    expect(WEBHOOK_SERVICE_SRC).not.toMatch(/(insertInto|updateTable)\(\s*['"]financial_refunds['"]/);
+    expect(WEBHOOK_SERVICE_SRC).toContain('this.financialService.recordRefundOutcome(');
   });
 
   it('financial.module.ts registers both the controller and the service', () => {

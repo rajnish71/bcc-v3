@@ -331,6 +331,9 @@ export class MembershipAdminService {
         .where('m.expires_at', '>=', windowStart)
         .where('m.expires_at', '<', windowEnd)
         .where('m.owner_type', '=', 'INDIVIDUAL')
+        // Release 1 §18: only renewable plans are reminded to renew --
+        // Legacy (closed, non-renewable) and lifetime classes never are.
+        .where('mc.is_renewable', '=', true)
         .execute();
 
       dispatched[typeKey] = 0;

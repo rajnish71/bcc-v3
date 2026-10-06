@@ -122,6 +122,22 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
       <div id="reminders-feedback" class="assign-feedback" hidden></div>
     </section>
 
+    <!-- 7b: RELEASE 1 RENEWAL / REINSTATEMENT OPERATIONS -->
+    <section class="admin-section" id="section-renewal-ops">
+      <div class="section-kicker"><span class="kicker-rule"></span>Lifecycle Management</div>
+      <h2 class="section-title">Renewals &amp; Reinstatements</h2>
+      <p class="section-hint">
+        Self-service renewals and reinstatement requests on existing memberships (same record, same number).
+        Reinstatement requests need a decision before any payment is requested; renewals waiting for eligibility
+        proof need the uploaded document accepted.
+      </p>
+      <div id="renewal-ops-loading" class="state-loading">Loading…</div>
+      <div id="renewal-ops-empty"   class="state-empty" hidden>No renewal or reinstatement requests need attention.</div>
+      <div id="renewal-ops-error"   class="state-error" hidden></div>
+      <div id="renewal-ops-feedback" class="assign-feedback" hidden></div>
+      <div id="renewal-ops-list"    class="data-table-wrap" hidden></div>
+    </section>
+
     <!-- 8: EXPIRY PROCESSING -->
     <section class="admin-section" id="section-expiry">
       <div class="section-kicker"><span class="kicker-rule"></span>Lifecycle Management</div>
@@ -968,6 +984,94 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
     }
   });
 
+  // ── 7b: RENEWAL / REINSTATEMENT OPERATIONS (Release 1) ───────────
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  async function loadRenewalOps() {
+    hide('renewal-ops-error'); hide('renewal-ops-list'); hide('renewal-ops-empty'); show('renewal-ops-loading');
+    try {
+      var requested = await apiFetch('/api/v1/membership/admin/renewal-operations?status=REQUESTED');
+      var proof = await apiFetch('/api/v1/membership/admin/renewal-operations?status=PROOF_REQUIRED');
+      var rows = requested.concat(proof);
+      hide('renewal-ops-loading');
+      if (!rows.length) { show('renewal-ops-empty'); return; }
+      var wrap = document.getElementById('renewal-ops-list');
+      wrap.innerHTML = '<table class="data-table"><thead><tr>' +
+        '<th>Member</th><th>Membership No.</th><th>Class</th><th>Request</th><th>Term end</th><th>Action</th>' +
+        '</tr></thead><tbody>' + rows.map(function(r) {
+          var actions = r.status === 'REQUESTED'
+            ? '<button type="button" class="btn-action" data-op-approve="' + r.id + '">Approve</button> ' +
+              '<button type="button" class="btn-action" data-op-reject="' + r.id + '">Reject</button>'
+            : '<button type="button" class="btn-action" data-op-docs="' + r.id + '" data-membership="' + r.membership_id + '">Review proof</button>';
+          return '<tr><td><div style="font-weight:600">' + escHtml(r.full_name) + '</div><div class="mono" style="color:var(--ink-400)">' + escHtml(r.email) + '</div></td>' +
+            '<td class="mono">' + escHtml(r.membership_number || '—') + '</td>' +
+            '<td>' + escHtml(r.class_name) + '</td>' +
+            '<td><span class="tag-pill">' + escHtml(r.operation_type) + '</span> <span class="tag-pill">' + escHtml(r.status) + '</span></td>' +
+            '<td class="mono">' + fmtDate(r.previous_term_end) + '</td>' +
+            '<td>' + actions + '<div data-op-docs-panel="' + r.id + '"></div></td></tr>';
+        }).join('') + '</tbody></table>';
+      show('renewal-ops-list');
+    } catch (e) {
+      hide('renewal-ops-loading'); setText('renewal-ops-error', e.message); show('renewal-ops-error');
+    }
+  }
+
+  document.getElementById('renewal-ops-list').addEventListener('click', async function(ev) {
+    var t = ev.target;
+    if (!(t instanceof HTMLElement)) return;
+    var approveId = t.getAttribute('data-op-approve');
+    var rejectId = t.getAttribute('data-op-reject');
+    var docsId = t.getAttribute('data-op-docs');
+    var reviewUuid = t.getAttribute('data-doc-review');
+    hide('renewal-ops-feedback'); hide('renewal-ops-error');
+    try {
+      if (approveId || rejectId) {
+        var decision = approveId ? 'APPROVED' : 'REJECTED';
+        var note = window.prompt(decision === 'APPROVED'
+          ? 'Approve reinstatement? The member will be asked to pay the current plan fee. Optional note:'
+          : 'Reason for rejecting this reinstatement request (shown to the member):');
+        if (note === null) return;
+        t.setAttribute('disabled', 'true');
+        await apiFetch('/api/v1/membership/admin/renewal-operations/' + (approveId || rejectId) + '/decision', {
+          method: 'POST', body: JSON.stringify({ decision: decision, note: note }),
+        });
+        setText('renewal-ops-feedback', 'Reinstatement request ' + decision.toLowerCase() + '.');
+        show('renewal-ops-feedback');
+        loadRenewalOps();
+      } else if (docsId) {
+        var panel = document.querySelector('[data-op-docs-panel="' + docsId + '"]');
+        var docs = await apiFetch('/api/v1/membership/applications/' + t.getAttribute('data-membership') + '/documents');
+        var mine = docs.filter(function(d) { return Number(d.renewal_operation_id) === Number(docsId); });
+        panel.innerHTML = mine.length ? mine.map(function(d) {
+          return '<div style="margin-top:6px">' + escHtml(d.document_type) + ' — ' + escHtml(d.original_filename) +
+            ' <span class="tag-pill">' + escHtml(d.upload_status === 'UPLOADED' ? d.review_status : 'NOT UPLOADED') + '</span>' +
+            (d.upload_status === 'UPLOADED' && d.review_status === 'PENDING_REVIEW'
+              ? ' <button type="button" class="btn-action" data-doc-review="' + escHtml(d.uuid) + '" data-decision="ACCEPTED">Accept</button>' +
+                ' <button type="button" class="btn-action" data-doc-review="' + escHtml(d.uuid) + '" data-decision="REJECTED">Reject</button>'
+              : '') + '</div>';
+        }).join('') : '<div style="margin-top:6px">No proof uploaded yet.</div>';
+      } else if (reviewUuid) {
+        var reviewStatus = t.getAttribute('data-decision');
+        var reviewNote = reviewStatus === 'REJECTED' ? window.prompt('Reason (shown to the member):') : null;
+        if (reviewStatus === 'REJECTED' && reviewNote === null) return;
+        t.setAttribute('disabled', 'true');
+        await apiFetch('/api/v1/membership/applications/documents/' + reviewUuid + '/review', {
+          method: 'POST', body: JSON.stringify({ reviewStatus: reviewStatus, reviewNote: reviewNote || undefined }),
+        });
+        setText('renewal-ops-feedback', 'Proof ' + reviewStatus.toLowerCase() + '. The member continues to payment from the Member Hub.');
+        show('renewal-ops-feedback');
+        loadRenewalOps();
+      }
+    } catch (e) {
+      setText('renewal-ops-error', e.message); show('renewal-ops-error');
+      t.removeAttribute('disabled');
+    }
+  });
+
   // ── 8: EXPIRY PROCESSING ─────────────────────────────────────────
   var dueForExpiry = [];
 
@@ -1194,6 +1298,7 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
   loadStats();
   loadClasses();
   loadExpiring();
+  loadRenewalOps();
   loadEvents();
   loadNotifTypes();
 })();

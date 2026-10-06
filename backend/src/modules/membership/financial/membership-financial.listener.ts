@@ -13,6 +13,7 @@ import { FinancialEventBus } from '../../financial/financial-event-bus.service';
 import { FINANCIAL_EVENT_TYPES } from '../../financial/financial.events';
 import type { FinancialEngineEventPayload } from '../../financial/financial.events';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
+import { MembershipRenewalService } from '../renewal/membership-renewal.service';
 
 const MEMBERSHIP_BUSINESS_MODULE = 'MEMBERSHIP';
 
@@ -23,6 +24,7 @@ export class MembershipFinancialListener implements OnModuleInit {
   constructor(
     private readonly eventBus: FinancialEventBus,
     private readonly lifecycle: MembershipLifecycleService,
+    private readonly renewal: MembershipRenewalService,
   ) {}
 
   onModuleInit(): void {
@@ -44,13 +46,17 @@ export class MembershipFinancialListener implements OnModuleInit {
   // only records that payment has been received; recordPaymentReceived() is
   // async and errors are caught so a failure here never crashes the event
   // emitter loop.
+  // Release 1: a renewal/reinstatement obligation (recognised by its
+  // deterministic key) is applied by MembershipRenewalService to the
+  // EXISTING row; every other Contribution keeps the existing behaviour.
   private handleContributionCompleted(payload: FinancialEngineEventPayload): void {
     const membershipId = payload.businessReferenceId;
     // contributionId lets the lifecycle recognise a settlement-correction
     // Contribution (record-only); every other Contribution keeps the
     // existing behaviour.
-    this.lifecycle
-      .recordPaymentReceived(membershipId, payload.contributionId)
+    this.renewal
+      .handleContributionCompleted(payload)
+      .then((handled) => (handled ? undefined : this.lifecycle.recordPaymentReceived(membershipId, payload.contributionId)))
       .catch((err: Error) =>
         this.logger.error(
           `recordPaymentReceived(${membershipId}) failed after CONTRIBUTION_COMPLETED: ${err.message}`,
@@ -60,12 +66,17 @@ export class MembershipFinancialListener implements OnModuleInit {
 
   private handleSettlementFailed(payload: FinancialEngineEventPayload): void {
     const membershipId = payload.businessReferenceId;
-    this.lifecycle
-      .recordPaymentFailure(
-        membershipId,
-        payload.amountPaise,
-        undefined,
-        payload.contributionId,
+    this.renewal
+      .handleSettlementFailed(payload)
+      .then((handled) =>
+        handled
+          ? undefined
+          : this.lifecycle.recordPaymentFailure(
+              membershipId,
+              payload.amountPaise,
+              undefined,
+              payload.contributionId,
+            ),
       )
       .catch((err: Error) =>
         this.logger.error(

@@ -279,7 +279,7 @@ const { variant } = Astro.props;
         <p>BCC processes personal data in accordance with applicable Indian data protection regulations. Member data is used solely for club operations, communication, and membership management. Data is never sold or disclosed to third parties. Full details are available in the BCC Privacy Policy.</p>
 
         <h5 class="maf-tc-h5">6. Fees and Renewals</h5>
-        <p>Membership fees are determined by the BCC Executive Committee and are subject to annual review. Membership is valid for one calendar year from the date of admin activation. Renewals must be submitted within the 60-day window prior to expiry or within 30 days after expiry.</p>
+        <p>Membership fees are determined by the BCC Executive Committee and are subject to annual review. Membership is valid for one calendar year from the date of admin activation. Renewal opens 45 days before your membership expires and closes on the expiry date. After expiry, the same membership can only be restored through a reinstatement request approved by the membership team.</p>
 
         <h5 class="maf-tc-h5">7. Termination</h5>
         <p>Membership may be surrendered by the member at any time by written notice to the BCC Secretary. BCC reserves the right to suspend or terminate membership in cases of breach of these terms or the BCC Code of Conduct, following due process and notification.</p>
@@ -1330,7 +1330,8 @@ const { variant } = Astro.props;
             city,
             state,
             pinCode: pin,
-            termsVersion: 'v1.0',
+            // v1.1: §6 renewal sentence corrected to the Release 1 policy.
+            termsVersion: 'v1.1',
             membershipClassCode: selectedPlan.classCode,
           }),
         });

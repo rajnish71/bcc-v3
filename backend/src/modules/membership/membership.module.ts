@@ -28,6 +28,7 @@ import { HubMembershipService } from './hub/hub-membership.service';
 import { HubMembershipController } from './hub/hub-membership.controller';
 import { MembershipAdminService } from './admin/membership-admin.service';
 import { MembershipAdminController } from './admin/membership-admin.controller';
+import { MembershipRenewalService } from './renewal/membership-renewal.service';
 
 @Module({
   imports: [AuthModule, RbacModule, CommunicationModule, StorageModule, FinancialModule],
@@ -57,6 +58,7 @@ import { MembershipAdminController } from './admin/membership-admin.controller';
     MembershipCardService,
     HubMembershipService,
     MembershipAdminService,
+    MembershipRenewalService,
   ],
   exports: [
     MembershipLifecycleService,

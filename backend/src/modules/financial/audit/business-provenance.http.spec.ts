@@ -52,6 +52,7 @@ import { MembershipController } from '../../membership/membership.controller';
 import { MembershipLifecycleService } from '../../membership/lifecycle/membership-lifecycle.service';
 import { ApplicationWorkflowService } from '../../membership/application/application-workflow.service';
 import { HubMembershipController } from '../../membership/hub/hub-membership.controller';
+import { MembershipRenewalService } from '../../membership/renewal/membership-renewal.service';
 import { HubMembershipService } from '../../membership/hub/hub-membership.service';
 import { MembershipAdminController } from '../../membership/admin/membership-admin.controller';
 import { MembershipAdminService } from '../../membership/admin/membership-admin.service';
@@ -141,7 +142,8 @@ function auditOps(eventType: string): FakeOp[] {
 describe('HTTP-originated Business Module financial actions carry full provenance', () => {
   let app: NestFastifyApplication;
   let jwt: JwtService;
-  const hubService = { submitApplication: jest.fn().mockResolvedValue({ success: true }), submitRenewal: jest.fn().mockResolvedValue({ success: true }) };
+  const hubService = { submitApplication: jest.fn().mockResolvedValue({ success: true }) };
+  const renewalService = { requestRenewal: jest.fn().mockResolvedValue({}) };
   const adminService = { grantComplimentaryMembership: jest.fn().mockResolvedValue({ membershipNumber: 'x', expiresAt: 'y' }) };
   const permissions = new Map<number, Set<string>>([
     [ADMIN, new Set(['membership.application.reject', 'membership.application.create_for_others', 'membership.lifecycle.activate'])],
@@ -167,6 +169,7 @@ describe('HTTP-originated Business Module financial actions carry full provenanc
         CommunicationService,
         R2Service,
         { provide: HubMembershipService, useValue: hubService },
+        { provide: MembershipRenewalService, useValue: renewalService },
         { provide: MembershipAdminService, useValue: adminService },
         { provide: MerchandiseCatalogService, useValue: {} },
       ],
@@ -251,18 +254,19 @@ describe('HTTP-originated Business Module financial actions carry full provenanc
   // createApplicationContribution() -> CONTRIBUTION_CREATED path is the one
   // exercised end-to-end by the membership application test above.
   it.each([
-    ['application', 'submitApplication'],
-    ['renewal', 'submitRenewal'],
-  ] as const)('Hub %s route forwards member provenance to the membership service', async (path, method) => {
+    ['application', 'submitApplication', 'submitApplication'],
+    ['renewal', 'requestRenewal', 'requestRenewal'],
+  ] as const)('Hub %s route forwards member provenance to the membership service', async (path, method, serviceMethod) => {
     const controller = app.get(HubMembershipController);
+    const service = (path === 'renewal' ? renewalService : hubService) as Record<string, jest.Mock>;
     const req = {
       id: 'hub-request-id', ip: CLIENT_IP, headers: { 'user-agent': UA, authorization: 'Bearer x' },
       routeOptions: { url: `/api/v1/hub/membership/${path}` },
     };
     await (controller[method] as (...a: unknown[]) => Promise<unknown>)(
-      { sub: MEMBER, uuid: 'u', status: 'ACTIVE', sid: MEMBER_SID }, {}, req,
+      { sub: MEMBER, uuid: 'u', status: 'ACTIVE', sid: MEMBER_SID }, { acceptTerms: true, termsVersion: 'renewal-v1.0' }, req,
     );
-    const context = hubService[method].mock.calls.at(-1)![4] as AuditContext;
+    const context = service[serviceMethod].mock.calls.at(-1)![4] as AuditContext;
     expect(context).toEqual({
       actorType: 'MEMBER',
       provenance: {
@@ -272,14 +276,17 @@ describe('HTTP-originated Business Module financial actions carry full provenanc
     });
   });
 
-  it('Hub service forwards the context into createApplicationContribution() on both paths', () => {
+  // Release 1: the renewal path no longer creates an application
+  // Contribution (it inserted a new membership row); renewal obligations are
+  // created by MembershipRenewalService, which receives the context above.
+  it('Hub service forwards the context into createApplicationContribution() on the application path', () => {
     // Complements the controller test above: the service body is gated by a
     // full consent form, so its one-line forwarding is asserted on source.
     const src = require('fs').readFileSync(
       require('path').join(__dirname, '../../membership/hub/hub-membership.service.ts'), 'utf8',
     ) as string;
     const calls = src.match(/createApplicationContribution\([^)]*\)/g) ?? [];
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(1);
     for (const call of calls) expect(call).toContain('auditContext');
   });
 

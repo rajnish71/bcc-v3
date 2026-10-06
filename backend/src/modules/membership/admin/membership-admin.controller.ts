@@ -11,6 +11,8 @@
 //   GET  /api/v1/membership/admin/email-templates
 //   GET  /api/v1/membership/admin/senior-status/eligible
 //   POST /api/v1/membership/admin/senior-status/evaluate
+//   GET  /api/v1/membership/admin/renewal-operations  - Release 1 renewal/reinstatement operations
+//   POST /api/v1/membership/admin/renewal-operations/:operationId/decision - reinstatement approve/reject
 //   POST /api/v1/membership/:id/upgrade
 //   POST /api/v1/membership/:id/downgrade
 
@@ -38,6 +40,13 @@ import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.se
 import { UpgradeMembershipDto } from '../dto/upgrade-membership.dto';
 import { DowngradeMembershipDto } from '../dto/downgrade-membership.dto';
 import { GrantComplimentaryMembershipDto } from '../dto/grant-complimentary-membership.dto';
+import { DecideReinstatementDto } from '../dto/decide-reinstatement.dto';
+import { MembershipRenewalService } from '../renewal/membership-renewal.service';
+import type { RenewalOperationStatus } from '../../../database/db';
+
+const RENEWAL_OPERATION_STATUSES: RenewalOperationStatus[] = [
+  'REQUESTED', 'PROOF_REQUIRED', 'AWAITING_PAYMENT', 'APPLIED', 'REJECTED', 'EXPIRED', 'BLOCKED',
+];
 
 @Controller('api/v1/membership')
 @UseGuards(AccessTokenGuard, RbacGuard)
@@ -45,6 +54,7 @@ export class MembershipAdminController {
   constructor(
     private readonly adminService: MembershipAdminService,
     private readonly lifecycle: MembershipLifecycleService,
+    private readonly renewal: MembershipRenewalService,
   ) {}
 
   // ── Class catalogue + entitlements ────────────────────────────────────────
@@ -161,6 +171,37 @@ export class MembershipAdminController {
       }
     }
     return { processed: results.length, results };
+  }
+
+  // ── Release 1 renewal / reinstatement operations ─────────────────────────
+  // Reinstatement after term end: admin approval precedes the PAY-001
+  // obligation (rejection therefore never needs a refund). Student renewal
+  // proof is reviewed through the existing application-document review route.
+
+  @Get('admin/renewal-operations')
+  @HttpCode(200)
+  @RequirePermissions('membership.record.view')
+  async listRenewalOperations(@Query('status') status?: string) {
+    const filter = RENEWAL_OPERATION_STATUSES.find((s) => s === status);
+    return this.renewal.listOperations(filter);
+  }
+
+  @Post('admin/renewal-operations/:operationId/decision')
+  @HttpCode(200)
+  @RequirePermissions('membership.lifecycle.renew')
+  async decideReinstatement(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Param('operationId', ParseIntPipe) operationId: number,
+    @Body() dto: DecideReinstatementDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.renewal.decideReinstatement(
+      operationId,
+      actor.sub,
+      dto.decision,
+      dto.note?.trim() || null,
+      requestAuditContext('ADMIN', req, actor),
+    );
   }
 
   // ── Exceptional administrative courtesy ──────────────────────────────────

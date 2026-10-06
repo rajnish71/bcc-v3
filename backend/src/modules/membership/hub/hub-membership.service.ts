@@ -3,7 +3,7 @@
 // Self-service membership application and renewal for authenticated users.
 // Two flows:
 //   APPLICATION — USER role, no active/pending membership
-//   RENEWAL     — user has ACTIVE or APPROVED membership in renewal window
+//   RENEWAL     — delegated to MembershipRenewalService (Release 1)
 //
 // CONSTITUTIONAL GUARDS (enforced here):
 //   year_joined_bcc is NEVER updated by any method in this service.
@@ -33,6 +33,7 @@ import type { AuditContext } from '../../financial/audit/financial-audit.types';
 import type { SubmitGroupApplicationDto } from '../dto/submit-group-application.dto';
 import { GroupService } from '../groups/group.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
+import { assertNoBlockingIndividualMembership } from '../renewal/renewal-policy';
 
 const BASIC_MEMBER_CODE = 'BASIC_MEMBER';
 
@@ -208,6 +209,9 @@ export class HubMembershipService {
           : 'You already have an active membership',
       );
     }
+    // Release 1 §20 fast-path (re-checked under the lock below): suspended or
+    // expired Release 1 memberships never get a second row via application.
+    await assertNoBlockingIndividualMembership(db, userId);
 
     const canonical = normalize(dto.phone);
     if (!validate(canonical)) {
@@ -224,6 +228,11 @@ export class HubMembershipService {
     const now = toMysqlDatetime(new Date());
 
     const membershipId = await db.transaction().execute(async (trx) => {
+      // 0. Serialise concurrent applications for this person: lock the users
+      // row, then re-check (Release 1 §20 -- no check-then-insert race).
+      await trx.selectFrom('users').select('id').where('id', '=', userId).forUpdate().executeTakeFirst();
+      await assertNoBlockingIndividualMembership(trx, userId);
+
       // 1. INSERT membership row (PENDING)
       const inserted = await trx
         .insertInto('memberships')
@@ -418,189 +427,11 @@ export class HubMembershipService {
     };
   }
 
-  // ── Renewal flow (Variant B) ──────────────────────────────────────────────
-
-  async getRenewalPrefill(userId: number) {
-    const activeMembership = await db
-      .selectFrom('memberships')
-      .selectAll()
-      .where('user_id', '=', userId)
-      .where('owner_type', '=', 'INDIVIDUAL')
-      .where('lifecycle_state', 'in', ['ACTIVE', 'APPROVED', 'EXPIRED'])
-      .orderBy('created_at', 'desc')
-      .executeTakeFirst();
-
-    if (!activeMembership) {
-      throw new ForbiddenException('No active or recently expired membership found');
-    }
-
-    const expiresAt = activeMembership.expires_at
-      ? new Date(activeMembership.expires_at as unknown as string)
-      : null;
-
-    const now = new Date();
-    const sixtyDaysFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-
-    const renewalEligible =
-      activeMembership.lifecycle_state === 'EXPIRED' ||
-      (expiresAt !== null && expiresAt <= sixtyDaysFromNow);
-
-    let projectedNewExpiry: string | null = null;
-    if (expiresAt) {
-      const base = expiresAt > now ? expiresAt : now;
-      const projected = new Date(base);
-      projected.setFullYear(projected.getFullYear() + 1);
-      projectedNewExpiry = projected.toISOString().slice(0, 10);
-    }
-
-    const user = await this.getUserPrefill(userId);
-
-    // A renewal in flight lives on its OWN membership row (submitRenewal()
-    // inserts a new PENDING row rather than mutating activeMembership above)
-    // -- same APPROVED-with-a-Contribution signal as the application flow,
-    // just queried against the most recent PENDING/APPROVED row instead.
-    const latestOwnRow = await db
-      .selectFrom('memberships')
-      .select(['id', 'lifecycle_state'])
-      .where('user_id', '=', userId)
-      .where('owner_type', '=', 'INDIVIDUAL')
-      .where('lifecycle_state', 'in', ['PENDING', 'APPROVED'])
-      .orderBy('created_at', 'desc')
-      .executeTakeFirst();
-
-    let applicationStatus: string = activeMembership.lifecycle_state as string;
-    let payment: Awaited<ReturnType<typeof this.getPendingPayment>> = null;
-    // Workflow-ordering fix: the renewal's Contribution now exists while the
-    // new row is still PENDING (created at submission time), not APPROVED.
-    if (latestOwnRow && latestOwnRow.lifecycle_state === 'PENDING') {
-      payment = await this.getPendingPayment(latestOwnRow.id);
-      if (payment && payment.state !== 'COMPLETED') {
-        applicationStatus = 'PAYMENT_REQUIRED';
-      } else if (payment && payment.state === 'COMPLETED') {
-        applicationStatus = 'AWAITING_APPROVAL';
-      }
-    }
-
-    return {
-      fullName: user.full_name,
-      email: user.email,
-      phone: user.phone ? normalize(user.phone) : null,
-      city: user.city ?? null,
-      state: user.state ?? null,
-      addressLine1: user.address_line1 ?? null,
-      addressLine2: user.address_line2 ?? null,
-      pinCode: user.pin_code ?? null,
-      dateOfBirth: user.date_of_birth
-        ? (user.date_of_birth as unknown as Date).toISOString().slice(0, 10)
-        : null,
-      gender: user.gender ?? null,
-      applicationStatus,
-      expiresAt: expiresAt ? expiresAt.toISOString().slice(0, 10) : null,
-      renewalEligible,
-      projectedNewExpiry,
-      pendingContributionId: payment?.contributionId ?? null,
-      pendingContributionState: payment?.state ?? null,
-      pendingAmountPaise: payment?.amountPaise ?? null,
-      pendingCurrency: payment?.currency ?? null,
-    };
-  }
-
-  async submitRenewal(
-    userId: number,
-    dto: SubmitMembershipFormDto,
-    ipAddress: string | null,
-    userAgent: string | null,
-    auditContext?: AuditContext,
-  ) {
-    const activeMembership = await db
-      .selectFrom('memberships')
-      .selectAll()
-      .where('user_id', '=', userId)
-      .where('owner_type', '=', 'INDIVIDUAL')
-      .where('lifecycle_state', 'in', ['ACTIVE', 'APPROVED', 'EXPIRED'])
-      .orderBy('created_at', 'desc')
-      .executeTakeFirst();
-
-    if (!activeMembership) {
-      throw new ForbiddenException('No active or recently expired membership found for renewal');
-    }
-
-    const alreadyPending = await db
-      .selectFrom('memberships')
-      .select('id')
-      .where('user_id', '=', userId)
-      .where('owner_type', '=', 'INDIVIDUAL')
-      .where('lifecycle_state', '=', 'PENDING')
-      .executeTakeFirst();
-
-    if (alreadyPending) {
-      throw new ConflictException('You already have a pending renewal application');
-    }
-
-    const canonical = normalize(dto.phone);
-    if (!validate(canonical)) {
-      throw new BadRequestException('Enter a valid 10-digit Indian mobile number');
-    }
-    const phoneConflict = await db.selectFrom('users').select(['id', 'phone']).where('phone', '=', canonical).where('id', '!=', userId).executeTakeFirst();
-    if (phoneConflict) {
-      throw new ConflictException('This phone number is already registered to another account');
-    }
-
-    const classCode = this.resolveClassCode(dto.membershipClassCode);
-    const classId = await this.getClassIdByCode(classCode);
-    const membershipUuid = randomUUID();
-    const now = toMysqlDatetime(new Date());
-
-    const membershipId = await db.transaction().execute(async (trx) => {
-      // 1. INSERT new membership row (PENDING renewal)
-      const inserted = await trx
-        .insertInto('memberships')
-        .values({
-          uuid: membershipUuid,
-          owner_type: 'INDIVIDUAL',
-          user_id: userId,
-          membership_class_id: classId,
-          lifecycle_state: 'PENDING',
-          applied_at: now,
-        })
-        .executeTakeFirstOrThrow();
-
-      // 2. UPDATE users — Step 1 editable fields only
-      // year_joined_bcc is NEVER updated here (constitutional guard)
-      await trx
-        .updateTable('users')
-        .set({
-          phone: canonical,
-          city: dto.city,
-          state: dto.state,
-          address_line1: dto.addressLine1,
-          address_line2: dto.addressLine2 ?? null,
-          pin_code: dto.pinCode,
-          date_of_birth: dto.dateOfBirth,
-          gender: dto.gender,
-        })
-        .where('id', '=', userId)
-        .execute();
-
-      // 3. INSERT consent audit record (append-only, never updated)
-      await trx
-        .insertInto('membership_consent_log')
-        .values({
-          user_id: userId,
-          consent_type: 'RENEWAL',
-          terms_version: dto.termsVersion,
-          ip_address: ipAddress,
-          user_agent: userAgent,
-        })
-        .execute();
-
-      return Number(inserted.insertId);
-    });
-
-    // Workflow-ordering fix (PART 2) -- see submitApplication() for the
-    // identical pattern and rationale.
-    await this.lifecycle.createApplicationContribution(membershipId, classId, userId, auditContext);
-
-    return { success: true, submittedAt: now };
-  }
+  // ── Renewal (Variant B) ──────────────────────────────────────────────────
+  //
+  // Release 1: the former submitRenewal() INSERTED A NEW membership row (and
+  // so would have minted a second permanent number on approval). It is
+  // removed. Renewal and reinstatement now operate only on the member's
+  // EXISTING row through MembershipRenewalService; no profile/application
+  // data is rewritten and there is no plan or class selection.
 }

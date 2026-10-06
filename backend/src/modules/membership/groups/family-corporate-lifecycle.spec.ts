@@ -42,6 +42,7 @@ import type { R2Service } from '../../shared/storage/r2.service';
 import { ApplicationWorkflowService } from '../application/application-workflow.service';
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipFinancialListener } from '../financial/membership-financial.listener';
+import { MembershipRenewalService } from '../renewal/membership-renewal.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
 import { GroupMembershipService } from './group-membership.service';
@@ -258,7 +259,11 @@ function buildServices(): void {
   hub = new HubMembershipService(financial, lifecycle, groups);
   workflow = new ApplicationWorkflowService(lifecycle, {} as R2Service, communication);
   // Payment -> Membership only through Financial Engine events (PAY-001 §11).
-  new MembershipFinancialListener(bus, lifecycle).onModuleInit();
+  new MembershipFinancialListener(
+    bus,
+    lifecycle,
+    new MembershipRenewalService(financial, entitlements, lifecycle, communication, {} as R2Service),
+  ).onModuleInit();
 }
 
 // The listener's handlers are fire-and-forget; let them settle.

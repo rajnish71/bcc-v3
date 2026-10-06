@@ -20,17 +20,24 @@ describe('HubMembershipService PAYMENT_REQUIRED wiring (Step 20, real source ins
     expect(SERVICE_SRC).toContain("MEMBERSHIP_BUSINESS_MODULE");
   });
 
-  it('both getApplicationPrefill and getRenewalPrefill expose PAYMENT_REQUIRED', () => {
+  it('getApplicationPrefill exposes PAYMENT_REQUIRED', () => {
     const appFn = SERVICE_SRC.slice(
       SERVICE_SRC.indexOf('async getApplicationPrefill'),
       SERVICE_SRC.indexOf('async submitApplication'),
     );
-    const renewFn = SERVICE_SRC.slice(
-      SERVICE_SRC.indexOf('async getRenewalPrefill'),
-      SERVICE_SRC.indexOf('async submitRenewal'),
-    );
     expect(appFn).toContain("'PAYMENT_REQUIRED'");
-    expect(renewFn).toContain("'PAYMENT_REQUIRED'");
+  });
+
+  // Release 1 §4: the old self-service submitRenewal() inserted a NEW
+  // membership row. It must be gone; the only membership insert left in this
+  // service is the new-application path, guarded by the duplicate check.
+  it('has no renewal path that inserts a membership row (Release 1 numbering rule)', () => {
+    expect(SERVICE_SRC).not.toContain('async submitRenewal');
+    expect(SERVICE_SRC).not.toContain('async getRenewalPrefill');
+    expect(SERVICE_SRC.match(/insertInto\('memberships'\)/g)?.length).toBe(1);
+    const submitFn = SERVICE_SRC.slice(SERVICE_SRC.indexOf('async submitApplication'), SERVICE_SRC.indexOf('async submitGroupApplication'));
+    expect(submitFn).toContain('assertNoBlockingIndividualMembership(trx, userId)');
+    expect(submitFn.indexOf('forUpdate()')).toBeLessThan(submitFn.indexOf("insertInto('memberships')"));
   });
 
   it('never activates membership or writes lifecycle_state from the prefill read path', () => {

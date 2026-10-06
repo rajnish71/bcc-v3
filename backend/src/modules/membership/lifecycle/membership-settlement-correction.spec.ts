@@ -47,6 +47,8 @@ import type { CommunicationService } from '../../shared/communication/communicat
 import { SettlementCorrectionDto } from '../dto/settlement-correction.dto';
 import type { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipFinancialListener } from '../financial/membership-financial.listener';
+import { MembershipRenewalService } from '../renewal/membership-renewal.service';
+import type { R2Service } from '../../shared/storage/r2.service';
 import type { MembershipNumberingService } from '../numbering/membership-numbering.service';
 import {
   MembershipLifecycleService,
@@ -179,6 +181,16 @@ function services() {
     financial,
   );
   return { bus, provider, financial, lifecycle, numbering, communication, entitlements };
+}
+
+function renewalFor(s: ReturnType<typeof services>): MembershipRenewalService {
+  return new MembershipRenewalService(
+    s.financial,
+    s.entitlements as unknown as EntitlementService,
+    s.lifecycle,
+    s.communication as unknown as CommunicationService,
+    {} as R2Service,
+  );
 }
 
 const flush = async () => {
@@ -599,7 +611,7 @@ describe('correction payment — existing payment-link flow, own transaction and
   async function paidCorrection() {
     const tables = world();
     const s = services();
-    const listener = new MembershipFinancialListener(s.bus, s.lifecycle);
+    const listener = new MembershipFinancialListener(s.bus, s.lifecycle, renewalFor(s));
     listener.onModuleInit();
     const emitted: string[] = [];
     const origEmit = s.bus.emit.bind(s.bus);
@@ -682,7 +694,7 @@ describe('correction payment failure', () => {
   it('SETTLEMENT_FAILED for a correction is recorded only: membership and originals unchanged, no throw', async () => {
     const tables = world();
     const s = services();
-    const listener = new MembershipFinancialListener(s.bus, s.lifecycle);
+    const listener = new MembershipFinancialListener(s.bus, s.lifecycle, renewalFor(s));
     listener.onModuleInit();
     const { correctionContributionId } = await s.lifecycle.createSettlementCorrectionContribution(
       MEMBERSHIP_ID, ORIGINAL_ID, REASON, 1, ADMIN,

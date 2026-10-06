@@ -224,7 +224,11 @@ describe('D. approve() enforces COMPLETED as a precondition for PAYMENT_REQUIRED
 describe('E. MembershipFinancialListener no longer activates on CONTRIBUTION_COMPLETED', () => {
   it('handleContributionCompleted() calls recordPaymentReceived(), not activate()', () => {
     const handlerFn = slice(LISTENER_SRC, 'private handleContributionCompleted(', 'private handleSettlementFailed(');
-    expect(handlerFn).toContain('this.lifecycle\n      .recordPaymentReceived(');
+    // Release 1: renewal/reinstatement obligations are routed to
+    // MembershipRenewalService first; every other Contribution still only
+    // records payment received.
+    expect(handlerFn).toContain('this.renewal\n      .handleContributionCompleted(payload)');
+    expect(handlerFn).toContain('this.lifecycle.recordPaymentReceived(');
     expect(handlerFn).not.toContain('.activate(');
   });
 

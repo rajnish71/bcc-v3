@@ -39,6 +39,8 @@ import { CommunicationService } from '../../shared/communication/communication.s
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
+import { assertNoBlockingIndividualMembership, isRelease1RenewalClass } from '../renewal/renewal-policy';
+import { expireClosedRenewalOperations } from '../renewal/renewal-obligation-expiry';
 
 type LifecycleState = 'PENDING' | 'APPROVED' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'TERMINATED' | 'REJECTED';
 type MembershipRow = Selectable<MembershipsTable>;
@@ -102,7 +104,9 @@ export class MembershipLifecycleService {
   // only -- see EntitlementService.getClassConfigValue). Lifetime classes
   // get expires_at = null. A renewable class MISSING its config is treated
   // as a loud error, not silently perpetual.
-  private async computeExpiry(
+  // Public for MembershipRenewalService (Release 1): a renewal term is the
+  // class's renewal_term_months from the previous term end.
+  async computeExpiry(
     membership: Pick<MembershipRow, 'owner_type' | 'membership_class_id' | 'group_membership_type_id'>,
     from: Date,
   ): Promise<string | null> {
@@ -268,6 +272,14 @@ export class MembershipLifecycleService {
     // F-013: membership insert + LIFECYCLE_TRANSITION audit write commit/
     // roll back as one transaction (mirrors auth.service.ts's F-011 pattern).
     const id = await db.transaction().execute(async (trx) => {
+      // Release 1 §20: the duplicate check above is re-run under a row lock
+      // on the applicant, so concurrent applications serialise, and an
+      // EXPIRED Release 1 membership must be reinstated, not re-applied for.
+      if (params.ownerType === 'INDIVIDUAL') {
+        await trx.selectFrom('users').select('id').where('id', '=', params.userId!).forUpdate().executeTakeFirst();
+        await assertNoBlockingIndividualMembership(trx, params.userId!);
+      }
+
       const inserted = await trx
         .insertInto('memberships')
         .values({
@@ -1308,6 +1320,10 @@ export class MembershipLifecycleService {
       );
     });
 
+    // Release 1 §9: the renewal window closed at term end -- an unsettled
+    // renewal obligation expires; one already in settlement is left to PAY-001.
+    await expireClosedRenewalOperations(this.financialService, membershipId).catch(() => 0);
+
     const graceDays = await this.gracePeriodDays(membership).catch(() => 0);
     const expiryDisplay = membership.expires_at
       ? new Date(membership.expires_at as unknown as string)
@@ -1337,6 +1353,24 @@ export class MembershipLifecycleService {
       throw new ConflictException(
         `Membership ${membershipId} belongs to a Family/Corporate group; renew the group membership (paid renewal) instead.`,
       );
+    }
+
+    // Release 1 §19: Individual Annual/Biennial/Student never renew without
+    // their PAY-001 obligation, and never from "now" -- after term end they
+    // return to ACTIVE only through reinstatement (MembershipRenewalService).
+    // Other classes keep this path unchanged (their policy is out of scope).
+    if (membership.membership_class_id != null) {
+      const cls = await db
+        .selectFrom('membership_classes')
+        .select('code')
+        .where('id', '=', membership.membership_class_id)
+        .executeTakeFirst();
+      if (isRelease1RenewalClass(cls?.code)) {
+        throw new ConflictException(
+          `Membership ${membershipId} is a self-service renewable plan; it can only be returned to ACTIVE through ` +
+          'an approved reinstatement request and its PAY-001 payment.',
+        );
+      }
     }
 
     // Grace-period enforcement. INTERPRETATION FLAG: spec 02.8 defines a

@@ -334,6 +334,8 @@ export class ApplicationWorkflowService {
         'review_note',
         'reviewed_at',
         'created_at',
+        // Release 1: distinguishes renewal eligibility proof from application documents.
+        'renewal_operation_id',
       ])
       .where('membership_id', '=', membershipId)
       .orderBy('created_at', 'asc')

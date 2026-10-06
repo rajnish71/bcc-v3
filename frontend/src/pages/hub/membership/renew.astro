@@ -1,86 +1,338 @@
 ---
 /**
- * hub/membership/renew.astro — V6 19 Membership Renewal Form (Variant B)
+ * hub/membership/renew.astro — Membership Renewal (Release 1)
  * Route: /hub/membership/renew/
  *
- * Shell: Full HubLayout (authenticated, role ≥ USER).
- * HubSidebar active item: "Renewals" (matched by activeRoute).
+ * Shell: HubLayout (HUB-ARCH-001) — this page owns only its workspace.
  *
- * MEM-006: Only Basic Membership shown. No constitutional class names.
- * MEM-007: No membership number at any point. PENDING state only.
- *
- * RBAC: MEMBER role (must have ACTIVE or APPROVED membership in the
- *   renewal window: expires_at ≤ NOW()+60days, OR EXPIRED status).
- *   If renewalEligible = false → redirect to /hub/.
- *   Unauthenticated → HubLayout redirects to /auth/signin/.
- *
- * Auth guard: HubLayout handles JWT; renewal eligibility checked via
- *   GET /api/v1/hub/membership/renewal in MembershipApplicationFlow.
+ * Release 1 frozen policy: same-plan renewal of the member's EXISTING
+ * membership (same row, same permanent number). No plan/class selection, no
+ * profile or application data is collected or rewritten. Captures only a
+ * fresh renewal T&C acceptance and, where configured, Student eligibility
+ * proof. The server (GET/POST api/v1/hub/membership/renewal) is the sole
+ * authority on eligibility, the configured renewal window, the fee and the
+ * new term; nothing here is hard-coded. Payment uses the existing payer-owned
+ * PAY-001 routes on the returned Contribution. After the term end the page
+ * offers an administrative reinstatement request instead.
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
-import MembershipApplicationFlow from '../../../components/hub/MembershipApplicationFlow.astro';
 ---
 
-<HubLayout
-  title="Renew Membership"
-  description="Renew your BCC Basic Membership — three simple steps."
->
-
-  <div class="renew-flow">
-
-    <!-- Page heading -->
-    <div class="renew-flow__heading">
-      <nav class="renew-flow__breadcrumb" aria-label="Breadcrumb">
-        <span class="renew-flow__bc-mono">Member Hub</span>
-        <span class="renew-flow__bc-sep">›</span>
-        <span class="renew-flow__bc-active renew-flow__bc-mono">Membership Renewal</span>
-      </nav>
-      <h2 class="renew-flow__title">Membership Renewal</h2>
-      <div class="renew-flow__meta">
-        <span class="renew-flow__meta-route renew-flow__bc-mono">/hub/membership/renew</span>
-        <span class="renew-flow__meta-badge renew-flow__bc-mono">RBAC: MEMBER</span>
-      </div>
-    </div>
-
-    <!-- 3-step form (Variant B) -->
-    <MembershipApplicationFlow variant="renew" />
-
+<HubLayout title="Renew Membership" description="Renew your existing BCC membership.">
+  <div class="rnw">
+    <nav class="rnw__bc" aria-label="Breadcrumb">
+      <span>Member Hub</span><span aria-hidden="true">›</span><span class="rnw__bc-active">Membership Renewal</span>
+    </nav>
+    <h2 class="rnw__title">Membership Renewal</h2>
+    <div id="rnw-body" class="rnw__body" aria-live="polite">Loading…</div>
   </div>
-
 </HubLayout>
 
+<script>
+  declare const Razorpay: any;
+
+  const API = '/api/v1';
+  const TERMS_VERSION = 'renewal-v1.0';
+  const body = document.getElementById('rnw-body') as HTMLElement;
+
+  type Contribution = { id: number; state: string; amountPaise: number; currency: string };
+  type Operation = {
+    id: number; type: 'RENEWAL' | 'REINSTATEMENT'; status: string;
+    previousTermEnd: string | null; newTermStart: string | null; newTermEnd: string | null;
+    decisionNote: string | null; contribution: Contribution | null;
+    documents: Array<{ uuid: string; document_type: string; original_filename: string; upload_status: string; review_status: string; review_note: string | null }>;
+  };
+  type Status = {
+    hasMembership: boolean; membershipNumber?: string | null; className?: string | null; lifecycleState?: string;
+    termStart?: string | null; termEnd?: string | null;
+    window?: { opensAt: string; closesAt: string; state: string } | null;
+    mode: 'RENEWAL' | 'REINSTATEMENT' | 'NONE'; reason: string | null;
+    feePaise?: number | null; projectedTerm?: { start: string; end: string } | null;
+    proofRequired?: boolean; requiredDocumentTypes?: string[]; operation?: Operation | null;
+  };
+
+  function token(): string { return localStorage.getItem('bcc_token') ?? ''; }
+  function authHeaders(json = false): Record<string, string> {
+    return { Authorization: `Bearer ${token()}`, ...(json ? { 'Content-Type': 'application/json' } : {}) };
+  }
+  function esc(v: unknown): string {
+    return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  }
+  function date(v: string | null | undefined): string {
+    return v ? new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+  }
+  function money(paise: number | null | undefined, currency = 'INR'): string {
+    if (paise == null) return '—';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency, maximumFractionDigits: 0 }).format(paise / 100);
+  }
+  async function errorText(res: Response): Promise<string> {
+    try { const j = await res.json(); return Array.isArray(j.message) ? j.message.join(' ') : (j.message ?? 'Something went wrong.'); }
+    catch { return 'Something went wrong.'; }
+  }
+
+  async function load(): Promise<void> {
+    if (!token()) { window.location.replace('/auth/signin/?next=/hub/membership/renew/'); return; }
+    const res = await fetch(`${API}/hub/membership/renewal`, { headers: authHeaders() });
+    if (res.status === 401) { window.location.replace('/auth/signin/?next=/hub/membership/renew/'); return; }
+    if (!res.ok) { body.innerHTML = `<p class="rnw-err">${esc(await errorText(res))}</p>`; return; }
+    render(await res.json() as Status);
+  }
+
+  function termCard(s: Status): string {
+    return `
+      <div class="rnw-card">
+        <dl class="rnw-dl">
+          <div><dt>Plan</dt><dd>${esc(s.className)}</dd></div>
+          <div><dt>Membership number</dt><dd class="rnw-mono">${esc(s.membershipNumber ?? '—')}</dd></div>
+          <div><dt>Current term</dt><dd>${date(s.termStart)} – ${date(s.termEnd)}</dd></div>
+          ${s.window ? `<div><dt>Renewal window</dt><dd>${date(s.window.opensAt)} – ${date(s.window.closesAt)}</dd></div>` : ''}
+        </dl>
+      </div>`;
+  }
+
+  function opStatusText(op: Operation): string {
+    switch (op.status) {
+      case 'PROOF_REQUIRED': return 'Waiting for your eligibility proof to be accepted.';
+      case 'AWAITING_PAYMENT': return op.type === 'REINSTATEMENT' ? 'Reinstatement approved — payment required.' : 'Renewal requested — payment required.';
+      case 'REQUESTED': return 'Reinstatement requested — awaiting review by the membership team.';
+      case 'APPLIED': return `${op.type === 'RENEWAL' ? 'Renewed' : 'Reinstated'}: valid ${date(op.newTermStart)} – ${date(op.newTermEnd)}.`;
+      case 'REJECTED': return `Reinstatement request was not approved.${op.decisionNote ? ` ${op.decisionNote}` : ''}`;
+      case 'EXPIRED': return 'The renewal window closed before payment was started.';
+      case 'BLOCKED': return 'Your payment could not be applied to your membership; it has been referred for refund. Please contact the membership team.';
+      default: return op.status;
+    }
+  }
+
+  function termsBlock(): string {
+    return `
+      <div class="rnw-terms">
+        <p>By continuing you confirm that the details on your member profile are current, and you agree to the BCC membership rules for the renewed term.
+        Your membership continues under the same plan and the same membership number. Fees are those configured for your plan when your payment request is created.</p>
+        <label class="rnw-check"><input type="checkbox" id="rnw-accept" /> I accept the renewal terms and conditions</label>
+      </div>`;
+  }
+
+  function render(s: Status): void {
+    if (!s.hasMembership) {
+      body.innerHTML = `<p>You do not have a membership to renew. <a href="/hub/membership/apply/">Apply for membership</a>.</p>`;
+      return;
+    }
+    const op = s.operation ?? null;
+    const openOp = op && ['REQUESTED', 'PROOF_REQUIRED', 'AWAITING_PAYMENT'].includes(op.status) ? op : null;
+    let html = termCard(s);
+
+    if (op) html += `<p class="rnw-status">${esc(opStatusText(op))}</p>`;
+
+    if (s.mode === 'NONE' && !openOp) {
+      const reasons: Record<string, string> = {
+        WINDOW_NOT_YET_OPEN: s.window ? `Renewal opens on ${date(s.window.opensAt)}.` : 'Renewal is not open yet.',
+        CLASS_NOT_SELF_RENEWABLE: 'Your membership plan is not renewed through self-service. Please contact the membership team.',
+        SUSPENDED: 'Your membership is suspended. Please contact the membership team.',
+        TERMINATED: 'Your membership has ended. Please contact the membership team.',
+        NO_TERM_END: 'Your membership does not require renewal.',
+        CONFIGURATION_INCOMPLETE: 'Renewal is temporarily unavailable. Please contact the membership team.',
+      };
+      html += `<p class="rnw-note">${esc(reasons[s.reason ?? ''] ?? 'Renewal is not available.')}</p>`;
+      body.innerHTML = html;
+      return;
+    }
+
+    if (openOp?.status === 'AWAITING_PAYMENT' && openOp.contribution) {
+      const c = openOp.contribution;
+      html += `
+        <div class="rnw-card">
+          <dl class="rnw-dl">
+            <div><dt>Amount</dt><dd class="rnw-mono">${money(c.amountPaise, c.currency)}</dd></div>
+            ${s.projectedTerm && openOp.type === 'RENEWAL' ? `<div><dt>New term</dt><dd>${date(s.projectedTerm.start)} – ${date(s.projectedTerm.end)}</dd></div>` : ''}
+          </dl>
+          ${['AWAITING_SETTLEMENT', 'FAILED', 'ABANDONED', 'SETTLEMENT_IN_PROGRESS'].includes(c.state)
+            ? `<button type="button" class="btn btn-gold btn-md" id="rnw-pay">Pay ${money(c.amountPaise, c.currency)}</button>`
+            : c.state === 'COMPLETED' ? '<p class="rnw-note">Payment received — updating your membership…</p>'
+            : '<p class="rnw-note">This payment request is closed. Please contact the membership team.</p>'}
+          <p class="rnw-err" id="rnw-pay-err" hidden></p>
+        </div>`;
+      body.innerHTML = html;
+      document.getElementById('rnw-pay')?.addEventListener('click', () => beginCheckout(c));
+      return;
+    }
+
+    if (openOp?.status === 'PROOF_REQUIRED') {
+      html += proofBlock(s, openOp);
+      html += `<button type="button" class="btn btn-dark btn-md" id="rnw-continue">Continue to payment</button><p class="rnw-err" id="rnw-err" hidden></p>`;
+      body.innerHTML = html;
+      wireProof();
+      document.getElementById('rnw-continue')!.addEventListener('click', () => submit('renewal', true));
+      return;
+    }
+
+    if (openOp?.status === 'REQUESTED') { body.innerHTML = html; return; }
+
+    if (s.mode === 'RENEWAL') {
+      html += `
+        <div class="rnw-card">
+          <dl class="rnw-dl">
+            <div><dt>Renewal fee</dt><dd class="rnw-mono">${money(s.feePaise)}</dd></div>
+            ${s.projectedTerm ? `<div><dt>New term</dt><dd>${date(s.projectedTerm.start)} – ${date(s.projectedTerm.end)}</dd></div>` : ''}
+          </dl>
+          ${s.proofRequired ? `<p class="rnw-note">Eligibility proof (${esc((s.requiredDocumentTypes ?? []).join(', '))}) is required before payment.</p>` : ''}
+        </div>
+        ${termsBlock()}
+        <button type="button" class="btn btn-gold btn-md" id="rnw-submit">Renew membership</button>
+        <p class="rnw-err" id="rnw-err" hidden></p>`;
+      body.innerHTML = html;
+      document.getElementById('rnw-submit')!.addEventListener('click', () => submit('renewal'));
+      return;
+    }
+
+    if (s.mode === 'REINSTATEMENT') {
+      html += `
+        <p class="rnw-note">Your membership term has ended, so self-service renewal is closed. You can ask the membership team to reinstate your existing membership
+        (same plan and membership number). If approved, you will be asked to pay the plan fee and your membership restarts when payment completes.</p>
+        ${termsBlock()}
+        <button type="button" class="btn btn-gold btn-md" id="rnw-submit">Request reinstatement</button>
+        <p class="rnw-err" id="rnw-err" hidden></p>`;
+      body.innerHTML = html;
+      document.getElementById('rnw-submit')!.addEventListener('click', () => submit('reinstatement'));
+      return;
+    }
+    body.innerHTML = html;
+  }
+
+  function proofBlock(s: Status, op: Operation): string {
+    const rows = op.documents.map((d) => `
+      <li>${esc(d.document_type)} — ${esc(d.original_filename)}
+        <span class="rnw-mono">${d.upload_status === 'UPLOADED' ? esc(d.review_status) : 'UPLOAD INCOMPLETE'}</span>
+        ${d.review_note ? `<span class="rnw-note"> ${esc(d.review_note)}</span>` : ''}</li>`).join('');
+    const types = (s.requiredDocumentTypes ?? []).map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    return `
+      <div class="rnw-card">
+        <p>Upload your eligibility proof. The membership team reviews it; once accepted you can continue to payment.</p>
+        ${rows ? `<ul class="rnw-docs">${rows}</ul>` : ''}
+        <div class="rnw-upload">
+          <select id="rnw-doc-type" class="rnw-input">${types}</select>
+          <input type="file" id="rnw-doc-file" accept="application/pdf,image/jpeg,image/png,image/webp" />
+          <button type="button" class="btn btn-dark btn-sm" id="rnw-upload">Upload</button>
+        </div>
+        <p class="rnw-err" id="rnw-upload-err" hidden></p>
+      </div>`;
+  }
+
+  function wireProof(): void {
+    document.getElementById('rnw-upload')!.addEventListener('click', async () => {
+      const err = document.getElementById('rnw-upload-err') as HTMLElement;
+      err.hidden = true;
+      const file = (document.getElementById('rnw-doc-file') as HTMLInputElement).files?.[0];
+      const documentType = (document.getElementById('rnw-doc-type') as HTMLSelectElement).value;
+      if (!file) { err.textContent = 'Choose a file to upload.'; err.hidden = false; return; }
+      try {
+        const res = await fetch(`${API}/hub/membership/renewal/proof/request-upload`, {
+          method: 'POST', headers: authHeaders(true),
+          body: JSON.stringify({ documentType, originalFilename: file.name, mimeType: file.type, sizeBytes: file.size }),
+        });
+        if (!res.ok) throw new Error(await errorText(res));
+        const { documentUuid, uploadUrl } = await res.json() as { documentUuid: string; uploadUrl: string };
+        const put = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+        if (!put.ok) throw new Error('Upload failed. Please try again.');
+        const confirm = await fetch(`${API}/membership/applications/documents/${documentUuid}/confirm-upload`, { method: 'POST', headers: authHeaders() });
+        if (!confirm.ok) throw new Error(await errorText(confirm));
+        await load();
+      } catch (e) {
+        err.textContent = (e as Error).message; err.hidden = false;
+      }
+    });
+  }
+
+  async function submit(kind: 'renewal' | 'reinstatement', skipTerms = false): Promise<void> {
+    const err = document.getElementById('rnw-err') as HTMLElement;
+    err.hidden = true;
+    const accepted = skipTerms || (document.getElementById('rnw-accept') as HTMLInputElement | null)?.checked;
+    if (!accepted) { err.textContent = 'Please accept the renewal terms and conditions.'; err.hidden = false; return; }
+    const btn = document.getElementById(skipTerms ? 'rnw-continue' : 'rnw-submit') as HTMLButtonElement;
+    btn.disabled = true;
+    const res = await fetch(`${API}/hub/membership/${kind}`, {
+      method: 'POST', headers: authHeaders(true),
+      body: JSON.stringify({ acceptTerms: true, termsVersion: TERMS_VERSION }),
+    });
+    if (!res.ok) { err.textContent = await errorText(res); err.hidden = false; btn.disabled = false; return; }
+    render(await res.json() as Status);
+  }
+
+  // ── Existing PAY-001 Razorpay Checkout (same routes as the application flow) ──
+  async function beginCheckout(c: Contribution): Promise<void> {
+    const err = document.getElementById('rnw-pay-err') as HTMLElement;
+    const btn = document.getElementById('rnw-pay') as HTMLButtonElement;
+    err.hidden = true; btn.disabled = true;
+    try {
+      const live = await fetch(`${API}/financial/contributions/${c.id}`, { headers: authHeaders() });
+      const state = live.ok ? ((await live.json()) as { state: string }).state : c.state;
+      if (state === 'FAILED' || state === 'ABANDONED') {
+        const retry = await fetch(`${API}/financial/contributions/${c.id}/settlement/retry`, { method: 'POST', headers: authHeaders() });
+        if (!retry.ok) throw new Error(await errorText(retry));
+      }
+      const orderRes = await fetch(`${API}/financial/contributions/${c.id}/settlement/razorpay-order`, { method: 'POST', headers: authHeaders() });
+      if (!orderRes.ok) throw new Error(await errorText(orderRes));
+      const order = await orderRes.json() as { orderReference: string; amountPaise: number; currency: string; providerPublicKeyId: string | null };
+      if (!order.providerPublicKeyId) throw new Error('Payment is temporarily unavailable.');
+      await loadRazorpay();
+      const rzp = new Razorpay({
+        key: order.providerPublicKeyId, order_id: order.orderReference, amount: order.amountPaise, currency: order.currency,
+        name: 'Bhopal Camera Club', description: 'Membership Renewal Fee', theme: { color: '#A8843C' },
+        // Client-side success is never authoritative: the webhook settles the Contribution.
+        handler: () => { body.insertAdjacentHTML('beforeend', '<p class="rnw-note">Confirming your payment…</p>'); poll(c.id, 0); },
+        modal: { ondismiss: () => { btn.disabled = false; } },
+      });
+      rzp.on('payment.failed', () => { err.textContent = 'Payment was not completed. You can try again.'; err.hidden = false; btn.disabled = false; });
+      rzp.open();
+    } catch (e) {
+      err.textContent = (e as Error).message || 'Could not start payment. Please try again.'; err.hidden = false; btn.disabled = false;
+    }
+  }
+
+  function loadRazorpay(): Promise<void> {
+    if (typeof Razorpay !== 'undefined') return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.onload = () => resolve(); s.onerror = () => reject(new Error('Payment is temporarily unavailable.'));
+      document.head.appendChild(s);
+    });
+  }
+
+  // Bounded polling (same discipline as the application flow); the GET renewal
+  // status re-applies a completed payment idempotently if its event was lost.
+  function poll(contributionId: number, attempt: number): void {
+    fetch(`${API}/financial/contributions/${contributionId}`, { headers: authHeaders() })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('status'))))
+      .then((d: { state: string }) => {
+        if (d.state === 'COMPLETED' || d.state === 'FAILED' || d.state === 'ABANDONED' || attempt >= 9) { load(); return; }
+        setTimeout(() => poll(contributionId, attempt + 1), 3000);
+      })
+      .catch(() => (attempt >= 9 ? load() : setTimeout(() => poll(contributionId, attempt + 1), 3000)));
+  }
+
+  load().catch(() => { body.innerHTML = '<p class="rnw-err">Could not load your renewal status. Please refresh.</p>'; });
+</script>
+
 <style>
-.renew-flow {
-  padding: var(--s-5) 0 var(--s-10);
-}
-.renew-flow__heading { margin-bottom: var(--s-5); }
+  .rnw { max-width: 760px; padding: var(--s-5) 0 var(--s-10); }
+  .rnw__bc { display: flex; gap: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-400); margin-bottom: var(--s-2); }
+  .rnw__bc-active { color: var(--gold-600); }
+  .rnw__title { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink-900); margin: 0 0 var(--s-4); }
+  .rnw__body { font-family: var(--font-body); font-size: 14px; color: var(--ink-600); }
 
-.renew-flow__breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: var(--s-2);
-}
-.renew-flow__bc-mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-400); }
-.renew-flow__bc-active { color: var(--gold-600); }
-.renew-flow__bc-sep { font-family: var(--font-mono); font-size: 12px; color: var(--ink-400); }
-
-.renew-flow__title {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--ink-900);
-  margin: 0 0 var(--s-1);
-}
-.renew-flow__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.renew-flow__meta-route { font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); }
-.renew-flow__meta-badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  background: var(--surface-2);
-  border: 1px solid var(--hairline);
-  padding: 3px 10px;
-  color: var(--ink-600);
-}
+  /* Runtime-created nodes: :global() per CLAUDE.md §4.4 */
+  :global(.rnw-card) { background: var(--surface-0); border: 1px solid var(--hairline); padding: 18px 20px; margin-bottom: 16px; }
+  :global(.rnw-dl) { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 24px; margin: 0 0 12px; }
+  :global(.rnw-dl dt) { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-400); margin-bottom: 4px; }
+  :global(.rnw-dl dd) { margin: 0; color: var(--ink-900); font-weight: 600; }
+  :global(.rnw-mono) { font-family: var(--font-mono); font-size: 13px; }
+  :global(.rnw-status) { color: var(--ink-900); font-weight: 600; margin: 0 0 16px; }
+  :global(.rnw-note) { font-size: 13px; color: var(--ink-600); margin: 8px 0 16px; max-width: 70ch; }
+  :global(.rnw-err) { font-size: 13px; color: #C0392B; margin: 10px 0 0; }
+  :global(.rnw-terms) { font-size: 13px; color: var(--ink-600); margin: 0 0 16px; max-width: 70ch; }
+  :global(.rnw-check) { display: flex; align-items: center; gap: 8px; color: var(--ink-900); font-weight: 600; margin-top: 10px; }
+  :global(.rnw-upload) { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  :global(.rnw-input) { font-family: var(--font-body); font-size: 13px; padding: 6px 8px; border: 1px solid var(--hairline); background: var(--surface-0); color: var(--ink-900); }
+  :global(.rnw-docs) { margin: 10px 0 0; padding-left: 18px; }
+  @media (max-width: 640px) { .rnw { padding-left: 16px; padding-right: 16px; } }
 </style>

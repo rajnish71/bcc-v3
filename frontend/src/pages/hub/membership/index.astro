@@ -5,7 +5,9 @@
  *
  * Checks current membership state and redirects appropriately:
  *   - Active, Approved, or Pending members -> /hub/ (details on dashboard)
- *   - Guests/Draft/Expired/Lapsed/Rejected -> /hub/membership/apply/
+ *   - Expired Release 1 plan -> /hub/membership/renew/ (reinstatement, same record)
+ *   - Expired plan outside Release 1 (e.g. Basic) -> /hub/membership/apply/ (unchanged)
+ *   - Guests/Draft/Lapsed/Rejected -> /hub/membership/apply/
  */
 import HubLayout from '../../../layouts/HubLayout.astro';
 ---
@@ -53,9 +55,22 @@ import HubLayout from '../../../layouts/HubLayout.astro';
           m => m.lifecycle_state === 'ACTIVE' || m.lifecycle_state === 'APPROVED' || m.lifecycle_state === 'PENDING'
         );
 
+        // Release 1: an expired membership continues on the SAME record
+        // (renewal page offers reinstatement) -- never a new application.
+        const expired = memberships.find(m => m.lifecycle_state === 'EXPIRED');
+
         if (activeOrPending) {
           // Already have active membership -- details are on the hub main view
           window.location.replace('/hub/');
+        } else if (expired) {
+          // Release 1 plans continue on the same record (renewal page offers
+          // reinstatement); every other plan keeps its pre-existing route.
+          const rs = await fetch(`${API}/hub/membership/renewal`, { headers: { Authorization: `Bearer ${t}` } })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null) as { reason?: string | null } | null;
+          window.location.replace(
+            rs && rs.reason !== 'CLASS_NOT_SELF_RENEWABLE' ? '/hub/membership/renew/' : '/hub/membership/apply/',
+          );
         } else {
           // No active application/membership -- send to apply page
           window.location.replace('/hub/membership/apply/');

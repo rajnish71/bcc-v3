@@ -743,6 +743,21 @@ export class FinancialContributionService {
         );
       }
 
+      // Obligation expiry (policy set by the Business Module via
+      // FinancialObligationInput.expiresAt): no NEW Settlement Attempt may
+      // begin once it has passed. An attempt already SETTLEMENT_IN_PROGRESS
+      // (returned above) is unaffected and resolves through the normal
+      // lifecycle. No state is written here; the Business Module expires it.
+      const obligationExpiresAt = contribution.expires_at
+        ? new Date(contribution.expires_at as unknown as string)
+        : null;
+      if (obligationExpiresAt && Date.now() >= obligationExpiresAt.getTime()) {
+        throw new ConflictException(
+          `Contribution ${contributionId} expired at ${obligationExpiresAt.toISOString()}; ` +
+          `a new settlement attempt can no longer be started.`,
+        );
+      }
+
       pending = await this.transitionContribution(contributionId, 'SETTLEMENT_IN_PROGRESS', trx);
       await this.audit.record(trx, {
         eventType: 'SETTLEMENT_START_REQUESTED',

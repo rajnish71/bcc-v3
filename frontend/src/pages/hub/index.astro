@@ -1197,15 +1197,41 @@ async function loadMembership(): Promise<void> {
     if (expiryEl) expiryEl.textContent = d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }).toUpperCase();
     if (expiryLabelEl) expiryLabelEl.textContent = 'Valid Thru';
 
+    // Release 1: the renewal window is server-configured (renewal_window_days);
+    // only the server's renewal status decides whether renewal is open.
     const daysLeft = Math.ceil((d.getTime() - Date.now()) / 86400000);
-    if (daysLeft <= 60 && daysLeft > 0) {
-      const renewEl = document.getElementById('mcard-renews');
-      if (renewEl) { renewEl.textContent = `RENEWS ${daysLeft}D`; renewEl.hidden = false; }
-      addAttentionItem(
-        `Membership renews <span style="font-family:var(--font-mono);margin-left:4px">${d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>`,
-        '/hub/membership/'
-      );
-    }
+    // Awaited: attention items are rendered once, after loadMembership() resolves.
+    await apiFetch(`${API}/hub/membership/renewal`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((rs: { mode?: string; reason?: string | null; operation?: { status?: string } | null } | null) => {
+        if (!rs) return;
+        // Plans outside Release 1 (e.g. Basic) keep their pre-existing,
+        // purely informational expiry notice unchanged -- Release 1 does not
+        // alter their renewal behaviour.
+        if (rs.reason === 'CLASS_NOT_SELF_RENEWABLE') {
+          if (daysLeft <= 60 && daysLeft > 0) {
+            const renewEl = document.getElementById('mcard-renews');
+            if (renewEl) { renewEl.textContent = `RENEWS ${daysLeft}D`; renewEl.hidden = false; }
+            addAttentionItem(
+              `Membership renews <span style="font-family:var(--font-mono);margin-left:4px">${d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>`,
+              '/hub/membership/'
+            );
+          }
+          return;
+        }
+        const pendingPayment = rs.operation?.status === 'AWAITING_PAYMENT' || rs.operation?.status === 'PROOF_REQUIRED';
+        if (rs.mode === 'RENEWAL' && daysLeft > 0) {
+          const renewEl = document.getElementById('mcard-renews');
+          if (renewEl) { renewEl.textContent = `RENEWS ${daysLeft}D`; renewEl.hidden = false; }
+          addAttentionItem(
+            `${pendingPayment ? 'Complete your membership renewal' : 'Membership renewal is open'} <span style="font-family:var(--font-mono);margin-left:4px">${d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>`,
+            '/hub/membership/renew/'
+          );
+        } else if (rs.mode === 'REINSTATEMENT') {
+          addAttentionItem('Your membership term has ended — request reinstatement', '/hub/membership/renew/');
+        }
+      })
+      .catch(() => { /* non-blocking dashboard hint */ });
   } else if (active.lifecycle_state === 'ACTIVE') {
     // ACTIVE with null expiry → genuinely lifetime membership class
     if (expiryEl) expiryEl.textContent = 'Lifetime';

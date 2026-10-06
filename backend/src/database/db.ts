@@ -772,6 +772,9 @@ export interface MembershipApplicationDocumentsTable {
   id: Generated<number>;
   uuid: string;
   membership_id: number;
+  // Migration 0110 -- set only on Student eligibility proof uploaded for a
+  // Release 1 renewal operation; NULL for application documents.
+  renewal_operation_id: Nullable<number>;
   document_type: string;
   r2_object_key: string;
   original_filename: string;
@@ -785,6 +788,44 @@ export interface MembershipApplicationDocumentsTable {
   reviewed_by_user_id: number | null;
   reviewed_at: ColumnType<Date | null, string | null, string | null>;
   created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
+// Migration 0110 -- Release 1 renewal / reinstatement operation and term
+// provenance on an EXISTING membership row. Operation status is never a
+// membership lifecycle state. open_lock is a generated column (never written).
+export type RenewalOperationStatus =
+  | 'REQUESTED'
+  | 'PROOF_REQUIRED'
+  | 'AWAITING_PAYMENT'
+  | 'APPLIED'
+  | 'REJECTED'
+  | 'EXPIRED'
+  | 'BLOCKED';
+
+export interface MembershipRenewalOperationsTable {
+  id: Generated<number>;
+  uuid: string;
+  membership_id: number;
+  user_id: number;
+  membership_class_id: number;
+  operation_type: 'RENEWAL' | 'REINSTATEMENT';
+  status: RenewalOperationStatus;
+  previous_term_start: ColumnType<Date | null, string | null, string | null>;
+  previous_term_end: ColumnType<Date | null, string | null, string | null>;
+  new_term_start: ColumnType<Date | null, string | null, string | null>;
+  new_term_end: ColumnType<Date | null, string | null, string | null>;
+  contribution_id: Nullable<number>;
+  funded_amount_paise: Nullable<number>;
+  consent_log_id: Nullable<number>;
+  terms_version: Nullable<string>;
+  decided_by_user_id: Nullable<number>;
+  decision_note: Nullable<string>;
+  decided_at: ColumnType<Date | null, string | null, string | null>;
+  applied_at: ColumnType<Date | null, string | null, string | null>;
+  term_key: Nullable<string>;
+  open_lock: ColumnType<number | null, never, never>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
 }
 
 export interface MembershipApplicationMessagesTable {
@@ -1266,6 +1307,7 @@ export interface DB {
   financial_event_outbox: FinancialEventOutboxTable;
   settlement_webhook_inbox: SettlementWebhookInboxTable;
   membership_application_documents: MembershipApplicationDocumentsTable;
+  membership_renewal_operations: MembershipRenewalOperationsTable;
   membership_application_messages: MembershipApplicationMessagesTable;
   membership_approval_stages: MembershipApprovalStagesTable;
   voting_register_snapshots: VotingRegisterSnapshotsTable;

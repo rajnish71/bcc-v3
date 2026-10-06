@@ -968,12 +968,13 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
       var result = await apiFetch('/api/v1/membership/admin/renewal-reminders', { method: 'POST' });
       hide('reminders-loading');
       var fb = document.getElementById('reminders-feedback');
+      var d = (result && result.dispatched) || {};
       fb.innerHTML =
         'Reminders dispatched: ' +
-        '<strong>' + (result.sent30 || 0) + '</strong> at 30d &nbsp; ' +
-        '<strong>' + (result.sent15 || 0) + '</strong> at 15d &nbsp; ' +
-        '<strong>' + (result.sent7  || 0) + '</strong> at 7d &nbsp; ' +
-        '<strong>' + (result.sent1  || 0) + '</strong> at 1d';
+        '<strong>' + (d.RENEWAL_REMINDER_30 || 0) + '</strong> at 30d &nbsp; ' +
+        '<strong>' + (d.RENEWAL_REMINDER_15 || 0) + '</strong> at 15d &nbsp; ' +
+        '<strong>' + (d.RENEWAL_REMINDER_7  || 0) + '</strong> at 7d &nbsp; ' +
+        '<strong>' + (d.RENEWAL_REMINDER_1  || 0) + '</strong> at 1d';
       show('reminders-feedback');
     } catch (e) {
       hide('reminders-loading');

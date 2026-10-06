@@ -1069,9 +1069,14 @@ const jsonLd = displayName
 }
 .about-website-link:hover { text-decoration: underline; }
 
+/* About-rail content (gear, genres, expertise, awards, titles) is injected via
+   innerHTML at runtime, so those child nodes never receive Astro's scoping
+   attribute. Each child rule is therefore anchored to its static (scoped)
+   container and wrapped in :global() — CLAUDE.md §4.4. */
+
 /* Gear */
 .about-gear { display: flex; flex-direction: column; gap: 12px; }
-.gear-group-label {
+.about-gear :global(.gear-group-label) {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1079,7 +1084,7 @@ const jsonLd = displayName
   color: var(--ink-400);
   margin-bottom: 4px;
 }
-.gear-items {
+.about-gear :global(.gear-items) {
   font-size: 13px;
   line-height: 1.9;
   color: var(--ink-600);
@@ -1093,7 +1098,7 @@ const jsonLd = displayName
 
 /* Genres / Expertise in About */
 .about-genres { display: flex; flex-wrap: wrap; gap: 6px; }
-.about-genre-tag {
+.about-genres :global(.about-genre-tag) {
   font-size: 12px;
   color: var(--ink-600);
   background: var(--surface-2);
@@ -1103,15 +1108,15 @@ const jsonLd = displayName
 
 /* Awards */
 .about-awards { display: flex; flex-direction: column; gap: 14px; }
-.about-award-item { border-bottom: 1px solid var(--hairline-soft); padding-bottom: 12px; }
-.about-award-item:last-child { border-bottom: none; padding-bottom: 0; }
-.about-award-name {
+.about-awards :global(.about-award-item) { border-bottom: 1px solid var(--hairline-soft); padding-bottom: 12px; }
+.about-awards :global(.about-award-item:last-child) { border-bottom: none; padding-bottom: 0; }
+.about-awards :global(.about-award-name) {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink-900);
   margin-bottom: 2px;
 }
-.about-award-body {
+.about-awards :global(.about-award-body) {
   font-size: 11px;
   color: var(--gold-600);
   font-weight: 600;
@@ -1119,24 +1124,24 @@ const jsonLd = displayName
   letter-spacing: 0.04em;
   margin-bottom: 3px;
 }
-.about-award-year { font-size: 11px; color: var(--ink-400); }
-.about-award-desc { font-size: 12px; color: var(--ink-600); line-height: 1.6; margin-top: 4px; }
-.about-awards-html { font-size: 13px; line-height: 1.8; color: #37322C; }
-.about-awards-html :is(ul, ol) { padding-left: 18px; margin: 0; }
-.about-awards-html li { margin-bottom: 4px; }
-.about-awards-html p { margin: 0 0 8px; }
-.about-awards-html strong { color: var(--ink-900); }
+.about-awards :global(.about-award-year) { font-size: 11px; color: var(--ink-400); }
+.about-awards :global(.about-award-desc) { font-size: 12px; color: var(--ink-600); line-height: 1.6; margin-top: 4px; }
+.about-awards :global(.about-awards-html) { font-size: 13px; line-height: 1.8; color: #37322C; }
+.about-awards :global(.about-awards-html :is(ul, ol)) { padding-left: 18px; margin: 0; }
+.about-awards :global(.about-awards-html li) { margin-bottom: 4px; }
+.about-awards :global(.about-awards-html p) { margin: 0 0 8px; }
+.about-awards :global(.about-awards-html strong) { color: var(--ink-900); }
 
 /* Photo titles */
 .about-titles { display: flex; flex-direction: column; gap: 8px; }
-.about-title-row { display: flex; align-items: baseline; gap: 8px; }
-.about-title-code {
+.about-titles :global(.about-title-row) { display: flex; align-items: baseline; gap: 8px; }
+.about-titles :global(.about-title-code) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   font-weight: 700;
   color: var(--gold-light);
 }
-.about-title-body {
+.about-titles :global(.about-title-body) {
   font-size: 11px;
   color: var(--ink-400);
 }

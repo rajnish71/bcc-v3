@@ -169,10 +169,8 @@ export class AuthService {
     // the flag in resetPassword() below.
     if (user.force_password_reset) {
       await this.recordLoginAttempt(user.id, identifier, device, 'FAILED');
-      throw new ForbiddenException(
-        'Password reset required. Please reset your password before signing in.',
-      );
     }
+    this.assertPasswordResetNotRequired(user);
 
     // Success -- clear any failed-attempt counter, record history, issue tokens.
     const sessionId = resolveSessionId();
@@ -359,10 +357,40 @@ export class AuthService {
     // caller's transaction commits or rolls back the session and its history
     // together. email_attempted stays NULL: no identifier was typed on these
     // paths; user_id identifies the account.
+    //
+    // F-034 universal session block: this is the convergence point for every
+    // non-password path, so a flagged account is refused here before any
+    // session id, refresh token or login_history row is created. Read on the
+    // caller's executor so an in-transaction sign-up sees its own new row
+    // (which always carries the column default, false). A missing row is
+    // not this gate's concern: fk_refresh_tokens_user rejects the insert.
+    const account = await executor
+      .selectFrom('users')
+      .select(['force_password_reset'])
+      .where('id', '=', userId)
+      .executeTakeFirst();
+    if (account) this.assertPasswordResetNotRequired(account);
+
     const sessionId = resolveSessionId();
     const tokens = await this.issueTokenPair(userId, uuid, status, device, sessionId, undefined, executor);
     await this.recordLoginAttempt(userId, null, device, 'SUCCESS', sessionId, executor);
     return tokens;
+  }
+
+  /**
+   * F-034: the single force_password_reset rule shared by login(), refresh()
+   * and issueSessionForUser(). Public only so RegistrationService can apply
+   * it before linking a social identity to an existing account (that link is
+   * a mutation and must not happen for an authentication that will be
+   * refused). The way out is resetPassword() or the in-app password change,
+   * both of which clear the flag.
+   */
+  assertPasswordResetNotRequired(user: { force_password_reset: boolean }): void {
+    if (user.force_password_reset) {
+      throw new ForbiddenException(
+        'Password reset required. Please reset your password before signing in.',
+      );
+    }
   }
 
   private async issueTokenPair(
@@ -460,11 +488,7 @@ export class AuthService {
 
     // F-034: same gate as login() -- a flagged account does not get a new
     // token pair on refresh either.
-    if (user.force_password_reset) {
-      throw new ForbiddenException(
-        'Password reset required. Please reset your password before signing in.',
-      );
-    }
+    this.assertPasswordResetNotRequired(user);
 
     await db
       .updateTable('refresh_tokens')

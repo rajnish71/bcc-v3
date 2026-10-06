@@ -325,6 +325,10 @@ export class RegistrationService {
         throw new ForbiddenException(`Account is ${existingByEmail.status.toLowerCase()}`);
       }
 
+      // F-034: refuse before linking -- a flagged account must not gain a
+      // new provider identity (or its audit row) from a refused sign-in.
+      this.authService.assertPasswordResetNotRequired(existingByEmail);
+
       await db
         .insertInto('auth_identities')
         .values({ user_id: existingByEmail.id, provider: dto.provider, provider_user_id: dto.providerUserId })

@@ -142,18 +142,87 @@ describe('AuthService.refresh() force_password_reset gate (F-034, real source in
     '// -- Logout / session management ------------------------------------',
   );
 
-  it('checks force_password_reset before issuing a new token pair', () => {
-    expect(refreshBody).toContain('if (user.force_password_reset)');
-    expect(refreshBody.indexOf('if (user.force_password_reset)')).toBeLessThan(
+  it('checks force_password_reset (shared F-034 helper) before issuing a new token pair', () => {
+    expect(refreshBody).toContain('this.assertPasswordResetNotRequired(user);');
+    expect(refreshBody.indexOf('this.assertPasswordResetNotRequired(user);')).toBeLessThan(
       refreshBody.indexOf('return this.issueTokenPair('),
     );
   });
 
   it('the force_password_reset check runs after the existing active-account check', () => {
     const statusCheckIndex = refreshBody.indexOf("if (!user || user.status !== 'ACTIVE')");
-    const flagCheckIndex = refreshBody.indexOf('if (user.force_password_reset)');
+    const flagCheckIndex = refreshBody.indexOf('this.assertPasswordResetNotRequired(user);');
     expect(statusCheckIndex).toBeGreaterThan(-1);
     expect(flagCheckIndex).toBeGreaterThan(statusCheckIndex);
+  });
+
+  it('the force_password_reset check runs before last_used_at is touched (no rotation side effects)', () => {
+    expect(refreshBody.indexOf('this.assertPasswordResetNotRequired(user);')).toBeLessThan(
+      refreshBody.indexOf('last_used_at:'),
+    );
+  });
+});
+
+// ── B2. Shared helper + universal session block (F-034 Option A) ───────────
+
+describe('F-034 universal session block (real source inspection)', () => {
+  const helperBody = methodBody(
+    AUTH_SERVICE_SRC,
+    'assertPasswordResetNotRequired(user: { force_password_reset: boolean }): void {',
+    'private async issueTokenPair(',
+  );
+  const issueSessionBody = methodBody(
+    AUTH_SERVICE_SRC,
+    'async issueSessionForUser(',
+    'assertPasswordResetNotRequired(user: { force_password_reset: boolean }): void {',
+  );
+  const loginBody = methodBody(
+    AUTH_SERVICE_SRC,
+    'async login(',
+    '// -- Password reset ---------------------------------------------------',
+  );
+
+  it('the helper throws ForbiddenException with the existing F-034 message', () => {
+    expect(helperBody).toContain('if (user.force_password_reset)');
+    expect(helperBody).toContain('throw new ForbiddenException(');
+    expect(helperBody).toContain(
+      "'Password reset required. Please reset your password before signing in.'",
+    );
+  });
+
+  it('the message literal exists exactly once in AuthService (single rule, no divergent copies)', () => {
+    const occurrences = AUTH_SERVICE_SRC.split(
+      'Password reset required. Please reset your password before signing in.',
+    ).length - 1;
+    expect(occurrences).toBe(1);
+  });
+
+  it('login() uses the shared helper, still before any session side effect', () => {
+    const helperCall = loginBody.indexOf('this.assertPasswordResetNotRequired(user);');
+    expect(helperCall).toBeGreaterThan(-1);
+    expect(helperCall).toBeLessThan(loginBody.indexOf('resolveSessionId()'));
+    expect(helperCall).toBeLessThan(loginBody.indexOf('this.clearFailedAttempts(user.id)'));
+  });
+
+  it('issueSessionForUser() reads the flag on the caller executor and enforces it before minting a session', () => {
+    expect(issueSessionBody).toMatch(/executor\s*\.selectFrom\('users'\)\s*\.select\(\['force_password_reset'\]\)/);
+    const gate = issueSessionBody.indexOf('this.assertPasswordResetNotRequired(account)');
+    expect(gate).toBeGreaterThan(-1);
+    expect(gate).toBeLessThan(issueSessionBody.indexOf('resolveSessionId()'));
+    expect(gate).toBeLessThan(issueSessionBody.indexOf('this.issueTokenPair('));
+    expect(gate).toBeLessThan(issueSessionBody.indexOf('this.recordLoginAttempt('));
+  });
+
+  it('registerOrLoginWithSocial() link-by-email applies the gate before inserting auth_identities or auditing the link', () => {
+    const linkBranch = methodBody(
+      REGISTRATION_SERVICE_SRC,
+      'if (existingByEmail) {',
+      'return { user: this.rowToPublicUser(existingByEmail), tokens, wasNewUser: false };',
+    );
+    const gate = linkBranch.indexOf('this.authService.assertPasswordResetNotRequired(existingByEmail);');
+    expect(gate).toBeGreaterThan(-1);
+    expect(gate).toBeLessThan(linkBranch.indexOf("insertInto('auth_identities')"));
+    expect(gate).toBeLessThan(linkBranch.indexOf("actionType: 'SOCIAL_IDENTITY_LINKED'"));
   });
 });
 

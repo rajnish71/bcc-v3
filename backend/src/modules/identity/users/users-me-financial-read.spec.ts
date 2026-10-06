@@ -37,6 +37,11 @@ describe('GET /users/me ui.financialRead', () => {
     expect(res.ui.financialRead).toBe(true);
   });
 
+  it('is false for a user with no financial permissions (Coordinator, volunteer, member)', async () => {
+    const res = await controllerWith(['membership.record.view', 'event.volunteer.manage']).me(actor);
+    expect(res.ui.financialRead).toBe(false);
+  });
+
   it('is false for verify/audit holders without financial.read', async () => {
     const res = await controllerWith(['financial.settlement.verify', 'financial.audit.view']).me(actor);
     expect(res.ui.financialRead).toBe(false);

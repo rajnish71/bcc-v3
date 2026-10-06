@@ -197,13 +197,39 @@ describe('Track 4 admin financial API (api/v1/financial/admin)', () => {
     expect([...GRANTED].sort()).toEqual(['Financial Authority', 'Super Admin']);
   });
 
-  it('no other migration or seed grants financial.read', () => {
-    const dirs = ['database/migrations', 'database/seeds'].map((d) => path.join(REPO, d));
-    const offenders = dirs
-      .flatMap((d) => fs.readdirSync(d).map((f) => path.join(d, f)))
-      .filter((f) => f.endsWith('.sql') && f !== MIGRATION_0114)
-      .filter((f) => fs.readFileSync(f, 'utf8').includes("'financial.read'"));
+  // Fail closed: any future migration, seed or bootstrap/seed script that
+  // mentions financial.read breaks this test until the grant is reviewed.
+  it('no other migration, seed or bootstrap script grants financial.read', () => {
+    const walk = (d: string): string[] =>
+      fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) return e.name === 'node_modules' || e.name === '__pycache__' ? [] : walk(p);
+        return [p];
+      });
+    const offenders = ['database', 'scripts']
+      .flatMap((d) => walk(path.join(REPO, d)))
+      .filter((f) => /\.(sql|js|ts|py|ps1|bat|json)$/.test(f) && f !== MIGRATION_0114)
+      .filter((f) => fs.readFileSync(f, 'utf8').includes('financial.read'));
     expect(offenders).toEqual([]);
+  });
+
+  // ── Navigation gating (supplementary to server-side authorization) ──────
+
+  it('Hub shows the Financial group only when /users/me reports financialRead === true', () => {
+    const layout = fs.readFileSync(path.join(REPO, 'frontend/src/layouts/HubLayout.astro'), 'utf8');
+    const sidebar = fs.readFileSync(path.join(REPO, 'frontend/src/components/hub/HubSidebar.astro'), 'utf8');
+    expect(layout).toContain('financialRead = user.ui?.financialRead === true;');
+    expect(layout).toContain("frame.setAttribute('data-hub-financial', financialRead ? 'true' : 'false')");
+    expect(sidebar).toMatch(/<div class="hub-rail__group hub-rail__elevated" data-financial-group hidden>/);
+    const reveals = sidebar.match(/renderGroup\(FINANCIAL_CONFIG, 'financial'\)/g) ?? [];
+    expect(reveals).toHaveLength(2);
+    for (const line of sidebar.split(/\r?\n/).filter((l) => l.includes("renderGroup(FINANCIAL_CONFIG, 'financial')"))) {
+      expect(line).toContain("getAttribute('data-hub-financial') === 'true'");
+    }
+    // Not tied to portal role: Coordinator (portal ADMIN) gets no Financial items.
+    const elevated = sidebar.slice(sidebar.indexOf('const ELEVATED_CONFIG'), sidebar.indexOf('function isRouteActive'));
+    expect(elevated).toContain("label: 'ADMINISTRATION'");
+    expect(elevated).not.toContain('/hub/admin/financial/');
   });
 
   it('migration 0114 creates Financial Authority as a SYSTEM role and does not grant verify/audit permissions', () => {

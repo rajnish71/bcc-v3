@@ -3,7 +3,12 @@
 // Module 06 -- Photographer Profiles & Portfolios (spec 06.1, 06.2)
 //
 // Phase 2a scope:
-//   - Photographer directory: all ACTIVE members with PUBLIC profile visibility.
+//   - Photographer directory: ACTIVE members with PUBLIC profile visibility
+//     who are DIRECTORY-ELIGIBLE (directory-eligibility.policy.ts: profile
+//     photo + completion >= 50% + >= 5 public portfolio photographs) --
+//     enforced only once the profile-completion definition is approved.
+//     Eligibility gates LISTING only -- getPhotographer() and the public
+//     profile route are unchanged (see listProfilePaths()).
 //   - Photographer detail: profile + recognition + social handles + photo count.
 //   - Portfolio = gallery photos (curated pinning is a Phase 3 hub feature).
 //
@@ -26,6 +31,7 @@ import { db } from '../../database/db';
 import { ikUrl, COVER_DELIVERY_TR, AVATAR_DELIVERY_TR } from '../shared/storage/imagekit.util';
 import { PortfolioExposureService, exposedPhotoPredicate } from '../gallery/portfolio-exposure.service';
 import type { ExposureSet } from '../gallery/portfolio-exposure.policy';
+import { DirectoryEligibilityService, directoryBaseQuery } from './directory-eligibility.service';
 
 const P_COLS = { owner: 'photos.owner_user_id', selected: 'photos.portfolio_selected', id: 'photos.id' };
 
@@ -110,7 +116,10 @@ async function batchPhotoCounts(userIds: number[], set: ExposureSet): Promise<Re
 
 @Injectable()
 export class PhotographerProfilesService {
-  constructor(private readonly exposure: PortfolioExposureService) {}
+  constructor(
+    private readonly exposure: PortfolioExposureService,
+    private readonly eligibility: DirectoryEligibilityService,
+  ) {}
 
   // =========================================================================
   // List photographers
@@ -126,34 +135,61 @@ export class PhotographerProfilesService {
     // MEM-008: PUBLIC photographs are exposed per owner entitlement + cap.
     const exposureSet = await this.exposure.getExposureSet('PORTFOLIO');
 
+    // Directory eligibility (profile photo + completion >= 50% + >= 5 public
+    // portfolio photographs). Applied as a SQL id predicate on BOTH the count
+    // and the row query so totals, pagination, sorting and genre filtering
+    // can never surface an ineligible photographer. null = rule not enforced
+    // yet (profile-completion definition pending): no eligibility filter.
+    const eligibleIds = await this.eligibility.listableUserIds();
+    if (eligibleIds !== null && eligibleIds.length === 0) {
+      return { data: [], meta: { total_count: 0, limit: opts.limit, offset: opts.offset } };
+    }
+
+    const applyFilters = <QB extends { where: any }>(qb: QB): QB => {
+      let q: any = eligibleIds === null ? qb : qb.where('u.id', 'in', eligibleIds);
+      if (opts.hasApprovedPhotos) {
+        q = q.where((eb: any) =>
+          eb.exists(
+            eb.selectFrom('photos')
+              .whereRef('photos.owner_user_id', '=', 'u.id')
+              .where('photos.status', '=', 'ACTIVE')
+              .where('photos.visibility', '=', 'PUBLIC')
+              .where('photos.show_in_portfolio', '=', true as any)
+              .where((eb2: any) => exposedPhotoPredicate(eb2, P_COLS, exposureSet))
+              .select('photos.id')
+          )
+        );
+      }
+      // Genre filter in SQL (previously applied in JS after LIMIT/OFFSET,
+      // which made total_count and page contents inconsistent).
+      if (opts.genre) {
+        const genre = opts.genre;
+        q = q.where((eb: any) =>
+          eb.exists(
+            eb.selectFrom('photos')
+              .innerJoin('photo_tag_assignments as pta', 'pta.photo_id', 'photos.id')
+              .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
+              .whereRef('photos.owner_user_id', '=', 'u.id')
+              .where('photos.status', '=', 'ACTIVE')
+              .where('pt.tag_key', '=', genre)
+              .where('pt.category', '=', 'GENRE')
+              .where('photos.visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
+              .where('photos.show_in_portfolio', '=', true as any)
+              .where((eb2: any) => eb2.or([
+                eb2('photos.visibility', '!=', 'PUBLIC'),
+                exposedPhotoPredicate(eb2, P_COLS, exposureSet),
+              ]))
+              .select('photos.id')
+          )
+        );
+      }
+      return q;
+    };
+
     // ------------------------------------------------------------------
     // Total count
     // ------------------------------------------------------------------
-    let countQuery = db
-      .selectFrom('users as u')
-      .innerJoin('memberships as m', 'm.user_id', 'u.id')
-      .where('u.status', '=', 'ACTIVE')
-      .where('u.deleted_at', 'is', null)
-      .where('u.profile_visibility', '=', 'PUBLIC')
-      .where('u.username', 'is not', null)
-      .where('m.lifecycle_state', '=', 'ACTIVE')
-      .where('m.membership_class_id', 'is not', null);
-
-    if (opts.hasApprovedPhotos) {
-      countQuery = countQuery.where((eb) =>
-        eb.exists(
-          eb.selectFrom('photos')
-            .whereRef('photos.owner_user_id', '=', 'u.id')
-            .where('photos.status', '=', 'ACTIVE')
-            .where('photos.visibility', '=', 'PUBLIC')
-            .where('photos.show_in_portfolio', '=', true as any)
-            .where(eb2 => exposedPhotoPredicate(eb2, P_COLS, exposureSet))
-            .select('photos.id')
-        )
-      );
-    }
-
-    const countRow = await countQuery
+    const countRow = await applyFilters(directoryBaseQuery())
       .select(eb => eb.fn.count<number>('u.id').as('total'))
       .executeTakeFirst();
 
@@ -170,37 +206,13 @@ export class PhotographerProfilesService {
     const dbLimit   = photoSort ? 1000 : opts.limit;
     const dbOffset  = photoSort ? 0    : opts.offset;
 
-    let rowsQuery = db
-      .selectFrom('users as u')
-      .innerJoin('memberships as m', 'm.user_id', 'u.id')
+    const rows = await applyFilters(directoryBaseQuery())
       .innerJoin('membership_classes as mc', 'mc.id', 'm.membership_class_id')
       .leftJoin('user_avatars as av', join =>
         join
           .onRef('av.user_id', '=', 'u.id')
           .on('av.size_variant', '=', 'ORIGINAL'),
       )
-      .where('u.status', '=', 'ACTIVE')
-      .where('u.deleted_at', 'is', null)
-      .where('u.profile_visibility', '=', 'PUBLIC')
-      .where('u.username', 'is not', null)
-      .where('m.lifecycle_state', '=', 'ACTIVE')
-      .where('m.membership_class_id', 'is not', null);
-
-    if (opts.hasApprovedPhotos) {
-      rowsQuery = rowsQuery.where((eb) =>
-        eb.exists(
-          eb.selectFrom('photos')
-            .whereRef('photos.owner_user_id', '=', 'u.id')
-            .where('photos.status', '=', 'ACTIVE')
-            .where('photos.visibility', '=', 'PUBLIC')
-            .where('photos.show_in_portfolio', '=', true as any)
-            .where(eb2 => exposedPhotoPredicate(eb2, P_COLS, exposureSet))
-            .select('photos.id')
-        )
-      );
-    }
-
-    const rows = await rowsQuery
       .select([
         'u.id',
         'u.username',
@@ -233,35 +245,9 @@ export class PhotographerProfilesService {
     const photoMap = await batchPhotoCounts(userIds, exposureSet);
 
     // ------------------------------------------------------------------
-    // Optional genre filter
-    // ------------------------------------------------------------------
-    let genreSet: Set<number> | null = null;
-    if (opts.genre) {
-      const genre = opts.genre;
-      const genreRows = await db
-        .selectFrom('photos')
-        .innerJoin('photo_tag_assignments as pta', 'pta.photo_id', 'photos.id')
-        .innerJoin('photo_tags as pt', 'pt.id', 'pta.tag_id')
-        .where('photos.owner_user_id', 'in', userIds)
-        .where('photos.status', '=', 'ACTIVE')
-        .where('pt.tag_key', '=', genre)
-        .where('pt.category', '=', 'GENRE')
-        .where('photos.visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
-        .where('photos.show_in_portfolio', '=', true as any)
-        .where(eb => eb.or([
-          eb('photos.visibility', '!=', 'PUBLIC'),
-          exposedPhotoPredicate(eb, P_COLS, exposureSet),
-        ]))
-        .select('photos.owner_user_id')
-        .execute();
-      genreSet = new Set(genreRows.map(r => r.owner_user_id as number));
-    }
-
-    // ------------------------------------------------------------------
     // Build result
     // ------------------------------------------------------------------
     let items = rows
-      .filter(r => genreSet == null || genreSet.has(r.id))
       .map(r => ({
         id:          r.id,
         username:    r.username!,
@@ -284,6 +270,26 @@ export class PhotographerProfilesService {
       data: items,
       meta: { total_count: total, limit: opts.limit, offset: opts.offset },
     };
+  }
+
+  // =========================================================================
+  // Public profile paths (static build of /photographers/:username/)
+  //
+  // Directory eligibility gates LISTING, not profile visibility. Before the
+  // eligibility rule, profile pages were pre-rendered from the directory
+  // list; this keeps exactly that pre-eligibility population (PUBLIC profile
+  // + ACTIVE classed membership) so an unlisted photographer's public profile
+  // keeps its static page, metadata and sitemap entry. Returns slugs only --
+  // no directory card data.
+  // =========================================================================
+
+  async listProfilePaths() {
+    const rows = await directoryBaseQuery()
+      .select(['u.id', 'u.username'])
+      .distinct()
+      .orderBy('u.id', 'asc')
+      .execute();
+    return { data: rows.map(r => ({ id: r.id, username: r.username! })) };
   }
 
   // =========================================================================

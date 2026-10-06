@@ -8,7 +8,8 @@ import { BUILD_API_URL } from '../../../lib/api';
 export async function getStaticPaths() {
   let photographers: any[] = [];
   try {
-    const res = await fetch(`${BUILD_API_URL}/photographers?limit=100`);
+    // Every PUBLIC profile (not the eligibility-gated directory list).
+    const res = await fetch(`${BUILD_API_URL}/photographers/profile-paths`);
     if (res.ok) {
       const json = await res.json();
       photographers = json.data || [];

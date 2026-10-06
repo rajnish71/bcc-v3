@@ -3,11 +3,11 @@ import {
   IsArray, ArrayMaxSize, IsIn, IsDateString, Matches,
   IsInt, Min,
 } from 'class-validator';
+import { CAMERA_SYSTEMS } from './profile-field-values';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
 const GENDERS = ['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'] as const;
 const RELATIONSHIPS = ['SPOUSE', 'PARENT', 'SIBLING', 'CHILD', 'FRIEND', 'OTHER'] as const;
-const CAMERA_SYSTEMS = ['Nikon', 'Canon', 'Sony', 'Fujifilm', 'OM System', 'Other'] as const;
 const GALLERY_LAYOUTS = ['justified', 'masonry', 'editorial', 'modular', 'metro', 'magazine'] as const;
 
 export class UpdateProfileDto {

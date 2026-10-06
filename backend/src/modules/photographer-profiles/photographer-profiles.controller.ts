@@ -24,7 +24,8 @@ export class PhotographerProfilesController {
 
   /**
    * GET /api/v1/photographers
-   * Photographer directory. Returns active members with PUBLIC profile visibility.
+   * Photographer directory. Returns active members with PUBLIC profile visibility
+   * who meet the directory eligibility rule (directory-eligibility.policy.ts).
    *
    * Query params:
    *   limit  (default 40, max 100)
@@ -48,6 +49,18 @@ export class PhotographerProfilesController {
     const hasApprovedPhotos = hasApprovedPhotosStr === 'true';
 
     return this.svc.listPhotographers({ limit, offset, sort, genre, hasApprovedPhotos });
+  }
+
+  /**
+   * GET /api/v1/photographers/profile-paths
+   * Usernames of every PUBLIC photographer profile, for the static build of
+   * /photographers/:username/. Independent of directory eligibility, which
+   * gates the directory LISTING only. Declared before ':username' so the
+   * static segment wins.
+   */
+  @Get('profile-paths')
+  async listProfilePaths() {
+    return this.svc.listProfilePaths();
   }
 
   /**

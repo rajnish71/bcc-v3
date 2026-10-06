@@ -16,20 +16,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { BUILD_API_URL } from '../../lib/api';
 
 export async function getStaticPaths() {
-  // The list endpoint caps limit at 100; page with offset until total_count
-  // so every public photographer is discovered regardless of club size.
+  // Profile pages are built for every PUBLIC photographer profile -- NOT
+  // from the directory list, which is additionally gated by directory
+  // eligibility (profile photo + completion + 5 portfolio photographs).
+  // Directory eligibility controls listing only, never profile visibility.
   let photographers: any[] = [];
   try {
-    const PAGE_SIZE = 100;
-    for (let offset = 0; ; offset += PAGE_SIZE) {
-      const res = await fetch(`${BUILD_API_URL}/photographers?limit=${PAGE_SIZE}&offset=${offset}`);
-      if (!res.ok) break;
-      const json = await res.json();
-      const page: any[] = json.data || [];
-      photographers.push(...page);
-      const total = json.meta?.total_count ?? 0;
-      if (page.length < PAGE_SIZE || photographers.length >= total) break;
-    }
+    const res = await fetch(`${BUILD_API_URL}/photographers/profile-paths`);
+    if (res.ok) photographers = (await res.json()).data || [];
   } catch {
     // Backend unavailable at build time — fall through to hardcoded paths below.
   }

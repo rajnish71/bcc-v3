@@ -62,6 +62,22 @@ import HubLayout from '../../layouts/HubLayout.astro';
       <!-- items injected by JS: max 3 -->
     </div>
 
+    <!-- ②.5 PHOTOGRAPHER DIRECTORY STATUS ─────────────────────────────────
+         Source: GET /api/v1/hub/profile/directory-status (derived live).
+         Hidden for users without an ACTIVE membership; neutral "Not Listed"
+         note when profile visibility is not PUBLIC. Actions shown only for unmet requirements; text links,
+         never the gold CTA (one gold CTA per view). -->
+    <div class="section-block directory-status" id="directory-status" hidden>
+      <div class="section-head">
+        <div class="section-kicker"><span class="kicker-rule"></span>Photographer Directory</div>
+        <span class="dir-state" id="dir-state"></span>
+      </div>
+      <p class="dir-summary" id="dir-summary"></p>
+      <ul class="dir-reqs" id="dir-reqs"></ul>
+      <p class="dir-hint" id="dir-hint" hidden></p>
+      <div class="dir-actions" id="dir-actions"></div>
+    </div>
+
     <!-- ③a RECENT WORK (populated) ─────────────────────────────────────── -->
     <div class="section-block recent-work" id="recent-work" hidden>
       <div class="section-head">
@@ -288,6 +304,77 @@ import HubLayout from '../../layouts/HubLayout.astro';
   background: var(--gold-gradient);
   flex-shrink: 0;
 }
+
+/* ②.5 PHOTOGRAPHER DIRECTORY STATUS ───────────────────────────
+   Rows and action links are created by JS -> :global() (CLAUDE.md 4.4). */
+.directory-status {
+  background: var(--surface-0);
+  border: 1px solid var(--hairline);
+  padding: 20px 24px;
+}
+.directory-status .section-head { margin-bottom: 10px; }
+.dir-state {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  font-family: var(--font-body);
+}
+.dir-state--eligible { background: var(--status-active-bg);  color: var(--status-active-text); }
+.dir-state--pending  { background: var(--status-pending-bg); color: var(--status-pending-text); }
+.dir-summary {
+  font-size: 14px;
+  color: var(--ink-700);
+  margin: 0 0 12px;
+  font-family: var(--font-body);
+}
+.dir-reqs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+}
+.directory-status :global(.dir-req) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-900);
+  font-family: var(--font-body);
+}
+.directory-status :global(.dir-req-mark) { font-weight: 700; width: 14px; text-align: center; }
+.directory-status :global(.dir-req--met .dir-req-mark)   { color: var(--status-active-text); }
+.directory-status :global(.dir-req--unmet .dir-req-mark) { color: var(--status-pending-text); }
+.directory-status :global(.dir-req--unmet)               { color: var(--ink-600); }
+.directory-status :global(.dir-req--pending .dir-req-mark) { color: var(--ink-400); }
+.directory-status :global(.dir-req--pending)               { color: var(--ink-400); }
+.dir-hint {
+  font-size: 13px;
+  color: var(--ink-400);
+  margin: 12px 0 0;
+  font-family: var(--font-body);
+}
+.dir-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 14px;
+}
+.dir-actions:empty { display: none; }
+/* Same treatment as .section-link (JS-created, so re-declared under :global) */
+.dir-actions :global(.dir-action) {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gold-600);
+  border-bottom: 1px solid rgba(168,132,60,0.4);
+  text-decoration: none;
+  font-family: var(--font-body);
+}
+.dir-actions :global(.dir-action:hover) { border-color: var(--gold-600); }
 
 /* ③ SECTION BLOCK / RECENT WORK ──────────────────────────────── */
 .section-block { margin-bottom: 40px; }
@@ -1533,6 +1620,101 @@ function renderJourneyStrip() {
   show('journey-card');
 }
 
+/* ── PHOTOGRAPHER DIRECTORY STATUS ──────────────────────────── */
+type DirectoryStatus = {
+  directoryEligible: boolean | null;          // null = undetermined (completion definition pending)
+  ruleEnforced: boolean;
+  notListedReason: 'NO_ACTIVE_MEMBERSHIP' | 'PROFILE_VISIBILITY' | null;
+  profileCompletionPercent: number | null;    // display only (backend floor); null = definition pending
+  profileCompletionCount: { completed: number; total: number } | null;
+  completion?: { elements: Array<{ key: string; label: string; complete: boolean }> };
+  publicPortfolioPhotoCount: number;
+  requirements: { profilePhoto: boolean; profileCompletion: boolean | null; portfolioPhotos: boolean };
+  thresholds: { profileCompletionPercent: number; portfolioPhotos: number };
+  actions: Array<{ key: string; label: string; href: string }>;
+};
+
+async function loadDirectoryStatus(): Promise<void> {
+  const res = await apiFetch(`${API}/hub/profile/directory-status`);
+  if (!res.ok) return;
+  const s = (await res.json() as { data?: DirectoryStatus }).data;
+  if (!s) return;
+
+  const stateEl = document.getElementById('dir-state');
+  const reqsEl  = document.getElementById('dir-reqs');
+  const hintEl  = document.getElementById('dir-hint');
+  const actsEl  = document.getElementById('dir-actions');
+  if (!stateEl || !reqsEl || !hintEl || !actsEl) return;
+
+  // Registered users without an ACTIVE membership are never directory
+  // photographers -- no block at all.
+  if (s.notListedReason === 'NO_ACTIVE_MEMBERSHIP') return;
+  if (s.notListedReason === 'PROFILE_VISIBILITY') {
+    // Neutral note only, no settings link: some profiles (e.g. founding
+    // members) are PRIVATE by governance decision.
+    stateEl.textContent = 'Not Listed';
+    stateEl.className = 'dir-state dir-state--pending';
+    setText('dir-summary', 'Your profile visibility is not set to Public, so your profile is not listed in the public Photographer Directory.');
+    show('directory-status');
+    return;
+  }
+
+  if (!s.ruleEnforced) {
+    // Profile-completion definition not yet frozen: the directory rule is not
+    // enforced, so no eligibility verdict is shown -- only the requirements
+    // that can already be evaluated.
+    stateEl.textContent = 'Requirements Pending';
+    stateEl.className = 'dir-state dir-state--pending';
+    setText('dir-summary', 'New Photographer Directory requirements are being finalised. Here is where your profile stands on the requirements confirmed so far:');
+  } else {
+    stateEl.textContent = s.directoryEligible ? 'Eligible' : 'Not Yet Eligible';
+    stateEl.className = `dir-state ${s.directoryEligible ? 'dir-state--eligible' : 'dir-state--pending'}`;
+    setText('dir-summary', s.directoryEligible
+      ? 'Your profile currently meets the requirements to appear in the public Photographer Directory.'
+      : 'Complete the following requirements to appear in the public Photographer Directory:');
+  }
+
+  // met: true / false / null (cannot be evaluated yet)
+  const rows: Array<[boolean | null, string]> = [
+    [s.requirements.profilePhoto, 'Profile photo'],
+    [s.requirements.profileCompletion, s.profileCompletionCount === null
+      ? 'Profile completion — definition pending'
+      : `Profile completion — ${s.profileCompletionCount.completed} of ${s.profileCompletionCount.total} (${s.profileCompletionPercent}%)`],
+    [s.requirements.portfolioPhotos, `Portfolio — ${s.publicPortfolioPhotoCount} / ${s.thresholds.portfolioPhotos} photos`],
+  ];
+  reqsEl.innerHTML = rows.map(([met, label]) => {
+    const cls  = met === null ? 'dir-req--pending' : met ? 'dir-req--met' : 'dir-req--unmet';
+    const mark = met === null ? '&#8211;' : met ? '&#10003;' : '&#10007;';
+    const aria = met === null ? 'Pending' : met ? 'Met' : 'Not yet met';
+    return `<li class="dir-req ${cls}">
+       <span class="dir-req-mark" role="img" aria-label="${aria}">${mark}</span>
+       <span>${escHtml(label)}</span>
+     </li>`;
+  }).join('');
+
+  const hints: string[] = [];
+  const missingPhotos = s.thresholds.portfolioPhotos - s.publicPortfolioPhotoCount;
+  if (!s.requirements.portfolioPhotos && missingPhotos > 0) {
+    hints.push(`Add ${missingPhotos} more portfolio photo${missingPhotos === 1 ? '' : 's'}${s.ruleEnforced ? ' to appear in the Photographer Directory' : ''}.`);
+  }
+  if (s.requirements.profileCompletion === false) {
+    // Element list and threshold come from the backend (PROFILE-ARCH-001);
+    // nothing is calculated here.
+    const missing = (s.completion?.elements ?? []).filter(e => !e.complete).map(e => e.label);
+    hints.push(`Profile completion needs to reach ${s.thresholds.profileCompletionPercent}%` +
+      (missing.length ? ` — still to complete: ${missing.join(', ')}.` : '.'));
+  }
+  if (hints.length) {
+    hintEl.textContent = hints.join(' ');
+    hintEl.hidden = false;
+  }
+
+  actsEl.innerHTML = s.actions.map(a =>
+    `<a class="dir-action" href="${escHtml(a.href)}">${escHtml(a.label)} &#8594;</a>`).join('');
+
+  show('directory-status');
+}
+
 /* ── JOURNEY NUMBERS ────────────────────────────────────────── */
 function renderJourneyNumbers(photoCount: number) {
   if (photoCount === 0) return;
@@ -1560,6 +1742,7 @@ async function init() {
     loadMembership().catch(() => {}),
     loadEvents(!hasPhotos).catch(() => {}),
     loadStoriesCollections().catch(() => {}),
+    loadDirectoryStatus().catch(() => {}),
   ]);
 
   renderAttentionRow();

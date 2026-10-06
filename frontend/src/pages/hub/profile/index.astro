@@ -58,10 +58,10 @@ const maxYear = new Date().getFullYear() + 1;
     <div class="ob-center">
       <div class="ob-completion-text">
         <span class="ob-completion-label">PROFILE COMPLETION</span>
-        <span class="ob-completion-value">85%</span>
+        <span class="ob-completion-value" id="ph-completion-value">—</span>
       </div>
       <div class="ob-completion-bar-wrap">
-        <div class="ob-completion-bar-fill" style="width: 85%"></div>
+        <div class="ob-completion-bar-fill" id="ph-completion-fill" style="width: 0%"></div>
       </div>
     </div>
 
@@ -906,7 +906,7 @@ const maxYear = new Date().getFullYear() + 1;
   color: var(--ink-400);
 }
 
-/* Center: Profile Completion Placeholder */
+/* Center: Profile Completion (GET /hub/profile/directory-status) */
 .ob-center {
   display: flex;
   flex-direction: column;
@@ -1522,6 +1522,21 @@ function initChipInput(containerId: string, field: string) {
 }
 
 // ── Load profile ────────────────────────────────────────────────────────────
+// ── Profile completion ─────────────────────────────────────────────────────
+// Authoritative PROFILE-ARCH-001 result from GET /hub/profile/directory-status
+// (backend display percentage = floor(100 * completed / 7)). Nothing is
+// calculated here; "—" is shown if the API gives no value.
+async function loadCompletion() {
+  const res = await apiFetch(`${API}/directory-status`);
+  if (!res.ok) return;
+  const pct = (await res.json() as { data?: { profileCompletionPercent?: number } }).data?.profileCompletionPercent;
+  if (typeof pct !== 'number') return;
+  const valueEl = document.getElementById('ph-completion-value');
+  const fillEl  = document.getElementById('ph-completion-fill');
+  if (valueEl) valueEl.textContent = `${pct}%`;
+  if (fillEl)  fillEl.style.width = `${pct}%`;
+}
+
 async function loadProfile() {
   const res = await apiFetch(API);
   if (!res.ok) return;
@@ -1736,6 +1751,7 @@ async function saveAll() {
     if (allOk) {
       dirty.clear();
       setStatus('All changes saved');
+      loadCompletion().catch(() => {});
     } else {
       const errs = results.filter(r => !r.ok);
       const msg = await errs[0].json().catch(() => ({})) as {message?: string};
@@ -1796,6 +1812,7 @@ async function uploadMedia(file: File, type: 'avatar' | 'cover') {
     });
     if (confirmRes.ok) {
       showUploadStatus(statusId, type === 'avatar' ? 'Photo updated!' : 'Cover updated!', false);
+      loadCompletion().catch(() => {});
     } else {
       showUploadStatus(statusId, 'Upload confirmed but may take a moment to reflect.', false);
     }
@@ -1985,4 +2002,5 @@ document.getElementById('cover-file-input')?.addEventListener('change', e => {
 
 // Load data
 loadProfile().catch(() => {});
+loadCompletion().catch(() => {});
 </script>

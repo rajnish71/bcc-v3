@@ -524,6 +524,18 @@ Status: Deployed to production on 2026-09-29 — migration 0103 applied (17:47 U
 
 ---
 
+### PROFILE-ARCH-001 — Photographer Profile Completion & Directory Eligibility
+
+**Status:** 🚧 IMPLEMENTED — COMMITTED LOCALLY, NOT DEPLOYED (pending review)
+
+Architecture authority: `ProjectDocs/Architecture/PROFILE-ARCH-001_PHOTOGRAPHER_PROFILE_COMPLETION_AND_DIRECTORY_ELIGIBILITY_FREEZE_v1.0.md` (frozen by Human Authority, 2026-10-06; subordinate to MEM-006/MEM-007/MEM-008).
+
+- Profile completion: seven equally weighted binary elements (Bio, City, Camera Gear, Social/Website, Cover Photo, Photography Genres, Tagline); threshold 4 of 7 (`2 * completed >= 7`), computed server-side, never stored.
+- Public Photographer Directory lists a photographer only when existing directory gates pass AND a valid profile photograph exists AND completion >= 4/7 AND >= 5 MEM-008 publicly eligible portfolio photographs exist.
+- `/photographers/:username` and static profile paths/sitemap are independent of directory eligibility.
+
+---
+
 ## FEEDBACK STAGE 5 — Pre-Soft-Launch Polish
 
 **Status:** 🚧 P0 BLOCKERS OUTSTANDING — F5.1–F5.4 complete; P0 issues must be resolved before soft launch

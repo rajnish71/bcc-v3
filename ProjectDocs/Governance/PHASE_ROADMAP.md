@@ -55,9 +55,13 @@ Source: `ProjectDocs/Audits/BCC_V3_August_Audit_Blocks_1-15_Consolidated.md` and
 - F-004 (webhook/reconciliation tests are static source-pattern checks, not runtime tests) — open.
 - F-005/F-006 — only in scope **if an actual required behaviour is established**; not to be invented. F-005 (this roadmap being stale on payment status) is addressed by this reconciliation. F-006 (webhook-driven refund `PROCESSING → COMPLETED` path) status not re-verified in this pass — treat as open until confirmed.
 
-## Track 4 — Admin Financial Visibility — 🔜 FUTURE / DEFERRED
+## Track 4 — Admin Financial Visibility — 🚧 IMPLEMENTED LOCALLY — PENDING PRODUCTION DEPLOYMENT
 
-- Read-only admin financial reconciliation surface — confirmed absent (Audit Blocks 5, 14). Not started.
+- Read-only admin financial visibility implemented (overview, contributions, contribution detail, refunds, receipts, exceptions, unified search) as an RBAC-gated Financial workspace group inside HubLayout/HubSidebar; API `GET /api/v1/financial/admin/*`.
+- RBAC: new permission `financial.read`, granted to Super Admin and Financial Authority only. Financial Authority is a new **SYSTEM** RBAC role (not a membership class, position or event assignment). Not granted to Coordinator, Platform Admin, operational roles or members; independent of `financial.settlement.verify` and `financial.audit.view`.
+- No financial mutation, refund, settlement or reconciliation operation introduced; refunds displayed from `financial_refunds` as stored.
+- Migration `0114_add_financial_read_permission_and_financial_authority_role.sql` created — **not applied to production**. No user assigned the Financial Authority role.
+- Committed locally as `2a0588a` (+ test hardening `ba7b3a4`) — not pushed, not deployed. Production deployment pending Human Authority approval.
 
 ## Track 5 — Production DB / Operational Security — 🔜 FUTURE / DEFERRED
 

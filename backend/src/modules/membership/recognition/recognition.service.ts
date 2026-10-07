@@ -27,6 +27,11 @@ import type { Kysely } from 'kysely';
 import { db, type DB } from '../../../database/db';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
+import {
+  assertLegacySeniorPathwayContained,
+  isSeniorStatusCode,
+  seniorContainmentError,
+} from './senior-containment';
 
 type RecognitionCode =
   | 'SENIOR_MEMBER'
@@ -62,6 +67,8 @@ export class RecognitionService {
     actorUserId: number,
     startDate?: string,
   ): Promise<void> {
+    // WP0 containment: no new Senior through the legacy recognition model.
+    if (isSeniorStatusCode(recognitionCode)) throw seniorContainmentError();
     this.assertTrackMatchesCode(recognitionCode, track);
     const membership = await db
       .selectFrom('memberships')
@@ -158,6 +165,8 @@ export class RecognitionService {
     },
   ): Promise<{ outcome: 'GRANTED' | 'SUPERSEDED' | 'NOOP'; userId: number | null }> {
     const { membershipId, recognitionCode, track, reason, actorUserId } = params;
+    // WP0 containment: no new Senior through the legacy recognition model.
+    if (isSeniorStatusCode(recognitionCode)) throw seniorContainmentError();
     this.assertTrackMatchesCode(recognitionCode, track);
 
     const membership = await trx
@@ -185,6 +194,9 @@ export class RecognitionService {
     let outcome: 'GRANTED' | 'SUPERSEDED' = 'GRANTED';
 
     if (active) {
+      // WP0 containment: an existing Senior row is never superseded (flipped
+      // to HISTORICAL) by a governance grant (MEM-006 v1.1 precedence scope).
+      if (isSeniorStatusCode(active.recognition_code)) throw seniorContainmentError();
       if (active.recognition_code === recognitionCode) return { outcome: 'NOOP', userId };
       const supersedable = active.track === 'AUTO' && HONORARY_CODES.includes(recognitionCode);
       if (!supersedable) {
@@ -252,6 +264,8 @@ export class RecognitionService {
         portal_link: portalLink,
       });
     } else if (recognitionCode === 'SENIOR_MEMBER') {
+      // WP0 containment: no Senior achievement notice from the legacy path.
+      assertLegacySeniorPathwayContained();
       await this.communicationService.dispatch('SENIOR_STATUS_ACHIEVED', userId, {
         full_name: user?.full_name ?? '',
         portal_link: portalLink,
@@ -278,6 +292,8 @@ export class RecognitionService {
       .where('status', '=', 'ACTIVE')
       .executeTakeFirst();
     if (!active) throw new NotFoundException('No active recognition on this membership.');
+    // WP0 containment: Senior is not revoked through the legacy recognition model.
+    if (isSeniorStatusCode(active.recognition_code)) throw seniorContainmentError();
 
     await db
       .updateTable('member_recognitions')
@@ -307,6 +323,8 @@ export class RecognitionService {
     criteriaValue: string,
     actorUserId: number,
   ): Promise<void> {
+    // WP0 containment: obsolete configurable Senior criteria are frozen as-is.
+    if (isSeniorStatusCode(recognitionCode)) throw seniorContainmentError();
     await db
       .insertInto('recognition_criteria')
       .values({
@@ -339,6 +357,9 @@ export class RecognitionService {
       eligible: boolean | null;
     }>;
   }> {
+    // WP0 containment: the legacy AUTO evaluator (365.25-day join_year tenure,
+    // configurable criteria) is non-conforming and is disabled.
+    assertLegacySeniorPathwayContained();
     const membership = await db
       .selectFrom('memberships')
       .select(['id', 'join_year', 'join_month', 'lifecycle_state'])

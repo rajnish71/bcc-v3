@@ -19,6 +19,7 @@ import { RecognitionService } from '../recognition/recognition.service';
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
+import { assertLegacySeniorPathwayContained } from '../recognition/senior-containment';
 
 @Injectable()
 export class MembershipAdminService {
@@ -147,7 +148,11 @@ export class MembershipAdminService {
   // Returns a list of ACTIVE memberships that qualify but do not yet hold
   // SENIOR_MEMBER recognition. Calling assignSeniorStatus() awards them.
   // -------------------------------------------------------------------------
+  //
+  // WP0 containment: this obsolete bulk evaluator and the batch assigner
+  // below are disabled (TENURE-ARCH-001 §19 #2, #4, #5, #9, #10). Both throw.
   async listSeniorStatusEligible() {
+    assertLegacySeniorPathwayContained();
     // Load configurable thresholds from DB (MEM-008 P0.3 -- no hardcoded values)
     const criteriaRows = await db
       .selectFrom('recognition_criteria')
@@ -253,6 +258,7 @@ export class MembershipAdminService {
 
   // Evaluate all eligible and assign SENIOR_MEMBER recognition, then notify.
   async assignSeniorStatusToEligible(actorUserId: number): Promise<{ assigned: number }> {
+    assertLegacySeniorPathwayContained();
     const eligible = await this.listSeniorStatusEligible();
     let assigned = 0;
 

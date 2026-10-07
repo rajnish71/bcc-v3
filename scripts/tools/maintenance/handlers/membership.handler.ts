@@ -229,6 +229,26 @@ export class MembershipHandler implements MaintenanceHandler {
       .execute();
     const membershipIds = memberships.map(m => m.id);
 
+    // WP0 Senior containment (TENURE-ARCH-001): Senior records -- including
+    // the 8 protected MANUAL ones -- are never deleted or re-attributed by
+    // this tool. Throwing here rolls back the caller's whole transaction.
+    const seniorQuery = db
+      .selectFrom('member_recognitions')
+      .select('id')
+      .where('recognition_code', '=', 'SENIOR_MEMBER');
+    const seniorTouched = await (membershipIds.length > 0
+      ? seniorQuery.where((eb) =>
+          eb.or([eb('membership_id', 'in', membershipIds), eb('assigned_by_user_id', 'in', userIds)]),
+        )
+      : seniorQuery.where('assigned_by_user_id', 'in', userIds)
+    ).executeTakeFirst();
+    if (seniorTouched) {
+      throw new Error(
+        'Refusing to delete: target user(s) own or assigned a SENIOR_MEMBER recognition. ' +
+          'Senior records are protected during the Senior/Tenure migration (WP0 containment).',
+      );
+    }
+
     if (membershipIds.length > 0) {
       // Delete membership grandchildren
       await db.deleteFrom('payments').where('membership_id', 'in', membershipIds).execute();

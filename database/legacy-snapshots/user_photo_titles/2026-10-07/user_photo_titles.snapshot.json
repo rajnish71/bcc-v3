@@ -1,0 +1,30 @@
+{
+  "snapshot": "user_photo_titles",
+  "purpose": "Photographic Distinctions legacy migration -- step SNAPSHOT (immutable migration source). Do not edit; capture a new dated snapshot instead.",
+  "source": {
+    "environment": "production",
+    "database": "bcc_v3",
+    "access": "read-only (MySQL user bcc_mcp_ro, single SELECT)",
+    "captured_at_server_time": "2026-10-07 12:12:20",
+    "query": "SELECT t.id, t.user_id, t.body_code, t.title_code, t.body_name, t.sort_order, u.username FROM user_photo_titles t JOIN users u ON u.id = t.user_id ORDER BY t.id",
+    "table_auto_increment_at_capture": 46,
+    "schema_migrations_head_at_capture": "0114_add_financial_read_permission_and_financial_authority_role.sql",
+    "ddl": "CREATE TABLE user_photo_titles (id BIGINT NOT NULL AUTO_INCREMENT, user_id BIGINT NOT NULL, body_code ENUM('FIP','PSA','FIAP','GPU','OTHER') NOT NULL, title_code VARCHAR(50) NOT NULL, body_name VARCHAR(255) NULL, sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY (id), KEY idx_photo_titles_user (user_id), CONSTRAINT fk_photo_titles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)"
+  },
+  "row_count": 12,
+  "users": { "16": "kshitijpatle", "27": "sanjaykumarshukla" },
+  "rows": [
+    { "id": 1,  "user_id": 27, "body_code": "FIP",   "title_code": "EFIP",        "body_name": null,      "sort_order": 10 },
+    { "id": 2,  "user_id": 27, "body_code": "PSA",   "title_code": "PPSA",        "body_name": null,      "sort_order": 20 },
+    { "id": 3,  "user_id": 27, "body_code": "FIAP",  "title_code": "AFIAP",       "body_name": null,      "sort_order": 30 },
+    { "id": 4,  "user_id": 27, "body_code": "GPU",   "title_code": "GPU-CR3",     "body_name": null,      "sort_order": 40 },
+    { "id": 5,  "user_id": 27, "body_code": "GPU",   "title_code": "GPU VIP-3",   "body_name": null,      "sort_order": 41 },
+    { "id": 6,  "user_id": 27, "body_code": "OTHER", "title_code": "FRPA",        "body_name": "FRPA",    "sort_order": 50 },
+    { "id": 7,  "user_id": 27, "body_code": "OTHER", "title_code": "GNG",         "body_name": "GNG",     "sort_order": 51 },
+    { "id": 8,  "user_id": 27, "body_code": "OTHER", "title_code": "Hon PESGSPC", "body_name": "PESGSPC", "sort_order": 52 },
+    { "id": 9,  "user_id": 27, "body_code": "OTHER", "title_code": "GPA-PESGSPC", "body_name": "PESGSPC", "sort_order": 53 },
+    { "id": 10, "user_id": 27, "body_code": "OTHER", "title_code": "HonVNPC",     "body_name": "VNPC",    "sort_order": 54 },
+    { "id": 11, "user_id": 27, "body_code": "OTHER", "title_code": "Hon WPAI",    "body_name": "WPAI",    "sort_order": 55 },
+    { "id": 45, "user_id": 16, "body_code": "FIP",   "title_code": "AFIP",        "body_name": null,      "sort_order": 20 }
+  ]
+}

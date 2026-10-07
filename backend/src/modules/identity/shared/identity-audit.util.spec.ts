@@ -108,6 +108,19 @@ describe('logIdentityAudit() (F-018 runtime execution coverage)', () => {
     expect(db.insertInto).toHaveBeenCalledWith('identity_audit_log');
   });
 
+  it('writes a NULL target for catalogue-level events (0115) -- never the actor', async () => {
+    const trx = createMockExecutor();
+
+    await logIdentityAudit(
+      { actorId: 1, targetUserId: null, actionType: 'PHOTOGRAPHIC_INSTITUTION_CREATED' },
+      trx as any,
+    );
+
+    expect(trx.values).toHaveBeenCalledWith(
+      expect.objectContaining({ actor_id: 1, target_user_id: null }),
+    );
+  });
+
   it('propagates an insert failure uncaught (no silent swallow)', async () => {
     const trx = createMockExecutor();
     trx.execute.mockRejectedValue(new Error('insert failed'));

@@ -14,7 +14,11 @@ import { db, type DB } from '../../../database/db';
 
 export interface IdentityAuditEntry {
   actorId: number | null;
-  targetUserId: number;
+  // The affected user. NULL only for catalogue-level events that affect no
+  // individual (0115, e.g. Photographic Distinctions catalogue changes) --
+  // never pass the actor here just to fill the column. Required (not
+  // optional) so every caller states its target explicitly.
+  targetUserId: number | null;
   actionType: string;
   oldValue?: unknown;
   newValue?: unknown;

@@ -223,6 +223,47 @@ export interface UserPhotoTitlesTable {
   sort_order: number;
 }
 
+// Photographic Distinctions (0116). Catalogue-bounded, self-declared,
+// UNVERIFIED identity attributes -- not Recognition Classes, not membership.
+// TINYINT(1) flags arrive from mysql2 as 0/1 at runtime; read them through
+// a boolean coercion, never `=== true`.
+export interface PhotographicInstitutionsTable {
+  id: Generated<number>;
+  code: string;
+  name: string;
+  is_active: Generated<boolean>;
+  sort_order: Generated<number>;
+  updated_by_user_id: number | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface PhotographicDistinctionsTable {
+  id: Generated<number>;
+  institution_id: number;
+  code: string;
+  name: string;
+  badge_eligible: Generated<boolean>;
+  is_active: Generated<boolean>;
+  sort_order: Generated<number>;
+  updated_by_user_id: number | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
+export interface UserPhotographicDistinctionsTable {
+  id: Generated<number>;
+  user_id: number;
+  distinction_id: number;
+  state: 'DECLARED' | 'WITHDRAWN' | 'REMOVED';
+  pre_removal_state: 'DECLARED' | 'WITHDRAWN' | null;
+  declared_at: ColumnType<Date, string, string>;
+  state_changed_at: ColumnType<Date, string, string>;
+  state_changed_by_user_id: number | null;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string>>;
+}
+
 export interface UserAwardsTable {
   id: Generated<number>;
   user_id: number;
@@ -280,7 +321,8 @@ export interface UserRolesTable {
 export interface IdentityAuditLogTable {
   id: Generated<number>;
   actor_id: number | null;
-  target_user_id: number;
+  // NULL only for catalogue-level events (0115); never the actor as filler.
+  target_user_id: number | null;
   action_type: string;
   old_value: unknown | null;
   new_value: unknown | null;
@@ -1273,6 +1315,9 @@ export interface DB {
   user_social_handles: UserSocialHandlesTable;
   user_cover_photos: UserCoverPhotosTable;
   user_photo_titles: UserPhotoTitlesTable;
+  photographic_institutions: PhotographicInstitutionsTable;
+  photographic_distinctions: PhotographicDistinctionsTable;
+  user_photographic_distinctions: UserPhotographicDistinctionsTable;
   user_awards: UserAwardsTable;
   user_gear: UserGearTable;
   notification_preferences: NotificationPreferencesTable;

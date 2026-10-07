@@ -1,0 +1,3 @@
+# Immutable legacy snapshots: byte-exact, so recorded sha256 checksums stay valid
+# on every checkout (core.autocrlf would otherwise rewrite line endings).
+* -text

@@ -49,11 +49,51 @@ export interface DistinctionUiFlags {
   catalogueManage: boolean;
 }
 
-/** Navigation/visibility hints from /users/me (never an authorization decision). */
+// HubLayout writes this attribute on #hub-frame exactly once, after it has
+// validated (or refreshed) the stored token and confirmed it with /users/me.
+// It is absent from the initial markup -- unlike data-hub-role, which starts
+// as "member" -- so its presence means authentication has resolved. Same
+// signal HubSidebar observes for the Financial group (HUB-ARCH-001: workspace
+// scripts execute after authentication resolves).
+export const HUB_AUTH_READY_ATTR = 'data-hub-financial';
+
+/**
+ * Resolves once HubLayout has finished authentication, so the first
+ * authenticated request never uses a stale token mid-refresh. Never refreshes
+ * the token itself. Resolves immediately when the signal is already present
+ * (or when there is no #hub-frame, i.e. not inside HubLayout).
+ */
+export function whenHubAuthenticated(
+  frame: HTMLElement | null = document.getElementById('hub-frame'),
+  Observer: typeof MutationObserver = MutationObserver,
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (!frame || frame.hasAttribute(HUB_AUTH_READY_ATTR)) {
+      resolve();
+      return;
+    }
+    const observer = new Observer(() => {
+      if (!frame.hasAttribute(HUB_AUTH_READY_ATTR)) return;
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(frame, { attributes: true, attributeFilter: [HUB_AUTH_READY_ATTR] });
+  });
+}
+
+/**
+ * Navigation/visibility hints from /users/me (never an authorization
+ * decision). Call only after whenHubAuthenticated(). A failed request throws
+ * rather than returning all-false, so a session problem is never shown as
+ * "no access"; only a successful /users/me with the flags off is a denial.
+ */
 export async function loadUiFlags(): Promise<DistinctionUiFlags> {
   const token = localStorage.getItem('bcc_token') ?? '';
   const res = await fetch('/api/v1/users/me', { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) return { view: false, remove: false, catalogueManage: false };
+  if (res.status === 401) {
+    throw new DistinctionsAccessError('Your session could not be verified. Reload the page or sign in again.');
+  }
+  if (!res.ok) throw new Error(`Could not load your permissions (${res.status}). Reload the page to try again.`);
   const me = (await res.json()) as { ui?: { distinctionView?: boolean; distinctionRemove?: boolean; distinctionCatalogueManage?: boolean } };
   return {
     view: me.ui?.distinctionView === true,

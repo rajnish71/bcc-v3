@@ -117,7 +117,7 @@ import '../../../../../styles/distinctions-admin.css';
 
 <script>
   import {
-    request, loadUiFlags, esc, dateTime, statePill, DistinctionsAccessError, type DistinctionUiFlags,
+    request, loadUiFlags, whenHubAuthenticated, esc, dateTime, statePill, DistinctionsAccessError, type DistinctionUiFlags,
   } from '../../../../../lib/distinctions-admin';
 
   interface Declaration {
@@ -402,8 +402,17 @@ import '../../../../../styles/distinctions-admin.css';
 
   // ── Boot ─────────────────────────────────────────────────────────────────
 
+  // The first authenticated request waits for HubLayout to finish
+  // authentication (it may be refreshing an expired token). A failure to load
+  // the flags is reported as such -- never as "no access".
   (async () => {
-    flags = await loadUiFlags();
+    try {
+      await whenHubAuthenticated();
+      flags = await loadUiFlags();
+    } catch (err) {
+      showError($('pd-access'), err);
+      return;
+    }
     if (!flags.view) {
       const el = $('pd-access');
       el.textContent = 'You do not have access to photographic distinction administration.';

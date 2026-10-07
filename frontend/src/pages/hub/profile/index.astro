@@ -2188,5 +2188,24 @@ document.getElementById('pd-declare')?.addEventListener('click', () => {
   if (id > 0) pdAct(id, 'declare');
 });
 
-pdLoad().catch((err) => pdStatus((err as Error).message || 'Could not load photographic distinctions.', true));
+// HubLayout may still be refreshing an expired token when this script runs.
+// Wait for its post-authentication signal on #hub-frame (written once, after
+// the token check/refresh and /users/me; absent from the initial markup --
+// the same attribute HubSidebar observes) before the first request. This
+// never refreshes the token itself.
+function pdWhenHubAuthenticated(run: () => void): void {
+  const READY_ATTR = 'data-hub-financial';
+  const frame = document.getElementById('hub-frame');
+  if (!frame || frame.hasAttribute(READY_ATTR)) { run(); return; }
+  const observer = new MutationObserver(() => {
+    if (!frame.hasAttribute(READY_ATTR)) return;
+    observer.disconnect();
+    run();
+  });
+  observer.observe(frame, { attributes: true, attributeFilter: [READY_ATTR] });
+}
+
+pdWhenHubAuthenticated(() => {
+  pdLoad().catch((err) => pdStatus((err as Error).message || 'Could not load photographic distinctions.', true));
+});
 </script>

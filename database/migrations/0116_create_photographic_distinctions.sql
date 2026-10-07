@@ -15,10 +15,14 @@
 --    Seeded with exactly FIP, FIAP, PSA, RPS, GPU. No generic OTHER row.
 --
 -- 2. photographic_distinctions -- distinction catalogue, unique per
---    (institution_id, code). Deliberately seeded with NO rows here: entries
---    are created only after Human Authority approves the legacy
---    classification report (names and badge_eligible are HA decisions),
---    through identity.distinction.catalogue.manage.
+--    (institution_id, code). Seeded with exactly the four HA-confirmed
+--    mappable legacy distinctions: FIP/AFIP, FIP/EFIP, PSA/PPSA,
+--    FIAP/AFIAP -- active and badge eligible (HA-approved initial badge
+--    rule). name = the confirmed code: no authoritative formal name exists
+--    in the repository, so none is manufactured. GPU-CR3 and GPU VIP-3
+--    remain pending HA classification and are NOT seeded; the six legacy
+--    OTHER values are snapshot-only. Further entries are added only via
+--    identity.distinction.catalogue.manage.
 --
 -- 3. user_photographic_distinctions -- member declarations.
 --      state             DECLARED | WITHDRAWN | REMOVED
@@ -33,7 +37,8 @@
 -- migration (SNAPSHOT -> CLASSIFY -> MAP -> VERIFY -> CARRY FORWARD -> RETIRE;
 -- carry-forward awaits HA approval of the classification report).
 --
--- Idempotency: CREATE TABLE IF NOT EXISTS; INSERT IGNORE on uq code.
+-- Idempotency: CREATE TABLE IF NOT EXISTS; INSERT IGNORE on the unique
+-- institution code and (institution_id, code) keys.
 -- ============================================================================
 
 SET NAMES utf8mb4;
@@ -102,6 +107,21 @@ INSERT IGNORE INTO photographic_institutions (code, name, is_active, sort_order)
   ('PSA',  'Photographic Society of America',                      1, 30),
   ('RPS',  'The Royal Photographic Society',                       1, 40),
   ('GPU',  'Global Photographic Union',                            1, 50);
+
+-- Initial distinction catalogue: exactly these four. Resolved by institution
+-- code (never by auto-increment id); updated_by_user_id NULL = migration
+-- seed, as for the institution rows. INSERT IGNORE on
+-- uq_photo_dist_institution_code keeps re-runs idempotent.
+INSERT IGNORE INTO photographic_distinctions
+  (institution_id, code, name, badge_eligible, is_active, sort_order)
+SELECT i.id, s.code, s.code, 1, 1, s.sort_order
+FROM (
+  SELECT 'FIP'  AS institution_code, 'AFIP'  AS code, 10 AS sort_order
+  UNION ALL SELECT 'FIP',  'EFIP',  20
+  UNION ALL SELECT 'FIAP', 'AFIAP', 10
+  UNION ALL SELECT 'PSA',  'PPSA',  10
+) AS s
+JOIN photographic_institutions i ON i.code = s.institution_code;
 
 INSERT INTO schema_migrations (filename, applied_at)
 VALUES ('0116_create_photographic_distinctions.sql', NOW());

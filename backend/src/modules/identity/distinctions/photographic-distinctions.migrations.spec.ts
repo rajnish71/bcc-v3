@@ -46,9 +46,46 @@ describe('0116 photographic distinctions schema', () => {
     expect(sql).not.toMatch(/'OTHER'/);
   });
 
-  it('seeds no distinction entries (pending HA classification approval)', () => {
-    expect(sql).not.toMatch(/INSERT[\s\S]*INTO photographic_distinctions/i);
-    expect(sql).not.toMatch(/INSERT[\s\S]*INTO user_photographic_distinctions/i);
+  describe('distinction catalogue seed', () => {
+    const seed = sql.match(/INSERT IGNORE INTO photographic_distinctions[\s\S]*?;/)![0];
+    const rows = [...seed.matchAll(/SELECT\s+'([A-Z]+)'(?:\s+AS institution_code)?,\s*'([^']+)'(?:\s+AS code)?,\s*(\d+)/g)]
+      .map((m) => ({ institution: m[1], code: m[2], sort: Number(m[3]) }));
+
+    it('seeds exactly the four confirmed distinctions under the correct institutions', () => {
+      expect(rows.map((r) => `${r.institution}/${r.code}`).sort()).toEqual(['FIAP/AFIAP', 'FIP/AFIP', 'FIP/EFIP', 'PSA/PPSA']);
+    });
+
+    it('all four are active, badge eligible and named by their confirmed code', () => {
+      expect(seed).toMatch(/\(institution_id, code, name, badge_eligible, is_active, sort_order\)\s+SELECT i\.id, s\.code, s\.code, 1, 1, s\.sort_order/);
+    });
+
+    it('resolves institutions by code, never by id', () => {
+      expect(seed).toMatch(/JOIN photographic_institutions i ON i\.code = s\.institution_code/);
+    });
+
+    it('sort_order is deterministic and unique within each institution', () => {
+      const keys = rows.map((r) => `${r.institution}:${r.sort}`);
+      expect(new Set(keys).size).toBe(rows.length);
+    });
+
+    it('GPU-CR3 and GPU VIP-3 are absent; no GPU distinction is seeded', () => {
+      expect(sql).not.toMatch(/GPU-CR3|GPU VIP-3/);
+      expect(rows.some((r) => r.institution === 'GPU')).toBe(false);
+    });
+
+    it('none of the six legacy OTHER values are seeded', () => {
+      for (const v of ['FRPA', 'GNG', 'PESGSPC', 'VNPC', 'WPAI']) expect(sql).not.toMatch(new RegExp(v));
+    });
+
+    it('seeds no member declarations', () => {
+      expect(sql).not.toMatch(/INSERT[\s\S]*INTO user_photographic_distinctions/i);
+    });
+  });
+
+  it('is idempotent: CREATE TABLE IF NOT EXISTS and INSERT IGNORE for every seed', () => {
+    expect(sql.match(/CREATE TABLE (?!IF NOT EXISTS)/g)).toBeNull();
+    const inserts = sql.match(/INSERT\s+(IGNORE\s+)?INTO\s+(\w+)/g)!;
+    for (const ins of inserts.filter((i) => !/schema_migrations/.test(i))) expect(ins).toMatch(/INSERT IGNORE INTO/);
   });
 
   it('has no badge table / stored badge and no recognition or membership coupling', () => {

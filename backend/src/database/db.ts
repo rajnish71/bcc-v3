@@ -485,9 +485,76 @@ export interface RecognitionCriteriaTable {
   updated_at: Generated<ColumnType<Date, string | undefined, string>>;
 }
 
+// ── TENURE-ARCH-001 v1.1 WP2 (migrations 0119-0121) ──────────────────────────
+// Schema types only. No runtime writer is wired in WP2; the immutability,
+// ownership and transition rules are enforced by the migrations' triggers
+// and CHECK constraints.
+
+export interface RecognizedServicePeriodsTable {
+  id: Generated<number>;
+  user_id: number;
+  membership_id: number | null;
+  start_date: ColumnType<Date, string, never>;
+  start_precision: 'EXACT' | 'MONTH' | 'YEAR';
+  start_attestation: 'BOUNDARY' | 'PERIOD' | null;
+  end_date: ColumnType<Date | null, string | null, never>;
+  end_precision: 'EXACT' | 'MONTH' | 'YEAR' | null;
+  end_attestation: 'BOUNDARY' | 'PERIOD' | null;
+  evidence_kind: 'BOUNDARY' | 'PERIOD' | 'POINT';
+  continuity_established: number;
+  basis: 'NATIVE_LIFECYCLE' | 'HISTORICAL_RECONCILIATION' | 'GOVERNANCE_ATTESTATION';
+  native_source_type: string | null;
+  native_source_id: number | null;
+  evidence_reference: string | null;
+  evidence_note: string | null;
+  verification_status: Generated<'UNVERIFIED' | 'VERIFIED' | 'REJECTED'>;
+  verified_by_user_id: number | null;
+  verified_at: ColumnType<Date | null, string | null, string | null>;
+  verification_reason: string | null;
+  correction_state: Generated<'CURRENT' | 'CORRECTED' | 'SUPERSEDED'>;
+  supersedes_period_id: number | null;
+  established_by_type: 'SYSTEM' | 'ADMIN';
+  established_by_user_id: number | null;
+  established_at: Generated<ColumnType<Date, string | undefined, never>>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  native_capture_lock: ColumnType<string | null, never, never>; // STORED generated
+}
+
+export interface SeniorStatusOverlaysTable {
+  id: Generated<number>;
+  user_id: number;
+  status: 'ACTIVE' | 'REMOVED';
+  provenance: 'AUTO' | 'MANUAL';
+  achieved_date: ColumnType<Date | null, string | null, never>;
+  historical_achievement_date: ColumnType<Date | null, string | null, string | null>;
+  eligibility_date: ColumnType<Date | null, string | null, never>;
+  qualification_snapshot: ColumnType<string | null, string | null, never>; // TEXT holding JSON
+  source_evaluation_ref: string | null;
+  legacy_recognition_id: number | null;
+  legacy_recording_date: ColumnType<Date | null, string | null, never>;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+  updated_at: Generated<ColumnType<Date, string | undefined, string | undefined>>;
+}
+
+export interface SeniorStatusTransitionsTable {
+  id: Generated<number>;
+  overlay_id: number;
+  from_status: 'ACTIVE' | 'REMOVED' | null;
+  to_status: 'ACTIVE' | 'REMOVED';
+  transition_type: 'AWARDED' | 'CARRIED_OVER' | 'REMOVED' | 'RESCINDED';
+  actor_type: 'SYSTEM' | 'ADMIN';
+  actor_user_id: number | null;
+  reason: string | null;
+  occurred_at: Generated<ColumnType<Date, string | undefined, never>>;
+  membership_audit_log_id: number;
+  created_at: Generated<ColumnType<Date, string | undefined, never>>;
+}
+
 export interface MembershipAuditLogTable {
   id: Generated<number>;
   membership_id: number | null;
+  // 0122 (TENURE-ARCH-001 §16): the individual a ledger / Senior overlay event concerns.
+  subject_user_id: number | null;
   event_type: string;
   actor_type: 'SYSTEM' | 'ADMIN' | 'MEMBER';
   actor_user_id: number | null;
@@ -1340,6 +1407,9 @@ export interface DB {
   individual_overrides: IndividualOverridesTable;
   recognition_criteria: RecognitionCriteriaTable;
   membership_audit_log: MembershipAuditLogTable;
+  recognized_service_periods: RecognizedServicePeriodsTable;
+  senior_status_overlays: SeniorStatusOverlaysTable;
+  senior_status_transitions: SeniorStatusTransitionsTable;
   membership_number_pool: MembershipNumberPoolTable;
   membership_number_log: MembershipNumberLogTable;
   membership_temp_identifiers: MembershipTempIdentifiersTable;

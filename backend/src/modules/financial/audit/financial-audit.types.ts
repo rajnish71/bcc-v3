@@ -84,6 +84,17 @@ export type SettlementChannel = (typeof SETTLEMENT_CHANNELS)[number];
 export const SETTLEMENT_CLASSIFICATIONS = ['TEST_MODE_NON_GENUINE_SETTLEMENT'] as const;
 export type SettlementClassification = (typeof SETTLEMENT_CLASSIFICATIONS)[number];
 
+// Razorpay TEST-mode merchant account(s) whose signed webhook deliveries
+// establish a TEST_MODE_NON_GENUINE_SETTLEMENT (HA evidence pass,
+// 2026-10-07). A public account identifier, not a credential. Used ONLY
+// when writing an annotation, to verify the provider account read from the
+// settlement's own verified payload -- never a reporting-time rule.
+export const RAZORPAY_TEST_MODE_ACCOUNT_IDS: readonly string[] = ['acc_DJkWMSsLHLxU4a'];
+
+// Same 500-character bound as the admin request DTO, enforced at the
+// service so every caller (not only the HTTP route) is held to it.
+export const RECONCILIATION_REASON_MAX_LENGTH = 500;
+
 // Section 13: only the fields required by the current operation should be
 // passed. Built once per HTTP request by buildRequestProvenance() and
 // threaded explicitly through service method calls -- never a generic

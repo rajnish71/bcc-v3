@@ -43,6 +43,7 @@ import {
 import { RAZORPAY_PROVIDER_NAME } from './razorpay-settlement.provider';
 import { FinancialAuditService } from './audit/financial-audit.service';
 import type { AuditContext, FinancialAuditMetadata, SettlementClassification } from './audit/financial-audit.types';
+import { RAZORPAY_TEST_MODE_ACCOUNT_IDS, RECONCILIATION_REASON_MAX_LENGTH } from './audit/financial-audit.types';
 
 // Callers that do not (yet) thread HTTP provenance through -- e.g. Business
 // Module services invoking createContribution() -- are recorded as SYSTEM
@@ -272,16 +273,30 @@ export class FinancialContributionService {
     return { contribution, transaction: transaction ?? null, refund: refund ?? null, webhook };
   }
 
-  // Writes exactly ONE immutable financial_audit_log row recording that a
-  // COMPLETED Contribution's settlement did not represent genuine received
-  // funds, and which later Contribution collects the genuine payment.
+  // Writes exactly ONE immutable financial_audit_log row classifying a
+  // settled Contribution's settlement as not representing genuine received
+  // funds (TEST_MODE_NON_GENUINE_SETTLEMENT).
   //
   // RECORD-ONLY (PAY-001 Principle 10): the original Contribution, its
-  // Financial Transaction, Receipt, webhook inbox row and refund state are
-  // never updated or deleted, and no state transition occurs -- previous
-  // and resulting state are both COMPLETED. Whether a genuine replacement
-  // payment is still outstanding is derived from correctionContributionId's
-  // own state, never stored here.
+  // Financial Transaction, Receipt, webhook inbox row and refund are never
+  // updated or deleted, and no state transition occurs -- previous and
+  // resulting state are both the Contribution's current state.
+  //
+  // Evidence is mandatory; a correction Contribution is optional:
+  //  • the SUCCEEDED Financial Transaction must be matched by payment id to a
+  //    PROCESSED (signature-verified) payment.captured delivery, and the
+  //    provider account read from that verified payload must be a known
+  //    Razorpay TEST-mode account (RAZORPAY_TEST_MODE_ACCOUNT_IDS);
+  //  • correctionContributionId, when present (Option I correction flow),
+  //    must reference another existing Contribution; when absent the
+  //    annotation is complete on its own -- no Contribution, obligation or
+  //    Transaction is ever created here. Whether a genuine replacement
+  //    payment is outstanding is derived from the correction's own state,
+  //    never stored here.
+  //
+  // States: COMPLETED with no refund record, or REFUNDED whose refund record
+  // is COMPLETED (the refund is linked via refund_id so reporting can pair
+  // it with the classified settlement). REFUNDED stays REFUNDED.
   //
   // Idempotent: the original Contribution row is locked FOR UPDATE and an
   // existing annotation for it is returned instead of writing a second one.
@@ -290,7 +305,7 @@ export class FinancialContributionService {
     input: {
       classification: SettlementClassification;
       reason: string;
-      correctionContributionId: number;
+      correctionContributionId?: number | null;
     },
     auditContext: AuditContext,
   ): Promise<{ annotated: boolean }> {
@@ -298,7 +313,13 @@ export class FinancialContributionService {
     if (!reason) {
       throw new BadRequestException('A reconciliation reason is required.');
     }
-    if (input.correctionContributionId === originalContributionId) {
+    if (reason.length > RECONCILIATION_REASON_MAX_LENGTH) {
+      throw new BadRequestException(
+        `A reconciliation reason must be at most ${RECONCILIATION_REASON_MAX_LENGTH} characters.`,
+      );
+    }
+    const correctionContributionId = input.correctionContributionId ?? null;
+    if (correctionContributionId === originalContributionId) {
       throw new BadRequestException('A Contribution cannot be its own correction.');
     }
 
@@ -321,31 +342,44 @@ export class FinancialContributionService {
         .executeTakeFirst();
       if (existing) return { annotated: false };
 
-      if (original.state !== 'COMPLETED') {
+      if (original.state !== 'COMPLETED' && original.state !== 'REFUNDED') {
         throw new ConflictException(
-          `Contribution ${originalContributionId} is in state '${original.state}'; only a COMPLETED settlement can be reconciled.`,
+          `Contribution ${originalContributionId} is in state '${original.state}'; only a COMPLETED or REFUNDED settlement can be reconciled.`,
         );
       }
 
-      const correction = await trx
-        .selectFrom('financial_contributions')
-        .select('id')
-        .where('id', '=', input.correctionContributionId)
-        .executeTakeFirst();
-      if (!correction) {
-        throw new NotFoundException(`Correction contribution ${input.correctionContributionId} not found.`);
+      if (correctionContributionId !== null) {
+        const correction = await trx
+          .selectFrom('financial_contributions')
+          .select('id')
+          .where('id', '=', correctionContributionId)
+          .executeTakeFirst();
+        if (!correction) {
+          throw new NotFoundException(`Correction contribution ${correctionContributionId} not found.`);
+        }
       }
 
       const evidence = await this.getSettlementReconciliationEvidence(originalContributionId, trx);
       if (!evidence.transaction) {
         throw new ConflictException(`Contribution ${originalContributionId} has no SUCCEEDED Financial Transaction.`);
       }
-      if (evidence.refund) {
+      if (original.state === 'COMPLETED' && evidence.refund) {
         throw new ConflictException(`Contribution ${originalContributionId} already has a refund record.`);
+      }
+      if (original.state === 'REFUNDED' && (!evidence.refund || evidence.refund.status !== 'COMPLETED')) {
+        throw new ConflictException(
+          `Contribution ${originalContributionId} is REFUNDED but has no COMPLETED refund record.`,
+        );
       }
       if (!evidence.webhook) {
         throw new ConflictException(
           `Contribution ${originalContributionId} has no processed payment.captured delivery for its settlement.`,
+        );
+      }
+      const providerAccountId = evidence.webhook.providerAccountId;
+      if (!providerAccountId || !RAZORPAY_TEST_MODE_ACCOUNT_IDS.includes(providerAccountId)) {
+        throw new ConflictException(
+          `Contribution ${originalContributionId}'s verified settlement is not from a Razorpay test-mode account.`,
         );
       }
 
@@ -353,17 +387,18 @@ export class FinancialContributionService {
         eventType: 'SETTLEMENT_RECONCILIATION_ANNOTATED',
         contributionId: originalContributionId,
         transactionId: Number(evidence.transaction.id),
+        ...(evidence.refund ? { refundId: Number(evidence.refund.id) } : {}),
         webhookInboxId: evidence.webhook.inboxId,
         actorType: auditContext.actorType,
         provenance: auditContext.provenance,
         providerOrderRef: evidence.webhook.providerOrderRef,
         providerPaymentRef: evidence.transaction.provider_reference,
-        previousState: 'COMPLETED',
-        resultingState: 'COMPLETED',
+        previousState: original.state,
+        resultingState: original.state,
         metadata: {
           settlementClassification: input.classification,
-          ...(evidence.webhook.providerAccountId ? { providerAccountId: evidence.webhook.providerAccountId } : {}),
-          correctionContributionId: input.correctionContributionId,
+          providerAccountId,
+          ...(correctionContributionId !== null ? { correctionContributionId } : {}),
           reconciliationReason: reason,
         },
       });

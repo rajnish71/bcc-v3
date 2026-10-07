@@ -37,13 +37,18 @@ export function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
+// MEM-007: BCCTemp identifiers are never exposed or searchable. Shared by
+// unified search and the receipts contributor filter.
+export function rejectTemporaryIdentifier(q: string): void {
+  if (BCC_TEMP.test(q)) {
+    throw new BadRequestException('Temporary membership identifiers are not searchable');
+  }
+}
+
 export function buildSearchTerms(raw: string): SearchTerm[] {
   const q = raw.trim();
   if (q.length < 2) throw new BadRequestException('q must be at least 2 characters');
-  if (BCC_TEMP.test(q)) {
-    // MEM-007: BCCTemp identifiers are never exposed or searchable.
-    throw new BadRequestException('Temporary membership identifiers are not searchable');
-  }
+  rejectTemporaryIdentifier(q);
 
   const like = escapeLike(q);
   const terms: SearchTerm[] = [

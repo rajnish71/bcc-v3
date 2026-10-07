@@ -74,6 +74,30 @@ export function pill(state: string | null | undefined): string {
   return `<span class="tag-pill${tone ? ` tag-pill--${tone}` : ''}">${esc(state)}</span>`;
 }
 
+// Reporting classification (never a financial state). Rendered with the
+// existing status-badge treatment.
+export const TEST_MODE_MARKER = 'TEST_MODE_NON_GENUINE_SETTLEMENT';
+export const TEST_MODE_LABEL = 'Test-mode — non-genuine';
+export const NOT_CLASSIFIED_LABEL = 'Not classified';
+
+export function classificationBadge(value: string | null | undefined): string {
+  return value === TEST_MODE_MARKER ? `<span class="tag-pill tag-pill--red">${TEST_MODE_LABEL}</span>` : '';
+}
+
+// Display-only review flags (financial-admin-metrics.ts REVIEW_FLAGS).
+export const REVIEW_FLAG_LABELS: Record<string, string> = {
+  RECEIPT_STATE_UNEXPECTED: 'Receipt on unexpected state',
+  RECEIPT_AMOUNT_MISMATCH: 'Receipt amount mismatch',
+  REFUND_STATE_MISMATCH: 'Refund / state mismatch',
+  REFUND_EXCEEDS_CONTRIBUTION: 'Refund exceeds contribution',
+  MULTIPLE_SUCCEEDED_TRANSACTIONS: 'Multiple succeeded transactions',
+};
+
+export function reviewFlagsCell(flags: string[]): string {
+  if (!flags.length) return '<span class="muted">—</span>';
+  return flags.map((f) => `<span class="tag-pill tag-pill--gold" title="${esc(f)}">${esc(REVIEW_FLAG_LABELS[f] ?? f)}</span>`).join(' ');
+}
+
 export function label(key: string): string {
   return key.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 }
@@ -111,6 +135,7 @@ export interface ContributionItem {
   refundStatus: string | null;
   latestTransaction: { provider: string | null; outcome: string } | null;
   evidenceStatus: string | null;
+  settlementClassification: string | null;
 }
 
 export interface Page<T> {
@@ -130,7 +155,7 @@ export function contributionsTable(items: ContributionItem[]): string {
         <td>${contributorCell(c.contributor)}</td>
         <td><span class="tag-pill">${esc(c.businessModule)}</span><div class="cell-sub">${esc(c.purpose)}</div></td>
         <td class="mono num">${esc(money(c.amountPaise, c.currency))}</td>
-        <td>${pill(c.state)}</td>
+        <td>${pill(c.state)}${c.settlementClassification ? `<div class="cell-sub">${classificationBadge(c.settlementClassification)}</div>` : ''}</td>
         <td>${c.latestTransaction ? `${esc(c.latestTransaction.provider ?? '—')} ${pill(c.latestTransaction.outcome)}` : '<span class="muted">—</span>'}</td>
         <td>${receiptCell(c.receipt)}</td>
         <td>${c.refundStatus ? pill(c.refundStatus) : '<span class="muted">—</span>'}</td>

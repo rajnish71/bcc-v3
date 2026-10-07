@@ -4,7 +4,8 @@
  * Route: /hub/admin/financial/contributions/
  *
  * Paginated Financial Contributions, filterable by canonical state and by
- * business_module (options come from the overview API — never hard-coded).
+ * business_module (options come from the overview API — never hard-coded)
+ * and test-mode classification (TEST_MODE / UNCLASSIFIED = "Not classified").
  * With ?q= the page shows Unified Financial Search results instead
  * (GET /api/v1/financial/admin/search — fixed fields only).
  */
@@ -38,6 +39,13 @@ const STATES = [
             <option value="">All modules</option>
           </select>
         </label>
+        <label>Classification
+          <select name="classification">
+            <option value="">All</option>
+            <option value="TEST_MODE">Test-mode — non-genuine</option>
+            <option value="UNCLASSIFIED">Not classified</option>
+          </select>
+        </label>
         <button type="submit" class="btn-action">Apply</button>
       </form>
 
@@ -58,6 +66,7 @@ const STATES = [
 
   (form.elements.namedItem('q') as HTMLInputElement).value = q;
   (form.elements.namedItem('state') as HTMLSelectElement).value = params.get('state') ?? '';
+  (form.elements.namedItem('classification') as HTMLSelectElement).value = params.get('classification') ?? '';
 
   async function loadModules() {
     try {
@@ -89,8 +98,10 @@ const STATES = [
       } else {
         const state = params.get('state');
         const mod = params.get('businessModule');
+        const classification = params.get('classification');
         if (state) qs.set('state', state);
         if (mod) qs.set('businessModule', mod);
+        if (classification) qs.set('classification', classification);
         path = `/contributions?${qs}`;
       }
       const data = await getJson<Page<ContributionItem>>(path);
@@ -113,8 +124,10 @@ const STATES = [
     else {
       const s = String(fd.get('state') ?? '');
       const m = String(fd.get('businessModule') ?? '');
+      const c = String(fd.get('classification') ?? '');
       if (s) next.set('state', s);
       if (m) next.set('businessModule', m);
+      if (c) next.set('classification', c);
     }
     window.location.search = next.toString();
   });

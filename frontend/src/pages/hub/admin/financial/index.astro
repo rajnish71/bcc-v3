@@ -3,9 +3,11 @@
  * hub/admin/financial/index.astro — Financial Overview (Track 4, READ ONLY)
  * Route: /hub/admin/financial/
  *
- * Canonical PAY-001 counts only — contributions by state and business
- * module, completed-contribution totals, refunds by status, receipts issued,
- * exception counts. No accounting concepts. Data: GET
+ * Money (per currency, never combined across currencies) excludes
+ * contributions classified TEST_MODE_NON_GENUINE_SETTLEMENT by an attributed
+ * audit annotation; that money is shown separately and stays visible as
+ * records. Record-state metrics count every record and ignore
+ * classification. No accounting concepts. Data: GET
  * /api/v1/financial/admin/overview (financial.read, enforced server-side).
  * Navigation is owned by HubSidebar (Financial workspace group).
  */
@@ -18,7 +20,7 @@ import '../../../../styles/financial-admin.css';
     <section class="admin-section">
       <div class="section-kicker"><span class="kicker-rule"></span>Financial</div>
       <h2 class="section-title">Financial Overview</h2>
-      <p class="section-hint">Read-only. Counts reflect the current canonical state of each Financial Contribution.</p>
+      <p class="section-hint">Read-only. Figures reflect the current canonical state of each Financial Contribution.</p>
 
       <form class="filter-bar" id="fin-search" role="search">
         <label>Search
@@ -32,16 +34,28 @@ import '../../../../styles/financial-admin.css';
       <div id="ov-error" class="state-error" hidden></div>
     </section>
 
+    <section class="admin-section" id="ov-money-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Completed contributions</div>
+      <p class="section-hint">Gross = contributions in state COMPLETED or REFUNDED. Net Completed Contributions are net of completed refunds only — cancelled contributions are not subtracted. Each currency is shown separately.</p>
+      <div id="ov-money"></div>
+    </section>
+
+    <section class="admin-section" id="ov-testmode-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Test-mode — non-genuine (excluded)</div>
+      <p class="section-hint">Settlements classified as historical Razorpay test-mode (no genuine financial settlement) by an attributed audit annotation are excluded from the figures above, together with any refunds recorded against them. The records themselves are unchanged and remain listed.</p>
+      <div id="ov-testmode"></div>
+    </section>
+
     <section class="admin-section" id="ov-body" hidden>
       <div class="section-kicker"><span class="kicker-rule"></span>Contributions by state</div>
       <div class="stats-grid" id="ov-states"></div>
       <div class="breakdown-row" id="ov-modules"></div>
     </section>
 
-    <section class="admin-section" id="ov-completed-wrap" hidden>
-      <div class="section-kicker"><span class="kicker-rule"></span>Completed contributions</div>
-      <p class="section-hint">Total amount of contributions currently in state COMPLETED, by currency.</p>
-      <div class="stats-grid" id="ov-completed"></div>
+    <section class="admin-section" id="ov-operational-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Record state</div>
+      <p class="section-hint">Counts every applicable record, regardless of test-mode classification. Not part of the money figures.</p>
+      <div class="stats-grid" id="ov-operational"></div>
     </section>
 
     <section class="admin-section" id="ov-refunds-wrap" hidden>
@@ -59,14 +73,28 @@ import '../../../../styles/financial-admin.css';
 <script>
   import { getJson, esc, label, money, showError } from '../../../../lib/financial-admin';
 
+  interface CurrencyCountPaise { currency: string; count: number; paise: number }
   interface Overview {
     contributionsByState: Record<string, number>;
     contributionsByBusinessModule: Array<{ businessModule: string; count: number }>;
-    completedContributions: Array<{ currency: string; count: number; amountPaise: number }>;
     refundsByStatus: Record<string, number>;
-    refundAmounts: Array<{ status: string; currency: string; count: number; amountPaise: number }>;
     receiptsIssued: number;
     exceptions: Record<string, number>;
+    money: Array<{
+      currency: string;
+      grossCompletedExclTestModePaise: number;
+      completedRefundsExclTestModePaise: number;
+      netCompletedExclTestModePaise: number;
+      testMode: { settledCount: number; settledPaise: number; refundCount: number; refundPaise: number };
+    }>;
+    operational: {
+      refundsInProgress: CurrencyCountPaise[];
+      failedRefundsCount: number;
+      settledPendingCompletion: CurrencyCountPaise[];
+      cancelledCount: number;
+      zeroValueCompletedCount: number;
+      reviewCount: number;
+    };
   }
 
   const card = (value: string, text: string, href?: string, warn = false) =>
@@ -74,6 +102,11 @@ import '../../../../styles/financial-admin.css';
        <span class="stat-card__value${warn ? ' stat-card__value--warn' : ''}">${esc(value)}</span>
        <span class="stat-card__label">${esc(text)}</span>
      </${href ? 'a' : 'div'}>`;
+
+  const perCurrency = (rows: CurrencyCountPaise[], text: string, href?: string) =>
+    rows.length
+      ? rows.map((r) => card(String(r.count), `${text} · ${money(r.paise, r.currency)}`, href, r.count > 0)).join('')
+      : card('0', text, href);
 
   document.getElementById('fin-search')?.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -85,23 +118,50 @@ import '../../../../styles/financial-admin.css';
     const loading = document.getElementById('ov-loading')!;
     try {
       const o = await getJson<Overview>('/overview');
+
+      document.getElementById('ov-money')!.innerHTML = o.money.length
+        ? o.money.map((m) => `
+            <div class="stats-grid">
+              ${card(money(m.grossCompletedExclTestModePaise, m.currency), `Gross completed contributions · ${m.currency}`)}
+              ${card(money(m.completedRefundsExclTestModePaise, m.currency), `Completed refunds · ${m.currency}`)}
+              ${card(money(m.netCompletedExclTestModePaise, m.currency), `Net Completed Contributions (net of completed refunds) · ${m.currency}`)}
+            </div>`).join('')
+        : '<div class="state-empty">No completed contributions.</div>';
+
+      document.getElementById('ov-testmode')!.innerHTML = o.money.length
+        ? o.money.map((m) => `
+            <div class="stats-grid">
+              ${card(money(m.testMode.settledPaise, m.currency), `${m.testMode.settledCount} test-mode settlement${m.testMode.settledCount === 1 ? '' : 's'} · ${m.currency}`, '/hub/admin/financial/contributions/?classification=TEST_MODE')}
+              ${card(money(m.testMode.refundPaise, m.currency), `${m.testMode.refundCount} refund${m.testMode.refundCount === 1 ? '' : 's'} on test-mode settlements · ${m.currency}`)}
+            </div>`).join('')
+        : '<div class="state-empty">No test-mode settlements.</div>';
+
       document.getElementById('ov-states')!.innerHTML = Object.entries(o.contributionsByState)
-        .map(([s, n]) => card(String(n), label(s), `/hub/admin/financial/contributions/?state=${s}`))
+        .map(([s, n]) => card(String(n), label(s), `/hub/admin/financial/contributions/?state=${encodeURIComponent(s)}`))
         .join('');
       document.getElementById('ov-modules')!.innerHTML = o.contributionsByBusinessModule
         .map((m) => `<a class="breakdown-pill" href="/hub/admin/financial/contributions/?businessModule=${encodeURIComponent(m.businessModule)}">${esc(m.businessModule)} <strong>${m.count}</strong></a>`)
         .join('');
-      document.getElementById('ov-completed')!.innerHTML = o.completedContributions.length
-        ? o.completedContributions.map((c) => card(money(c.amountPaise, c.currency), `${c.count} completed · ${c.currency}`)).join('')
-        : '<div class="state-empty">No completed contributions.</div>';
+
+      const op = o.operational;
+      document.getElementById('ov-operational')!.innerHTML = [
+        perCurrency(op.refundsInProgress, 'Refunds in progress', '/hub/admin/financial/refunds/?status=PROCESSING'),
+        card(String(op.failedRefundsCount), 'Failed refunds', '/hub/admin/financial/refunds/?status=FAILED', op.failedRefundsCount > 0),
+        perCurrency(op.settledPendingCompletion, 'Settled, pending completion', '/hub/admin/financial/contributions/?state=SETTLED'),
+        card(String(op.cancelledCount), 'Cancelled', '/hub/admin/financial/contributions/?state=CANCELLED'),
+        card(String(op.zeroValueCompletedCount), 'Zero-value completed'),
+        card(String(op.reviewCount), 'Needs review', '/hub/admin/financial/receipts/?state=REVIEW', op.reviewCount > 0),
+      ].join('');
+
       document.getElementById('ov-refunds')!.innerHTML =
         Object.entries(o.refundsByStatus)
-          .map(([s, n]) => card(String(n), `Refunds ${label(s)}`, `/hub/admin/financial/refunds/?status=${s}`))
+          .map(([s, n]) => card(String(n), `Refunds ${label(s)}`, `/hub/admin/financial/refunds/?status=${encodeURIComponent(s)}`))
           .join('') + card(String(o.receiptsIssued), 'Receipts issued', '/hub/admin/financial/receipts/');
       document.getElementById('ov-exceptions')!.innerHTML = Object.entries(o.exceptions)
-        .map(([c, n]) => card(String(n), label(c), `/hub/admin/financial/exceptions/?category=${c}`, n > 0))
+        .map(([c, n]) => card(String(n), label(c), `/hub/admin/financial/exceptions/?category=${encodeURIComponent(c)}`, n > 0))
         .join('');
-      ['ov-body', 'ov-completed-wrap', 'ov-refunds-wrap', 'ov-exceptions-wrap'].forEach((id) => {
+
+      ['ov-money-wrap', 'ov-testmode-wrap', 'ov-body', 'ov-operational-wrap', 'ov-refunds-wrap', 'ov-exceptions-wrap'].forEach((id) => {
         document.getElementById(id)!.hidden = false;
       });
     } catch (err) {

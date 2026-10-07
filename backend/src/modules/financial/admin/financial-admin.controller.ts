@@ -30,7 +30,7 @@ import { FINANCIAL_READ_PERMISSION } from './financial-admin.mappers';
 import {
   FinancialAdminContributionsQueryDto,
   FinancialAdminExceptionsQueryDto,
-  FinancialAdminPageQueryDto,
+  FinancialAdminReceiptsQueryDto,
   FinancialAdminRefundsQueryDto,
   FinancialAdminSearchQueryDto,
 } from './dto/financial-admin-query.dto';
@@ -49,7 +49,8 @@ export class FinancialAdminController {
     return this.service.overview();
   }
 
-  // Paginated { items, page, pageSize, total }. Filters: state, businessModule.
+  // Paginated { items, page, pageSize, total }. Filters: state, businessModule,
+  // classification (TEST_MODE|UNCLASSIFIED).
   @Get('contributions')
   @HttpCode(200)
   contributions(@Query() query: FinancialAdminContributionsQueryDto) {
@@ -70,9 +71,13 @@ export class FinancialAdminController {
     return this.service.listRefunds(query);
   }
 
+  // Filters: state (repeatable: SETTLED|COMPLETED|REFUNDED|REVIEW),
+  // businessModule, classification (TEST_MODE|UNCLASSIFIED), issuedFrom/
+  // issuedTo (Asia/Kolkata days), receiptNumber (prefix), q (contributor).
+  // sort: issued_at|receipt_number|amount_paise|contributor; order: asc|desc.
   @Get('receipts')
   @HttpCode(200)
-  receipts(@Query() query: FinancialAdminPageQueryDto) {
+  receipts(@Query() query: FinancialAdminReceiptsQueryDto) {
     return this.service.listReceipts(query);
   }
 

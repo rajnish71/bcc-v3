@@ -22,6 +22,8 @@
 // empty transactions list. Nothing is fabricated.
 
 import { CONTRIBUTION_STATES, type ContributionState } from '../financial.types';
+import { toClassification } from './financial-admin-classification';
+import { reviewFlagsOf } from './financial-admin-metrics';
 
 export const FINANCIAL_READ_PERMISSION = 'financial.read';
 
@@ -102,6 +104,7 @@ export interface ContributionListRow {
   latest_provider: string | null;
   latest_outcome: string | null;
   evidence_status: string | null;
+  classified: unknown;
 }
 
 export interface TransactionRow {
@@ -145,6 +148,13 @@ export interface ReceiptListRow {
   issued_at: unknown;
   contribution_uuid: string;
   business_module: string;
+  contribution_state: string;
+  contribution_amount_paise: unknown;
+  refund_status: string | null;
+  refund_amount_paise: unknown;
+  refund_resolved_at: unknown;
+  succeeded_count: unknown;
+  classified: unknown;
   contributor_name: string | null;
   contributor_username: string | null;
   membership_number: unknown;
@@ -197,6 +207,7 @@ export function toContributionListItem(row: ContributionListRow) {
       ? { provider: row.latest_provider, outcome: row.latest_outcome }
       : null,
     evidenceStatus: row.evidence_status ?? null,
+    settlementClassification: toClassification(row.classified),
   };
 }
 
@@ -241,6 +252,9 @@ export function toRefundListItem(row: RefundListRow) {
   };
 }
 
+// Receipt status is the contribution's canonical state (1:1 via
+// receipts.contribution_id) -- never inferred from a refund row. The refund
+// is a supplemental field; review flags are display-only.
 export function toReceiptListItem(row: ReceiptListRow) {
   return {
     reference: row.uuid,
@@ -248,8 +262,42 @@ export function toReceiptListItem(row: ReceiptListRow) {
     amountPaise: Number(row.amount_paise),
     currency: row.currency,
     issuedAt: toIso(row.issued_at),
-    contribution: { reference: row.contribution_uuid, businessModule: row.business_module },
+    contributionState: row.contribution_state,
+    contribution: { reference: row.contribution_uuid, businessModule: row.business_module, state: row.contribution_state },
+    refund: row.refund_status
+      ? { status: row.refund_status, amountPaise: Number(row.refund_amount_paise), resolvedAt: toIso(row.refund_resolved_at) }
+      : null,
+    reviewFlags: reviewFlagsOf({
+      state: row.contribution_state,
+      amount_paise: row.contribution_amount_paise,
+      refund_status: row.refund_status,
+      refund_amount_paise: row.refund_amount_paise,
+      receipt_amount_paise: row.amount_paise,
+      succeeded_count: row.succeeded_count,
+    }),
+    settlementClassification: toClassification(row.classified),
     contributor: contributor(row.contributor_name, row.contributor_username, row.membership_number),
+  };
+}
+
+// C3 -- strict allow-list. Never: provider account, payment/order refs,
+// webhook id, actor_user_id, IP, User-Agent, request/session id, raw
+// metadata, or the numeric correctionContributionId (only its UUID).
+export function toClassificationDetail(input: {
+  marker: string;
+  actorType: string;
+  actorDisplayName: string | null;
+  annotatedAt: unknown;
+  reason: string | null;
+  correctionContributionReference: string | null;
+}) {
+  return {
+    marker: input.marker,
+    actorType: input.actorType,
+    actorDisplayName: input.actorDisplayName ?? null,
+    annotatedAt: toIso(input.annotatedAt),
+    reason: input.reason ?? null,
+    correctionContributionReference: input.correctionContributionReference ?? null,
   };
 }
 

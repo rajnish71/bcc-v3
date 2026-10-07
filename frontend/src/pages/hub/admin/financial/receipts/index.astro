@@ -3,9 +3,11 @@
  * hub/admin/financial/receipts/index.astro — Receipts (Track 4, READ ONLY)
  * Route: /hub/admin/financial/receipts/
  *
- * Lists issued receipts (one per completed contribution). Contributions
- * with no receipt do not appear here and are shown as "No receipt issued"
- * on the Contributions views. Data: GET /api/v1/financial/admin/receipts.
+ * One row per receipt (receipts.contribution_id is 1:1 — never merged by
+ * contributor). Status is the contribution's canonical state; the refund is
+ * supplemental. Review flags and the test-mode classification are display
+ * only. Filtering, sorting and pagination happen server-side.
+ * Data: GET /api/v1/financial/admin/receipts.
  */
 import HubLayout from '../../../../../layouts/HubLayout.astro';
 import '../../../../../styles/financial-admin.css';
@@ -16,7 +18,59 @@ import '../../../../../styles/financial-admin.css';
     <section class="admin-section">
       <div class="section-kicker"><span class="kicker-rule"></span>Financial</div>
       <h2 class="section-title">Receipts</h2>
-      <p class="section-hint">Receipts issued on completed contributions.</p>
+      <p class="section-hint">One row per receipt. Status is the contribution's state; issued dates are Asia/Kolkata calendar days.</p>
+
+      <form class="filter-bar" id="rc-filters">
+        <label>Status
+          <select name="state">
+            <option value="">All statuses</option>
+            <option value="SETTLED">Settled</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="REFUNDED">Refunded</option>
+            <option value="REVIEW">Needs review</option>
+          </select>
+        </label>
+        <label>Business module
+          <select name="businessModule" id="rc-module">
+            <option value="">All modules</option>
+          </select>
+        </label>
+        <label>Classification
+          <select name="classification">
+            <option value="">All</option>
+            <option value="TEST_MODE">Test-mode — non-genuine</option>
+            <option value="UNCLASSIFIED">Not classified</option>
+          </select>
+        </label>
+        <label>Issued from
+          <input type="date" name="issuedFrom" />
+        </label>
+        <label>Issued to
+          <input type="date" name="issuedTo" />
+        </label>
+        <label>Receipt number
+          <input type="text" name="receiptNumber" maxlength="40" pattern="[A-Za-z0-9-]+" placeholder="BCC-RCP-…" />
+        </label>
+        <label>Contributor
+          <input type="search" name="q" maxlength="64" placeholder="Name or username" />
+        </label>
+        <label>Sort by
+          <select name="sort">
+            <option value="issued_at">Issued date</option>
+            <option value="receipt_number">Receipt number</option>
+            <option value="amount_paise">Amount</option>
+            <option value="contributor">Contributor</option>
+          </select>
+        </label>
+        <label>Order
+          <select name="order">
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
+        </label>
+        <button type="submit" class="btn-action">Apply</button>
+      </form>
+
       <div id="rc-loading" class="state-loading">Loading receipts…</div>
       <div id="rc-error" class="state-error" hidden></div>
       <div id="rc-table"></div>
@@ -26,32 +80,75 @@ import '../../../../../styles/financial-admin.css';
 </HubLayout>
 
 <script>
-  import { getJson, esc, money, dateTime, contributorCell, renderPager, showError, DETAIL_HREF, type Contributor, type Page } from '../../../../../lib/financial-admin';
+  import {
+    getJson, esc, money, dateTime, pill, contributorCell, classificationBadge, reviewFlagsCell,
+    renderPager, showError, DETAIL_HREF, type Contributor, type Page,
+  } from '../../../../../lib/financial-admin';
 
   interface ReceiptItem {
     reference: string; receiptNumber: string; amountPaise: number; currency: string; issuedAt: string | null;
-    contribution: { reference: string; businessModule: string };
+    contributionState: string;
+    contribution: { reference: string; businessModule: string; state: string };
+    refund: { status: string; amountPaise: number; resolvedAt: string | null } | null;
+    reviewFlags: string[];
+    settlementClassification: string | null;
     contributor: Contributor;
+  }
+
+  const FILTER_KEYS = ['state', 'businessModule', 'classification', 'issuedFrom', 'issuedTo', 'receiptNumber', 'q', 'sort', 'order'];
+  const form = document.getElementById('rc-filters') as HTMLFormElement;
+  const params = new URLSearchParams(window.location.search);
+  for (const key of FILTER_KEYS) {
+    const el = form.elements.namedItem(key) as HTMLInputElement | HTMLSelectElement | null;
+    if (el && params.get(key)) el.value = params.get(key)!;
+  }
+  if (!params.get('order') && params.get('sort') && params.get('sort') !== 'issued_at') {
+    (form.elements.namedItem('order') as HTMLSelectElement).value = 'asc';
+  }
+  const dash = '<span class="muted">—</span>';
+
+  async function loadModules() {
+    try {
+      const o = await getJson<{ contributionsByBusinessModule: Array<{ businessModule: string }> }>('/overview');
+      const select = document.getElementById('rc-module') as HTMLSelectElement;
+      for (const m of o.contributionsByBusinessModule) {
+        const opt = document.createElement('option');
+        opt.value = m.businessModule;
+        opt.textContent = m.businessModule;
+        select.appendChild(opt);
+      }
+      select.value = params.get('businessModule') ?? '';
+    } catch { /* filter options are optional; list load reports access errors */ }
   }
 
   async function load(page: number) {
     const loading = document.getElementById('rc-loading')!;
     const table = document.getElementById('rc-table')!;
     loading.hidden = false;
+    document.getElementById('rc-error')!.hidden = true;
     try {
-      const data = await getJson<Page<ReceiptItem>>(`/receipts?page=${page}`);
+      const qs = new URLSearchParams({ page: String(page) });
+      for (const key of FILTER_KEYS) {
+        const v = params.get(key);
+        if (v) qs.set(key, v);
+      }
+      const data = await getJson<Page<ReceiptItem>>(`/receipts?${qs}`);
       table.innerHTML = data.items.length
         ? `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Receipt number</th><th>Contributor</th><th>Module</th><th>Amount</th><th>Issued</th><th>Contribution</th></tr></thead>
+            <thead><tr><th>Receipt number</th><th>Issued</th><th>Amount</th><th>Status</th><th>Refund</th>
+              <th>Contribution</th><th>Module</th><th>Contributor</th><th>Review</th></tr></thead>
             <tbody>${data.items.map((r) => `<tr>
               <td class="mono">${esc(r.receiptNumber)}</td>
-              <td>${contributorCell(r.contributor)}</td>
-              <td><span class="tag-pill">${esc(r.contribution.businessModule)}</span></td>
-              <td class="mono num">${esc(money(r.amountPaise, r.currency))}</td>
               <td class="mono">${esc(dateTime(r.issuedAt))}</td>
+              <td class="mono num">${esc(money(r.amountPaise, r.currency))}</td>
+              <td>${pill(r.contributionState)}${r.settlementClassification ? `<div class="cell-sub">${classificationBadge(r.settlementClassification)}</div>` : ''}</td>
+              <td>${r.refund ? `${pill(r.refund.status)}<div class="cell-sub mono">${esc(money(r.refund.amountPaise, r.currency))}${r.refund.resolvedAt ? ` · ${esc(dateTime(r.refund.resolvedAt))}` : ''}</div>` : dash}</td>
               <td><a class="mono ref-link" href="${DETAIL_HREF}?ref=${encodeURIComponent(r.contribution.reference)}">${esc(r.contribution.reference.slice(0, 8))}…</a></td>
+              <td><span class="tag-pill">${esc(r.contribution.businessModule)}</span></td>
+              <td>${contributorCell(r.contributor)}</td>
+              <td>${reviewFlagsCell(r.reviewFlags)}</td>
             </tr>`).join('')}</tbody></table></div>`
-        : '<div class="state-empty">No receipts issued.</div>';
+        : '<div class="state-empty">No receipts match.</div>';
       renderPager(document.getElementById('rc-pager')!, data, load);
     } catch (err) {
       table.innerHTML = '';
@@ -60,5 +157,22 @@ import '../../../../../styles/financial-admin.css';
       loading.hidden = true;
     }
   }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const next = new URLSearchParams();
+    for (const key of FILTER_KEYS) {
+      const v = String(fd.get(key) ?? '').trim();
+      if (!v) continue;
+      // Defaults are implied; keep the URL clean.
+      if (key === 'sort' && v === 'issued_at') continue;
+      if (key === 'order' && v === 'desc' && String(fd.get('sort')) === 'issued_at') continue;
+      next.set(key, v);
+    }
+    window.location.search = next.toString();
+  });
+
+  loadModules();
   load(1);
 </script>

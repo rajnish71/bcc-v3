@@ -27,6 +27,11 @@ import '../../../../../../styles/financial-admin.css';
       <div id="d-summary"></div>
     </section>
 
+    <section class="admin-section" id="d-class-wrap" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Settlement classification</div>
+      <div id="d-class"></div>
+    </section>
+
     <section class="admin-section" id="d-tx-wrap" hidden>
       <div class="section-kicker"><span class="kicker-rule"></span>Financial transactions</div>
       <div id="d-tx"></div>
@@ -53,6 +58,7 @@ import '../../../../../../styles/financial-admin.css';
 <script>
   import {
     getJson, esc, money, dateTime, pill, contributorCell, showError, NO_RECEIPT_LABEL,
+    classificationBadge, DETAIL_HREF, TEST_MODE_LABEL,
     type ContributionItem,
   } from '../../../../../../lib/financial-admin';
 
@@ -62,6 +68,10 @@ import '../../../../../../styles/financial-admin.css';
     refund: { reference: string; amountPaise: number; currency: string; provider: string | null; providerReference: string | null; status: string; reason: string | null; failureReason: string | null; requestedByType: string; requestedAt: string | null; resolvedAt: string | null } | null;
     settlementEvidence: Array<{ reference: string; claimedAmountPaise: number; paymentDate: string | null; submittedAt: string | null; reviewStatus: string; reviewedAt: string | null }>;
     auditTrail: Array<{ eventType: string; previousState: string | null; resultingState: string | null; actorType: string; occurredAt: string | null }>;
+    classification: {
+      marker: string; actorType: string; actorDisplayName: string | null; annotatedAt: string | null;
+      reason: string | null; correctionContributionReference: string | null;
+    } | null;
   }
 
   const row = (k: string, v: string) =>
@@ -92,6 +102,25 @@ import '../../../../../../styles/financial-admin.css';
         ${row('Expires', esc(dateTime(d.expiresAt)))}
         ${row('Latest evidence', d.evidenceStatus ? pill(d.evidenceStatus) : dash)}
       </div>`;
+
+      // Reporting classification only -- the contribution's state and every
+      // financial record are unchanged. A correction reference is a UUID.
+      if (d.classification) {
+        const c = d.classification;
+        const correction = c.correctionContributionReference
+          ? `<a class="mono ref-link" href="${DETAIL_HREF}?ref=${encodeURIComponent(c.correctionContributionReference)}">${esc(c.correctionContributionReference)}</a>`
+            + '<div class="cell-sub">A separate contribution raised to collect the genuine live-mode payment. Open it to see its own state.</div>'
+          : dash;
+        document.getElementById('d-class')!.innerHTML = `<div class="detail-grid">
+          ${row('Classification', classificationBadge(c.marker) || esc(TEST_MODE_LABEL))}
+          ${row('Reason', c.reason ? esc(c.reason) : dash)}
+          ${row('Corrective live contribution', correction)}
+          ${row('Annotated by', `${esc(c.actorDisplayName ?? '—')}<div class="cell-sub">${esc(c.actorType)}</div>`)}
+          ${row('Annotated', esc(dateTime(c.annotatedAt)))}
+        </div>
+        <p class="section-hint">Excluded from genuine-money totals. The contribution, its transactions, receipt and any refund are unchanged.</p>`;
+        document.getElementById('d-class-wrap')!.hidden = false;
+      }
 
       document.getElementById('d-tx')!.innerHTML = d.transactions.length
         ? table(['Reference', 'Provider', 'Provider reference', 'Amount', 'Outcome', 'Failure reason', 'Recorded'],

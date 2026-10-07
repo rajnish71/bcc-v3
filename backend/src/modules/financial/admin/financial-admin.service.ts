@@ -17,7 +17,7 @@
 // only when it is a permanent MEM-007 number (BCCTemp never qualifies, and
 // membership_temp_identifiers is never read).
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { sql } from 'kysely';
 import { db } from '../../../database/db';
 import type { ContributionState } from '../financial.types';
@@ -28,6 +28,7 @@ import {
   REFUND_STATUSES,
   clampPage,
   toAuditEvent,
+  toClassificationDetail,
   toContributionListItem,
   toEvidence,
   toIso,
@@ -42,7 +43,24 @@ import {
   type RefundStatus,
   type ReceiptListRow,
 } from './financial-admin.mappers';
-import { buildSearchTerms } from './financial-admin-search';
+import { buildSearchTerms, escapeLike, rejectTemporaryIdentifier } from './financial-admin-search';
+import {
+  CLASSIFICATION_EVENT_TYPE,
+  classifiedSql,
+  notClassifiedSql,
+  readAnnotationMetadata,
+} from './financial-admin-classification';
+import {
+  computeMoneyMetrics,
+  computeOperationalMetrics,
+  type ContributionMetricRow,
+} from './financial-admin-metrics';
+import {
+  RECEIPT_NEEDS_REVIEW_SQL,
+  asList,
+  issuedRange,
+  resolveReceiptSort,
+} from './financial-admin-receipts';
 
 export interface PageInput {
   page?: string;
@@ -123,6 +141,7 @@ export class FinancialAdminService {
             .orderBy('se.id', 'desc')
             .limit(1)
             .as('evidence_status'),
+          classifiedSql('fc.id').as('classified'),
         ])
         .orderBy('fc.created_at', 'desc')
         .orderBy('fc.id', 'desc')
@@ -142,12 +161,14 @@ export class FinancialAdminService {
 
   // ── Overview ─────────────────────────────────────────────────────────────
   //
-  // Canonical counts/sums only -- no accounting concepts (revenue, net,
-  // profit). completedAmountByCurrency is literally the sum of amount_paise
-  // over contributions currently in state COMPLETED.
+  // Record counts (unchanged), B2 money metrics per currency excluding
+  // contributions classified TEST_MODE_NON_GENUINE_SETTLEMENT (reported
+  // separately as testMode), and B3 operational metrics that ignore
+  // classification. Money and operational metrics are computed from ONE row
+  // per contribution (financial-admin-metrics.ts) -- no double counting.
 
   async overview() {
-    const [byState, byModule, completedSums, refundRows, receiptRow, exceptionCounts] = await Promise.all([
+    const [byState, byModule, refundRows, receiptRow, exceptionCounts, metricRows] = await Promise.all([
       db
         .selectFrom('financial_contributions')
         .select((eb) => ['state as key', eb.fn.countAll<number>().as('count')])
@@ -160,47 +181,62 @@ export class FinancialAdminService {
         .orderBy('business_module', 'asc')
         .execute(),
       db
-        .selectFrom('financial_contributions')
-        .select((eb) => ['currency', eb.fn.sum<number>('amount_paise').as('amount'), eb.fn.countAll<number>().as('count')])
-        .where('state', '=', 'COMPLETED')
-        .groupBy('currency')
-        .execute(),
-      db
         .selectFrom('financial_refunds')
-        .select((eb) => ['status as key', 'currency', eb.fn.countAll<number>().as('count'), eb.fn.sum<number>('amount_paise').as('amount')])
-        .groupBy(['status', 'currency'])
+        .select((eb) => ['status as key', eb.fn.countAll<number>().as('count')])
+        .groupBy('status')
         .execute(),
       db.selectFrom('receipts').select((eb) => eb.fn.countAll<number>().as('count')).executeTakeFirst(),
       this.exceptionCounts(),
+      this.contributionMetricRows(),
     ]);
 
-    const refundsByStatus = zeroFilled(REFUND_STATUSES, aggregate(refundRows));
     return {
       contributionsByState: zeroFilled(CONTRIBUTION_STATE_KEYS, byState),
       contributionsByBusinessModule: byModule.map((r) => ({ businessModule: String(r.key), count: Number(r.count) })),
-      completedContributions: completedSums.map((r) => ({
-        currency: r.currency,
-        count: Number(r.count),
-        amountPaise: Number(r.amount ?? 0),
-      })),
-      refundsByStatus,
-      refundAmounts: refundRows.map((r) => ({
-        status: String(r.key),
-        currency: r.currency,
-        count: Number(r.count),
-        amountPaise: Number(r.amount ?? 0),
-      })),
+      refundsByStatus: zeroFilled(REFUND_STATUSES, refundRows),
       receiptsIssued: Number(receiptRow?.count ?? 0),
       exceptions: exceptionCounts,
+      money: computeMoneyMetrics(metricRows),
+      operational: computeOperationalMetrics(metricRows),
     };
+  }
+
+  // One row per contribution: the refund and receipt joins are 1:1 (unique
+  // contribution_id), transactions are counted in a scalar subquery and the
+  // classification is an EXISTS flag.
+  private async contributionMetricRows(): Promise<ContributionMetricRow[]> {
+    const rows = await db
+      .selectFrom('financial_contributions as fc')
+      .leftJoin('financial_refunds as fr', 'fr.contribution_id', 'fc.id')
+      .leftJoin('receipts as r', 'r.contribution_id', 'fc.id')
+      .select((eb) => [
+        'fc.state',
+        'fc.currency',
+        'fc.amount_paise',
+        'fr.status as refund_status',
+        'fr.amount_paise as refund_amount_paise',
+        'fr.currency as refund_currency',
+        'r.amount_paise as receipt_amount_paise',
+        eb
+          .selectFrom('financial_transactions as mt')
+          .select((e) => e.fn.countAll<number>().as('n'))
+          .whereRef('mt.contribution_id', '=', 'fc.id')
+          .where('mt.outcome', '=', 'SUCCEEDED')
+          .as('succeeded_count'),
+        classifiedSql('fc.id').as('classified'),
+      ])
+      .execute();
+    return rows as unknown as ContributionMetricRow[];
   }
 
   // ── Contributions ────────────────────────────────────────────────────────
 
-  async listContributions(filters: { state?: string; businessModule?: string } & PageInput) {
+  async listContributions(filters: { state?: string; businessModule?: string; classification?: string } & PageInput) {
     let base = this.contributionBase();
     if (filters.state) base = base.where('fc.state', '=', filters.state as ContributionState);
     if (filters.businessModule) base = base.where('fc.business_module', '=', filters.businessModule);
+    if (filters.classification === 'TEST_MODE') base = base.where(classifiedSql('fc.id'));
+    if (filters.classification === 'UNCLASSIFIED') base = base.where(notClassifiedSql('fc.id'));
     return this.pageContributions(base, filters);
   }
 
@@ -220,7 +256,7 @@ export class FinancialAdminService {
       .executeTakeFirstOrThrow();
     const contributionId = Number(idRow.id);
 
-    const [transactions, refund, evidence, audit, receipt] = await Promise.all([
+    const [transactions, refund, evidence, audit, receipt, classification] = await Promise.all([
       db
         .selectFrom('financial_transactions')
         .select(['uuid', 'provider', 'provider_reference', 'amount_paise', 'currency', 'outcome', 'failure_reason', 'created_at'])
@@ -252,6 +288,7 @@ export class FinancialAdminService {
         .select(['uuid', 'receipt_number', 'amount_paise', 'currency', 'issued_at'])
         .where('contribution_id', '=', contributionId)
         .executeTakeFirst(),
+      this.classificationDetail(contributionId),
     ]);
 
     return {
@@ -269,7 +306,52 @@ export class FinancialAdminService {
       refund: refund ? toRefund(refund) : null,
       settlementEvidence: evidence.map(toEvidence),
       auditTrail: audit.map(toAuditEvent),
+      classification,
     };
+  }
+
+  // C3: the contribution's recognised annotation, or null. The only writer
+  // (FinancialContributionService's annotateSettlementReconciliation) locks
+  // the contribution row and refuses to write a second
+  // SETTLEMENT_RECONCILIATION_ANNOTATED row, so at most one exists per
+  // contribution (verified in production 2026-10-07: one each for 4, 8, 9,
+  // 12, 13). Rows are read in id order only so the result is deterministic;
+  // this is not a precedence rule between annotations. Unrecognised rows
+  // (malformed / other metadata) are skipped. The numeric
+  // correctionContributionId is resolved to the target's UUID (null if the
+  // target does not exist) and is never returned itself.
+  private async classificationDetail(contributionId: number) {
+    const rows = await db
+      .selectFrom('financial_audit_log as fa')
+      .leftJoin('users as au', 'au.id', 'fa.actor_user_id')
+      .select(['fa.event_type', 'fa.metadata_json', 'fa.actor_type', 'fa.created_at', 'au.full_name as actor_name'])
+      .where('fa.contribution_id', '=', contributionId)
+      .where('fa.event_type', '=', CLASSIFICATION_EVENT_TYPE)
+      .orderBy('fa.id', 'asc')
+      .execute();
+
+    for (const row of rows) {
+      const annotation = readAnnotationMetadata(row.event_type, row.metadata_json);
+      if (!annotation) continue;
+      let correctionContributionReference: string | null = null;
+      if (annotation.correctionContributionId !== null) {
+        const target = await db
+          .selectFrom('financial_contributions')
+          .select('uuid')
+          .where('id', '=', annotation.correctionContributionId)
+          .executeTakeFirst();
+        correctionContributionReference = target?.uuid ?? null;
+      }
+      return toClassificationDetail({
+        marker: annotation.marker,
+        actorType: row.actor_type,
+        actorDisplayName: row.actor_name ?? null,
+        annotatedAt: row.created_at,
+        reason: annotation.reason,
+        correctionContributionReference,
+      });
+    }
+    return null;
   }
 
   // ── Refunds (financial_refunds, as stored) ──────────────────────────────
@@ -306,35 +388,101 @@ export class FinancialAdminService {
     };
   }
 
-  // ── Receipts ─────────────────────────────────────────────────────────────
+  // ── Receipts (C2) ────────────────────────────────────────────────────────
+  //
+  // Status = the contribution's canonical state; the refund is supplemental.
+  // Filters AND together; repeated `state` values OR together (REVIEW = any
+  // review flag). Sorting is a fixed allow-list with receipt_number ASC as
+  // the deterministic tie-breaker. The total uses the identical filters.
 
-  async listReceipts(pageInput: PageInput) {
-    const { page, pageSize, offset } = clampPage(pageInput.page, pageInput.pageSize);
-    const base = db
+  async listReceipts(filters: {
+    state?: string | string[];
+    businessModule?: string;
+    classification?: string;
+    issuedFrom?: string;
+    issuedTo?: string;
+    receiptNumber?: string;
+    q?: string;
+    sort?: string;
+    order?: string;
+  } & PageInput) {
+    const { page, pageSize, offset } = clampPage(filters.page, filters.pageSize);
+    const { fromEpoch, toEpochExclusive } = issuedRange(filters.issuedFrom, filters.issuedTo);
+    const { sort, order } = resolveReceiptSort(filters.sort, filters.order);
+
+    let base = db
       .selectFrom('receipts as r')
       .innerJoin('financial_contributions as fc', 'fc.id', 'r.contribution_id')
-      .innerJoin('users as u', 'u.id', 'fc.payer_user_id');
+      .innerJoin('users as u', 'u.id', 'fc.payer_user_id')
+      .leftJoin('financial_refunds as fr', 'fr.contribution_id', 'fc.id');
+
+    const statuses = asList(filters.state);
+    if (statuses.length > 0) {
+      const states = statuses.filter((v) => v !== 'REVIEW') as ContributionState[];
+      const review = statuses.includes('REVIEW');
+      base = base.where((eb) =>
+        eb.or([
+          ...(states.length > 0 ? [eb('fc.state', 'in', states)] : []),
+          ...(review ? [eb(RECEIPT_NEEDS_REVIEW_SQL, '=', 1)] : []),
+        ]),
+      );
+    }
+    if (filters.businessModule) base = base.where('fc.business_module', '=', filters.businessModule);
+    if (filters.classification === 'TEST_MODE') base = base.where(classifiedSql('fc.id'));
+    if (filters.classification === 'UNCLASSIFIED') base = base.where(notClassifiedSql('fc.id'));
+    if (fromEpoch !== null) base = base.where(sql<number>`UNIX_TIMESTAMP(r.issued_at)`, '>=', fromEpoch);
+    if (toEpochExclusive !== null) base = base.where(sql<number>`UNIX_TIMESTAMP(r.issued_at)`, '<', toEpochExclusive);
+    if (filters.receiptNumber) base = base.where('r.receipt_number', 'like', `${escapeLike(filters.receiptNumber)}%`);
+    if (filters.q !== undefined) {
+      const q = filters.q.trim();
+      if (q.length < 2) throw new BadRequestException('q must be at least 2 characters');
+      rejectTemporaryIdentifier(q);
+      const like = `%${escapeLike(q)}%`;
+      base = base.where((eb) => eb.or([eb('u.full_name', 'like', like), eb('u.username', 'like', like)]));
+    }
+
+    let listQuery = base.select((eb) => [
+      'r.uuid', 'r.receipt_number', 'r.amount_paise', 'r.currency', 'r.issued_at',
+      'fc.uuid as contribution_uuid', 'fc.business_module', 'fc.state as contribution_state',
+      'fc.amount_paise as contribution_amount_paise',
+      'fr.status as refund_status', 'fr.amount_paise as refund_amount_paise', 'fr.resolved_at as refund_resolved_at',
+      'u.full_name as contributor_name', 'u.username as contributor_username',
+      eb
+        .selectFrom('memberships as m')
+        .select('m.membership_number')
+        .whereRef('m.user_id', '=', 'fc.payer_user_id')
+        .where(sql<boolean>`m.membership_number REGEXP ${PERMANENT_MEMBERSHIP_NUMBER_SQL}`)
+        .orderBy('m.id', 'desc')
+        .limit(1)
+        .as('membership_number'),
+      eb
+        .selectFrom('financial_transactions as rt')
+        .select((e) => e.fn.countAll<number>().as('n'))
+        .whereRef('rt.contribution_id', '=', 'fc.id')
+        .where('rt.outcome', '=', 'SUCCEEDED')
+        .as('succeeded_count'),
+      classifiedSql('fc.id').as('classified'),
+    ]);
+
+    switch (sort) {
+      case 'issued_at':
+        listQuery = listQuery.orderBy('r.issued_at', order);
+        break;
+      case 'receipt_number':
+        listQuery = listQuery.orderBy('r.receipt_number', order);
+        break;
+      case 'amount_paise':
+        listQuery = listQuery.orderBy('r.amount_paise', order);
+        break;
+      case 'contributor':
+        // Display name, NULLS LAST in both directions.
+        listQuery = listQuery.orderBy(sql`u.full_name IS NULL`, 'asc').orderBy('u.full_name', order);
+        break;
+    }
+    if (sort !== 'receipt_number') listQuery = listQuery.orderBy('r.receipt_number', 'asc');
 
     const [rows, countRow] = await Promise.all([
-      base
-        .select((eb) => [
-          'r.uuid', 'r.receipt_number', 'r.amount_paise', 'r.currency', 'r.issued_at',
-          'fc.uuid as contribution_uuid', 'fc.business_module',
-          'u.full_name as contributor_name', 'u.username as contributor_username',
-          eb
-            .selectFrom('memberships as m')
-            .select('m.membership_number')
-            .whereRef('m.user_id', '=', 'fc.payer_user_id')
-            .where(sql<boolean>`m.membership_number REGEXP ${PERMANENT_MEMBERSHIP_NUMBER_SQL}`)
-            .orderBy('m.id', 'desc')
-            .limit(1)
-            .as('membership_number'),
-        ])
-        .orderBy('r.issued_at', 'desc')
-        .orderBy('r.id', 'desc')
-        .limit(pageSize)
-        .offset(offset)
-        .execute(),
+      listQuery.limit(pageSize).offset(offset).execute(),
       base.select((eb) => eb.fn.countAll<number>().as('total')).executeTakeFirst(),
     ]);
 
@@ -343,6 +491,8 @@ export class FinancialAdminService {
       page,
       pageSize,
       total: Number(countRow?.total ?? 0),
+      sort,
+      order,
     };
   }
 
@@ -426,11 +576,4 @@ export class FinancialAdminService {
     );
     return this.pageContributions(base, filters);
   }
-}
-
-// Collapses (status, currency) refund rows into per-status counts.
-function aggregate(rows: Array<{ key: unknown; count: unknown }>) {
-  const totals = new Map<string, number>();
-  for (const r of rows) totals.set(String(r.key), (totals.get(String(r.key)) ?? 0) + Number(r.count));
-  return [...totals].map(([key, count]) => ({ key, count }));
 }

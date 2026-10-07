@@ -19,6 +19,7 @@ jest.mock('kysely', () => {
     const expr = { sql: strings.join('?'), values, as: (alias: string) => ({ ...expr, alias }) };
     return expr;
   };
+  (sql as unknown as { ref: (r: string) => unknown }).ref = (r: string) => ({ ref: r });
   return { sql };
 });
 
@@ -542,21 +543,328 @@ describe('Track 4 admin financial API (api/v1/financial/admin)', () => {
 
   // ── Overview ─────────────────────────────────────────────────────────────
 
-  it('overview returns canonical metrics only (no accounting concepts)', async () => {
+  // One row per contribution, as contributionMetricRows() selects it.
+  const METRIC_ROWS = [
+    { state: 'COMPLETED', currency: 'INR', amount_paise: 250000, classified: 1, refund_status: null, refund_amount_paise: null, refund_currency: null, receipt_amount_paise: 250000, succeeded_count: 1 },
+    { state: 'REFUNDED', currency: 'INR', amount_paise: 50000, classified: 1, refund_status: 'COMPLETED', refund_amount_paise: 50000, refund_currency: 'INR', receipt_amount_paise: 50000, succeeded_count: 1 },
+    { state: 'COMPLETED', currency: 'INR', amount_paise: 120000, classified: 0, refund_status: null, refund_amount_paise: null, refund_currency: null, receipt_amount_paise: 120000, succeeded_count: 1 },
+    { state: 'REFUNDED', currency: 'INR', amount_paise: 1000, classified: 0, refund_status: 'COMPLETED', refund_amount_paise: 1000, refund_currency: 'INR', receipt_amount_paise: 1000, succeeded_count: 1 },
+    { state: 'CANCELLED', currency: 'INR', amount_paise: 50000, classified: 0, refund_status: null, refund_amount_paise: null, refund_currency: null, receipt_amount_paise: null, succeeded_count: 0 },
+  ];
+
+  it('overview exposes the approved money and operational blocks only (no accounting concepts)', async () => {
     script({
-      financial_contributions: [{ key: 'COMPLETED', count: 3, currency: 'INR', amount: 3000 }],
-      financial_refunds: [{ key: 'COMPLETED', currency: 'INR', count: 1, amount: 1000 }],
+      financial_contributions: [{ key: 'COMPLETED', count: 3 }],
+      financial_refunds: [{ key: 'COMPLETED', count: 1 }],
       receipts: [{ count: 3 }],
-      'financial_contributions as fc': [{ total: 0 }],
+      'financial_contributions as fc': METRIC_ROWS,
     });
     const res = await call(USERS.financialAuthority.id, '/api/v1/financial/admin/overview');
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(Object.keys(body).sort()).toEqual([
-      'completedContributions', 'contributionsByBusinessModule', 'contributionsByState', 'exceptions',
-      'receiptsIssued', 'refundAmounts', 'refundsByStatus',
+      'contributionsByBusinessModule', 'contributionsByState', 'exceptions', 'money', 'operational',
+      'receiptsIssued', 'refundsByStatus',
     ]);
     expect(Object.keys(body.contributionsByState)).toHaveLength(10);
-    expect(res.body).not.toMatch(/revenue|profit|netCollected|outstanding/i);
+    expect(body.money).toEqual([{
+      currency: 'INR',
+      grossCompletedExclTestModePaise: 121000,
+      completedRefundsExclTestModePaise: 1000,
+      netCompletedExclTestModePaise: 120000,
+      testMode: { settledCount: 2, settledPaise: 300000, refundCount: 1, refundPaise: 50000 },
+    }]);
+    expect(body.operational).toEqual({
+      refundsInProgress: [], failedRefundsCount: 0, settledPendingCompletion: [],
+      cancelledCount: 1, zeroValueCompletedCount: 0, reviewCount: 0,
+    });
+    expect(Object.keys(body.money[0].testMode).sort()).toEqual(['refundCount', 'refundPaise', 'settledCount', 'settledPaise']);
+    expect(res.body).not.toMatch(/revenue|profit|netCollected|outstanding|completedContributions|refundAmounts/i);
+  });
+
+  it('overview metric query reads one row per contribution and never joins the audit log', async () => {
+    script({ 'financial_contributions as fc': METRIC_ROWS });
+    await call(USERS.superAdmin.id, '/api/v1/financial/admin/overview');
+    const tables = fake.selects.map((op) => op.table);
+    expect(tables).not.toContain('financial_audit_log as fa');
+    expect(tables.filter((t) => t.startsWith('financial_audit_log'))).toEqual([]);
+  });
+
+  // ── Classification filters (C2) ─────────────────────────────────────────
+
+  function whereSql(op: FakeOp | undefined): string[] {
+    return (op?.wheres ?? []).map(([a]) => (a && typeof a === 'object' && 'sql' in (a as object) ? String((a as { sql: string }).sql) : String(a)));
+  }
+
+  it.each([
+    ['TEST_MODE', 'EXISTS (SELECT 1 FROM financial_audit_log AS fa'],
+    ['UNCLASSIFIED', 'NOT ?'],
+  ])('8. contributions classification=%s applies the stored-annotation predicate', async (value, prefix) => {
+    const res = await call(USERS.superAdmin.id, `/api/v1/financial/admin/contributions?classification=${value}&state=COMPLETED&businessModule=MEMBERSHIP`);
+    expect(res.statusCode).toBe(200);
+    const op = fake.selects.find((o) => o.limit !== undefined);
+    expect(op?.wheres).toContainEqual(['fc.state', '=', 'COMPLETED']);
+    expect(op?.wheres).toContainEqual(['fc.business_module', '=', 'MEMBERSHIP']);
+    expect(whereSql(op).some((s) => s.startsWith(prefix))).toBe(true);
+  });
+
+  it('contributions without a classification filter add no classification predicate', async () => {
+    await call(USERS.superAdmin.id, '/api/v1/financial/admin/contributions');
+    const op = fake.selects.find((o) => o.limit !== undefined);
+    expect(whereSql(op).some((s) => s.includes('financial_audit_log'))).toBe(false);
+  });
+
+  it.each([
+    '/api/v1/financial/admin/contributions?classification=GENUINE',
+    '/api/v1/financial/admin/contributions?classification=TEST_MODE_NON_GENUINE_SETTLEMENT',
+    '/api/v1/financial/admin/receipts?classification=genuine',
+    '/api/v1/financial/admin/receipts?state=CANCELLED',
+    '/api/v1/financial/admin/receipts?state=COMPLETED&state=BOGUS',
+    '/api/v1/financial/admin/receipts?sort=status',
+    '/api/v1/financial/admin/receipts?sort=state',
+    '/api/v1/financial/admin/receipts?sort=r.id',
+    '/api/v1/financial/admin/receipts?order=sideways',
+    '/api/v1/financial/admin/receipts?issuedFrom=05-10-2026',
+    '/api/v1/financial/admin/receipts?issuedFrom=2026-02-30',
+    '/api/v1/financial/admin/receipts?issuedFrom=2026-10-06&issuedTo=2026-10-05',
+    '/api/v1/financial/admin/receipts?receiptNumber=BCC%25',
+    '/api/v1/financial/admin/receipts?q=BCCTemp00012',
+    '/api/v1/financial/admin/receipts?q=a',
+    '/api/v1/financial/admin/receipts?provider=RAZORPAY',
+    '/api/v1/financial/admin/receipts?amountFrom=1',
+  ])('9/11. rejects unknown or disallowed filter/sort: %s', async (url) => {
+    const res = await call(USERS.superAdmin.id, url);
+    expect(res.statusCode).toBe(400);
+  });
+
+  // ── Receipts (C2) ────────────────────────────────────────────────────────
+
+  const RECEIPT_ROW = {
+    uuid: 'r-uuid-9', receipt_number: 'BCC-RCP-202609-000009', amount_paise: 50000, currency: 'INR', issued_at: '2026-09-18T08:39:37Z',
+    contribution_uuid: CONTRIB_UUID, business_module: 'MEMBERSHIP', contribution_state: 'REFUNDED', contribution_amount_paise: 50000,
+    refund_status: 'COMPLETED', refund_amount_paise: 50000, refund_resolved_at: '2026-09-18T10:03:21Z',
+    contributor_name: 'Jaysh', contributor_username: 'jaysh', membership_number: 'BCC20260900062',
+    succeeded_count: 2, classified: 1,
+    // must never surface
+    id: 9, payer_user_id: 77, contribution_id: 9,
+  };
+
+  it('receipt rows: canonical state, supplemental refund, review flags and classification', async () => {
+    script({ 'receipts as r': [RECEIPT_ROW] });
+    const res = await call(USERS.financialAuthority.id, '/api/v1/financial/admin/receipts');
+    expect(res.statusCode).toBe(200);
+    const item = res.json().items[0];
+    expect(item).toMatchObject({
+      receiptNumber: 'BCC-RCP-202609-000009',
+      contributionState: 'REFUNDED',
+      contribution: { reference: CONTRIB_UUID, businessModule: 'MEMBERSHIP', state: 'REFUNDED' },
+      refund: { status: 'COMPLETED', amountPaise: 50000, resolvedAt: '2026-09-18T10:03:21.000Z' },
+      settlementClassification: 'TEST_MODE_NON_GENUINE_SETTLEMENT',
+      // edge 3: classified AND flagged -- the flag remains
+      reviewFlags: ['MULTIPLE_SUCCEEDED_TRANSACTIONS'],
+    });
+    for (const s of ['"id"', 'payer_user_id', 'payerUserId', 'contribution_id', 'BCCTemp']) expect(res.body).not.toContain(s);
+  });
+
+  it('an unclassified receipt carries settlementClassification: null', async () => {
+    script({ 'receipts as r': [{ ...RECEIPT_ROW, classified: 0, succeeded_count: 1 }] });
+    const item = (await call(USERS.superAdmin.id, '/api/v1/financial/admin/receipts')).json().items[0];
+    expect(item.settlementClassification).toBeNull();
+    expect(item.reviewFlags).toEqual([]);
+  });
+
+  it('8/14. receipts: every filter applies, combined, with identical filters on the total', async () => {
+    const res = await call(
+      USERS.superAdmin.id,
+      '/api/v1/financial/admin/receipts?state=COMPLETED&state=REVIEW&businessModule=EVENT_REGISTRATION&classification=TEST_MODE'
+        + '&issuedFrom=2026-10-01&issuedTo=2026-10-05&receiptNumber=BCC-RCP-2026&q=Asha&sort=amount_paise&order=desc&page=2&pageSize=10',
+    );
+    expect(res.statusCode).toBe(200);
+    const op = fake.selects.find((o) => o.table === 'receipts as r')!;
+    const texts = whereSql(op);
+    expect(op.wheres).toContainEqual(['fc.business_module', '=', 'EVENT_REGISTRATION']);
+    expect(op.wheres).toContainEqual(['r.receipt_number', 'like', 'BCC-RCP-2026%']);
+    expect(texts.some((s) => s.startsWith('EXISTS (SELECT 1 FROM financial_audit_log AS fa'))).toBe(true);
+    const from = op.wheres.find(([c, o]) => String((c as { sql?: string }).sql) === 'UNIX_TIMESTAMP(r.issued_at)' && o === '>=');
+    const to = op.wheres.find(([c, o]) => String((c as { sql?: string }).sql) === 'UNIX_TIMESTAMP(r.issued_at)' && o === '<');
+    expect(from?.[2]).toBe(Date.UTC(2026, 8, 30, 18, 30) / 1000);
+    expect(to?.[2]).toBe(Date.UTC(2026, 9, 5, 18, 30) / 1000);
+    // state OR REVIEW and contributor q are callback predicates (bound values only)
+    expect(op.wheres.filter(([c]) => typeof c === 'function')).toHaveLength(2);
+    expect(op.limit).toBe(10);
+    expect(op.offset).toBe(10);
+    // the list and the total share one filtered base
+    expect(fake.selects.filter((o) => o.table === 'receipts as r')).toHaveLength(2);
+    expect(fake.selects.filter((o) => o.table === 'receipts as r').every((o) => o === op)).toBe(true);
+  });
+
+  it('receipts: receiptNumber is a literal prefix (LIKE wildcards escaped)', async () => {
+    await call(USERS.superAdmin.id, '/api/v1/financial/admin/receipts?receiptNumber=BCC-RCP');
+    const op = fake.selects.find((o) => o.table === 'receipts as r')!;
+    expect(op.wheres).toContainEqual(['r.receipt_number', 'like', 'BCC-RCP%']);
+  });
+
+  it.each([
+    ['issued_at', 'asc'], ['issued_at', 'desc'],
+    ['receipt_number', 'asc'], ['receipt_number', 'desc'],
+    ['amount_paise', 'asc'], ['amount_paise', 'desc'],
+    ['contributor', 'asc'], ['contributor', 'desc'],
+  ])('10. sort=%s order=%s uses the fixed column map and receipt_number ASC tie-breaker', async (sort, order) => {
+    const res = await call(USERS.superAdmin.id, `/api/v1/financial/admin/receipts?sort=${sort}&order=${order}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ sort, order });
+    const orderBys = fake.selects.find((o) => o.table === 'receipts as r')!.orderBys!;
+    const column: Record<string, string> = { issued_at: 'r.issued_at', receipt_number: 'r.receipt_number', amount_paise: 'r.amount_paise' };
+    if (sort === 'contributor') {
+      expect((orderBys[0][0] as { sql: string }).sql).toBe('u.full_name IS NULL');
+      expect(orderBys[0][1]).toBe('asc'); // NULLS LAST in both directions
+      expect(orderBys[1]).toEqual(['u.full_name', order]);
+    } else {
+      expect(orderBys[0]).toEqual([column[sort], order]);
+    }
+    if (sort !== 'receipt_number') expect(orderBys[orderBys.length - 1]).toEqual(['r.receipt_number', 'asc']);
+  });
+
+  it('default receipt order is issued_at DESC then receipt_number ASC', async () => {
+    await call(USERS.superAdmin.id, '/api/v1/financial/admin/receipts');
+    expect(fake.selects.find((o) => o.table === 'receipts as r')!.orderBys).toEqual([
+      ['r.issued_at', 'desc'], ['r.receipt_number', 'asc'],
+    ]);
+  });
+
+  it('12. receipts pageSize above 100 is clamped (existing Track 4 contract)', async () => {
+    const res = await call(USERS.superAdmin.id, '/api/v1/financial/admin/receipts?pageSize=500');
+    expect(res.json().pageSize).toBe(MAX_PAGE_SIZE);
+    expect(fake.selects.find((o) => o.table === 'receipts as r')!.limit).toBe(MAX_PAGE_SIZE);
+  });
+
+  // ── Contribution detail classification (C3) ─────────────────────────────
+
+  const C23_UUID = '9e1d15b6-a676-495c-897c-c84ac6142645';
+  const ANNOTATION_17 = {
+    event_type: 'SETTLEMENT_RECONCILIATION_ANNOTATED',
+    metadata_json: '{"settlementClassification":"TEST_MODE_NON_GENUINE_SETTLEMENT","providerAccountId":"acc_DJkWMSsLHLxU4a","correctionContributionId":23,"reconciliationReason":"HA-approved genuine live corrective payment"}',
+    actor_type: 'ADMIN', created_at: '2026-10-05T08:50:21Z', actor_name: 'Rajnish Khare',
+    // must never surface
+    id: 17, actor_user_id: 1, request_id: 'req-secret', session_id: 'sess-secret', client_ip: '203.0.113.9', user_agent: 'UA-secret',
+    webhook_inbox_id: 8, provider_payment_ref: 'pay_Td1Zs77xOJPVno', provider_order_ref: 'order_Td1ZT3Jyl4em4f',
+  };
+
+  function detailWorld(annotations: unknown[], correctionTarget: unknown[] = [{ uuid: C23_UUID }]) {
+    fake.responder = (op: FakeOp) => {
+      if (op.kind !== 'select') return undefined;
+      if (op.table === 'financial_contributions') {
+        if (op.wheres.some(([c]) => c === 'uuid')) return [{ id: 8 }];
+        if (op.wheres.some(([c, , v]) => c === 'id' && v === 23)) return correctionTarget;
+        return [];
+      }
+      if (op.table === 'financial_audit_log as fa') return annotations;
+      return DETAIL_TABLES[op.table];
+    };
+  }
+
+  it('13. contribution 8: classification panel with the correction resolved to contribution 23 UUID', async () => {
+    detailWorld([ANNOTATION_17]);
+    const res = await call(USERS.financialAuthority.id, `/api/v1/financial/admin/contributions/${CONTRIB_UUID}`);
+    expect(res.statusCode).toBe(200);
+    const { classification } = res.json();
+    expect(classification).toEqual({
+      marker: 'TEST_MODE_NON_GENUINE_SETTLEMENT',
+      actorType: 'ADMIN',
+      actorDisplayName: 'Rajnish Khare',
+      annotatedAt: '2026-10-05T08:50:21.000Z',
+      reason: 'HA-approved genuine live corrective payment',
+      correctionContributionReference: C23_UUID,
+    });
+    const lookup = fake.selects.find((o) => o.table === 'financial_contributions' && o.wheres.some(([c]) => c === 'id'));
+    expect(lookup?.wheres).toContainEqual(['id', '=', 23]);
+  });
+
+  it('15. classification panel exposes nothing outside its allow-list', async () => {
+    detailWorld([ANNOTATION_17]);
+    const res = await call(USERS.superAdmin.id, `/api/v1/financial/admin/contributions/${CONTRIB_UUID}`);
+    const body = res.body;
+    for (const s of [
+      'acc_DJkWMSsLHLxU4a', 'providerAccountId', 'pay_Td1Zs77xOJPVno', 'order_Td1ZT3Jyl4em4f', 'webhook', 'Inbox',
+      'actor_user_id', 'actorUserId', '203.0.113.9', 'UA-secret', 'req-secret', 'sess-secret', 'metadata',
+      'correctionContributionId', 'BCCTemp',
+    ]) expect(body).not.toContain(s);
+    expect(Object.keys(res.json().classification).sort()).toEqual([
+      'actorDisplayName', 'actorType', 'annotatedAt', 'correctionContributionReference', 'marker', 'reason',
+    ]);
+    expect(JSON.stringify(res.json().classification)).not.toMatch(/:\s*23\b/);
+  });
+
+  it('14. a missing correction target resolves to null (never the numeric id)', async () => {
+    detailWorld([ANNOTATION_17], []);
+    const { classification } = (await call(USERS.superAdmin.id, `/api/v1/financial/admin/contributions/${CONTRIB_UUID}`)).json();
+    expect(classification.correctionContributionReference).toBeNull();
+  });
+
+  it('historical form (no correction): reference is null and no target lookup happens', async () => {
+    detailWorld([{ ...ANNOTATION_17, metadata_json: '{"settlementClassification":"TEST_MODE_NON_GENUINE_SETTLEMENT","providerAccountId":"acc_DJkWMSsLHLxU4a","reconciliationReason":"Historical Razorpay test-mode settlement."}' }]);
+    const { classification } = (await call(USERS.superAdmin.id, `/api/v1/financial/admin/contributions/${CONTRIB_UUID}`)).json();
+    expect(classification).toMatchObject({ marker: 'TEST_MODE_NON_GENUINE_SETTLEMENT', reason: 'Historical Razorpay test-mode settlement.', correctionContributionReference: null });
+    expect(fake.selects.some((o) => o.table === 'financial_contributions' && o.wheres.some(([c]) => c === 'id'))).toBe(false);
+  });
+
+  // The write path admits at most one annotation per contribution; these
+  // rows exercise only the defensive skipping of unrecognised metadata.
+  it('3. malformed / non-matching metadata rows are skipped; the recognised annotation is returned', async () => {
+    detailWorld([
+      { ...ANNOTATION_17, metadata_json: '{bad json' },
+      { ...ANNOTATION_17, metadata_json: '{"note":"TEST_MODE_NON_GENUINE_SETTLEMENT"}' },
+      ANNOTATION_17,
+    ]);
+    const res = await call(USERS.superAdmin.id, `/api/v1/financial/admin/contributions/${CONTRIB_UUID}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.json().classification.reason).toBe('HA-approved genuine live corrective payment');
+  });
+
+  it('3. only malformed metadata: classification is null and the detail still loads', async () => {
+    detailWorld([{ ...ANNOTATION_17, metadata_json: '{bad json' }]);
+    const res = await call(USERS.superAdmin.id, `/api/v1/financial/admin/contributions/${CONTRIB_UUID}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.json().classification).toBeNull();
+  });
+
+  it('an unclassified contribution has classification: null', async () => {
+    detailWorld([]);
+    const res = await call(USERS.superAdmin.id, `/api/v1/financial/admin/contributions/${CONTRIB_UUID}`);
+    expect(res.json().classification).toBeNull();
+    const fa = fake.selects.find((o) => o.table === 'financial_audit_log as fa');
+    expect(fa?.wheres).toContainEqual(['fa.event_type', '=', 'SETTLEMENT_RECONCILIATION_ANNOTATED']);
+  });
+
+  // ── Unified search (C4) ─────────────────────────────────────────────────
+
+  it('17. search results carry settlementClassification', async () => {
+    script({ 'financial_contributions as fc': [{ ...CONTRIB_ROW, classified: 1 }] });
+    const res = await call(USERS.superAdmin.id, '/api/v1/financial/admin/search?q=asha');
+    expect(res.json().items[0].settlementClassification).toBe('TEST_MODE_NON_GENUINE_SETTLEMENT');
+  });
+
+  it('17. the classification name is not a search term', async () => {
+    const { tables, preds } = await searchPredicates('TEST_MODE_NON_GENUINE_SETTLEMENT');
+    expect(tables).not.toContain('financial_audit_log');
+    for (const [col] of preds) expect(String(col)).not.toMatch(/audit|metadata|classif/i);
+    expect(SEARCH_FIELDS as readonly string[]).not.toContain('CLASSIFICATION');
+  });
+
+  it('exceptions rows carry settlementClassification without changing detection', async () => {
+    script({ 'financial_contributions as fc': [{ ...CONTRIB_ROW, classified: 1 }] });
+    const res = await call(USERS.superAdmin.id, '/api/v1/financial/admin/exceptions?category=FAILED');
+    expect(res.json().items[0].settlementClassification).toBe('TEST_MODE_NON_GENUINE_SETTLEMENT');
+    const op = fake.selects.find((o) => o.limit !== undefined)!;
+    expect(op.wheres).toEqual([['fc.state', '=', 'FAILED']]);
+  });
+
+  it('18. RBAC: denied users never reach a financial read on the new filters', async () => {
+    for (const who of ['platformAdmin', 'member', 'coordinator'] as const) {
+      const res = await call(USERS[who].id, '/api/v1/financial/admin/receipts?classification=TEST_MODE&sort=contributor');
+      expect(res.statusCode).toBe(403);
+    }
+    expect((await call(null, '/api/v1/financial/admin/overview')).statusCode).toBe(401);
+    expect(fake.selects).toHaveLength(0);
   });
 });

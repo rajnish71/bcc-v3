@@ -26,6 +26,8 @@ export interface FakeOp {
   // Recorded for pagination assertions (Track 4 admin financial tests).
   limit?: number;
   offset?: number;
+  // Recorded for sort assertions (Track 4 receipts sorting).
+  orderBys?: Array<[unknown, unknown]>;
 }
 
 export type Responder = (op: FakeOp) => unknown;
@@ -110,6 +112,7 @@ export class FakeDb {
         if (prop === 'where') return (a: unknown, b: unknown, c: unknown) => { op.wheres.push([a, b, c]); return self; };
         if (prop === 'limit') return (n: number) => { op.limit = n; return self; };
         if (prop === 'offset') return (n: number) => { op.offset = n; return self; };
+        if (prop === 'orderBy') return (col: unknown, dir?: unknown) => { (op.orderBys ??= []).push([col, dir ?? 'asc']); return self; };
         if (prop === 'execute') {
           return async () => {
             const r = await run();

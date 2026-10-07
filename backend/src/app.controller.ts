@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { sql } from 'kysely';
 import { db } from './database/db';
+import { countCurrentMembers } from './modules/membership/current-members.query';
 
 @Controller('api/v1')
 export class AppController {
@@ -24,12 +25,8 @@ export class AppController {
   /** Public platform statistics — canonical single endpoint for Home and About pages. */
   @Get('stats')
   async stats() {
-    const [membersRow, photosRow, activitiesRow, photographersRow, photowalksRow] = await Promise.all([
-      db.selectFrom('memberships')
-        .select(eb => eb.fn.count<number>('id').as('cnt'))
-        .where('lifecycle_state', '=', 'ACTIVE')
-        .where('owner_type', '=', 'INDIVIDUAL')
-        .executeTakeFirst(),
+    const [members, photosRow, activitiesRow, photographersRow, photowalksRow] = await Promise.all([
+      countCurrentMembers(),
       db.selectFrom('photos')
         .select(eb => eb.fn.count<number>('id').as('cnt'))
         .where('status', '=', 'ACTIVE')
@@ -51,7 +48,7 @@ export class AppController {
         .executeTakeFirst(),
     ]);
     return {
-      members:       Number(membersRow?.cnt       ?? 0),
+      members,
       photos:        Number(photosRow?.cnt        ?? 0),
       activities:    Number(activitiesRow?.cnt    ?? 0),
       photographers: Number(photographersRow?.cnt ?? 0),

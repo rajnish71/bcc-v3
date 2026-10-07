@@ -4,6 +4,7 @@
 //
 // PUBLIC endpoints (no auth required):
 //   GET /api/v1/photographers              - photographer directory
+//   GET /api/v1/photographers/stats        - live directory statistics
 //   GET /api/v1/photographers/:username    - photographer profile by username
 //
 // Photo delivery for the profile page uses the existing gallery endpoint:
@@ -14,9 +15,7 @@
 
 import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { PhotographerProfilesService } from './photographer-profiles.service';
-
-type SortParam = 'name' | 'photos' | 'joined';
-const VALID_SORTS: SortParam[] = ['name', 'photos', 'joined'];
+import { parseDirectoryFilter, parseDirectorySort, parseSeed } from './directory-listing.policy';
 
 @Controller('api/v1/photographers')
 export class PhotographerProfilesController {
@@ -27,10 +26,16 @@ export class PhotographerProfilesController {
    * Photographer directory. Returns active members with PUBLIC profile visibility
    * who meet the directory eligibility rule (directory-eligibility.policy.ts).
    *
-   * Query params:
+   * Query params (vocabulary: directory-listing.policy.ts):
    *   limit  (default 40, max 100)
    *   offset (default 0)
-   *   sort   'name' | 'photos' | 'joined'  (default 'name')
+   *   filter 'all' | 'active' | 'legacy' | 'honorary' | 'distinctions'  (default 'all')
+   *   sort   'random' | 'newest' | 'earliest' | 'photos_desc' | 'photos_asc'
+   *          | 'name_asc' | 'name_desc'  (default 'name_asc'; legacy
+   *          'name' | 'photos' | 'joined' still accepted)
+   *   seed   random-order seed (1..2147483646). Omitted with sort=random:
+   *          the server picks one and returns it in meta.seed -- pass it back
+   *          on later pages so the order stays stable across pagination.
    *   genre  optional genre filter (only photographers with photos in that genre)
    */
   @Get()
@@ -38,17 +43,35 @@ export class PhotographerProfilesController {
     @Query('limit')  limitStr?: string,
     @Query('offset') offsetStr?: string,
     @Query('sort')   sortRaw?: string,
+    @Query('filter') filterRaw?: string,
+    @Query('seed')   seedRaw?: string,
     @Query('genre')  genre?: string,
     @Query('hasApprovedPhotos') hasApprovedPhotosStr?: string,
   ) {
     const limit  = Math.min(parseInt(limitStr  ?? '40', 10) || 40, 100);
     const offset = Math.max(parseInt(offsetStr ?? '0',  10) || 0,  0);
-    const sort: SortParam = VALID_SORTS.includes(sortRaw as SortParam)
-      ? (sortRaw as SortParam)
-      : 'name';
     const hasApprovedPhotos = hasApprovedPhotosStr === 'true';
 
-    return this.svc.listPhotographers({ limit, offset, sort, genre, hasApprovedPhotos });
+    return this.svc.listPhotographers({
+      limit,
+      offset,
+      sort:   parseDirectorySort(sortRaw),
+      filter: parseDirectoryFilter(filterRaw),
+      seed:   parseSeed(seedRaw),
+      genre,
+      hasApprovedPhotos,
+    });
+  }
+
+  /**
+   * GET /api/v1/photographers/stats
+   * Live directory statistics (Total Members, Active Portfolios, Photos in
+   * Showcase). Independent of directory filter/sort. Declared before
+   * ':username' so the static segment wins.
+   */
+  @Get('stats')
+  async directoryStats() {
+    return this.svc.getDirectoryStats();
   }
 
   /**

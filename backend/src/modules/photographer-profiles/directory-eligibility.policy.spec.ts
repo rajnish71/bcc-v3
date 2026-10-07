@@ -203,11 +203,12 @@ describe('directory query -- photographer-profiles.service.ts', () => {
     expect(list).toMatch(/applyFilters = [\s\S]*?where\('u\.id', 'in', eligibleIds\)/);
     expect(list.match(/applyFilters\(directoryBaseQuery\(\)\)/g)).toHaveLength(2);
     // Paging happens in SQL on the filtered set (LIMIT/OFFSET after the predicate).
-    expect(list.indexOf('.limit(dbLimit)')).toBeGreaterThan(list.lastIndexOf('applyFilters(directoryBaseQuery())'));
+    expect(list.indexOf('.limit(opts.limit).offset(opts.offset)')).toBeGreaterThan(list.lastIndexOf('applyFilters(directoryBaseQuery())'));
   });
 
   it('returns an empty page (total 0) when nobody is eligible', () => {
-    expect(list).toMatch(/eligibleIds !== null && eligibleIds\.length === 0\)[\s\S]*?total_count: 0/);
+    expect(list).toMatch(/eligibleIds !== null && eligibleIds\.length === 0\)[\s\S]*?meta: meta\(0\)/);
+    expect(list).toMatch(/const meta\s+= \(total: number\) => \(\{\s*total_count: total,/);
   });
 
   it('genre filtering happens in SQL before LIMIT/OFFSET (no JS filter after paging)', () => {

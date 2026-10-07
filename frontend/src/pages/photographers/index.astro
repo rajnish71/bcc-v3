@@ -5,11 +5,17 @@
  * Design authority: V6 04 Photographers Directory.dc.html
  *
  * V6 Layout:
- *   PageHero (white · 3px amber top-border · stats band)
- *   → FilterTabs (All · Basic · Student · Individual · Life)
- *   → ResultsCountBar
- *   → PhotographerCard grid (4/3/2-col)
+ *   PageHero (white · 3px amber top-border · stats band:
+ *             Total Members · Active Portfolios · Photos in Showcase — live,
+ *             GET /api/v1/photographers/stats, independent of filter/sort)
+ *   → FilterTabs (All · Active · Legacy · Honorary · Photography Distinctions)
+ *   → ResultsCountBar (count · Sort select)
+ *   → PhotographerCard grid (4/3/2-col), server-paged 40 / +40 (Load More)
  *   → EmptyState (zero filter results)
+ *
+ * Filter/sort semantics are server-side (directory-listing.policy.ts).
+ * State is URL-addressable: /photographers/?filter=legacy&sort=newest
+ * Random (default) uses one seed per page view so paging never reshuffles.
  *
  * MEM-006 constraints enforced:
  *   1. PRIVATE profiles excluded at API layer.
@@ -19,6 +25,7 @@
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import FilterChips from '../../components/search/FilterChips.astro';
+import FilterSelect from '../../components/search/FilterSelect.astro';
 ---
 
 <BaseLayout
@@ -34,8 +41,13 @@ import FilterChips from '../../components/search/FilterChips.astro';
     <p class="hero-intro">A community of dedicated image-makers based in Bhopal. Members of the Bhopal Camera Club sharing their vision, craft, and stories with the world.</p>
     <div class="hero-stats">
       <div class="hero-stat">
-        <div class="hero-stat-val" id="stat-ph-count">—</div>
-        <div class="hero-stat-label">Active Photographers</div>
+        <div class="hero-stat-val" id="stat-member-count">—</div>
+        <div class="hero-stat-label">Total Members</div>
+      </div>
+      <div class="hero-stat-sep" aria-hidden="true"></div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="stat-portfolio-count">—</div>
+        <div class="hero-stat-label">Active Portfolios</div>
       </div>
       <div class="hero-stat-sep" aria-hidden="true"></div>
       <div class="hero-stat">
@@ -51,13 +63,13 @@ import FilterChips from '../../components/search/FilterChips.astro';
   <div class="filter-area-inner">
     <FilterChips
       id="filter-tabs"
-      label="Filter photographers by membership class"
+      label="Filter photographers"
       options={[
-        { value: 'all',        label: 'All' },
-        { value: 'basic',      label: 'Basic' },
-        { value: 'student',    label: 'Student' },
-        { value: 'individual', label: 'Individual' },
-        { value: 'life',       label: 'Life' },
+        { value: 'all',          label: 'All' },
+        { value: 'active',       label: 'Active' },
+        { value: 'legacy',       label: 'Legacy' },
+        { value: 'honorary',     label: 'Honorary' },
+        { value: 'distinctions', label: 'Photography Distinctions' },
       ]}
       value="all"
     />
@@ -70,7 +82,15 @@ import FilterChips from '../../components/search/FilterChips.astro';
     <span class="results-count" id="results-count" aria-live="polite">
       <span id="results-num">—</span> photographers
     </span>
-    <span class="results-sort-note">Sorted: random · No sort control in this version</span>
+    <FilterSelect id="ph-sort" label="Sort" class="results-sort">
+      <option value="random">Random</option>
+      <option value="newest">Newest Members</option>
+      <option value="earliest">Earliest Members</option>
+      <option value="photos_desc">Most Photos</option>
+      <option value="photos_asc">Fewest Photos</option>
+      <option value="name_asc">Name A–Z</option>
+      <option value="name_desc">Name Z–A</option>
+    </FilterSelect>
   </div>
 </div>
 
@@ -105,8 +125,12 @@ import FilterChips from '../../components/search/FilterChips.astro';
         <rect x="6" y="7" width="8" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
       </svg>
       <div class="ph-empty-title">No photographers found matching your filters</div>
-      <p class="ph-empty-desc">Try a different class filter or clear all filters to see everyone.</p>
+      <p class="ph-empty-desc">Try a different filter or clear all filters to see everyone.</p>
       <button class="btn-clear-filters" id="ph-clear">Clear Filters</button>
+    </div>
+
+    <div class="ph-load-more-wrap" id="ph-load-more-wrap" hidden>
+      <button class="ph-load-more-btn" id="ph-load-more" type="button">Load More Photographers</button>
     </div>
 
   </div>
@@ -219,12 +243,13 @@ import FilterChips from '../../components/search/FilterChips.astro';
   font-weight: 500;
 }
 #results-num { color: var(--ink-900); }
-.results-sort-note {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-400);
-  letter-spacing: 0.06em;
+/* Sort — canonical FilterSelect, label inline within the results bar */
+:global(.results-sort.fs) {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
 }
+:global(.results-sort .fs-select) { width: auto; }
 
 /* ── GRID AREA ───────────────────────────────────────────────────────────── */
 .grid-area {
@@ -470,6 +495,30 @@ import FilterChips from '../../components/search/FilterChips.astro';
 }
 .btn-clear-filters:hover { background: var(--gold-600); color: var(--surface-0); }
 
+/* Load more — mirrors the /photographers/[username] load-more control */
+.ph-load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0 0;
+}
+.ph-load-more-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-600);
+  border: 1px solid var(--gold-600);
+  padding: 12px 40px;
+  background: var(--surface-0);
+  border-radius: var(--r-1);
+  cursor: pointer;
+  transition: background var(--m-fast), color var(--m-fast);
+}
+.ph-load-more-btn:hover { background: var(--gold-600); color: var(--surface-0); }
+.ph-load-more-btn:focus-visible { outline: 2px solid var(--gold-600); outline-offset: 2px; }
+.ph-load-more-btn[disabled] { opacity: 0.5; cursor: default; }
+
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .ph-grid { grid-template-columns: repeat(3, 1fr); }
@@ -479,12 +528,13 @@ import FilterChips from '../../components/search/FilterChips.astro';
   .filter-area-inner { padding: 20px 32px 0; }
   .results-bar-inner { padding: 12px 32px; }
   .grid-container { padding: 0 32px; }
-  .results-sort-note { display: none; }
 }
 @media (max-width: 768px) {
   .hero-title { font-size: 40px; }
   .hero-intro { font-size: 16px; margin-bottom: 32px; }
   .hero-stat-val { font-size: 36px; }
+  .hero-stat { padding-right: 28px; }
+  .hero-stat-sep { margin-right: 28px; }
   .ph-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .hero-inner { padding: 40px 20px 36px; }
   .filter-area-inner { padding: 16px 20px 0; }
@@ -494,6 +544,11 @@ import FilterChips from '../../components/search/FilterChips.astro';
 }
 @media (max-width: 480px) {
   .ph-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .hero-stat { padding-right: 0; }
+  .hero-stat-sep { display: none; }
+  .hero-stat-val { font-size: 30px; }
+  .hero-stat-label { font-size: 10px; letter-spacing: 0.12em; }
 }
 </style>
 
@@ -541,8 +596,25 @@ const AVATAR_BG_PALETTE = [
 ];
 
 // ── State ─────────────────────────────────────────────────────────────────
-let allPhotographers: Photographer[] = [];
-let activeClass = 'all';
+// Filter/sort semantics live server-side (directory-listing.policy.ts); the
+// page only carries state and renders pages of results.
+const FILTERS = ['all', 'active', 'legacy', 'honorary', 'distinctions'] as const;
+const SORTS = ['random', 'newest', 'earliest', 'photos_desc', 'photos_asc', 'name_asc', 'name_desc'] as const;
+type Filter = typeof FILTERS[number];
+type Sort = typeof SORTS[number];
+const DEFAULT_FILTER: Filter = 'all';
+const DEFAULT_SORT: Sort = 'random';
+const PAGE_SIZE = 40;
+
+let activeFilter: Filter = DEFAULT_FILTER;
+let activeSort: Sort = DEFAULT_SORT;
+// One random seed per page view: every page of a Random listing is drawn from
+// the same deterministic order, so paging never reshuffles. Issued by the
+// server on the first random request and reused for later pages.
+let randomSeed: number | null = null;
+let loaded = 0;
+let total = 0;
+let requestToken = 0;
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function avatarBg(username: string): string {
@@ -563,79 +635,123 @@ function initials(name: string): string {
   return name.trim().split(/\s+/).map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase();
 }
 
-// ── Load data ─────────────────────────────────────────────────────────────
-// The list endpoint caps limit at 100; page with offset until total_count.
-async function fetchAllPhotographers(): Promise<{ data: any[]; total: number }> {
-  const PAGE_SIZE = 100;
-  const all: any[] = [];
-  let total = 0;
-  for (let offset = 0; ; offset += PAGE_SIZE) {
-    const res = await fetch(`/api/v1/photographers?limit=${PAGE_SIZE}&offset=${offset}&sort=name`);
-    if (!res.ok) {
-      if (offset === 0) throw new Error(`HTTP ${res.status}`);
-      break;
-    }
-    const { data, meta } = await res.json();
-    const page: any[] = Array.isArray(data) ? data : [];
-    all.push(...page);
-    total = meta?.total_count ?? all.length;
-    if (page.length < PAGE_SIZE || all.length >= total) break;
-  }
-  return { data: all, total };
+function parseFilter(v: string | null): Filter {
+  return (FILTERS as readonly string[]).includes(v ?? '') ? v as Filter : DEFAULT_FILTER;
 }
 
-async function load() {
+function parseSort(v: string | null): Sort {
+  return (SORTS as readonly string[]).includes(v ?? '') ? v as Sort : DEFAULT_SORT;
+}
+
+// ── URL state ─────────────────────────────────────────────────────────────
+// /photographers/?filter=legacy&sort=newest — defaults are omitted.
+function readUrlState() {
+  const q = new URLSearchParams(window.location.search);
+  activeFilter = parseFilter(q.get('filter'));
+  activeSort   = parseSort(q.get('sort'));
+}
+
+function writeUrlState() {
+  const url = new URL(window.location.href);
+  if (activeFilter === DEFAULT_FILTER) url.searchParams.delete('filter');
+  else url.searchParams.set('filter', activeFilter);
+  if (activeSort === DEFAULT_SORT) url.searchParams.delete('sort');
+  else url.searchParams.set('sort', activeSort);
+  if (url.href !== window.location.href) history.pushState(null, '', url);
+}
+
+// Reflect state on the controls without dispatching events.
+function syncControls() {
+  document.querySelectorAll<HTMLButtonElement>('#filter-tabs .fc-chip').forEach(b => {
+    const on = b.dataset.value === activeFilter;
+    b.classList.toggle('fc-chip--active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  const sortEl = document.getElementById('ph-sort') as HTMLSelectElement | null;
+  if (sortEl) sortEl.value = activeSort;
+}
+
+// ── Load data ─────────────────────────────────────────────────────────────
+async function loadStats() {
   try {
-    const [phRes, feedRes] = await Promise.allSettled([
-      fetchAllPhotographers(),
-      fetch('/api/v1/gallery/feed?limit=1'),
-    ]);
-
-    // Photographers
-    if (phRes.status === 'fulfilled') {
-      allPhotographers = phRes.value.data;
-      const total = phRes.value.total;
-      const statEl = document.getElementById('stat-ph-count');
-      if (statEl) statEl.textContent = total.toLocaleString('en-IN');
-    }
-
-    // Photos in showcase
-    if (feedRes.status === 'fulfilled' && feedRes.value.ok) {
-      const feedJson = await feedRes.value.json();
-      const photoTotal = feedJson?.total ?? feedJson?.meta?.total ?? null;
-      const photoStatEl = document.getElementById('stat-photo-count');
-      if (photoStatEl && photoTotal !== null) {
-        photoStatEl.textContent = Number(photoTotal).toLocaleString('en-IN');
-      }
-    }
+    const res = await fetch('/api/v1/photographers/stats');
+    if (!res.ok) return;
+    const { data } = await res.json();
+    const set = (id: string, v: unknown) => {
+      const el = document.getElementById(id);
+      if (el && typeof v === 'number') el.textContent = v.toLocaleString('en-IN');
+    };
+    set('stat-member-count',    data?.totalMembers);
+    set('stat-portfolio-count', data?.activePortfolios);
+    set('stat-photo-count',     data?.photosInShowcase);
   } catch {
-    // Graceful — render with whatever we have
+    // Graceful — stats keep their placeholder
   }
+}
 
-  render();
+async function fetchPage(offset: number): Promise<{ data: Photographer[]; total: number } | null> {
+  const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
+  params.set('filter', activeFilter);
+  params.set('sort', activeSort);
+  if (activeSort === 'random' && randomSeed !== null) params.set('seed', String(randomSeed));
+  const res = await fetch(`/api/v1/photographers?${params}`);
+  if (!res.ok) return null;
+  const { data, meta } = await res.json();
+  if (activeSort === 'random' && typeof meta?.seed === 'number') randomSeed = meta.seed;
+  const page: Photographer[] = Array.isArray(data) ? data : [];
+  return { data: page, total: Number(meta?.total_count ?? page.length) };
+}
+
+/** Load the first page for the current filter/sort (pagination resets). */
+async function reload() {
+  const token = ++requestToken;
+  const grid = document.getElementById('ph-grid')!;
+  grid.setAttribute('aria-busy', 'true');
+  let result: Awaited<ReturnType<typeof fetchPage>> = null;
+  try { result = await fetchPage(0); } catch { result = null; }
+  if (token !== requestToken) return; // a newer filter/sort superseded this request
+  grid.setAttribute('aria-busy', 'false');
+  grid.innerHTML = '';
+  loaded = 0;
+  total = result?.total ?? 0;
+  appendCards(result?.data ?? []);
+  updateChrome();
+}
+
+async function loadMore() {
+  const btn = document.getElementById('ph-load-more') as HTMLButtonElement;
+  const token = requestToken;
+  btn.disabled = true;
+  try {
+    const result = await fetchPage(loaded);
+    if (token !== requestToken || !result) return;
+    total = result.total;
+    const firstNew = appendCards(result.data);
+    updateChrome();
+    // Keep keyboard users in place: move focus to the first newly added card.
+    firstNew?.focus({ preventScroll: true });
+  } catch {
+    // Graceful — button stays available for retry
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
-function render() {
-  const grid    = document.getElementById('ph-grid')!;
+function updateChrome() {
   const emptyEl = document.getElementById('ph-empty')!;
   const numEl   = document.getElementById('results-num')!;
+  const moreEl  = document.getElementById('ph-load-more-wrap')!;
+  numEl.textContent = total.toLocaleString('en-IN');
+  emptyEl.toggleAttribute('hidden', loaded > 0);
+  moreEl.toggleAttribute('hidden', loaded >= total);
+}
 
-  grid.innerHTML = '';
+function appendCards(page: Photographer[]): HTMLAnchorElement | null {
+  const grid = document.getElementById('ph-grid')!;
+  let first: HTMLAnchorElement | null = null;
 
-  const filtered = activeClass === 'all'
-    ? allPhotographers
-    : allPhotographers.filter(ph => ph.memberClass === activeClass);
-
-  numEl.textContent = filtered.length.toLocaleString('en-IN');
-
-  if (!filtered.length) {
-    emptyEl.removeAttribute('hidden');
-    return;
-  }
-  emptyEl.setAttribute('hidden', '');
-
-  filtered.forEach(ph => {
+  page.forEach(ph => {
     const inits   = initials(ph.displayName ?? '?');
     const bgColor = avatarBg(ph.username);
     const classKey   = ph.memberClass ?? 'basic';
@@ -685,14 +801,29 @@ function render() {
     `;
 
     grid.appendChild(card);
+    first ??= card;
   });
+
+  loaded += page.length;
+  return first;
 }
 
 // ── Filter chips ──────────────────────────────────────────────────────────
 document.getElementById('filter-tabs')?.addEventListener('bcc:filter', e => {
-  activeClass = (e as CustomEvent<{ value: string }>).detail.value ?? 'all';
-  render();
+  activeFilter = parseFilter((e as CustomEvent<{ value: string }>).detail.value ?? null);
+  writeUrlState();
+  reload();
 });
+
+// ── Sort ──────────────────────────────────────────────────────────────────
+document.getElementById('ph-sort')?.addEventListener('change', e => {
+  activeSort = parseSort((e.target as HTMLSelectElement).value);
+  writeUrlState();
+  reload();
+});
+
+// ── Load more ─────────────────────────────────────────────────────────────
+document.getElementById('ph-load-more')?.addEventListener('click', loadMore);
 
 // ── Clear filters ─────────────────────────────────────────────────────────
 document.getElementById('ph-clear')?.addEventListener('click', () => {
@@ -700,6 +831,16 @@ document.getElementById('ph-clear')?.addEventListener('click', () => {
   document.querySelector<HTMLButtonElement>('#filter-tabs [data-value="all"]')?.click();
 });
 
+// ── Back / forward ────────────────────────────────────────────────────────
+window.addEventListener('popstate', () => {
+  readUrlState();
+  syncControls();
+  reload();
+});
+
 // ── Boot ──────────────────────────────────────────────────────────────────
-load();
+readUrlState();
+syncControls();
+loadStats();
+reload();
 </script>

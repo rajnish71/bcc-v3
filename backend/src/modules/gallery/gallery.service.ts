@@ -57,6 +57,7 @@ import type { UpdatePhotoDto } from './dto/update-photo.dto';
 import type { CreateAlbumDto, UpdateAlbumDto, AddPhotoToAlbumDto } from './dto/album.dto';
 import { HERO_DESTINATIONS } from './hero-destinations.config';
 import { PortfolioExposureService, exposedPhotoPredicate } from './portfolio-exposure.service';
+import { showcasePhotoPredicate } from './showcase-photo.predicate';
 import { decideSelection } from './portfolio-exposure.policy';
 
 // ---------------------------------------------------------------------------
@@ -1246,10 +1247,7 @@ export class GalleryService {
         'users.full_name as photographer_name',
         'users.username as photographer_username',
       ] as any)
-      .where('photos.status', '=', 'ACTIVE')
-      .where('photos.visibility', '=', 'PUBLIC')
-      .where('photos.show_in_portfolio', '=', true as any)
-      .where(eb => exposedPhotoPredicate(eb, PHOTO_COLS_QUALIFIED, gallerySet));
+      .where(eb => showcasePhotoPredicate(eb, gallerySet));
 
     if (opts.genre) {
       const genre = opts.genre;
@@ -1285,10 +1283,7 @@ export class GalleryService {
       // Count total without pagination (separate query to avoid subquery complexity)
       let countQ = db
         .selectFrom('photos')
-        .where('photos.status', '=', 'ACTIVE')
-        .where('photos.visibility', '=', 'PUBLIC')
-        .where('photos.show_in_portfolio', '=', true as any)
-        .where(eb => exposedPhotoPredicate(eb, PHOTO_COLS_QUALIFIED, gallerySet));
+        .where(eb => showcasePhotoPredicate(eb, gallerySet));
       if (opts.genre) {
         const genre = opts.genre;
         countQ = countQ.where('photos.id', 'in', eb =>
@@ -1395,6 +1390,22 @@ export class GalleryService {
       photos: pagedSelectedRows.map(r => formatPhoto(r as Record<string, unknown>)),
       total:  userIds.length,
     };
+  }
+
+  /**
+   * Number of canonical PHOTOS eligible to appear on the public Showcase --
+   * one per photo row, never per photographer. Same predicate as
+   * getPublicFeed() (showcasePhotoPredicate) with no genre/tag narrowing and
+   * without the feed's one-per-photographer presentation.
+   */
+  async countShowcasePhotos(): Promise<number> {
+    const gallerySet = await this.exposure.getExposureSet('GALLERY');
+    const row = await db
+      .selectFrom('photos')
+      .where(eb => showcasePhotoPredicate(eb, gallerySet))
+      .select(eb => eb.fn.count<number>('photos.id').as('cnt'))
+      .executeTakeFirst();
+    return Number(row?.cnt ?? 0);
   }
 
   async getPhotographerGallery(

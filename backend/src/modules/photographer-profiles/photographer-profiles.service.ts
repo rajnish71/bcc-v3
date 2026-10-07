@@ -18,20 +18,33 @@
 //   Class names are hidden only on join/membership WORKFLOW pages (/join, /membership).
 //   PUBLIC_CLASS_MASK maps all classes to descriptive tokens for the frontend badge component.
 //
-// PHOTO COUNT:
-//   Counts ACTIVE photos with PUBLIC or MEMBERS_ONLY visibility.
-//   PRIVATE and UNLISTED photos are excluded from the public count.
+// PHOTO COUNT (directory card, Most/Fewest Photos sort):
+//   PUBLICLY_ELIGIBLE_PORTFOLIO_COUNT (PROFILE-ARCH-001 §3) -- ACTIVE, PUBLIC,
+//   show_in_portfolio photographs exposed by the MEM-008 exposure path
+//   (entitlement, cap, portfolio_selected, over-cap fail-closed). Computed in
+//   the row query as a correlated subquery so sorting by it is SQL-side.
 //
-// PHOTO SORT ('photos'):
-//   For Phase 2a the photo-count sort fetches up to 1000 rows and sorts
-//   in JS (dataset is tiny). Convert to a SQL subquery if membership grows large.
+// FILTER / SORT vocabulary: directory-listing.policy.ts.
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { sql } from 'kysely';
 import { db } from '../../database/db';
 import { ikUrl, COVER_DELIVERY_TR, AVATAR_DELIVERY_TR } from '../shared/storage/imagekit.util';
 import { PortfolioExposureService, exposedPhotoPredicate } from '../gallery/portfolio-exposure.service';
 import type { ExposureSet } from '../gallery/portfolio-exposure.policy';
 import { DirectoryEligibilityService, directoryBaseQuery } from './directory-eligibility.service';
+import { GalleryService } from '../gallery/gallery.service';
+import { countCurrentMembers } from '../membership/current-members.query';
+import { findBadgeQualifiedUserIds } from '../identity/distinctions/photographic-distinction-badge';
+import {
+  buildDisplayName,
+  suppressedTitleRegex,
+  newSeed,
+  HONORARY_RECOGNITION_CODES,
+  LEGACY_MEMBER_CLASS_CODE,
+  type DirectoryFilter,
+  type DirectorySort,
+} from './directory-listing.policy';
 
 const P_COLS = { owner: 'photos.owner_user_id', selected: 'photos.portfolio_selected', id: 'photos.id' };
 
@@ -69,45 +82,22 @@ function maskClass(code: unknown): string {
   return PUBLIC_CLASS_MASK[String(code)] ?? 'member';
 }
 
-// Honorifics suppressed from public display — only Dr. is shown.
-const SUPPRESS_TITLES = new Set(['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Shri', 'Smt.', 'Er.', 'Prof.', 'Capt.', 'Col.', 'Maj.']);
+/**
+ * SQL mirror of buildDisplayName() (directory-listing.policy.ts), used as the
+ * Name A–Z / Z–A sort key so ordering follows the name the card displays
+ * (many full_name values carry a baked-in "Mr." / "Mrs." / "Dr." prefix).
+ */
+const DR_PREFIX_REGEX = '^Dr\\. ';
 
-function buildDisplayName(fullName: string | null, nameTitle: string | null): string {
-  const name = (fullName ?? '').trim();
-  // Strip any suppressed honorific already baked into full_name
-  for (const t of SUPPRESS_TITLES) {
-    if (name.startsWith(t + ' ')) return name.slice(t.length + 1).trim();
-  }
-  // Prepend Dr. if name_title says so and it's not already there
-  if (nameTitle === 'Dr.' && !name.startsWith('Dr. ')) return `Dr. ${name}`;
-  return name;
-}
-
-async function batchPhotoCounts(userIds: number[], set: ExposureSet): Promise<Record<number, number>> {
-  if (userIds.length === 0) return {};
-
-  // MEM-008: PUBLIC photographs count only while their owner's portfolio
-  // entitlement / cap exposes them; MEMBERS_ONLY keep their existing rule.
-  const rows = await db
-    .selectFrom('photos')
-    .where('owner_user_id', 'in', userIds)
-    .where('status', '=', 'ACTIVE')
-    .where('visibility', 'in', ['PUBLIC', 'MEMBERS_ONLY'] as const)
-    .where('show_in_portfolio', '=', true as any)
-    .where(eb => eb.or([
-      eb('visibility', '!=', 'PUBLIC'),
-      exposedPhotoPredicate(eb, { owner: 'owner_user_id', selected: 'portfolio_selected', id: 'id' }, set),
-    ]))
-    .groupBy('owner_user_id')
-    .select(['owner_user_id'])
-    .select(eb => eb.fn.count<number>('id').as('cnt'))
-    .execute();
-
-  const map: Record<number, number> = {};
-  for (const r of rows) {
-    map[r.owner_user_id as number] = Number(r.cnt);
-  }
-  return map;
+function displayNameSortKey() {
+  const name = sql`TRIM(COALESCE(u.full_name, ''))`;
+  return sql`CASE
+    WHEN REGEXP_LIKE(${name}, ${suppressedTitleRegex()}, 'c')
+      THEN TRIM(SUBSTRING(${name}, LOCATE(' ', ${name}) + 1))
+    WHEN u.name_title = 'Dr.' AND NOT REGEXP_LIKE(${name}, ${DR_PREFIX_REGEX}, 'c')
+      THEN CONCAT('Dr. ', ${name})
+    ELSE ${name}
+  END`;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,6 +109,7 @@ export class PhotographerProfilesService {
   constructor(
     private readonly exposure: PortfolioExposureService,
     private readonly eligibility: DirectoryEligibilityService,
+    private readonly gallery: GalleryService,
   ) {}
 
   // =========================================================================
@@ -128,25 +119,64 @@ export class PhotographerProfilesService {
   async listPhotographers(opts: {
     limit:  number;
     offset: number;
-    sort:   'name' | 'photos' | 'joined';
+    sort:   DirectorySort;
+    filter?: DirectoryFilter;
+    /** Random-order seed; generated when absent and echoed in meta. */
+    seed?:  number | null;
     genre?: string;
     hasApprovedPhotos?: boolean;
   }) {
+    const filter = opts.filter ?? 'all';
+    const seed   = opts.sort === 'random' ? (opts.seed ?? newSeed()) : null;
+    const meta   = (total: number) => ({
+      total_count: total, limit: opts.limit, offset: opts.offset, sort: opts.sort, filter, seed,
+    });
+
     // MEM-008: PUBLIC photographs are exposed per owner entitlement + cap.
     const exposureSet = await this.exposure.getExposureSet('PORTFOLIO');
 
     // Directory eligibility (profile photo + completion >= 50% + >= 5 public
     // portfolio photographs). Applied as a SQL id predicate on BOTH the count
-    // and the row query so totals, pagination, sorting and genre filtering
-    // can never surface an ineligible photographer. null = rule not enforced
+    // and the row query so totals, pagination, sorting and filtering can
+    // never surface an ineligible photographer. null = rule not enforced
     // yet (profile-completion definition pending): no eligibility filter.
     const eligibleIds = await this.eligibility.listableUserIds();
     if (eligibleIds !== null && eligibleIds.length === 0) {
-      return { data: [], meta: { total_count: 0, limit: opts.limit, offset: opts.offset } };
+      return { data: [], meta: meta(0) };
+    }
+
+    // Photography Distinctions: the canonical read-time badge predicate,
+    // evaluated over the eligible population only (never widens it).
+    let distinctionIds: number[] = [];
+    if (filter === 'distinctions') {
+      const candidates = eligibleIds ?? await this.eligibility.baseUserIds();
+      distinctionIds = [...await findBadgeQualifiedUserIds(candidates)];
+      if (distinctionIds.length === 0) return { data: [], meta: meta(0) };
     }
 
     const applyFilters = <QB extends { where: any }>(qb: QB): QB => {
       let q: any = eligibleIds === null ? qb : qb.where('u.id', 'in', eligibleIds);
+      if (filter === 'active') {
+        q = q.where('m.lifecycle_state', '=', 'ACTIVE');
+      } else if (filter === 'legacy') {
+        q = q.where('m.membership_class_id', 'in', (eb: any) =>
+          eb.selectFrom('membership_classes')
+            .where('code', '=', LEGACY_MEMBER_CLASS_CODE)
+            .select('id'),
+        );
+      } else if (filter === 'honorary') {
+        q = q.where((eb: any) =>
+          eb.exists(
+            eb.selectFrom('member_recognitions as mr')
+              .whereRef('mr.membership_id', '=', 'm.id')
+              .where('mr.status', '=', 'ACTIVE')
+              .where('mr.recognition_code', 'in', HONORARY_RECOGNITION_CODES)
+              .select('mr.id'),
+          ),
+        );
+      } else if (filter === 'distinctions') {
+        q = q.where('u.id', 'in', distinctionIds);
+      }
       if (opts.hasApprovedPhotos) {
         q = q.where((eb: any) =>
           eb.exists(
@@ -196,17 +226,14 @@ export class PhotographerProfilesService {
     const total = Number(countRow?.total ?? 0);
 
     if (total === 0) {
-      return { data: [], meta: { total_count: 0, limit: opts.limit, offset: opts.offset } };
+      return { data: [], meta: meta(0) };
     }
 
     // ------------------------------------------------------------------
-    // Row fetch
+    // Row fetch -- one query. The photo count is a correlated subquery so
+    // the photo sorts run in SQL under LIMIT/OFFSET (no N+1, no JS re-sort).
     // ------------------------------------------------------------------
-    const photoSort = opts.sort === 'photos';
-    const dbLimit   = photoSort ? 1000 : opts.limit;
-    const dbOffset  = photoSort ? 0    : opts.offset;
-
-    const rows = await applyFilters(directoryBaseQuery())
+    let rowQ = applyFilters(directoryBaseQuery())
       .innerJoin('membership_classes as mc', 'mc.id', 'm.membership_class_id')
       .leftJoin('user_avatars as av', join =>
         join
@@ -225,30 +252,53 @@ export class PhotographerProfilesService {
         'mc.code as class_code',
         'av.r2_key as avatar_r2_key',
       ])
-      .orderBy(
-        opts.sort === 'joined' ? 'm.join_year' : 'u.full_name',
-        'asc',
-      )
-      .orderBy('u.id', 'asc') // unique tie-breaker so offset pages never overlap or skip
-      .limit(dbLimit)
-      .offset(dbOffset)
-      .execute();
+      .select(eb =>
+        eb.selectFrom('photos')
+          .whereRef('photos.owner_user_id', '=', 'u.id')
+          .where('photos.status', '=', 'ACTIVE')
+          .where('photos.visibility', '=', 'PUBLIC')
+          .where('photos.show_in_portfolio', '=', true as any)
+          .where(eb2 => exposedPhotoPredicate(eb2, P_COLS, exposureSet))
+          .select(eb2 => eb2.fn.countAll<number>().as('n'))
+          .as('photo_count'),
+      );
 
-    if (rows.length === 0) {
-      return { data: [], meta: { total_count: total, limit: opts.limit, offset: opts.offset } };
+    // Every order ends on u.id (unique) so offset pages never overlap or skip.
+    switch (opts.sort) {
+      case 'random':
+        rowQ = rowQ.orderBy(sql`CRC32(CONCAT(${seed}, ':', u.id))`, 'asc').orderBy('u.id', 'asc');
+        break;
+      case 'newest':
+      case 'earliest': {
+        const dir = opts.sort === 'newest' ? 'desc' : 'asc';
+        rowQ = rowQ
+          .orderBy(sql`m.join_year IS NULL`, 'asc') // undated last in both directions
+          .orderBy('m.join_year', dir)
+          .orderBy('m.join_month', dir)
+          .orderBy('m.number_serial', dir)
+          .orderBy('u.id', dir);
+        break;
+      }
+      case 'photos_desc':
+      case 'photos_asc':
+        rowQ = rowQ
+          .orderBy(sql`photo_count`, opts.sort === 'photos_desc' ? 'desc' : 'asc')
+          .orderBy(displayNameSortKey(), 'asc')
+          .orderBy('u.id', 'asc');
+        break;
+      case 'name_desc':
+        rowQ = rowQ.orderBy(displayNameSortKey(), 'desc').orderBy('u.id', 'desc');
+        break;
+      case 'name_asc':
+      default:
+        rowQ = rowQ.orderBy(displayNameSortKey(), 'asc').orderBy('u.id', 'asc');
+        break;
     }
 
-    // ------------------------------------------------------------------
-    // Photo counts (batched)
-    // ------------------------------------------------------------------
-    const userIds  = rows.map(r => r.id);
-    const photoMap = await batchPhotoCounts(userIds, exposureSet);
+    const rows = await rowQ.limit(opts.limit).offset(opts.offset).execute();
 
-    // ------------------------------------------------------------------
-    // Build result
-    // ------------------------------------------------------------------
-    let items = rows
-      .map(r => ({
+    return {
+      data: rows.map(r => ({
         id:          r.id,
         username:    r.username!,
         displayName: buildDisplayName(r.full_name, r.name_title ?? null),
@@ -257,21 +307,35 @@ export class PhotographerProfilesService {
         city:        r.city ?? null,
         memberClass: maskClass(r.class_code),
         memberSince: r.join_year ?? null,
-        photoCount:  photoMap[r.id] ?? 0,
+        photoCount:  Number(r.photo_count ?? 0),
         avatarUrl:   r.avatar_r2_key ? ikUrl(r.avatar_r2_key, AVATAR_DELIVERY_TR) : null,
-      }));
-
-    if (photoSort) {
-      items.sort((a, b) => b.photoCount - a.photoCount);
-      items = items.slice(opts.offset, opts.offset + opts.limit);
-    }
-
-    return {
-      data: items,
-      meta: { total_count: total, limit: opts.limit, offset: opts.offset },
+      })),
+      meta: meta(total),
     };
   }
 
+  // =========================================================================
+  // Directory statistics -- independent of any directory filter or sort.
+  //
+  //   totalMembers      canonical current-member count (ACTIVE individual
+  //                     memberships) -- the same query behind /api/v1/stats.
+  //   activePortfolios  photographers the public directory lists (base gates
+  //                     + PROFILE-ARCH-001 eligibility).
+  //   photosInShowcase  photographs in the public Showcase pool
+  //                     (GalleryService.countShowcasePhotos, MEM-008 GALLERY).
+  // =========================================================================
+
+  async getDirectoryStats() {
+    const [totalMembers, eligibleIds, photosInShowcase] = await Promise.all([
+      countCurrentMembers(),
+      this.eligibility.listableUserIds(),
+      this.gallery.countShowcasePhotos(),
+    ]);
+    const activePortfolios = eligibleIds !== null
+      ? eligibleIds.length
+      : (await this.eligibility.baseUserIds()).length;
+    return { data: { totalMembers, activePortfolios, photosInShowcase } };
+  }
   // =========================================================================
   // Public profile paths (static build of /photographers/:username/)
   //

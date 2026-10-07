@@ -47,6 +47,14 @@ export class UsersController {
     // server-side RbacGuard on every financial admin route remains the
     // authorization boundary.
     const financialRead = await this.rbac.hasPermission(user.sub, 'financial.read');
+    // Photographic Distinctions admin controls -- navigation/visibility
+    // hints only; RbacGuard on every identity/distinctions/admin route is the
+    // authorization boundary.
+    const [distinctionView, distinctionRemove, distinctionCatalogueManage] = await Promise.all([
+      this.rbac.hasPermission(user.sub, 'identity.distinction.view'),
+      this.rbac.hasPermission(user.sub, 'identity.distinction.remove'),
+      this.rbac.hasPermission(user.sub, 'identity.distinction.catalogue.manage'),
+    ]);
 
     return {
       id: row.id,
@@ -64,6 +72,9 @@ export class UsersController {
       ui: {
         portalState,
         financialRead,
+        distinctionView,
+        distinctionRemove,
+        distinctionCatalogueManage,
       },
     };
   }

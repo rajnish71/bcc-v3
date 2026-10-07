@@ -14,6 +14,7 @@ import { db } from '../../../database/db';
 import type { FakeDb, FakeOp } from '../../../test-support/fake-db';
 import {
   findBadgeQualifiedUserIds,
+  getBadgeStatuses,
   isBadgeQualified,
   type BadgeDeclarationFact,
   type BadgeMembershipFact,
@@ -151,6 +152,31 @@ describe('findBadgeQualifiedUserIds (read path)', () => {
     declRows = [decl(10)];
     membershipRows = [{ user_id: 10, owner_type: 'GROUP', lifecycle_state: 'ACTIVE' }];
     expect((await findBadgeQualifiedUserIds([10])).size).toBe(0);
+  });
+
+  it('a badge_eligible change in the catalogue changes the derived result on the next read', async () => {
+    membershipRows = [{ user_id: 10, owner_type: 'INDIVIDUAL', lifecycle_state: 'ACTIVE' }];
+    declRows = [decl(10, { badge_eligible: 1 })];
+    expect((await findBadgeQualifiedUserIds([10])).has(10)).toBe(true);
+    declRows = [decl(10, { badge_eligible: 0 })]; // catalogue flag turned off
+    expect((await findBadgeQualifiedUserIds([10])).has(10)).toBe(false);
+  });
+
+  it('getBadgeStatuses returns structured status for every requested user', async () => {
+    declRows = [
+      decl(10, { code: 'AFIP', name: 'AFIP', institution_code: 'FIP' }),
+      decl(10, { code: 'PPSA', name: 'PPSA', institution_code: 'PSA', badge_eligible: 0 }),
+      decl(11, { code: 'CROWN3', name: 'GPU Crown 3', institution_code: 'GPU' }),
+    ];
+    membershipRows = [{ user_id: 10, owner_type: 'INDIVIDUAL', lifecycle_state: 'ACTIVE' }];
+    const statuses = await getBadgeStatuses([10, 11, 12]);
+    expect(statuses.get(10)).toEqual({
+      qualified: true,
+      hasActiveMembership: true,
+      qualifyingDistinctions: [{ institutionCode: 'FIP', code: 'AFIP', name: 'AFIP' }],
+    });
+    expect(statuses.get(11)).toEqual({ qualified: false, hasActiveMembership: false, qualifyingDistinctions: [] });
+    expect(statuses.get(12)).toEqual({ qualified: false, hasActiveMembership: false, qualifyingDistinctions: [] });
   });
 
   it('empty / invalid input does not query', async () => {

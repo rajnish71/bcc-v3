@@ -14,7 +14,7 @@ jest.mock('../../../database/db', () => {
   return { db: new FakeDb() };
 });
 
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { db } from '../../../database/db';
 import type { FakeDb, FakeOp } from '../../../test-support/fake-db';
 import { PhotographicDistinctionsService } from './photographic-distinctions.service';
@@ -83,9 +83,9 @@ describe('PhotographicDistinctionsService', () => {
       expect(audits()[0]).toMatchObject({ action_type: 'PHOTOGRAPHIC_DISTINCTION_REDECLARED', target_user_id: HOLDER });
     });
 
-    it('holder cannot re-declare a REMOVED distinction; nothing is written', async () => {
+    it('holder cannot re-declare a REMOVED distinction (403); nothing is written', async () => {
       script({ distinction: activeDistinction, existing: { id: 9, state: 'REMOVED', pre_removal_state: 'DECLARED' } });
-      await expect(svc.declare(HOLDER, DIST)).rejects.toBeInstanceOf(ConflictException);
+      await expect(svc.declare(HOLDER, DIST)).rejects.toBeInstanceOf(ForbiddenException);
       expect(fake.committed).toHaveLength(0);
     });
 
@@ -182,7 +182,7 @@ describe('PhotographicDistinctionsService', () => {
 
     it('createDistinction under an unknown institution -> 404', async () => {
       script({});
-      await expect(svc.createDistinction(ADMIN, { institutionId: 99, code: 'X', name: 'X', badgeEligible: false })).rejects.toBeInstanceOf(NotFoundException);
+      await expect(svc.createDistinction(ADMIN, { institutionId: 99, code: 'XX', name: 'X', badgeEligible: false })).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('duplicate (institution, code) -> conflict (uq_photo_dist_institution_code)', async () => {

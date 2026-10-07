@@ -1,0 +1,420 @@
+---
+/**
+ * hub/admin/users/distinctions/index.astro — Photographic Distinctions
+ * Route: /hub/admin/users/distinctions/  (identity-domain administration,
+ * inside Users & Members; HubLayout shell per HUB-ARCH-001 FD-014).
+ *
+ * Declarations: register of members' self-declared, UNVERIFIED distinctions.
+ *   identity.distinction.view    -> see the register and catalogue
+ *   identity.distinction.remove  -> Remove / Restore (reason required, audited)
+ * Catalogue:
+ *   identity.distinction.catalogue.manage -> create / edit / (de)activate /
+ *   badge eligibility; delete only when unreferenced (prefer deactivate).
+ *
+ * Controls render only when /users/me reports the permission; RbacGuard on
+ * /api/v1/identity/distinctions/admin/* is the authorization boundary.
+ * The BCC Distinguished Photographer Badge column is derived at read time;
+ * there is no badge award action anywhere on this page.
+ */
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import '../../../../../styles/distinctions-admin.css';
+---
+
+<HubLayout title="Photographic Distinctions" description="Members' self-declared photographic distinctions and the distinction catalogue.">
+  <div class="pd-admin">
+    <section class="admin-section">
+      <div class="section-kicker"><span class="kicker-rule"></span>Users &amp; Members</div>
+      <h2 class="section-title">Photographic Distinctions</h2>
+      <p class="section-hint">
+        Photographic distinctions are self-declared by members and are not verified by the club.
+        Where there is a credible complaint or reasonable doubt, an administrator may ask the member
+        for clarification and remove the declaration. Remove and Restore require a reason and are
+        recorded in the identity audit log. Restore returns the declaration to its state before removal.
+      </p>
+      <div id="pd-access" class="state-error" hidden></div>
+    </section>
+
+    <section class="admin-section" id="pd-register" hidden>
+      <div class="section-kicker"><span class="kicker-rule"></span>Register</div>
+      <h2 class="section-title">Declarations</h2>
+      <form class="filter-bar" id="pd-filters">
+        <label>State
+          <select name="state">
+            <option value="">All states</option>
+            <option value="DECLARED">Declared</option>
+            <option value="WITHDRAWN">Withdrawn</option>
+            <option value="REMOVED">Removed</option>
+          </select>
+        </label>
+        <label>Member
+          <input type="search" name="q" maxlength="64" placeholder="Name or username" />
+        </label>
+        <button type="submit" class="btn-action">Apply</button>
+      </form>
+      <div id="pd-flash" class="state-ok" hidden></div>
+      <div id="pd-reg-loading" class="state-loading">Loading declarations…</div>
+      <div id="pd-reg-error" class="state-error" hidden></div>
+      <div id="pd-reg-table"></div>
+    </section>
+
+    <section class="admin-section" id="pd-catalogue" hidden>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker"><span class="kicker-rule"></span>Catalogue</div>
+          <h2 class="section-title">Institutions &amp; distinctions</h2>
+        </div>
+        <button type="button" class="btn-action" id="pd-new-institution" hidden>Add institution</button>
+      </div>
+      <p class="section-hint">Members can declare only active distinctions of active institutions. Deactivate rather than delete: an entry that members have declared cannot be deleted.</p>
+      <div id="pd-cat-loading" class="state-loading">Loading catalogue…</div>
+      <div id="pd-cat-error" class="state-error" hidden></div>
+      <div id="pd-cat-body"></div>
+    </section>
+  </div>
+
+  <!-- Remove / Restore reason -->
+  <dialog class="pd-dialog" id="pd-reason-dialog" aria-labelledby="pd-reason-title">
+    <form method="dialog" id="pd-reason-form">
+      <h3 id="pd-reason-title"></h3>
+      <p id="pd-reason-desc"></p>
+      <label>Reason (required, recorded in the audit log)
+        <textarea name="reason" maxlength="500" required></textarea>
+      </label>
+      <div class="pd-dialog__error" id="pd-reason-error"></div>
+      <div class="pd-dialog__actions">
+        <button type="button" class="btn-action" data-close>Cancel</button>
+        <button type="submit" class="btn-action" id="pd-reason-submit">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Catalogue create / edit -->
+  <dialog class="pd-dialog" id="pd-cat-dialog" aria-labelledby="pd-cat-title">
+    <form method="dialog" id="pd-cat-form">
+      <h3 id="pd-cat-title"></h3>
+      <label id="pd-cat-institution-wrap">Institution
+        <select name="institutionId"></select>
+      </label>
+      <label>Code
+        <input type="text" name="code" maxlength="50" autocomplete="off" required />
+      </label>
+      <label>Name
+        <input type="text" name="name" maxlength="255" autocomplete="off" required />
+      </label>
+      <label>Sort order
+        <input type="number" name="sortOrder" min="0" max="65535" step="1" />
+      </label>
+      <label class="inline"><input type="checkbox" name="isActive" /> Active</label>
+      <label class="inline" id="pd-cat-badge-wrap"><input type="checkbox" name="badgeEligible" /> Counts toward the BCC Distinguished Photographer Badge</label>
+      <div class="pd-dialog__error" id="pd-cat-error-msg"></div>
+      <div class="pd-dialog__actions">
+        <button type="button" class="btn-action" data-close>Cancel</button>
+        <button type="submit" class="btn-action">Save</button>
+      </div>
+    </form>
+  </dialog>
+</HubLayout>
+
+<script>
+  import {
+    request, loadUiFlags, esc, dateTime, statePill, DistinctionsAccessError, type DistinctionUiFlags,
+  } from '../../../../../lib/distinctions-admin';
+
+  interface Declaration {
+    userId: number; fullName: string; username: string | null; badgeQualified: boolean;
+    distinctionId: number; institutionCode: string; code: string; name: string;
+    state: 'DECLARED' | 'WITHDRAWN' | 'REMOVED'; preRemovalState: string | null;
+    declaredAt: string; stateChangedAt: string;
+  }
+  interface CatDistinction { id: number; code: string; name: string; badgeEligible: boolean; isActive: boolean; sortOrder: number }
+  interface CatInstitution { id: number; code: string; name: string; isActive: boolean; sortOrder: number; distinctions: CatDistinction[] }
+
+  let flags: DistinctionUiFlags = { view: false, remove: false, catalogueManage: false };
+  let catalogue: CatInstitution[] = [];
+  const params = new URLSearchParams(window.location.search);
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  function flash(msg: string) {
+    const el = $('pd-flash');
+    el.textContent = msg;
+    el.hidden = !msg;
+  }
+
+  function showError(el: HTMLElement, err: unknown) {
+    el.textContent = err instanceof Error ? err.message : 'Request failed.';
+    el.hidden = false;
+  }
+
+  // ── Declarations register ────────────────────────────────────────────────
+
+  async function loadRegister() {
+    const loading = $('pd-reg-loading');
+    const table = $('pd-reg-table');
+    loading.hidden = false;
+    $('pd-reg-error').hidden = true;
+    try {
+      const qs = new URLSearchParams();
+      for (const key of ['state', 'q']) if (params.get(key)) qs.set(key, params.get(key)!);
+      const query = qs.toString();
+      const rows = await request<Declaration[]>(`/declarations${query ? `?${query}` : ''}`);
+      table.innerHTML = rows.length
+        ? `<div class="data-table-wrap"><table class="data-table">
+            <thead><tr><th>Member</th><th>Distinction</th><th>State</th><th>Badge (derived)</th><th>Declared</th><th>Last change</th>${flags.remove ? '<th></th>' : ''}</tr></thead>
+            <tbody>${rows.map((r) => `<tr>
+              <td>${r.username ? `<a class="ref-link" href="/photographers/${encodeURIComponent(r.username)}/">${esc(r.fullName)}</a>` : esc(r.fullName)}
+                ${r.username ? `<div class="cell-sub mono">@${esc(r.username)}</div>` : ''}</td>
+              <td><span class="mono">${esc(r.institutionCode)} · ${esc(r.code)}</span>${r.name !== r.code ? `<div class="cell-sub">${esc(r.name)}</div>` : ''}</td>
+              <td>${statePill(r.state)}${r.state === 'REMOVED' && r.preRemovalState ? `<div class="cell-sub">was ${esc(r.preRemovalState.toLowerCase())}</div>` : ''}</td>
+              <td>${r.badgeQualified ? 'Qualifies' : '<span class="muted">—</span>'}</td>
+              <td class="mono">${esc(dateTime(r.declaredAt))}</td>
+              <td class="mono">${esc(dateTime(r.stateChangedAt))}</td>
+              ${flags.remove ? `<td class="actions">${r.state === 'REMOVED'
+                ? `<button type="button" class="btn-action btn-action--sm" data-restore="${r.userId}:${r.distinctionId}" data-label="${esc(r.fullName)} — ${esc(r.institutionCode)} · ${esc(r.code)}">Restore</button>`
+                : `<button type="button" class="btn-action btn-action--sm btn-action--danger" data-remove="${r.userId}:${r.distinctionId}" data-label="${esc(r.fullName)} — ${esc(r.institutionCode)} · ${esc(r.code)}">Remove</button>`}</td>` : ''}
+            </tr>`).join('')}</tbody></table></div>`
+        : '<div class="state-empty">No declarations match.</div>';
+    } catch (err) {
+      table.innerHTML = '';
+      showError($('pd-reg-error'), err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+
+  // Remove / Restore with a mandatory reason
+  let pendingReason: { verb: 'remove' | 'restore'; userId: string; distinctionId: string } | null = null;
+
+  function openReason(verb: 'remove' | 'restore', key: string, label: string) {
+    const [userId, distinctionId] = key.split(':');
+    pendingReason = { verb, userId, distinctionId };
+    $('pd-reason-title').textContent = verb === 'remove' ? 'Remove declaration' : 'Restore declaration';
+    $('pd-reason-desc').textContent = verb === 'remove'
+      ? `${label}. The member will no longer be able to re-declare this distinction unless it is restored.`
+      : `${label}. The declaration returns to the state it had before removal.`;
+    $('pd-reason-error').textContent = '';
+    ($('pd-reason-form') as HTMLFormElement).reset();
+    ($('pd-reason-dialog') as HTMLDialogElement).showModal();
+  }
+
+  $('pd-reg-table').addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-remove], button[data-restore]');
+    if (!btn) return;
+    if (btn.dataset.remove) openReason('remove', btn.dataset.remove, btn.dataset.label ?? '');
+    else if (btn.dataset.restore) openReason('restore', btn.dataset.restore, btn.dataset.label ?? '');
+  });
+
+  $('pd-reason-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!pendingReason) return;
+    const reason = String(new FormData(e.target as HTMLFormElement).get('reason') ?? '').trim();
+    if (!reason) { $('pd-reason-error').textContent = 'A reason is required.'; return; }
+    const submit = $('pd-reason-submit') as HTMLButtonElement;
+    submit.disabled = true;
+    try {
+      const { verb, userId, distinctionId } = pendingReason;
+      await request(`/declarations/${userId}/${distinctionId}/${verb}`, 'POST', { reason });
+      ($('pd-reason-dialog') as HTMLDialogElement).close();
+      flash(verb === 'remove' ? 'Declaration removed.' : 'Declaration restored.');
+      await loadRegister();
+    } catch (err) {
+      $('pd-reason-error').textContent = err instanceof Error ? err.message : 'Request failed.';
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  // ── Catalogue ────────────────────────────────────────────────────────────
+
+  function activeLabel(active: boolean) {
+    return active ? 'Active' : '<span class="muted">Inactive</span>';
+  }
+
+  async function loadCatalogue() {
+    const loading = $('pd-cat-loading');
+    const body = $('pd-cat-body');
+    loading.hidden = false;
+    $('pd-cat-error').hidden = true;
+    try {
+      catalogue = await request<CatInstitution[]>('/catalogue');
+      const m = flags.catalogueManage;
+      body.innerHTML = catalogue.map((inst) => `
+        <div class="catalogue-institution">
+          <div class="catalogue-institution__head">
+            <div><span class="catalogue-institution__name">${esc(inst.name)}</span><span class="catalogue-institution__code">${esc(inst.code)}</span>
+              ${inst.isActive ? '' : ' <span class="tag-pill">INACTIVE</span>'}</div>
+            ${m ? `<div>
+              <button type="button" class="btn-action btn-action--sm" data-edit-inst="${inst.id}">Edit</button>
+              <button type="button" class="btn-action btn-action--sm" data-toggle-inst="${inst.id}">${inst.isActive ? 'Deactivate' : 'Activate'}</button>
+              <button type="button" class="btn-action btn-action--sm" data-new-dist="${inst.id}">Add distinction</button>
+              <button type="button" class="btn-action btn-action--sm btn-action--danger" data-delete-inst="${inst.id}">Delete</button>
+            </div>` : ''}
+          </div>
+          ${inst.distinctions.length ? `<div class="data-table-wrap"><table class="data-table">
+            <thead><tr><th>Code</th><th>Name</th><th>Badge eligible</th><th>Status</th><th>Sort</th>${m ? '<th></th>' : ''}</tr></thead>
+            <tbody>${inst.distinctions.map((d) => `<tr class="${d.isActive ? '' : 'row-inactive'}">
+              <td class="mono">${esc(d.code)}</td>
+              <td>${esc(d.name)}</td>
+              <td>${d.badgeEligible ? 'Yes' : '<span class="muted">No</span>'}</td>
+              <td>${activeLabel(d.isActive)}</td>
+              <td class="mono">${d.sortOrder}</td>
+              ${m ? `<td class="actions">
+                <button type="button" class="btn-action btn-action--sm" data-edit-dist="${d.id}">Edit</button>
+                <button type="button" class="btn-action btn-action--sm" data-toggle-dist="${d.id}">${d.isActive ? 'Deactivate' : 'Activate'}</button>
+                <button type="button" class="btn-action btn-action--sm btn-action--danger" data-delete-dist="${d.id}">Delete</button>
+              </td>` : ''}
+            </tr>`).join('')}</tbody></table></div>` : '<div class="state-empty" style="padding:12px 16px">No distinctions in this institution.</div>'}
+        </div>`).join('') || '<div class="state-empty">The catalogue is empty.</div>';
+    } catch (err) {
+      body.innerHTML = '';
+      showError($('pd-cat-error'), err);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+
+  const findInst = (id: number) => catalogue.find((i) => i.id === id);
+  const findDist = (id: number) => {
+    for (const i of catalogue) {
+      const d = i.distinctions.find((x) => x.id === id);
+      if (d) return { inst: i, dist: d };
+    }
+    return null;
+  };
+
+  // One dialog for institution/distinction create and edit.
+  let catTarget: { kind: 'institution' | 'distinction'; id: number | null } = { kind: 'institution', id: null };
+
+  function openCatalogueDialog(kind: 'institution' | 'distinction', id: number | null, institutionId?: number) {
+    catTarget = { kind, id };
+    const form = $('pd-cat-form') as HTMLFormElement;
+    form.reset();
+    $('pd-cat-error-msg').textContent = '';
+    const isDist = kind === 'distinction';
+    $('pd-cat-institution-wrap').hidden = !(isDist && id === null);
+    $('pd-cat-badge-wrap').hidden = !isDist;
+    const codeInput = form.elements.namedItem('code') as HTMLInputElement;
+    codeInput.pattern = isDist ? '[A-Z0-9]{2,50}' : '[A-Z]{2,20}';
+    codeInput.title = isDist ? '2-50 uppercase letters or digits' : '2-20 uppercase letters';
+    const select = form.elements.namedItem('institutionId') as HTMLSelectElement;
+    select.innerHTML = catalogue.map((i) => `<option value="${i.id}">${esc(i.code)} — ${esc(i.name)}</option>`).join('');
+    if (institutionId) select.value = String(institutionId);
+
+    const set = (name: string, v: string | boolean) => {
+      const el = form.elements.namedItem(name) as HTMLInputElement;
+      if (el.type === 'checkbox') el.checked = Boolean(v); else el.value = String(v);
+    };
+    if (kind === 'institution') {
+      const inst = id ? findInst(id) : null;
+      $('pd-cat-title').textContent = inst ? `Edit institution ${inst.code}` : 'Add institution';
+      set('code', inst?.code ?? ''); set('name', inst?.name ?? ''); set('sortOrder', String(inst?.sortOrder ?? 0)); set('isActive', inst?.isActive ?? true);
+    } else {
+      const found = id ? findDist(id) : null;
+      $('pd-cat-title').textContent = found ? `Edit ${found.inst.code} · ${found.dist.code}` : 'Add distinction';
+      set('code', found?.dist.code ?? ''); set('name', found?.dist.name ?? ''); set('sortOrder', String(found?.dist.sortOrder ?? 0));
+      set('isActive', found?.dist.isActive ?? true); set('badgeEligible', found?.dist.badgeEligible ?? false);
+    }
+    ($('pd-cat-dialog') as HTMLDialogElement).showModal();
+  }
+
+  $('pd-cat-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const fd = new FormData(form);
+    const body: Record<string, unknown> = {
+      code: String(fd.get('code') ?? '').trim(),
+      name: String(fd.get('name') ?? '').trim(),
+      sortOrder: Number(fd.get('sortOrder') || 0),
+      isActive: (form.elements.namedItem('isActive') as HTMLInputElement).checked,
+    };
+    if (catTarget.kind === 'distinction') {
+      body.badgeEligible = (form.elements.namedItem('badgeEligible') as HTMLInputElement).checked;
+      if (catTarget.id === null) body.institutionId = Number(fd.get('institutionId'));
+    }
+    const base = catTarget.kind === 'institution' ? '/catalogue/institutions' : '/catalogue/distinctions';
+    try {
+      if (catTarget.id === null) await request(base, 'POST', body);
+      else await request(`${base}/${catTarget.id}`, 'PATCH', body);
+      ($('pd-cat-dialog') as HTMLDialogElement).close();
+      await loadCatalogue();
+    } catch (err) {
+      $('pd-cat-error-msg').textContent = err instanceof Error ? err.message : 'Request failed.';
+    }
+  });
+
+  async function catalogueAction(run: () => Promise<unknown>) {
+    $('pd-cat-error').hidden = true;
+    try {
+      await run();
+      await loadCatalogue();
+    } catch (err) {
+      showError($('pd-cat-error'), err);
+    }
+  }
+
+  $('pd-cat-body').addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+    if (!btn) return;
+    const d = btn.dataset;
+    if (d.editInst) openCatalogueDialog('institution', Number(d.editInst));
+    else if (d.newDist) openCatalogueDialog('distinction', null, Number(d.newDist));
+    else if (d.editDist) openCatalogueDialog('distinction', Number(d.editDist));
+    else if (d.toggleInst) {
+      const inst = findInst(Number(d.toggleInst));
+      if (inst) catalogueAction(() => request(`/catalogue/institutions/${inst.id}`, 'PATCH', { isActive: !inst.isActive }));
+    } else if (d.toggleDist) {
+      const found = findDist(Number(d.toggleDist));
+      if (found) catalogueAction(() => request(`/catalogue/distinctions/${found.dist.id}`, 'PATCH', { isActive: !found.dist.isActive }));
+    } else if (d.deleteInst) {
+      const inst = findInst(Number(d.deleteInst));
+      if (inst && window.confirm(`Delete institution ${inst.code}? This is only possible when it has no distinctions.`)) {
+        catalogueAction(() => request(`/catalogue/institutions/${inst.id}`, 'DELETE'));
+      }
+    } else if (d.deleteDist) {
+      const found = findDist(Number(d.deleteDist));
+      if (found && window.confirm(`Delete ${found.inst.code} · ${found.dist.code}? This is only possible when no member has ever declared it.`)) {
+        catalogueAction(() => request(`/catalogue/distinctions/${found.dist.id}`, 'DELETE'));
+      }
+    }
+  });
+
+  $('pd-new-institution').addEventListener('click', () => openCatalogueDialog('institution', null));
+
+  document.querySelectorAll<HTMLButtonElement>('.pd-dialog [data-close]').forEach((b) =>
+    b.addEventListener('click', () => (b.closest('dialog') as HTMLDialogElement).close()));
+
+  // ── Filters ──────────────────────────────────────────────────────────────
+
+  const filters = $('pd-filters') as HTMLFormElement;
+  for (const key of ['state', 'q']) {
+    const el = filters.elements.namedItem(key) as HTMLInputElement | HTMLSelectElement;
+    if (params.get(key)) el.value = params.get(key)!;
+  }
+  filters.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fd = new FormData(filters);
+    const next = new URLSearchParams();
+    for (const key of ['state', 'q']) {
+      const v = String(fd.get(key) ?? '').trim();
+      if (v) next.set(key, v);
+    }
+    window.location.search = next.toString();
+  });
+
+  // ── Boot ─────────────────────────────────────────────────────────────────
+
+  (async () => {
+    flags = await loadUiFlags();
+    if (!flags.view) {
+      const el = $('pd-access');
+      el.textContent = 'You do not have access to photographic distinction administration.';
+      el.hidden = false;
+      return;
+    }
+    $('pd-register').hidden = false;
+    $('pd-catalogue').hidden = false;
+    $('pd-new-institution').hidden = !flags.catalogueManage;
+    await Promise.all([loadRegister(), loadCatalogue()]).catch((err) => {
+      if (err instanceof DistinctionsAccessError) showError($('pd-access'), err);
+    });
+  })();
+</script>

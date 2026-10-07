@@ -1,24 +1,30 @@
 // backend/src/modules/identity/distinctions/photographic-distinctions.service.ts
 //
-// Photographic Distinctions -- identity-domain writes (Implementation
-// Phase 1 foundation). Every state change commits atomically with its
-// identity_audit_log row:
+// Photographic Distinctions -- identity-domain reads and writes. Every
+// state change commits atomically with its identity_audit_log row (a failed
+// transaction leaves neither):
 //   holder declare / re-declare / withdraw  -> actor = holder,  target = holder
 //   admin remove / restore (reason required) -> actor = admin,   target = holder
-//   catalogue create / change                -> actor = manager, target = NULL
+//   catalogue create / change / delete       -> actor = manager, target = NULL
 //
 // Permission enforcement (identity.distinction.view / .remove /
-// .catalogue.manage) belongs to the controllers via RbacGuard; this
-// service never derives authority from membership or recognition.
-// No controller is exposed in Phase 1.
+// .catalogue.manage) belongs to PhotographicDistinctionsController via
+// RbacGuard; this service never derives authority from membership or
+// recognition. Holder methods take the userId from the access token only.
 
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Kysely } from 'kysely';
 import { db, type DB } from '../../../database/db';
 import { logIdentityAudit } from '../shared/identity-audit.util';
 import { toMysqlDatetime } from '../shared/token-hash.util';
-import { flag } from './photographic-distinction-badge';
-import { catalogueCreatedEvent, catalogueUpdateEvents } from './photographic-distinction-catalogue-audit';
+import { flag, getBadgeStatuses } from './photographic-distinction-badge';
+import { catalogueCreatedEvent, catalogueDeletedEvent, catalogueUpdateEvents } from './photographic-distinction-catalogue-audit';
 import {
   transitionDeclaration,
   type DeclarationSnapshot,
@@ -26,6 +32,25 @@ import {
 } from './photographic-distinction-state';
 
 const REASON_MAX = 500;
+
+// Structured catalogue identifiers (mirrors the request DTOs; enforced here
+// too so no caller can bypass them). There is never a generic OTHER
+// institution.
+const INSTITUTION_CODE = /^[A-Z]{2,20}$/;
+const DISTINCTION_CODE = /^[A-Z0-9]{2,50}$/;
+
+function institutionCode(raw: string): string {
+  const code = raw.trim().toUpperCase();
+  if (!INSTITUTION_CODE.test(code)) throw new BadRequestException('Institution code must be 2-20 uppercase letters.');
+  if (code === 'OTHER') throw new BadRequestException('There is no generic OTHER institution.');
+  return code;
+}
+
+function distinctionCode(raw: string): string {
+  const code = raw.trim();
+  if (!DISTINCTION_CODE.test(code)) throw new BadRequestException('Distinction code must be 2-50 uppercase letters or digits.');
+  return code;
+}
 
 function isDuplicateKey(err: unknown): boolean {
   const e = err as { code?: string; errno?: number } | null;
@@ -109,6 +134,8 @@ export class PhotographicDistinctionsService {
         const t = transitionDeclaration(current, p.action);
         if (!t.ok) {
           if (t.code === 'NOT_FOUND') throw new NotFoundException(t.message);
+          // An administrator's removal binds the holder: refused, not a conflict.
+          if (t.code === 'REMOVED_BY_ADMINISTRATOR') throw new ForbiddenException(t.message);
           throw new ConflictException(t.message);
         }
 
@@ -188,13 +215,13 @@ export class PhotographicDistinctionsService {
 
   async createInstitution(actorId: number, input: InstitutionInput) {
     const values = {
-      code: input.code.trim().toUpperCase(),
+      code: institutionCode(input.code),
       name: input.name.trim(),
       is_active: input.isActive ?? true,
       sort_order: input.sortOrder ?? 0,
       updated_by_user_id: actorId,
     };
-    if (!values.code || !values.name) throw new BadRequestException('Institution code and name are required.');
+    if (!values.name) throw new BadRequestException('Institution name is required.');
     return this.catalogueWrite('Institution code already exists.', async (trx) => {
       const r = await trx.insertInto('photographic_institutions').values(values).executeTakeFirstOrThrow();
       const id = Number(r.insertId);
@@ -206,8 +233,9 @@ export class PhotographicDistinctionsService {
 
   async updateInstitution(actorId: number, id: number, patch: Partial<InstitutionInput>) {
     const set: Record<string, unknown> = {};
-    if (patch.code !== undefined) set.code = patch.code.trim().toUpperCase();
+    if (patch.code !== undefined) set.code = institutionCode(patch.code);
     if (patch.name !== undefined) set.name = patch.name.trim();
+    if (set.name === '') throw new BadRequestException('Institution name is required.');
     if (patch.isActive !== undefined) set.is_active = patch.isActive;
     if (patch.sortOrder !== undefined) set.sort_order = patch.sortOrder;
     return this.catalogueWrite('Institution code already exists.', async (trx) => {
@@ -233,14 +261,14 @@ export class PhotographicDistinctionsService {
   async createDistinction(actorId: number, input: DistinctionInput) {
     const values = {
       institution_id: input.institutionId,
-      code: input.code.trim(),
+      code: distinctionCode(input.code),
       name: input.name.trim(),
       badge_eligible: input.badgeEligible,
       is_active: input.isActive ?? true,
       sort_order: input.sortOrder ?? 0,
       updated_by_user_id: actorId,
     };
-    if (!values.code || !values.name) throw new BadRequestException('Distinction code and name are required.');
+    if (!values.name) throw new BadRequestException('Distinction name is required.');
     return this.catalogueWrite('This institution already has a distinction with that code.', async (trx) => {
       const inst = await trx
         .selectFrom('photographic_institutions')
@@ -258,8 +286,9 @@ export class PhotographicDistinctionsService {
 
   async updateDistinction(actorId: number, id: number, patch: Partial<Omit<DistinctionInput, 'institutionId'>>) {
     const set: Record<string, unknown> = {};
-    if (patch.code !== undefined) set.code = patch.code.trim();
+    if (patch.code !== undefined) set.code = distinctionCode(patch.code);
     if (patch.name !== undefined) set.name = patch.name.trim();
+    if (set.name === '') throw new BadRequestException('Distinction name is required.');
     if (patch.badgeEligible !== undefined) set.badge_eligible = patch.badgeEligible;
     if (patch.isActive !== undefined) set.is_active = patch.isActive;
     if (patch.sortOrder !== undefined) set.sort_order = patch.sortOrder;
@@ -281,6 +310,186 @@ export class PhotographicDistinctionsService {
       for (const e of events) await logIdentityAudit(e, trx);
       return { id, changed: true };
     });
+  }
+
+  async deleteInstitution(actorId: number, id: number) {
+    return this.catalogueWrite('Institution is referenced and cannot be deleted.', async (trx) => {
+      const before = await trx
+        .selectFrom('photographic_institutions')
+        .select(['id', 'code', 'name', 'is_active', 'sort_order'])
+        .where('id', '=', id)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!before) throw new NotFoundException('Photographic institution not found.');
+      const ref = await trx
+        .selectFrom('photographic_distinctions')
+        .select(['id'])
+        .where('institution_id', '=', id)
+        .limit(1)
+        .executeTakeFirst();
+      if (ref) throw new ConflictException('This institution has catalogue distinctions. Deactivate it instead.');
+      await trx.deleteFrom('photographic_institutions').where('id', '=', id).execute();
+      await logIdentityAudit(catalogueDeletedEvent('INSTITUTION', actorId, before), trx);
+      return { id, deleted: true };
+    });
+  }
+
+  async deleteDistinction(actorId: number, id: number) {
+    return this.catalogueWrite('Distinction is referenced and cannot be deleted.', async (trx) => {
+      const before = await trx
+        .selectFrom('photographic_distinctions')
+        .select(['id', 'institution_id', 'code', 'name', 'badge_eligible', 'is_active', 'sort_order'])
+        .where('id', '=', id)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!before) throw new NotFoundException('Photographic distinction not found.');
+      // Any holder row -- in ANY state, including WITHDRAWN/REMOVED history --
+      // blocks deletion (fk_user_photo_dist_distinction is RESTRICT as well).
+      const ref = await trx
+        .selectFrom('user_photographic_distinctions')
+        .select(['id'])
+        .where('distinction_id', '=', id)
+        .limit(1)
+        .executeTakeFirst();
+      if (ref) throw new ConflictException('Members have declared this distinction. Deactivate it instead.');
+      await trx.deleteFrom('photographic_distinctions').where('id', '=', id).execute();
+      await logIdentityAudit(catalogueDeletedEvent('DISTINCTION', actorId, before), trx);
+      return { id, deleted: true };
+    });
+  }
+
+  // ── Reads ────────────────────────────────────────────────────────────────
+
+  /** Full catalogue (admin) or the declarable subset (active entries of active institutions). */
+  async getCatalogue(opts: { includeInactive: boolean }) {
+    let iq = db
+      .selectFrom('photographic_institutions')
+      .select(['id', 'code', 'name', 'is_active', 'sort_order'])
+      .orderBy('sort_order', 'asc')
+      .orderBy('code', 'asc');
+    let dq = db
+      .selectFrom('photographic_distinctions')
+      .select(['id', 'institution_id', 'code', 'name', 'badge_eligible', 'is_active', 'sort_order'])
+      .orderBy('sort_order', 'asc')
+      .orderBy('code', 'asc');
+    if (!opts.includeInactive) {
+      iq = iq.where('is_active', '=', true);
+      dq = dq.where('is_active', '=', true);
+    }
+    const [institutions, distinctions] = await Promise.all([iq.execute(), dq.execute()]);
+    return institutions.map((i) => ({
+      id: Number(i.id),
+      code: i.code,
+      name: i.name,
+      isActive: flag(i.is_active),
+      sortOrder: Number(i.sort_order),
+      distinctions: distinctions
+        .filter((d) => Number(d.institution_id) === Number(i.id))
+        .map((d) => ({
+          id: Number(d.id),
+          code: d.code,
+          name: d.name,
+          badgeEligible: flag(d.badge_eligible),
+          isActive: flag(d.is_active),
+          sortOrder: Number(d.sort_order),
+        })),
+    }));
+  }
+
+  /**
+   * The holder's own view: every relationship they have (any state) plus the
+   * declarable catalogue. REMOVED rows are shown as locked, never actionable.
+   */
+  async getHolderView(userId: number) {
+    const [catalogue, declarations] = await Promise.all([
+      this.getCatalogue({ includeInactive: false }),
+      this.holderRows(userId),
+    ]);
+    return { catalogue, declarations };
+  }
+
+  /** Admin register of declarations (identity.distinction.view). */
+  async listDeclarations(filters: { state?: 'DECLARED' | 'WITHDRAWN' | 'REMOVED'; userId?: number; q?: string }) {
+    let q = db
+      .selectFrom('user_photographic_distinctions as upd')
+      .innerJoin('photographic_distinctions as d', 'd.id', 'upd.distinction_id')
+      .innerJoin('photographic_institutions as i', 'i.id', 'd.institution_id')
+      .innerJoin('users as u', 'u.id', 'upd.user_id')
+      .select([
+        'upd.user_id as user_id',
+        'u.full_name as full_name',
+        'u.username as username',
+        'upd.distinction_id as distinction_id',
+        'd.code as code',
+        'd.name as name',
+        'i.code as institution_code',
+        'upd.state as state',
+        'upd.pre_removal_state as pre_removal_state',
+        'upd.declared_at as declared_at',
+        'upd.state_changed_at as state_changed_at',
+      ])
+      .orderBy('upd.state_changed_at', 'desc')
+      .limit(500);
+    if (filters.state) q = q.where('upd.state', '=', filters.state);
+    if (filters.userId) q = q.where('upd.user_id', '=', filters.userId);
+    if (filters.q) {
+      const term = `%${filters.q}%`;
+      q = q.where((eb) => eb.or([eb('u.full_name', 'like', term), eb('u.username', 'like', term)]));
+    }
+    const rows = await q.execute();
+    const badges = await getBadgeStatuses(rows.map((r) => Number(r.user_id)));
+    return rows.map((r) => ({
+      userId: Number(r.user_id),
+      // Derived at read time (never stored): whether this member currently
+      // holds the BCC Distinguished Photographer Badge.
+      badgeQualified: badges.get(Number(r.user_id))?.qualified ?? false,
+      fullName: r.full_name,
+      username: r.username ?? null,
+      distinctionId: Number(r.distinction_id),
+      institutionCode: r.institution_code,
+      code: r.code,
+      name: r.name,
+      state: r.state,
+      preRemovalState: r.pre_removal_state,
+      declaredAt: r.declared_at,
+      stateChangedAt: r.state_changed_at,
+    }));
+  }
+
+  private async holderRows(userId: number) {
+    const rows = await db
+      .selectFrom('user_photographic_distinctions as upd')
+      .innerJoin('photographic_distinctions as d', 'd.id', 'upd.distinction_id')
+      .innerJoin('photographic_institutions as i', 'i.id', 'd.institution_id')
+      .select([
+        'upd.distinction_id as distinction_id',
+        'd.code as code',
+        'd.name as name',
+        'd.is_active as distinction_is_active',
+        'i.code as institution_code',
+        'i.name as institution_name',
+        'i.is_active as institution_is_active',
+        'upd.state as state',
+        'upd.declared_at as declared_at',
+        'upd.state_changed_at as state_changed_at',
+      ])
+      .where('upd.user_id', '=', userId)
+      .orderBy('i.sort_order', 'asc')
+      .orderBy('d.sort_order', 'asc')
+      .execute();
+    return rows.map((r) => ({
+      distinctionId: Number(r.distinction_id),
+      institutionCode: r.institution_code,
+      institutionName: r.institution_name,
+      code: r.code,
+      name: r.name,
+      state: r.state,
+      // false once the catalogue entry or its institution is deactivated:
+      // the row is history, not currently declarable.
+      catalogueActive: flag(r.distinction_is_active) && flag(r.institution_is_active),
+      declaredAt: r.declared_at,
+      stateChangedAt: r.state_changed_at,
+    }));
   }
 
   private async catalogueWrite<T>(duplicateMessage: string, fn: (trx: Kysely<DB>) => Promise<T>): Promise<T> {

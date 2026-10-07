@@ -21,6 +21,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     <section class="admin-section" id="section-header">
       <div class="section-kicker"><span class="kicker-rule"></span>Operations</div>
       <h2 class="section-title">Users & Members</h2>
+      <a class="section-link" href="/hub/admin/users/distinctions/">Photographic Distinctions</a>
     </section>
 
     <!-- SEARCH & FILTERS ────────────────────────────────────────────────── -->
@@ -342,6 +343,15 @@ import HubLayout from '../../../layouts/HubLayout.astro';
     height: 1px;
     background: var(--gold-600);
   }
+  .section-link {
+    align-self: flex-start;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--ink-600);
+    text-decoration: underline;
+    text-decoration-color: var(--hairline);
+  }
+  .section-link:hover { color: var(--gold-600); }
   .section-title {
     font-family: var(--font-display);
     font-size: 26px;

@@ -1,13 +1,17 @@
 // backend/src/modules/identity/distinctions/photographic-distinctions.module.ts
 //
-// Photographic Distinctions -- identity domain (Implementation Phase 1).
-// Service + read-time badge derivation only; no controller is exposed until
-// Phase 2 (holder editor, identity-domain admin surfaces, public rendering).
+// Photographic Distinctions -- identity domain. Holder editor, admin
+// Remove/Restore, catalogue management and read-time badge derivation.
 
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { RbacModule } from '../rbac/rbac.module';
+import { PhotographicDistinctionsController } from './photographic-distinctions.controller';
 import { PhotographicDistinctionsService } from './photographic-distinctions.service';
 
 @Module({
+  imports: [AuthModule, RbacModule],
+  controllers: [PhotographicDistinctionsController],
   providers: [PhotographicDistinctionsService],
   exports: [PhotographicDistinctionsService],
 })

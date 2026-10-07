@@ -62,17 +62,34 @@ export function isBadgeQualified(
   return hasQualifyingMembership(memberships) && declarations.some(isQualifyingDeclaration);
 }
 
+export interface QualifyingDistinction {
+  institutionCode: string;
+  code: string;
+  name: string;
+}
+
+export interface BadgeStatus {
+  qualified: boolean;
+  /** Badge-eligible DECLARED distinctions on active catalogue entries. */
+  qualifyingDistinctions: QualifyingDistinction[];
+  hasActiveMembership: boolean;
+}
+
 /**
- * Returns the subset of userIds that currently qualify. Two reads, then the
- * pure predicate above -- so the tested rule is the production rule.
+ * Structured read-time badge status for each requested user (every valid
+ * id gets an entry). Two reads, then the pure predicate above -- so the
+ * tested rule is the production rule. Intended for the later public
+ * profile/directory rendering; nothing is stored.
  */
-export async function findBadgeQualifiedUserIds(
+export async function getBadgeStatuses(
   userIds: number[],
   executor: Kysely<DB> = db,
-): Promise<Set<number>> {
-  const qualified = new Set<number>();
+): Promise<Map<number, BadgeStatus>> {
   const ids = [...new Set(userIds.filter((id) => Number.isInteger(id) && id > 0))];
-  if (ids.length === 0) return qualified;
+  const result = new Map<number, BadgeStatus>(
+    ids.map((id) => [id, { qualified: false, qualifyingDistinctions: [], hasActiveMembership: false }]),
+  );
+  if (ids.length === 0) return result;
 
   const declarations = await executor
     .selectFrom('user_photographic_distinctions as upd')
@@ -81,21 +98,26 @@ export async function findBadgeQualifiedUserIds(
     .select([
       'upd.user_id as user_id',
       'upd.state as state',
+      'd.code as code',
+      'd.name as name',
+      'i.code as institution_code',
       'd.is_active as distinction_is_active',
       'd.badge_eligible as badge_eligible',
       'i.is_active as institution_is_active',
     ])
     .where('upd.user_id', 'in', ids)
     .where('upd.state', '=', 'DECLARED')
+    .orderBy('i.sort_order', 'asc')
+    .orderBy('d.sort_order', 'asc')
     .execute();
 
-  const declByUser = new Map<number, BadgeDeclarationFact[]>();
+  const declByUser = new Map<number, typeof declarations>();
   for (const row of declarations) {
     if (!isQualifyingDeclaration(row)) continue;
     const uid = Number(row.user_id);
     declByUser.set(uid, [...(declByUser.get(uid) ?? []), row]);
   }
-  if (declByUser.size === 0) return qualified;
+  if (declByUser.size === 0) return result;
 
   const memberships = await executor
     .selectFrom('memberships')
@@ -112,7 +134,24 @@ export async function findBadgeQualifiedUserIds(
   }
 
   for (const [uid, decls] of declByUser) {
-    if (isBadgeQualified(memByUser.get(uid) ?? [], decls)) qualified.add(uid);
+    const mems = memByUser.get(uid) ?? [];
+    const qualified = isBadgeQualified(mems, decls);
+    result.set(uid, {
+      qualified,
+      hasActiveMembership: hasQualifyingMembership(mems),
+      qualifyingDistinctions: qualified
+        ? decls.map((d) => ({ institutionCode: d.institution_code, code: d.code, name: d.name }))
+        : [],
+    });
   }
-  return qualified;
+  return result;
+}
+
+/** The subset of userIds that currently qualify. */
+export async function findBadgeQualifiedUserIds(
+  userIds: number[],
+  executor: Kysely<DB> = db,
+): Promise<Set<number>> {
+  const statuses = await getBadgeStatuses(userIds, executor);
+  return new Set([...statuses].filter(([, s]) => s.qualified).map(([id]) => id));
 }

@@ -11,6 +11,7 @@
 //   *_DEACTIVATED / *_REACTIVATED          is_active changed
 //   PHOTOGRAPHIC_DISTINCTION_BADGE_ELIGIBILITY_CHANGED  (distinctions only)
 //   *_UPDATED                              code / name / sort_order changed
+//   *_DELETED                              unreferenced entry removed
 
 import type { IdentityAuditEntry } from '../shared/identity-audit.util';
 import { flag } from './photographic-distinction-badge';
@@ -30,6 +31,14 @@ export function catalogueCreatedEvent(
   created: Record<string, unknown>,
 ): IdentityAuditEntry {
   return { actorId, targetUserId: null, actionType: `${PREFIX[kind]}_CREATED`, newValue: created };
+}
+
+export function catalogueDeletedEvent(
+  kind: CatalogueKind,
+  actorId: number,
+  deleted: Record<string, unknown>,
+): IdentityAuditEntry {
+  return { actorId, targetUserId: null, actionType: `${PREFIX[kind]}_DELETED`, oldValue: deleted };
 }
 
 export function catalogueUpdateEvents(

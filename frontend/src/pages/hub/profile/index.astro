@@ -644,6 +644,27 @@ const maxYear = new Date().getFullYear() + 1;
       </div>
     </div>
 
+    <!-- Photographic Distinctions (structured, catalogue-bounded). Each action
+         saves immediately via /api/v1/identity/distinctions/me and is
+         independent of the page Save and of the title fields above. -->
+    <div class="ps-divider"><span>Photographic Distinctions</span></div>
+
+    <div class="pd-block" id="pd-block">
+      <div class="ps-hint">Photographic distinctions are self-declared by the member. Choose from the club catalogue; each change takes effect immediately.</div>
+      <div class="pd-status" id="pd-status" role="status" aria-live="polite"></div>
+      <div id="pd-declared" class="pd-list" aria-label="Declared photographic distinctions"></div>
+      <div class="ps-row pd-add">
+        <div class="ps-field-group">
+          <label class="ps-label" for="pd-select">Add a distinction</label>
+          <select class="form-select" id="pd-select" disabled>
+            <option value="">Loading catalogue…</option>
+          </select>
+        </div>
+        <button type="button" class="btn-secondary pd-add__btn" id="pd-declare" disabled>Declare</button>
+      </div>
+      <div id="pd-history" class="pd-list pd-list--history"></div>
+    </div>
+
     <div class="ps-divider"><span>Awards &amp; Recognition</span></div>
 
     <div class="ps-row">
@@ -1412,6 +1433,32 @@ const maxYear = new Date().getFullYear() + 1;
     max-width: 140px;
   }
 }
+/* ── PHOTOGRAPHIC DISTINCTIONS (structured) ─────────────────────────────── */
+/* Rows are created at runtime, so their selectors are :global (CLAUDE.md 4.4). */
+.pd-block { display:flex; flex-direction:column; gap:12px; }
+.pd-status { font-size:12px; font-family:var(--font-body); color:var(--ink-600); min-height:0; }
+.pd-status:empty { display:none; }
+.pd-status.pd-status--error { color:#882828; }
+.pd-add { align-items:flex-end; margin-bottom:0; }
+.pd-add__btn { flex:0 0 auto; }
+.pd-add__btn:disabled { opacity:0.45; cursor:not-allowed; }
+.pd-list:empty { display:none; }
+:global(.pd-item) {
+  display:flex; align-items:center; gap:14px; padding:10px 0;
+  border-bottom:1px solid var(--hairline-soft); font-family:var(--font-body);
+}
+:global(.pd-item:last-child) { border-bottom:none; }
+:global(.pd-item__code) { font-size:14px; font-weight:600; color:var(--ink-900); min-width:72px; }
+:global(.pd-item__meta) { flex:1; font-size:12px; color:var(--ink-400); line-height:1.5; }
+:global(.pd-item__state) { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-400); }
+:global(.pd-item__action) {
+  background:none; border:1px solid var(--ink-200); cursor:pointer; font-size:12px; font-weight:600;
+  color:var(--ink-900); padding:6px 14px; font-family:var(--font-body); transition:border-color 0.15s;
+}
+:global(.pd-item__action:hover) { border-color:var(--gold-light); color:var(--gold-600); }
+:global(.pd-item__action:disabled) { opacity:0.45; cursor:not-allowed; }
+:global(.pd-item--muted .pd-item__code) { color:var(--ink-400); }
+:global(.pd-empty) { font-size:13px; color:var(--ink-400); font-family:var(--font-body); padding:4px 0; }
 </style>
 
 <script>
@@ -2003,4 +2050,143 @@ document.getElementById('cover-file-input')?.addEventListener('change', e => {
 // Load data
 loadProfile().catch(() => {});
 loadCompletion().catch(() => {});
+</script>
+
+<script>
+// Photographic Distinctions -- holder editor (structured, catalogue-bounded).
+// Self-contained: talks only to /api/v1/identity/distinctions/me, never to
+// the legacy PUT /hub/profile/distinctions path or the page dirty/Save flow.
+// Declarations are self-declared and unverified; the holder can declare,
+// withdraw and re-declare, but never re-declare one an administrator removed.
+const PD_API = '/api/v1/identity/distinctions/me';
+
+interface PdCatalogueEntry { id: number; code: string; name: string }
+interface PdInstitution { id: number; code: string; name: string; distinctions: PdCatalogueEntry[] }
+interface PdDeclaration {
+  distinctionId: number; institutionCode: string; institutionName: string;
+  code: string; name: string; state: 'DECLARED' | 'WITHDRAWN' | 'REMOVED'; catalogueActive: boolean;
+}
+
+function pdToken(): string { return localStorage.getItem('bcc_token') ?? ''; }
+
+function pdStatus(msg: string, error = false) {
+  const el = document.getElementById('pd-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.toggle('pd-status--error', error);
+}
+
+async function pdRequest<T>(path: string, method: 'GET' | 'POST' = 'GET'): Promise<T> {
+  const res = await fetch(`${PD_API}${path}`, { method, headers: { Authorization: `Bearer ${pdToken()}` } });
+  if (!res.ok) {
+    let message = 'Something went wrong. Please try again.';
+    try {
+      const body = await res.json();
+      if (body?.message) message = Array.isArray(body.message) ? body.message.join(', ') : String(body.message);
+    } catch { /* non-JSON error body */ }
+    throw new Error(message);
+  }
+  return res.json() as Promise<T>;
+}
+
+// Display text: the catalogue name, plus the code when it differs (e.g.
+// "GPU Crown 3" stays as is; "AFIP" is not repeated).
+function pdLabel(code: string, name: string): string {
+  return name === code ? code : `${name} (${code})`;
+}
+
+function pdItem(d: PdDeclaration, action: { label: string; run: () => void } | null, note: string): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'pd-item' + (d.state === 'DECLARED' ? '' : ' pd-item--muted');
+  const code = document.createElement('span');
+  code.className = 'pd-item__code';
+  code.textContent = d.code;
+  const meta = document.createElement('span');
+  meta.className = 'pd-item__meta';
+  meta.textContent = d.name === d.code ? d.institutionName : `${d.name} · ${d.institutionName}`;
+  row.append(code, meta);
+  if (note) {
+    const state = document.createElement('span');
+    state.className = 'pd-item__state';
+    state.textContent = note;
+    row.append(state);
+  }
+  if (action) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pd-item__action';
+    btn.textContent = action.label;
+    btn.addEventListener('click', action.run);
+    row.append(btn);
+  }
+  return row;
+}
+
+async function pdAct(distinctionId: number, verb: 'declare' | 'withdraw') {
+  document.querySelectorAll<HTMLButtonElement>('#pd-block button').forEach((b) => (b.disabled = true));
+  pdStatus(verb === 'declare' ? 'Declaring…' : 'Withdrawing…');
+  try {
+    await pdRequest(`/${distinctionId}/${verb}`, 'POST');
+    await pdLoad();
+    pdStatus(verb === 'declare' ? 'Distinction declared.' : 'Distinction withdrawn.');
+  } catch (err) {
+    pdStatus((err as Error).message, true);
+    await pdLoad().catch(() => {});
+  }
+}
+
+async function pdLoad() {
+  const view = await pdRequest<{ catalogue: PdInstitution[]; declarations: PdDeclaration[] }>('');
+  const declared = view.declarations.filter((d) => d.state === 'DECLARED');
+  const history = view.declarations.filter((d) => d.state !== 'DECLARED');
+  const taken = new Set(view.declarations.map((d) => d.distinctionId));
+
+  const declaredEl = document.getElementById('pd-declared')!;
+  declaredEl.replaceChildren(
+    ...(declared.length
+      ? declared.map((d) => pdItem(d, { label: 'Withdraw', run: () => pdAct(d.distinctionId, 'withdraw') }, ''))
+      : [Object.assign(document.createElement('div'), { className: 'pd-empty', textContent: 'No photographic distinctions declared.' })]),
+  );
+
+  const historyEl = document.getElementById('pd-history')!;
+  historyEl.replaceChildren(
+    ...history.map((d) => {
+      if (d.state === 'REMOVED') return pdItem(d, null, 'Removed by administrator');
+      if (!d.catalogueActive) return pdItem(d, null, 'No longer in catalogue');
+      return pdItem(d, { label: 'Re-declare', run: () => pdAct(d.distinctionId, 'declare') }, 'Withdrawn');
+    }),
+  );
+
+  // Only active catalogue entries the holder has never used; withdrawn ones
+  // are re-declared from the history list, removed ones are never offered.
+  const select = document.getElementById('pd-select') as HTMLSelectElement;
+  select.replaceChildren(Object.assign(document.createElement('option'), { value: '', textContent: 'Select a distinction…' }));
+  let available = 0;
+  for (const inst of view.catalogue) {
+    const options = inst.distinctions.filter((d) => !taken.has(d.id));
+    if (!options.length) continue;
+    const group = document.createElement('optgroup');
+    group.label = inst.name;
+    for (const d of options) {
+      group.append(Object.assign(document.createElement('option'), { value: String(d.id), textContent: pdLabel(d.code, d.name) }));
+      available++;
+    }
+    select.append(group);
+  }
+  select.disabled = available === 0;
+  if (available === 0) select.options[0].textContent = 'No further distinctions available';
+  const declareBtn = document.getElementById('pd-declare') as HTMLButtonElement;
+  declareBtn.disabled = true;
+  document.querySelectorAll<HTMLButtonElement>('#pd-block .pd-item__action').forEach((b) => (b.disabled = false));
+}
+
+document.getElementById('pd-select')?.addEventListener('change', (e) => {
+  (document.getElementById('pd-declare') as HTMLButtonElement).disabled = !(e.target as HTMLSelectElement).value;
+});
+document.getElementById('pd-declare')?.addEventListener('click', () => {
+  const id = Number((document.getElementById('pd-select') as HTMLSelectElement).value);
+  if (id > 0) pdAct(id, 'declare');
+});
+
+pdLoad().catch((err) => pdStatus((err as Error).message || 'Could not load photographic distinctions.', true));
 </script>

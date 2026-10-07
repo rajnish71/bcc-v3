@@ -94,6 +94,36 @@ describe('0116 photographic distinctions schema', () => {
   });
 });
 
+describe('0118 GPU catalogue entries (frozen HA decision)', () => {
+  const sql = read('0118_seed_gpu_photographic_distinctions.sql');
+  const seed = sql.match(/INSERT IGNORE INTO photographic_distinctions[\s\S]*?;/)![0];
+
+  it('seeds exactly GPU/CROWN3 "GPU Crown 3" and GPU/VIP3 "GPU VIP 3"', () => {
+    const rows = [...seed.matchAll(/SELECT\s+'([A-Z]+)'(?:\s+AS institution_code)?,\s*'([^']+)'(?:\s+AS code)?,\s*'([^']+)'(?:\s+AS name)?,\s*(\d+)/g)]
+      .map((m) => ({ institution: m[1], code: m[2], name: m[3], sort: Number(m[4]) }));
+    expect(rows).toEqual([
+      { institution: 'GPU', code: 'CROWN3', name: 'GPU Crown 3', sort: 10 },
+      { institution: 'GPU', code: 'VIP3', name: 'GPU VIP 3', sort: 20 },
+    ]);
+  });
+
+  it('both are active and badge eligible, resolved by institution code', () => {
+    expect(seed).toMatch(/SELECT i\.id, s\.code, s\.name, 1, 1, s\.sort_order/);
+    expect(seed).toMatch(/JOIN photographic_institutions i ON i\.code = s\.institution_code/);
+  });
+
+  it('adds no legacy alias codes, declarations or legacy-table writes', () => {
+    expect(sql).not.toMatch(/GPU-CR3|GPU VIP-3/);
+    expect(sql).not.toMatch(/user_photographic_distinctions|user_photo_titles/);
+    expect(sql).not.toMatch(/INSERT\s+INTO\s+photographic_institutions/i);
+  });
+
+  it('is idempotent and records itself once', () => {
+    expect(sql).toMatch(/INSERT IGNORE INTO photographic_distinctions/);
+    expect(sql.match(/INSERT INTO schema_migrations/g)).toHaveLength(1);
+  });
+});
+
 describe('0117 RBAC grants', () => {
   const sql = read('0117_add_identity_distinction_permissions.sql');
   const grant = (key: string) => {

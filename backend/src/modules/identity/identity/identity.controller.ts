@@ -16,6 +16,10 @@
 //
 // POST /api/v1/identity/admin/resend-welcome/:userId
 //   Admin. Resends the welcome email via CommunicationService.
+//
+// POST /api/v1/identity/admin/reconcile-duplicate-identity
+//   Super Admin ('identity.reconcile'). Folds one IDENTITY_PENDING duplicate
+//   into one IDENTITY_COMPLETE canonical identity. dryRun is required.
 
 import {
   Body,
@@ -30,6 +34,7 @@ import {
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { CompleteIdentityDto } from './dto/complete-identity.dto';
+import { ReconcileDuplicateIdentityDto } from './dto/reconcile-duplicate-identity.dto';
 import { AccessTokenGuard } from '../auth/access-token.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AccessTokenPayload } from '../auth/token.util';
@@ -110,5 +115,16 @@ export class IdentityController {
   ) {
     await this.identityService.sendMembershipInvitation(actor.sub, userId);
     return { message: 'Membership invitation email sent successfully.' };
+  }
+
+  @Post('admin/reconcile-duplicate-identity')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard, RbacGuard)
+  @RequirePermissions('identity.reconcile')
+  async reconcileDuplicateIdentity(
+    @CurrentUser() actor: AccessTokenPayload,
+    @Body() dto: ReconcileDuplicateIdentityDto,
+  ) {
+    return this.identityService.reconcileDuplicateIdentity(actor.sub, dto);
   }
 }

@@ -15,6 +15,9 @@
 //   sendCompletionLink()          — email the identity completion URL.
 //   sendPriorityCompletionLink()  — same with elevated subject line.
 //
+//   reconcileDuplicateIdentity()  — bounded duplicate-identity reconciliation
+//                                   (see duplicate-identity-reconciliation.ts).
+//
 // Administrators must NEVER assign usernames (IDENTITY-ARCH-001).
 // RBAC, membership, and profile visibility are never modified here.
 
@@ -28,6 +31,11 @@ import { db } from '../../../database/db';
 import { toMysqlDatetime } from '../shared/token-hash.util';
 import { CommunicationService } from '../../shared/communication/communication.service';
 import { EmailService } from '../../shared/communication/email.service';
+import {
+  reconcileDuplicateIdentity,
+  type ReconcileDuplicateIdentityInput,
+  type ReconcileDuplicateIdentityReport,
+} from './duplicate-identity-reconciliation';
 
 // Username rules (mirrored in CompleteIdentityDto validation decorator):
 const USERNAME_RE = /^[a-z0-9_]+$/;
@@ -347,6 +355,18 @@ export class IdentityService {
     );
 
     void adminId;
+  }
+
+  // ─── Duplicate identity reconciliation ────────────────────────────────────
+
+  // Bounded IDENTITY-ARCH-001 reconciliation of one PENDING duplicate into
+  // one COMPLETE canonical identity. Not a generic deletion; see
+  // duplicate-identity-reconciliation.ts for every fail-closed condition.
+  async reconcileDuplicateIdentity(
+    actorUserId: number,
+    input: ReconcileDuplicateIdentityInput,
+  ): Promise<ReconcileDuplicateIdentityReport> {
+    return reconcileDuplicateIdentity(actorUserId, input);
   }
 
   // ─── Private helpers ──────────────────────────────────────────────────────

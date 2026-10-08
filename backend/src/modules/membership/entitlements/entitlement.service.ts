@@ -22,6 +22,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../../../database/db';
 import { logMembershipAudit } from '../shared/membership-audit.util';
 import { applyEntitlementLayers } from './entitlement-layers';
+import { RECOGNITION_CLASS_CODES } from '../recognition/senior-status.reader';
 
 export interface ResolvedEntitlements {
   membershipId: number;
@@ -86,14 +87,19 @@ export class EntitlementService {
       }
     }
 
-    // Layer 2 -- active recognition modifiers (at most one active
-    // recognition exists, DB-enforced)
+    // Layer 2 -- active Recognition Class modifiers. WP5: only Recognition
+    // Classes are considered here, in a deterministic order (oldest row
+    // first, so a later row overwrites an earlier one). Whether a Senior
+    // Status Overlay contributes entitlement modifiers, and in what order,
+    // is an UNDECIDED governance question and is not encoded here.
     const modifierRows = await db
       .selectFrom('member_recognitions as mr')
       .innerJoin('recognition_modifiers as rm', 'rm.recognition_code', 'mr.recognition_code')
       .select(['rm.entitlement_key', 'rm.modifier_value', 'mr.recognition_code'])
       .where('mr.membership_id', '=', membershipId)
       .where('mr.status', '=', 'ACTIVE')
+      .where('mr.recognition_code', 'in', [...RECOGNITION_CLASS_CODES])
+      .orderBy('mr.id', 'asc')
       .execute();
     for (const row of modifierRows) {
       resolved[row.entitlement_key] = row.modifier_value;
@@ -174,7 +180,9 @@ export class EntitlementService {
         .select(['mr.membership_id', 'rm.entitlement_key', 'rm.modifier_value'])
         .where('mr.membership_id', 'in', membershipIds)
         .where('mr.status', '=', 'ACTIVE')
+        .where('mr.recognition_code', 'in', [...RECOGNITION_CLASS_CODES])
         .where('rm.entitlement_key', 'in', keys)
+        .orderBy('mr.id', 'asc')
         .execute(),
       db.selectFrom('individual_overrides')
         .select(['membership_id', 'entitlement_key', 'override_type', 'override_value', 'expires_at'])

@@ -43,6 +43,7 @@ import { GrantComplimentaryMembershipDto } from '../dto/grant-complimentary-memb
 import { DecideReinstatementDto } from '../dto/decide-reinstatement.dto';
 import { MembershipRenewalService } from '../renewal/membership-renewal.service';
 import type { RenewalOperationStatus } from '../../../database/db';
+import { SeniorStatusReader } from '../recognition/senior-status.reader';
 
 const RENEWAL_OPERATION_STATUSES: RenewalOperationStatus[] = [
   'REQUESTED', 'PROOF_REQUIRED', 'AWAITING_PAYMENT', 'APPLIED', 'REJECTED', 'EXPIRED', 'BLOCKED',
@@ -114,6 +115,14 @@ export class MembershipAdminController {
   }
 
   // ── Senior status ─────────────────────────────────────────────────────────
+
+  // WP5: read-only list of current Senior Status holders (SeniorStatusReader).
+  @Get('admin/senior-status/current')
+  @HttpCode(200)
+  @RequirePermissions('membership.record.view')
+  async seniorStatusCurrent() {
+    return new SeniorStatusReader().listActive();
+  }
 
   @Get('admin/senior-status/eligible')
   @HttpCode(200)

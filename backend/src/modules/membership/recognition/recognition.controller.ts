@@ -6,6 +6,7 @@ import type { AccessTokenPayload } from '../../identity/auth/token.util';
 import { RbacGuard } from '../../identity/rbac/rbac.guard';
 import { RequirePermissions } from '../../identity/rbac/permissions.decorator';
 import { RecognitionService } from './recognition.service';
+import { SeniorStatusReader } from './senior-status.reader';
 import { AssignRecognitionDto } from '../dto/assign-recognition.dto';
 import { RevokeRecognitionDto } from '../dto/revoke-recognition.dto';
 import { SetRecognitionCriteriaDto } from '../dto/set-recognition-criteria.dto';
@@ -13,6 +14,9 @@ import { SetRecognitionCriteriaDto } from '../dto/set-recognition-criteria.dto';
 @Controller('api/v1/membership/recognitions')
 @UseGuards(AccessTokenGuard, RbacGuard)
 export class RecognitionController {
+  // WP5: read-only Senior resolver (no DI needed; it only SELECTs).
+  private readonly seniorStatus = new SeniorStatusReader();
+
   constructor(private readonly recognitions: RecognitionService) {}
 
   @Get(':membershipId')
@@ -20,6 +24,17 @@ export class RecognitionController {
   @RequirePermissions('membership.recognition.view')
   async list(@Param('membershipId', ParseIntPipe) membershipId: number) {
     return this.recognitions.listForMembership(membershipId);
+  }
+
+  // WP5: Senior Status is a Status Overlay, not a Recognition Class, so it is
+  // NOT part of the raw recognition list above (which is unchanged). This
+  // read-only route resolves it through the single SeniorStatusReader.
+  @Get(':membershipId/senior-status')
+  @HttpCode(200)
+  @RequirePermissions('membership.recognition.view')
+  async seniorStatusFor(@Param('membershipId', ParseIntPipe) membershipId: number) {
+    const resolved = await this.seniorStatus.forMembership(membershipId);
+    return { membershipId, senior: resolved ? resolved.senior : { source: 'NONE' } };
   }
 
   @Post(':membershipId/assign')

@@ -49,23 +49,15 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
     <!-- ③ SENIOR STATUS ─────────────────────────────────────────────────────── -->
     <section class="admin-section" id="section-senior">
       <div class="section-kicker"><span class="kicker-rule"></span>Recognition Management</div>
-      <h2 class="section-title">Senior Member Eligibility</h2>
+      <h2 class="section-title">Senior Member Status</h2>
       <p class="section-hint">
-        Auto-calculated per MEM-008: age ≥ 60 <strong>OR</strong> (age ≥ 50 &amp; tenure ≥ 5 yr) <strong>OR</strong> tenure ≥ 10 yr.
-        Members already holding SENIOR_MEMBER recognition are excluded.
+        Read-only. Senior Member is a Status Overlay, separate from Honorary recognition classes.
+        Senior Status is not awarded or evaluated from this page; automatic evaluation and awards are not active.
       </p>
 
-      <div class="senior-actions-bar">
-        <button type="button" id="btn-check-senior" class="btn-action">Check Eligibility</button>
-        <button type="button" id="btn-assign-senior" class="btn-action btn-action--gold" hidden>
-          Assign Senior Status to All Eligible
-        </button>
-      </div>
-
-      <div id="senior-loading" class="state-loading" hidden>Evaluating…</div>
-      <div id="senior-empty"   class="state-empty"   hidden>No eligible members found.</div>
+      <div id="senior-loading" class="state-loading" hidden>Loading…</div>
+      <div id="senior-empty"   class="state-empty"   hidden>No current Senior Status holders.</div>
       <div id="senior-error"   class="state-error"   hidden></div>
-      <div id="senior-feedback" class="assign-feedback" hidden></div>
 
       <div id="senior-list" class="data-table-wrap" hidden></div>
     </section>
@@ -768,74 +760,41 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
   // legacyClassId captured when classes load — used by section ⑨
   let legacyClassId = null;
 
-  // ── ③ SENIOR STATUS ─────────────────────────────────────────────────
-  let seniorEligible = [];
-
-  document.getElementById('btn-check-senior').addEventListener('click', async () => {
+  // ── ③ SENIOR STATUS (read-only) ─────────────────────────────────────
+  // Resolved server-side by the single SeniorStatusReader (overlay, else the
+  // frozen legacy MANUAL record). No evaluation, award or bulk action here.
+  async function loadSeniorCurrent() {
     hide('senior-error');
     hide('senior-empty');
     hide('senior-list');
-    hide('senior-feedback');
-    hide('btn-assign-senior');
     show('senior-loading');
     try {
-      seniorEligible = await apiFetch('/api/v1/membership/admin/senior-status/eligible');
+      const rows = await apiFetch('/api/v1/membership/admin/senior-status/current');
       hide('senior-loading');
-      if (!seniorEligible.length) {
-        show('senior-empty');
-        return;
-      }
+      if (!rows.length) { show('senior-empty'); return; }
+      const sourceLabel = { OVERLAY: 'Status Overlay', LEGACY_MANUAL_RECOGNITION: 'Recorded (legacy manual)' };
       const wrap = document.getElementById('senior-list');
-      wrap.innerHTML = buildSeniorTable(seniorEligible);
+      wrap.innerHTML = `<table class="data-table">
+        <thead><tr>
+          <th>Member</th>
+          <th>Membership No.</th>
+          <th>Source</th>
+        </tr></thead>
+        <tbody>${rows.map(r => `<tr>
+          <td>
+            <div style="font-weight:600">${r.fullName || '—'}</div>
+            <div class="mono" style="color:var(--ink-400)">${r.username || ''}</div>
+          </td>
+          <td class="mono">${r.membershipNumber || '—'}</td>
+          <td><span class="tag-pill tag-pill--green">${sourceLabel[r.senior.source] || r.senior.source}</span></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
       show('senior-list');
-      show('btn-assign-senior');
     } catch (e) {
       hide('senior-loading');
       setText('senior-error', e.message);
       show('senior-error');
     }
-  });
-
-  document.getElementById('btn-assign-senior').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-assign-senior');
-    btn.disabled = true;
-    hide('senior-feedback');
-    try {
-      const result = await apiFetch('/api/v1/membership/admin/senior-status/evaluate', { method: 'POST' });
-      const fb = document.getElementById('senior-feedback');
-      fb.textContent = `Done — ${result.assigned} Senior Member recognition(s) assigned.`;
-      show('senior-feedback');
-      hide('btn-assign-senior');
-      hide('senior-list');
-    } catch (e) {
-      const fb = document.getElementById('senior-feedback');
-      fb.textContent = `Error: ${e.message}`;
-      show('senior-feedback');
-      btn.disabled = false;
-    }
-  });
-
-  function buildSeniorTable(rows) {
-    const ruleLabel = { age_60_plus: 'Age ≥ 60', age_50_tenure_5: 'Age ≥ 50 + Tenure ≥ 5yr', tenure_10_years: 'Tenure ≥ 10yr' };
-    return `<table class="data-table">
-      <thead><tr>
-        <th>Member</th>
-        <th>Join Year</th>
-        <th>Tenure</th>
-        <th>Age</th>
-        <th>Qualifying Rules</th>
-      </tr></thead>
-      <tbody>${rows.map(r => `<tr>
-        <td>
-          <div style="font-weight:600">${r.fullName || '—'}</div>
-          <div class="mono" style="color:var(--ink-400)">${r.username || ''}</div>
-        </td>
-        <td class="mono">${r.joinYear || '—'}</td>
-        <td class="mono">${r.tenureYears} yr</td>
-        <td class="mono">${r.ageYears != null ? r.ageYears + ' yr' : '—'}</td>
-        <td>${r.qualifyingRules.map(rule => `<span class="tag-pill tag-pill--green">${ruleLabel[rule] || rule}</span>`).join('')}</td>
-      </tr>`).join('')}</tbody>
-    </table>`;
   }
 
   // ── ④ EXPIRING SOON ─────────────────────────────────────────────────
@@ -1299,6 +1258,7 @@ import HubLayout from '../../../../layouts/HubLayout.astro';
   loadStats();
   loadClasses();
   loadExpiring();
+  loadSeniorCurrent();
   loadRenewalOps();
   loadEvents();
   loadNotifTypes();

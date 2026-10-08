@@ -186,6 +186,7 @@ const jsonLd = displayName
         <span class="ph-class-badge" id="ph-class-badge" hidden></span>
         <span class="ph-founding-badge" id="ph-founding-badge" hidden>★ FOUNDING MEMBER</span>
         <span class="ph-recognition-badge" id="ph-recognition-badge" hidden></span>
+        <span class="ph-recognition-badge ph-senior-badge" id="ph-senior-badge" hidden></span>
       </div>
       <!-- Photographic Distinction post-nominals (same canonical data as the
            directory card). Runtime-filled; hidden when none. -->
@@ -556,7 +557,8 @@ const jsonLd = displayName
 /* display:inline-flex above would otherwise override the [hidden] attribute and
    render an empty pill when there is no value. */
 .ph-class-badge[hidden],
-.ph-recognition-badge[hidden] { display: none; }
+.ph-recognition-badge[hidden],
+.ph-senior-badge[hidden] { display: none; }
 .ph-founding-badge {
   font-size: 10px;
   font-weight: 700;
@@ -1407,10 +1409,17 @@ async function loadProfile() {
     if (fb) fb.hidden = false;
   }
 
-  // Recognition badge (Senior / Honorary member) — migrated field, previously a UI gap
+  // Recognition Class badge (Honorary classes only). Senior is NOT a class.
   if (profile.recognition && profile.recognition.label) {
     const rb = document.getElementById('ph-recognition-badge');
     if (rb) { rb.textContent = `★ ${profile.recognition.label}`; rb.hidden = false; }
+  }
+
+  // Senior Status badge (Status Overlay) -- independent of the class badge, so
+  // a member can show both. Only the fact is public; no tenure/dates.
+  if (profile.seniorStatus && profile.seniorStatus.label) {
+    const sb = document.getElementById('ph-senior-badge');
+    if (sb) { sb.textContent = `★ ${profile.seniorStatus.label}`; sb.hidden = false; }
   }
 
   // Photo count

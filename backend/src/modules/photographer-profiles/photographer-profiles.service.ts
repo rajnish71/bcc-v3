@@ -37,6 +37,7 @@ import { GalleryService } from '../gallery/gallery.service';
 import { countCurrentMembers } from '../membership/current-members.query';
 import { findBadgeQualifiedUserIds } from '../identity/distinctions/photographic-distinction-badge';
 import { getPublicDistinctions } from '../identity/distinctions/photographic-distinction-public';
+import { RECOGNITION_CLASS_CODES, SeniorStatusReader } from '../membership/recognition/senior-status.reader';
 import {
   buildDisplayName,
   suppressedTitleRegex,
@@ -409,13 +410,19 @@ export class PhotographerProfilesService {
     if (!user) throw new NotFoundException('Photographer not found.');
     if (user.profile_visibility === 'PRIVATE') throw new NotFoundException('Photographer not found.');
 
-    // Active recognition
+    // Active Recognition Class (WP5): classes only, deterministic. Senior is a
+    // Status Overlay and is resolved separately below -- never as a class.
     const recognition = await db
       .selectFrom('member_recognitions')
       .where('membership_id', '=', user.membership_id as number)
       .where('status', '=', 'ACTIVE')
+      .where('recognition_code', 'in', [...RECOGNITION_CLASS_CODES])
+      .orderBy('id', 'desc')
       .select(['recognition_code', 'track'])
       .executeTakeFirst();
+
+    // Senior Status (read-only resolver: overlay, else frozen legacy MANUAL row).
+    const senior = await new SeniorStatusReader().forUser(user.id as number);
 
     // Social handles
     const handleRows = await db
@@ -511,6 +518,9 @@ export class PhotographerProfilesService {
           lenses:      gearRows.filter(g => g.gear_type === 'LENS').map(g => g.label),
           accessories: gearRows.filter(g => g.gear_type === 'ACCESSORY').map(g => g.label),
         },
+        // Senior Status is separate from the Recognition Class. Only the fact is
+        // public: no provenance, no dates, no tenure, no evidence fields.
+        seniorStatus: senior.senior.source === 'NONE' ? null : { label: RECOGNITION_LABELS.SENIOR_MEMBER },
         recognition: recognition
           ? {
               code:  recognition.recognition_code,

@@ -331,6 +331,17 @@ import FilterSelect from '../../components/search/FilterSelect.astro';
   transition: color 0.2s ease;
 }
 :global(.ph-card:hover .ph-card-name) { color: var(--gold-600); }
+/* Phase 2B: Photographic Distinction post-nominals (runtime DOM). Plain
+   editorial text -- no chips, no colour coding. */
+:global(.ph-card-postnominals) {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-600);
+  margin: -2px 0 4px;
+  word-break: break-word;
+}
 :global(.ph-card-username) {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -565,6 +576,7 @@ interface Photographer {
   memberSince: number | null;
   photoCount: number;
   avatarUrl: string | null;
+  postNominals?: string[];
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -770,6 +782,12 @@ function appendCards(page: Photographer[]): HTMLAnchorElement | null {
       avatarHtml = esc(inits);
     }
 
+    // Phase 2B: Photographic Distinction post-nominals; nothing when none.
+    const postNominals = Array.isArray(ph.postNominals) ? ph.postNominals.filter(Boolean) : [];
+    const postNominalsHtml = postNominals.length
+      ? `<div class="ph-card-postnominals">${esc(postNominals.join(' · '))}</div>`
+      : '';
+
     const taglineHtml = ph.tagline
       ? `<div class="ph-card-tagline">${esc(ph.tagline)}</div>`
       : '';
@@ -788,6 +806,7 @@ function appendCards(page: Photographer[]): HTMLAnchorElement | null {
       </div>
       <div class="ph-card-body">
         <div class="ph-card-name">${esc(ph.displayName ?? '')}</div>
+        ${postNominalsHtml}
         <div class="ph-card-username">@${esc(ph.username)}</div>
         <span class="ph-card-class-badge" style="color:${classColor};">${esc(classLabel)}</span>
         <div class="ph-card-divider"></div>

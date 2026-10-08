@@ -315,6 +315,15 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
   transition: color 0.2s ease;
 }
 :global(.ph-card:hover .ph-card-name) { color: var(--gold-600); }
+:global(.ph-card-postnominals) {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-600);
+  margin: -2px 0 4px;
+  word-break: break-word;
+}
 :global(.ph-card-username) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
@@ -480,6 +489,10 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
         const taglineHtml = ph.tagline
           ? `<div class="ph-card-tagline">${esc(ph.tagline)}</div>`
           : '';
+        const postNominals = Array.isArray(ph.postNominals) ? ph.postNominals.filter(Boolean) : [];
+        const postNominalsHtml = postNominals.length
+          ? `<div class="ph-card-postnominals">${esc(postNominals.join(' · '))}</div>`
+          : '';
         const cityHtml = ph.city
           ? `<div class="ph-card-meta-row"><span class="ph-card-city">${esc(ph.city)}</span></div>`
           : '';
@@ -490,6 +503,7 @@ import JustifiedPhotoGrid from '../components/gallery/JustifiedPhotoGrid.astro';
           </div>
           <div class="ph-card-body">
             <div class="ph-card-name">${esc(ph.displayName ?? '')}</div>
+            ${postNominalsHtml}
             <div class="ph-card-username">@${esc(ph.username)}</div>
             <span class="ph-card-class-badge" style="color:${classColor};">${esc(classLabel)}</span>
             <div class="ph-card-divider"></div>

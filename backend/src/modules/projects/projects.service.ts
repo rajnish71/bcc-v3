@@ -10,6 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 import { db } from '../../database/db';
 import { ikUrl, AVATAR_DELIVERY_TR } from '../shared/storage/imagekit.util';
+import { getPublicDistinctions } from '../identity/distinctions/photographic-distinction-public';
 
 interface ContributorRow {
   user_id: string;
@@ -79,6 +80,7 @@ export class ProjectsService {
       name: string;
       avatarUrl: string | null;
       photoCount: number;
+      postNominals: string[];
     }>;
   }> {
     if (!projectTag) return { contributors: [] };
@@ -103,6 +105,11 @@ export class ProjectsService {
       ORDER BY RAND()
     `.execute(db);
 
+    // Canonical public distinctions (display_code ?? code) -- sole public path.
+    const distinctions = await getPublicDistinctions(
+      result.rows.map(r => Number(r.user_id)),
+    );
+
     return {
       contributors: result.rows.map(r => ({
         userId:     Number(r.user_id),
@@ -110,6 +117,7 @@ export class ProjectsService {
         name:       r.full_name,
         avatarUrl:  r.avatar_r2_key ? ikUrl(r.avatar_r2_key, AVATAR_DELIVERY_TR) : null,
         photoCount: Number(r.photo_count),
+        postNominals: (distinctions.get(Number(r.user_id)) ?? []).map(d => d.code),
       })),
     };
   }

@@ -109,9 +109,10 @@ export class HubProfileService {
     // Photo titles
     const titleRows = await db
       .selectFrom('user_photo_titles')
-      .select(['body_code', 'title_code'])
+      .select(['id', 'body_code', 'title_code', 'body_name', 'sort_order'])
       .where('user_id', '=', userId)
       .orderBy('sort_order', 'asc')
+      .orderBy('id', 'asc')
       .execute();
 
     // Internal BCC roles
@@ -151,17 +152,6 @@ export class HubProfileService {
       .select(({ fn }) => [fn.countAll<number>().as('count')])
       .where('user_id', '=', userId)
       .executeTakeFirst();
-
-    // Assemble distinctions
-    const groupByCode = (code: string) =>
-      titleRows
-        .filter(r => r.body_code === code)
-        .map(r => r.title_code)
-        .join(' ');
-    const otherCodes = titleRows
-      .filter(r => r.body_code === 'GPU' || r.body_code === 'OTHER')
-      .map(r => r.title_code)
-      .join(' ');
 
     // Assemble gear
     const bodies = gearRows.filter(g => g.gear_type === 'BODY').map(g => g.label);
@@ -222,12 +212,15 @@ export class HubProfileService {
       gear: { bodies, lenses, other: accessories },
 
       // Distinctions
-      photoTitles: {
-        fiap: groupByCode('FIAP'),
-        fip: groupByCode('FIP'),
-        psa: groupByCode('PSA'),
-        other: otherCodes,
-      },
+      // Legacy user_photo_titles rows: READ-ONLY projection, never written back
+      // by the Hub (D1 = a). Values are passed through untouched.
+      photoTitleRows: titleRows.map(r => ({
+        id: r.id,
+        bodyCode: r.body_code,
+        titleCode: r.title_code,
+        bodyName: r.body_name,
+        sortOrder: r.sort_order,
+      })),
       awardsHtml: user.awards_html,
 
       // Internal BCC
@@ -382,29 +375,13 @@ export class HubProfileService {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // PUT /distinctions — replace photo titles + update awards_html
+  // PUT /distinctions — update awards_html only (legacy titles read-only)
   // ──────────────────────────────────────────────────────────────────────────
 
   async updateDistinctions(userId: number, dto: UpdateDistinctionsDto) {
-    // Clear all existing title rows for this user
-    await db.deleteFrom('user_photo_titles').where('user_id', '=', userId).execute();
-
-    const titleRows: { user_id: number; body_code: 'FIP' | 'PSA' | 'FIAP' | 'GPU' | 'OTHER'; title_code: string; sort_order: number }[] = [];
-
-    const addTitles = (bodyCode: 'FIP' | 'PSA' | 'FIAP' | 'OTHER', text: string | undefined, baseSort: number) => {
-      if (!text?.trim()) return;
-      titleRows.push({ user_id: userId, body_code: bodyCode, title_code: text.trim(), sort_order: baseSort });
-    };
-
-    addTitles('FIAP', dto.fiap, 10);
-    addTitles('FIP', dto.fip, 20);
-    addTitles('PSA', dto.psa, 30);
-    addTitles('OTHER', dto.other, 50);
-
-    if (titleRows.length > 0) {
-      await db.insertInto('user_photo_titles').values(titleRows).execute();
-    }
-
+    // Legacy user_photo_titles are READ-ONLY here (D1 = a). Scalar
+    // fiap/fip/psa/other on the DTO are accepted for backward compatibility
+    // and deliberately ignored: this method must never write that table.
     // Update awards_html on users
     if (dto.awardsHtml !== undefined) {
       await db

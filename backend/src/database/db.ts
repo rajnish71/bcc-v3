@@ -1457,15 +1457,23 @@ export interface DB {
   merchandise_coupon_redemptions: MerchandiseCouponRedemptionsTable;
 }
 
-const dialect = new MysqlDialect({
-  pool: createPool({
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '3306', 10),
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    connectionLimit: 5,
-  }),
+// TENURE-ARCH-001 v1.1 WP3 (R5C): the driver and every pooled connection are
+// pinned to UTC, so a stored TIMESTAMP is the same absolute instant whatever
+// the process TZ. Tenure converts instants to civil dates in Asia/Kolkata
+// separately (tenure/civil-date.ts civilDateInKolkata).
+const pool = createPool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '3306', 10),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  connectionLimit: 5,
+  timezone: 'Z',
 });
+pool.on('connection', (connection) => {
+  connection.query("SET time_zone = '+00:00'");
+});
+
+const dialect = new MysqlDialect({ pool });
 
 export const db = new Kysely<DB>({ dialect });

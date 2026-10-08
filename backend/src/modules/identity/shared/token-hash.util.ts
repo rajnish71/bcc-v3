@@ -21,22 +21,15 @@ export function generateNumericOtp(digits = 6): string {
   return String(randomInt(min, max + 1));
 }
 
-// IMPORTANT: this must format using LOCAL time components (getFullYear,
-// getHours, etc.), NOT toISOString() (which is always UTC). The server's
-// MySQL instance runs with time_zone=SYSTEM=Asia/Kolkata (IST, UTC+5:30),
-// and mysql2 reads DATETIME/TIMESTAMP values back interpreting them as the
-// Node process's local time -- also IST on this box. A naive
-// toISOString()-based formatter writes UTC wall-clock values into a column
-// that both MySQL and the driver treat as IST wall-clock, silently shifting
-// every JS-computed expiry by 5.5 hours. Caught via a phone-OTP smoke test
-// reporting a freshly-issued code as already expired -- the exact same
-// buggy pattern (`.toISOString().slice(0,19).replace('T',' ')`) was already
-// present in the deployed AuthService (refresh token expiry, lockout
-// timestamps) before this session; fixed there too, not just here.
+// Formats an instant as a UTC wall-clock 'YYYY-MM-DD HH:MM:SS'. The DB pool
+// (database/db.ts) runs the driver with timezone 'Z' and each connection with
+// time_zone '+00:00', so UTC wall-clock text is the exact instant on every
+// host regardless of the Node process TZ (TENURE-ARCH-001 WP3 timezone pin).
+// Never use toISOString().slice(...) variants here: keep this the one helper.
 export function toMysqlDatetime(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
-    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ` +
+    `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`
   );
 }

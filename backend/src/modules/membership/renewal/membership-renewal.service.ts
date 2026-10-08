@@ -45,6 +45,7 @@ import { R2Service } from '../../shared/storage/r2.service';
 import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 import { logMembershipAudit } from '../shared/membership-audit.util';
+import { NATIVE_SOURCE, captureNativeTerm } from '../tenure-ledger/native-term-capture';
 import { expireClosedRenewalOperations } from './renewal-obligation-expiry';
 import {
   OPEN_OPERATION_STATUSES,
@@ -895,6 +896,17 @@ export class MembershipRenewalService {
         .where('id', '=', operationId)
         .where('status', '=', 'AWAITING_PAYMENT')
         .execute();
+
+      // TENURE-ARCH-001 WP3: the applied operation is the durable native term
+      // record. Continuous renewal starts at the previous term end (no gap);
+      // reinstatement starts at payment success (the lapse stays a gap).
+      await captureNativeTerm(trx, {
+        membershipId: Number(membership.id),
+        startInstant: newStart,
+        endInstant: newEnd,
+        sourceType: NATIVE_SOURCE.RENEWAL_OPERATION,
+        sourceId: operationId,
+      });
       await logMembershipAudit(
         {
           membershipId: Number(membership.id),

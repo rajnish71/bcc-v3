@@ -127,7 +127,11 @@ describe('WP2 vocabulary matches the migration ENUMs', () => {
   });
 });
 
-describe('WP2 wires no runtime writer', () => {
+// WP3 (native lifecycle capture) is the first and only runtime writer of the
+// ledger; Senior overlay/transition tables stay unwired (WP4/WP5+).
+const WP3_LEDGER_WRITER = 'modules/membership/tenure-ledger/native-term-capture.ts';
+
+describe('only the WP3 native capture writes the ledger', () => {
   const walk = (d: string): string[] =>
     fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => {
       const p = path.join(d, e.name);
@@ -137,19 +141,21 @@ describe('WP2 wires no runtime writer', () => {
   const stripComments = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
   const sources = walk(SRC).map((f) => [path.relative(SRC, f).replace(/\\/g, '/'), stripComments(fs.readFileSync(f, 'utf8'))] as const);
 
-  it('no backend source reads or writes the three new tables', () => {
-    const touching = sources
-      .filter(([, s]) => /(selectFrom|insertInto|updateTable|deleteFrom)\(\s*'(recognized_service_periods|senior_status_overlays|senior_status_transitions)/.test(s))
-      .map(([f]) => f);
-    expect(touching).toEqual([]);
+  it('only the WP3 native capture touches the ledger; nothing touches the Senior tables', () => {
+    const touching = (tables: string) =>
+      sources
+        .filter(([, s]) => new RegExp(String.raw`(selectFrom|insertInto|updateTable|deleteFrom)\(\s*'(${tables})`).test(s))
+        .map(([f]) => f);
+    expect(touching('recognized_service_periods')).toEqual([WP3_LEDGER_WRITER]);
+    expect(touching('senior_status_overlays|senior_status_transitions')).toEqual([]);
   });
 
-  it('nothing writes membership_audit_log.subject_user_id yet', () => {
+  it('only the audit helper writes membership_audit_log.subject_user_id', () => {
     const writers = sources.filter(([f, s]) => f !== 'database/db.ts' && /subject_user_id/.test(s)).map(([f]) => f);
-    expect(writers).toEqual([]);
+    expect(writers).toEqual(['modules/membership/shared/membership-audit.util.ts']);
   });
 
-  it('the vocabulary module is not imported anywhere yet', () => {
-    expect(sources.filter(([, s]) => /tenure-ledger\.vocabulary/.test(s)).map(([f]) => f)).toEqual([]);
+  it('the vocabulary module is imported only by the WP3 native capture', () => {
+    expect(sources.filter(([, s]) => /tenure-ledger\.vocabulary/.test(s)).map(([f]) => f)).toEqual([WP3_LEDGER_WRITER]);
   });
 });

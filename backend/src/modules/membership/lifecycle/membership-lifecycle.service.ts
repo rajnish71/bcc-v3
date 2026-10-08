@@ -40,6 +40,7 @@ import { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipNumberingService } from '../numbering/membership-numbering.service';
 import { resolveNumberPrefix } from '../numbering/number-prefix';
 import { logMembershipAudit } from '../shared/membership-audit.util';
+import { NATIVE_SOURCE, captureNativeTerm, closeNativePeriodsAtTermination } from '../tenure-ledger/native-term-capture';
 import { assertNoBlockingIndividualMembership, isRelease1RenewalClass } from '../renewal/renewal-policy';
 import { expireClosedRenewalOperations } from '../renewal/renewal-obligation-expiry';
 
@@ -865,6 +866,20 @@ export class MembershipLifecycleService {
 
       const result = await this.numberingService.assignPermanentNumber(trx, membershipId, joinYear, joinMonth);
 
+      // TENURE-ARCH-001 WP3: a native first term. Group members (term owned by
+      // the group) and administrative expiry overrides (complimentary grants)
+      // are not tenure evidence; NULL expiry is never captured.
+      if (!isGroupMember && !opts?.expiresAtOverride) {
+        await captureNativeTerm(trx, {
+          membershipId,
+          startInstant: now,
+          endInstant: effectiveExpiresAt,
+          sourceType: NATIVE_SOURCE.ACTIVATION,
+          sourceId: membershipId,
+          actorUserId: actor.userId ?? null,
+        });
+      }
+
       await logMembershipAudit(
         {
           membershipId,
@@ -1582,11 +1597,15 @@ export class MembershipLifecycleService {
     // F-013: mutation + existing LIFECYCLE_TRANSITION audit write commit/
     // roll back as one transaction.
     await db.transaction().execute(async (trx) => {
+      const terminatedAt = new Date();
       await trx
         .updateTable('memberships')
-        .set({ lifecycle_state: 'TERMINATED', terminated_at: toMysqlDatetime(new Date()) })
+        .set({ lifecycle_state: 'TERMINATED', terminated_at: toMysqlDatetime(terminatedAt) })
         .where('id', '=', membershipId)
         .execute();
+
+      // TENURE-ARCH-001 WP3: recognized service ends at MIN(term end, termination).
+      await closeNativePeriodsAtTermination(trx, membershipId, terminatedAt, actorUserId);
 
       await logMembershipAudit(
         {

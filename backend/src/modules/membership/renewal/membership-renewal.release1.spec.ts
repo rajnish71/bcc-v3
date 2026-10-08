@@ -36,6 +36,7 @@ import type { EntitlementService } from '../entitlements/entitlement.service';
 import { MembershipFinancialListener } from '../financial/membership-financial.listener';
 import { MembershipLifecycleService } from '../lifecycle/membership-lifecycle.service';
 import type { MembershipNumberingService } from '../numbering/membership-numbering.service';
+import { civilDateInKolkata } from '../tenure/civil-date';
 import { MembershipRenewalService } from './membership-renewal.service';
 import {
   assertNoBlockingIndividualMembership,
@@ -152,7 +153,7 @@ interface World {
 
 function world(o: World = {}): Tables {
   const tables: Tables = {
-    users: [{ id: UID, full_name: 'Test Member', email: 't@example.test' }],
+    users: [{ id: UID, full_name: 'Test Member', email: 't@example.test', username: 'testmember' }],
     membership_classes: Object.entries(CLASSES).map(([id, c]) => ({
       id: Number(id), code: c.code, name: c.name, is_renewable: c.renewable, is_lifetime: c.lifetime,
       is_closed: c.code === 'LEGACY_MEMBER', activation_mode: 'PAYMENT_REQUIRED', voting_eligible: false,
@@ -358,6 +359,15 @@ describe.each([
     expect(membership(t)).toMatchObject({ lifecycle_state: 'ACTIVE', expires_at: toMysqlDatetime(expectedEnd), membership_class_id: classId });
     expect(ops(t)[0]).toMatchObject({ status: 'APPLIED', new_term_start: TERM_END_SQL, new_term_end: toMysqlDatetime(expectedEnd), funded_amount_paise: feePaise });
     expect(dispatched(s, 'MEMBERSHIP_RENEWED')).toHaveLength(1);
+    // WP3: the applied operation is captured as one native, contiguous term.
+    const rsp = fake.writes('recognized_service_periods', 'insert');
+    expect(rsp).toHaveLength(1);
+    expect(rsp[0].values).toMatchObject({
+      user_id: UID, membership_id: MID, basis: 'NATIVE_LIFECYCLE', verification_status: 'VERIFIED', verified_by_user_id: null,
+      native_source_type: 'RENEWAL_OPERATION', native_source_id: Number(ops(t)[0].id),
+      start_date: civilDateInKolkata(TERM_END),
+      end_date: civilDateInKolkata(new Date(expectedEnd.getTime() - 1000)),
+    });
     assertNumberingUntouched(s, t);
     // Never rewrites identity/profile/application data.
     expect(fake.committed.filter((op) => op.table === 'users' && op.kind === 'update')).toHaveLength(0);
@@ -658,6 +668,13 @@ describe('reinstatement after expiry', () => {
     expect(second.status).toBe('APPLIED');
     expect(second.new_term_start).toBe(toMysqlDatetime(paidAt));
     expect(dispatched(s, 'MEMBERSHIP_REINSTATED')).toHaveLength(1);
+    // WP3: reinstatement is a NEW native period starting at payment success (gap preserved).
+    const rspR = fake.writes('recognized_service_periods', 'insert');
+    expect(rspR).toHaveLength(1);
+    expect(rspR[0].values).toMatchObject({
+      basis: 'NATIVE_LIFECYCLE', native_source_type: 'RENEWAL_OPERATION', verified_by_user_id: null,
+      start_date: civilDateInKolkata(paidAt),
+    });
     assertNumberingUntouched(s, t);
   });
 

@@ -17,6 +17,8 @@ export interface MembershipAuditEntry {
   eventType: string;
   actorType: 'SYSTEM' | 'ADMIN' | 'MEMBER';
   actorUserId?: number | null;
+  // 0122: the individual a ledger / Senior overlay event concerns.
+  subjectUserId?: number | null;
   oldValue?: unknown;
   newValue?: unknown;
   notes?: string | null;
@@ -37,6 +39,7 @@ export async function logMembershipAudit(
       event_type: entry.eventType,
       actor_type: entry.actorType,
       actor_user_id: entry.actorUserId ?? null,
+      ...(entry.subjectUserId !== undefined ? { subject_user_id: entry.subjectUserId } : {}),
       old_value: entry.oldValue !== undefined ? JSON.stringify(entry.oldValue) : null,
       new_value: entry.newValue !== undefined ? JSON.stringify(entry.newValue) : null,
       notes: entry.notes ?? null,

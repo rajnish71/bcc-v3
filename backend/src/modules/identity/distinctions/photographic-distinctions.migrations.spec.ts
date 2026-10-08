@@ -237,3 +237,37 @@ describe('0127 display_code + catalogue seed', () => {
     expect(sql).not.toMatch(/\bUPDATE\b|\bDELETE\b|user_photographic_distinctions|user_photo_titles/i);
   });
 });
+
+describe('0128 Bio-Data catalogue extension (IIPC, ICS, FIP additions)', () => {
+  const sql = read('0128_distinctions_catalogue_iipc_ics_fip_extension.sql');
+  const rows = [...sql.matchAll(/(?:SELECT|UNION ALL SELECT)\s+'([A-Z]+)'(?:\s+AS institution_code)?,\s*'([A-Z0-9_]+)'(?:\s+AS code)?,\s*'([^']+)'(?:\s+AS display_code)?,\s*'([^']+)'/g)]
+    .map((m) => ({ inst: m[1], code: m[2], display: m[3], name: m[4] }));
+
+  it('adds exactly the IIPC and ICS institutions, never OTHER', () => {
+    const seed = sql.match(/INSERT IGNORE INTO photographic_institutions[\s\S]*?;/)![0];
+    expect([...seed.matchAll(/\('([A-Z]+)',/g)].map((m) => m[1])).toEqual(['IIPC', 'ICS']);
+    expect(seed).not.toMatch(/'OTHER'/);
+  });
+
+  it('adds exactly the five approved distinctions with source-faithful display codes', () => {
+    expect(rows.map((r) => `${r.inst}/${r.display}`).sort()).toEqual(
+      ['FIP/FFIP', 'FIP/FIP-5*', 'ICS/Hon. FICS', 'IIPC/AIIPC', 'IIPC/IIPC-Platinum'].sort(),
+    );
+    expect(rows.find((r) => r.display === 'FIP-5*')!.name).toBe('FIP-5*');
+    expect(rows.find((r) => r.display === 'IIPC-Platinum')!.name).toBe('IIPC-Platinum');
+    expect(sql).not.toMatch(/MPC/);
+  });
+
+  it('does not touch AFIAP, existing rows, member declarations or legacy titles', () => {
+    expect(rows.some((r) => r.code === 'AFIAP')).toBe(false);
+    expect(sql).not.toMatch(/\bUPDATE\b|\bDELETE\b|user_photographic_distinctions|user_photo_titles/i);
+  });
+
+  it('is idempotent, non-badge-eligible and resolves institutions by code', () => {
+    expect(sql).toMatch(/SELECT i\.id, s\.code, s\.display_code, s\.name, 0, 1, s\.sort_order/);
+    expect(sql).toMatch(/JOIN photographic_institutions i ON i\.code = s\.institution_code/);
+    for (const ins of sql.match(/INSERT\s+(IGNORE\s+)?INTO\s+\w+/g)!.filter((i) => !/schema_migrations/.test(i)))
+      expect(ins).toMatch(/INSERT IGNORE INTO/);
+    expect(sql.match(/INSERT INTO schema_migrations/g)).toHaveLength(1);
+  });
+});

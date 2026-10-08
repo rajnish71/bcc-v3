@@ -13,7 +13,7 @@ describe('distinction code rules', () => {
     expect(DISTINCTION_CODE_PATTERN.test('gpu-cr3')).toBe(false);
   });
 
-  it.each(['EFIAP/d1', 'MFIP (Nature)', 'GPU VIP 3', 'AV-AFIAP', 'GMPSA/B', 'HonEFIAP', 'Hon. FIP', 'Hon. MFIP (Nature)', 'EFIP/g (Nature)', 'PFIAP/b', 'GFIP/pt'])(
+  it.each(['EFIAP/d1', 'MFIP (Nature)', 'GPU VIP 3', 'AV-AFIAP', 'GMPSA/B', 'HonEFIAP', 'Hon. FIP', 'Hon. MFIP (Nature)', 'EFIP/g (Nature)', 'PFIAP/b', 'GFIP/pt', 'FIP-5*', 'IIPC-Platinum', 'Hon. FICS'])(
     'accepts official display code %s', async (displayCode) => {
       expect(await validate(make({ code: 'X_1', displayCode }))).toHaveLength(0);
     });

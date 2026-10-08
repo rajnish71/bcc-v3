@@ -40,7 +40,7 @@ const INSTITUTION_CODE = /^[A-Z]{2,20}$/;
 const DISTINCTION_CODE = /^[A-Z0-9_]{2,50}$/;
 // Canonical display form, e.g. EFIAP/d1, MFIP (Nature), GPU VIP 3. Official
 // punctuation is legal here; the internal code stays machine-safe.
-const DISPLAY_CODE = /^[A-Za-z0-9][A-Za-z0-9 \/().-]{0,49}$/;
+const DISPLAY_CODE = /^[A-Za-z0-9][A-Za-z0-9 \/().*-]{0,49}$/;
 
 function institutionCode(raw: string): string {
   const code = raw.trim().toUpperCase();
@@ -59,7 +59,7 @@ function displayCode(raw: string | null): string | null {
   if (raw === null) return null;
   const code = raw.trim();
   if (code === '') return null;
-  if (!DISPLAY_CODE.test(code)) throw new BadRequestException('Display code may contain letters, digits, spaces and / ( ) . - only.');
+  if (!DISPLAY_CODE.test(code)) throw new BadRequestException('Display code may contain letters, digits, spaces and / ( ) . * - only.');
   return code;
 }
 

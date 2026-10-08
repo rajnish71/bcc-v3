@@ -25,7 +25,7 @@ import {
 
 export const INSTITUTION_CODE_PATTERN = /^[A-Z]{2,20}$/;
 export const DISTINCTION_CODE_PATTERN = /^[A-Z0-9_]{2,50}$/;
-export const DISPLAY_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 \/().-]{0,49}$/;
+export const DISPLAY_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 \/().*-]{0,49}$/;
 
 export class DistinctionReasonDto {
   @IsString()
@@ -69,7 +69,7 @@ export class CreateDistinctionDto {
   @Matches(DISTINCTION_CODE_PATTERN, { message: 'code must be 2-50 uppercase letters, digits or underscores' })
   code!: string;
 
-  @IsOptional() @Matches(DISPLAY_CODE_PATTERN, { message: 'displayCode may contain letters, digits, spaces and / ( ) . - only' })
+  @IsOptional() @Matches(DISPLAY_CODE_PATTERN, { message: 'displayCode may contain letters, digits, spaces and / ( ) . * - only' })
   displayCode?: string;
 
   @IsString() @MinLength(1) @MaxLength(255)
@@ -89,7 +89,7 @@ export class UpdateDistinctionDto {
   @IsOptional() @Matches(DISTINCTION_CODE_PATTERN, { message: 'code must be 2-50 uppercase letters, digits or underscores' })
   code?: string;
 
-  @IsOptional() @Matches(DISPLAY_CODE_PATTERN, { message: 'displayCode may contain letters, digits, spaces and / ( ) . - only' })
+  @IsOptional() @Matches(DISPLAY_CODE_PATTERN, { message: 'displayCode may contain letters, digits, spaces and / ( ) . * - only' })
   displayCode?: string;
 
   @IsOptional() @IsString() @MinLength(1) @MaxLength(255)

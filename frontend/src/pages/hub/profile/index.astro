@@ -614,34 +614,13 @@ const maxYear = new Date().getFullYear() + 1;
   <section class="ps" id="section-distinctions" data-section="distinctions">
     <div class="ps-head"><span class="ps-title">Distinctions</span></div>
 
+    <!-- Legacy photographic titles: READ-ONLY. Rendered from photoTitleRows,
+         never part of the Save payload or dirty tracking. -->
     <div class="ps-row">
       <div class="ps-field-group ps-field-group--full">
-        <label class="ps-label" for="field-fiap">FIAP Distinctions</label>
-        <input class="form-input" type="text" id="field-fiap" name="fiap"
-          placeholder="e.g. AFIAP EFIAP MFIAP" maxlength="500" />
-        <div class="ps-hint">Space-separated codes awarded by FIAP.</div>
-      </div>
-    </div>
-    <div class="ps-row">
-      <div class="ps-field-group ps-field-group--full">
-        <label class="ps-label" for="field-fip">FIP Distinctions</label>
-        <input class="form-input" type="text" id="field-fip" name="fip"
-          placeholder="e.g. AFIP EFIP MFIP" maxlength="500" />
-      </div>
-    </div>
-    <div class="ps-row">
-      <div class="ps-field-group ps-field-group--full">
-        <label class="ps-label" for="field-psa">PSA Distinctions</label>
-        <input class="form-input" type="text" id="field-psa" name="psa"
-          placeholder="e.g. PPSA FPSA MPSA" maxlength="500" />
-      </div>
-    </div>
-    <div class="ps-row">
-      <div class="ps-field-group ps-field-group--full">
-        <label class="ps-label" for="field-other-titles">Other Distinctions</label>
-        <input class="form-input" type="text" id="field-other-titles" name="other"
-          placeholder="e.g. GPU-CR3 GPU-VIP-3 FRPA" maxlength="1000" />
-        <div class="ps-hint">GPU codes and other international body codes, space-separated.</div>
+        <div class="ps-label">Legacy Titles (read-only)</div>
+        <ul class="legacy-titles" id="legacy-titles" aria-label="Legacy photographic titles"></ul>
+        <div class="ps-hint">These earlier records are kept for review and cannot be edited here. Declare your distinctions in the Photographic Distinctions section below.</div>
       </div>
     </div>
 
@@ -1452,6 +1431,8 @@ const maxYear = new Date().getFullYear() + 1;
 }
 /* ── PHOTOGRAPHIC DISTINCTIONS (structured) ─────────────────────────────── */
 /* Rows are created at runtime, so their selectors are :global (CLAUDE.md 4.4). */
+.legacy-titles { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-secondary,#5c564d); }
+.legacy-titles__empty { font-family:'Inter',sans-serif; font-style:italic; }
 .pd-block { display:flex; flex-direction:column; gap:12px; }
 .pd-status { font-size:12px; font-family:var(--font-body); color:var(--ink-600); min-height:0; }
 .pd-status:empty { display:none; }
@@ -1710,10 +1691,24 @@ async function loadProfile() {
   reRenderAllChips(['chip-bodies','chip-lenses','chip-drones','chip-other-gear']);
 
   // Distinctions
-  setInpVal('field-fiap', p.photoTitles?.fiap ?? '');
-  setInpVal('field-fip', p.photoTitles?.fip ?? '');
-  setInpVal('field-psa', p.photoTitles?.psa ?? '');
-  setInpVal('field-other-titles', p.photoTitles?.other ?? '');
+  // Legacy photo titles: read-only display of user_photo_titles rows (textContent only).
+  const legacyList = document.getElementById('legacy-titles');
+  if (legacyList) {
+    legacyList.replaceChildren();
+    const legacyRows: {bodyCode: string; titleCode: string; bodyName: string | null}[] =
+      Array.isArray(p.photoTitleRows) ? p.photoTitleRows : [];
+    if (legacyRows.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'legacy-titles__empty';
+      li.textContent = 'None on record';
+      legacyList.appendChild(li);
+    }
+    legacyRows.forEach(r => {
+      const li = document.createElement('li');
+      li.textContent = `${r.bodyName || r.bodyCode} — ${r.titleCode}`;
+      legacyList.appendChild(li);
+    });
+  }
 
   // Internal roles
   ['coordinator','mentor','instructor','volunteer'].forEach(role => {
@@ -1835,10 +1830,6 @@ async function saveAll() {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      fiap: getInp('field-fiap') || undefined,
-      fip: getInp('field-fip') || undefined,
-      psa: getInp('field-psa') || undefined,
-      other: getInp('field-other-titles') || undefined,
       awardsHtml: getTxtArea('tiptap-hidden-awardsHtml') || undefined,
     }),
   }));
@@ -2077,7 +2068,7 @@ listenDirty([
   'field-blood','field-ec-name','field-ec-phone','field-ec-rel',
   'field-tagline','field-website','field-camera-system','field-year-joined','tiptap-hidden-bio',
 ], 'main');
-listenDirty(['field-fiap','field-fip','field-psa','field-other-titles','tiptap-hidden-awardsHtml'], 'distinctions');
+listenDirty(['tiptap-hidden-awardsHtml'], 'distinctions');
 document.querySelectorAll('[data-platform]').forEach(el => {
   el.addEventListener('input', () => markDirty('social'));
 });

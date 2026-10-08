@@ -3,11 +3,13 @@ interface Props {
   maxChars?: number;
   fieldId?: string;
   placeholder?: string;
+  enforceLimit?: boolean;
 }
 const {
   maxChars = 3000,
   fieldId = 'bio',
   placeholder = 'Tell your story as a photographer…',
+  enforceLimit = false,
 } = Astro.props;
 ---
 
@@ -15,6 +17,7 @@ const {
   class="tiptap-bio-wrap"
   data-max-chars={maxChars}
   data-field-id={fieldId}
+  data-enforce-limit={enforceLimit ? 'true' : 'false'}
   data-placeholder={placeholder}
   id={`tiptap-${fieldId}-root`}
 >
@@ -121,6 +124,8 @@ const {
 
 <script>
   import { Editor } from '@tiptap/core';
+  import { Extension } from '@tiptap/core';
+  import { Plugin } from '@tiptap/pm/state';
   import StarterKit from '@tiptap/starter-kit';
 
   // Astro deduplicates component scripts — initialise every instance on the page.
@@ -128,6 +133,8 @@ const {
     const fieldId   = root.dataset.fieldId ?? 'bio';
     const maxChars  = parseInt(root.dataset.maxChars ?? '3000', 10);
     const placeholder = root.dataset.placeholder ?? '';
+    const enforce     = root.dataset.enforceLimit === 'true';
+    let loading = false; // programmatic setContent of saved content is never blocked
 
     const editorEl      = root.querySelector<HTMLElement>(`#tiptap-editor-${fieldId}`);
     const hiddenTextarea = root.querySelector<HTMLTextAreaElement>(`#tiptap-hidden-${fieldId}`);
@@ -145,12 +152,35 @@ const {
     }
 
     function updateCharCount(ed: Editor) {
-      const count = ed.getText().length;
+      // Visible characters = text nodes only (markup and block breaks excluded);
+      // the server computes the same value from the saved HTML.
+      const count = ed.state.doc.textContent.length;
+      const over = count > maxChars;
       if (charCountEl) {
-        charCountEl.textContent = `${count} / ${maxChars}`;
-        (charCountEl as HTMLElement).style.color = count > maxChars ? '#882828' : '#8B8378';
+        charCountEl.textContent = over
+          ? `${count} / ${maxChars} — over limit by ${count - maxChars}`
+          : `${count} / ${maxChars}`;
+        (charCountEl as HTMLElement).style.color = over ? '#882828' : '#8B8378';
       }
+      if (hiddenTextarea) hiddenTextarea.dataset.overLimit = over ? 'true' : 'false';
     }
+
+    // Reject any edit/paste that would push visible text past the limit
+    // (whole transaction rejected, so formatting is never trimmed or lost).
+    // Edits that do not grow the text stay allowed so a legacy over-limit
+    // biography can still be shortened.
+    const LimitGuard = Extension.create({
+      name: 'visibleCharLimit',
+      addProseMirrorPlugins() {
+        return [new Plugin({
+          filterTransaction: (tr, state) => {
+            if (!enforce || loading || !tr.docChanged) return true;
+            const next = tr.doc.textContent.length;
+            return next <= maxChars || next <= state.doc.textContent.length;
+          },
+        })];
+      },
+    });
 
     const editor = new Editor({
       element: editorEl,
@@ -164,6 +194,7 @@ const {
           orderedList: false,
           strike: false,
         }),
+        LimitGuard,
       ],
       editorProps: {
         attributes: {
@@ -187,7 +218,8 @@ const {
     // Expose setter — profile loadProfile() calls this after API data arrives.
     // Key: window.tiptapSetContent_bio, window.tiptapSetContent_awardsHtml, etc.
     (window as any)[`tiptapSetContent_${fieldId}`] = (html: string) => {
-      editor.commands.setContent(html || '');
+      loading = true;
+      try { editor.commands.setContent(html || ''); } finally { loading = false; }
       if (hiddenTextarea) hiddenTextarea.value = html || '';
       updateCharCount(editor);
     };

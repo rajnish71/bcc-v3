@@ -3,6 +3,7 @@ import {
   IsArray, ArrayMaxSize, IsIn, IsDateString, Matches,
   IsInt, Min,
 } from 'class-validator';
+import { BIO_MAX_CHARS, MaxVisibleChars } from './bio-text';
 import { CAMERA_SYSTEMS } from './profile-field-values';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
@@ -37,7 +38,9 @@ export class UpdateProfileDto {
   @IsOptional() @IsArray() @ArrayMaxSize(10) @IsString({ each: true }) favouriteSubjects?: string[];
   @IsOptional() @IsString() @IsIn(CAMERA_SYSTEMS) preferredCameraSystem?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(10) @IsString({ each: true }) photographyGenres?: string[];
-  @IsOptional() @IsString() @MaxLength(3000) bio?: string;
+  // Limit is on VISIBLE text (tags excluded), matching the editor counter.
+  // Raw-length cap guards against absurd payloads only.
+  @IsOptional() @IsString() @MaxLength(100000) @MaxVisibleChars(BIO_MAX_CHARS) bio?: string;
 
   // Temporarily user-editable — will be replaced by membership application date on full launch
   @IsOptional() @IsInt() @Min(1990) yearJoinedBcc?: number;

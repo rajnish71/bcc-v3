@@ -178,13 +178,14 @@ describe('saveAll()', () => {
   const fnSrc = MAIN.match(/async function saveAll\(\)[\s\S]*?\r?\n\}\r?\n/)![0];
   const js = ts.transpileModule(fnSrc, { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText;
 
-  function run(canSave: boolean) {
-    const apiFetch = jest.fn(async () => response(200, {}));
+  function run(canSave: boolean, overLimit = false, apiImpl?: (url: string) => Response) {
+    const apiFetch = jest.fn(async (url: string) => (apiImpl ? apiImpl(url) : response(200, {})));
     const setStatus = jest.fn();
     const buttons: Record<string, { disabled: boolean }> = { 'save-btn': { disabled: !canSave }, 'mobile-save-btn': { disabled: !canSave } };
     const deps = {
       document: { getElementById: (id: string) => buttons[id] ?? null, querySelectorAll: () => [] },
       profileGate: { canSave: () => canSave },
+      bioOverLimit: () => overLimit,
       apiFetch,
       setStatus,
       API: '/api/v1/hub/profile',
@@ -230,6 +231,50 @@ describe('saveAll()', () => {
     ]);
     expect(buttons['save-btn'].disabled).toBe(false);
     expect(buttons['mobile-save-btn'].disabled).toBe(false);
+  });
+
+  it('over-limit Biography: sends ZERO requests and shows the clear message', async () => {
+    const { saveAll, apiFetch, setStatus } = run(true, true);
+    await saveAll();
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(setStatus).toHaveBeenCalledWith('Biography must be 3000 characters or fewer.', 'ob-status--error');
+  });
+
+  it('a Biography validation failure names the failing operation and the server message', async () => {
+    const { saveAll, setStatus } = run(true, false, (url) =>
+      url === '/api/v1/hub/profile' ? response(400, { message: ['Biography must be 3000 characters or fewer.'] }) : response(200, {}));
+    await saveAll();
+    expect(setStatus).toHaveBeenCalledWith('Save failed — Profile: Biography must be 3000 characters or fewer.', 'ob-status--error');
+  });
+
+  it('a gear failure is identified as Equipment, not a generic message', async () => {
+    const { saveAll, setStatus } = run(true, false, (url) =>
+      url.endsWith('/gear') ? response(500, {}) : response(200, {}));
+    await saveAll();
+    expect(setStatus).toHaveBeenCalledWith('Save failed — Equipment: error 500', 'ob-status--error');
+  });
+});
+
+describe('TiptapBio visible-character enforcement (real source)', () => {
+  const SRC = read('components/hub/TiptapBio.astro');
+  it('counts visible text only, not getText()/getHTML() length', () => {
+    expect(SRC).toContain('ed.state.doc.textContent.length');
+    expect(SRC).not.toContain('getText().length');
+  });
+  it('rejects transactions that grow text past the limit but allows shrinking', () => {
+    expect(SRC).toContain('filterTransaction');
+    expect(SRC).toContain('next <= maxChars || next <= state.doc.textContent.length');
+  });
+  it('flags over-limit state and the page enforces it only on the bio editor', () => {
+    expect(SRC).toContain('dataset.overLimit');
+    expect(PAGE).toContain('<TiptapBio maxChars={3000} enforceLimit={true} />');
+  });
+  it('the guard predicate behaves as specified', () => {
+    const allow = (next: number, prev: number, max = 3000) => next <= max || next <= prev;
+    expect(allow(3000, 2999)).toBe(true);
+    expect(allow(3001, 3000)).toBe(false);   // typing / paste over limit rejected
+    expect(allow(3500, 3600)).toBe(true);    // legacy over-limit text may shrink
+    expect(allow(3601, 3600)).toBe(false);
   });
 });
 

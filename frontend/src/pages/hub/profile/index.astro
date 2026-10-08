@@ -499,7 +499,7 @@ const maxYear = new Date().getFullYear() + 1;
     <div class="ps-row">
       <div class="ps-field-group ps-field-group--full">
         <label class="ps-label">Biography</label>
-        <TiptapBio maxChars={3000} />
+        <TiptapBio maxChars={3000} enforceLimit={true} />
       </div>
     </div>
   </section>
@@ -1762,6 +1762,11 @@ async function saveAll() {
     setStatus('Your profile has not loaded, so saving is disabled. Use Retry to load it.', 'ob-status--error');
     return;
   }
+  // The editor enforces 3000 visible characters; never submit past it.
+  if (bioOverLimit()) {
+    setStatus('Biography must be 3000 characters or fewer.', 'ob-status--error');
+    return;
+  }
   const btn = document.getElementById('save-btn') as HTMLButtonElement | null;
   const mBtn = document.getElementById('mobile-save-btn') as HTMLButtonElement | null;
   if (btn) btn.disabled = true;
@@ -1842,9 +1847,16 @@ async function saveAll() {
       setStatus('All changes saved');
       loadCompletion().catch(() => {});
     } else {
-      const errs = results.filter(r => !r.ok);
-      const msg = await errs[0].json().catch(() => ({})) as {message?: string};
-      setStatus(typeof msg.message === 'string' ? msg.message : 'Save failed', 'ob-status--error');
+      const labels = ['Profile', 'Social links', 'Equipment', 'Awards'];
+      const failures: string[] = [];
+      for (let i = 0; i < results.length; i++) {
+        if (results[i].ok) continue;
+        const body = await results[i].json().catch(() => ({})) as {message?: string | string[]};
+        const detail = Array.isArray(body.message) ? body.message.join('; ')
+          : typeof body.message === 'string' ? body.message : `error ${results[i].status}`;
+        failures.push(`${labels[i]}: ${detail}`);
+      }
+      setStatus(`Save failed — ${failures.join(' | ')}`, 'ob-status--error');
     }
   } catch {
     setStatus('Network error — try again', 'ob-status--error');
@@ -2011,6 +2023,7 @@ function setInpVal(id: string, val: string) { const el = document.getElementById
 function setTxtArea(id: string, val: string) { const el = document.getElementById(id) as HTMLTextAreaElement | null; if (el) el.value = val; }
 function setSelVal(id: string, val: string) { const el = document.getElementById(id) as HTMLSelectElement | null; if (el) el.value = val; }
 function getInp(id: string): string { return (document.getElementById(id) as HTMLInputElement | null)?.value.trim() ?? ''; }
+function bioOverLimit(): boolean { return document.getElementById('tiptap-hidden-bio')?.dataset.overLimit === 'true'; }
 function getTxtArea(id: string): string { return (document.getElementById(id) as HTMLTextAreaElement | null)?.value ?? ''; }
 function getSel(id: string): string { return (document.getElementById(id) as HTMLSelectElement | null)?.value ?? ''; }
 

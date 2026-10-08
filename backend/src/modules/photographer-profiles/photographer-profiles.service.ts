@@ -36,6 +36,7 @@ import { DirectoryEligibilityService, directoryBaseQuery } from './directory-eli
 import { GalleryService } from '../gallery/gallery.service';
 import { countCurrentMembers } from '../membership/current-members.query';
 import { findBadgeQualifiedUserIds } from '../identity/distinctions/photographic-distinction-badge';
+import { getPublicDistinctions } from '../identity/distinctions/photographic-distinction-public';
 import {
   buildDisplayName,
   suppressedTitleRegex,
@@ -297,6 +298,9 @@ export class PhotographerProfilesService {
 
     const rows = await rowQ.limit(opts.limit).offset(opts.offset).execute();
 
+    // Phase 2B: post-nominals for the whole page in ONE set-based query.
+    const distinctions = await getPublicDistinctions(rows.map(r => Number(r.id)));
+
     return {
       data: rows.map(r => ({
         id:          r.id,
@@ -309,6 +313,7 @@ export class PhotographerProfilesService {
         memberSince: r.join_year ?? null,
         photoCount:  Number(r.photo_count ?? 0),
         avatarUrl:   r.avatar_r2_key ? ikUrl(r.avatar_r2_key, AVATAR_DELIVERY_TR) : null,
+        postNominals: (distinctions.get(Number(r.id)) ?? []).map(d => d.code),
       })),
       meta: meta(total),
     };
@@ -448,6 +453,10 @@ export class PhotographerProfilesService {
       .execute();
 
     // Photography society titles (FIP, PSA, FIAP, GPU, OTHER)
+    // Phase 2B: structured, self-declared Photographic Distinctions (public
+    // fields only). Read after the PRIVATE gate above, so it never widens it.
+    const photographicDistinctions = (await getPublicDistinctions([Number(user.id)])).get(Number(user.id)) ?? [];
+
     const titleRows = await db
       .selectFrom('user_photo_titles')
       .select(['body_code', 'title_code', 'body_name'])
@@ -522,6 +531,7 @@ export class PhotographerProfilesService {
           bodyName: t.body_name ?? t.body_code,
           titleCode: t.title_code,
         })),
+        photographicDistinctions,
       },
     };
   }

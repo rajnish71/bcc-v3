@@ -344,6 +344,15 @@ const jsonLd = displayName
           <div class="about-awards" id="about-awards"></div>
         </div>
 
+        <!-- Photographic Distinctions (Phase 2B): structured, self-declared,
+             catalogue-bounded. Filled only by the runtime profile fetch below,
+             never from build-time props, metadata or JSON-LD. -->
+        <div class="about-card" id="about-pd-card" hidden>
+          <div class="about-card-head">Photographic Distinctions</div>
+          <div class="about-titles" id="about-pd"></div>
+          <p class="about-gear-note">Photographic distinctions are self-declared by the member.</p>
+        </div>
+
         <!-- Photography Society Titles -->
         <div class="about-card" id="about-titles-card" hidden>
           <div class="about-card-head">Photography Society Titles</div>
@@ -1581,6 +1590,25 @@ async function loadProfile() {
         <div class="about-title-row">
           <span class="about-title-code">${esc(t.titleCode)}</span>
           <span class="about-title-body">${esc(t.bodyName)}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Photographic Distinctions in About rail (Phase 2B, runtime data only).
+  // Post-nominal = catalogue code; the full name is shown when it differs
+  // from the code; then the institution. Card stays hidden when empty.
+  const pds: Array<{ institutionCode: string; institutionName: string; code: string; name: string }> =
+    Array.isArray(profile.photographicDistinctions) ? profile.photographicDistinctions : [];
+  if (pds.length) {
+    const card = document.getElementById('about-pd-card');
+    const el = document.getElementById('about-pd');
+    if (card) card.hidden = false;
+    if (el) {
+      el.innerHTML = pds.map(d => `
+        <div class="about-title-row">
+          <span class="about-title-code">${esc(d.code)}</span>
+          <span class="about-title-body">${d.name && d.name !== d.code ? `${esc(d.name)} · ` : ''}${esc(d.institutionName)}</span>
         </div>
       `).join('');
     }

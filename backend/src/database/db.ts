@@ -242,6 +242,7 @@ export interface PhotographicDistinctionsTable {
   id: Generated<number>;
   institution_id: number;
   code: string;
+  display_code: string | null;
   name: string;
   badge_eligible: Generated<boolean>;
   is_active: Generated<boolean>;

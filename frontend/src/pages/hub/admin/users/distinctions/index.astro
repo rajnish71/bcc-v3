@@ -98,6 +98,9 @@ import '../../../../../styles/distinctions-admin.css';
       <label>Code
         <input type="text" name="code" maxlength="50" autocomplete="off" required />
       </label>
+      <label id="pd-cat-display-wrap">Display code (optional, e.g. EFIAP/d1)
+        <input type="text" name="displayCode" maxlength="50" autocomplete="off" />
+      </label>
       <label>Name
         <input type="text" name="name" maxlength="255" autocomplete="off" required />
       </label>
@@ -126,7 +129,7 @@ import '../../../../../styles/distinctions-admin.css';
     state: 'DECLARED' | 'WITHDRAWN' | 'REMOVED'; preRemovalState: string | null;
     declaredAt: string; stateChangedAt: string;
   }
-  interface CatDistinction { id: number; code: string; name: string; badgeEligible: boolean; isActive: boolean; sortOrder: number }
+  interface CatDistinction { id: number; code: string; displayCode?: string; name: string; badgeEligible: boolean; isActive: boolean; sortOrder: number }
   interface CatInstitution { id: number; code: string; name: string; isActive: boolean; sortOrder: number; distinctions: CatDistinction[] }
 
   let flags: DistinctionUiFlags = { view: false, remove: false, catalogueManage: false };
@@ -252,7 +255,7 @@ import '../../../../../styles/distinctions-admin.css';
           ${inst.distinctions.length ? `<div class="data-table-wrap"><table class="data-table">
             <thead><tr><th>Code</th><th>Name</th><th>Badge eligible</th><th>Status</th><th>Sort</th>${m ? '<th></th>' : ''}</tr></thead>
             <tbody>${inst.distinctions.map((d) => `<tr class="${d.isActive ? '' : 'row-inactive'}">
-              <td class="mono">${esc(d.code)}</td>
+              <td class="mono">${esc(d.displayCode ?? d.code)}${d.displayCode && d.displayCode !== d.code ? `<div class="cell-sub">${esc(d.code)}</div>` : ''}</td>
               <td>${esc(d.name)}</td>
               <td>${d.badgeEligible ? 'Yes' : '<span class="muted">No</span>'}</td>
               <td>${activeLabel(d.isActive)}</td>
@@ -292,9 +295,10 @@ import '../../../../../styles/distinctions-admin.css';
     const isDist = kind === 'distinction';
     $('pd-cat-institution-wrap').hidden = !(isDist && id === null);
     $('pd-cat-badge-wrap').hidden = !isDist;
+    $('pd-cat-display-wrap').hidden = !isDist;
     const codeInput = form.elements.namedItem('code') as HTMLInputElement;
-    codeInput.pattern = isDist ? '[A-Z0-9]{2,50}' : '[A-Z]{2,20}';
-    codeInput.title = isDist ? '2-50 uppercase letters or digits' : '2-20 uppercase letters';
+    codeInput.pattern = isDist ? '[A-Z0-9_]{2,50}' : '[A-Z]{2,20}';
+    codeInput.title = isDist ? '2-50 uppercase letters, digits or underscores' : '2-20 uppercase letters';
     const select = form.elements.namedItem('institutionId') as HTMLSelectElement;
     select.innerHTML = catalogue.map((i) => `<option value="${i.id}">${esc(i.code)} — ${esc(i.name)}</option>`).join('');
     if (institutionId) select.value = String(institutionId);
@@ -310,7 +314,7 @@ import '../../../../../styles/distinctions-admin.css';
     } else {
       const found = id ? findDist(id) : null;
       $('pd-cat-title').textContent = found ? `Edit ${found.inst.code} · ${found.dist.code}` : 'Add distinction';
-      set('code', found?.dist.code ?? ''); set('name', found?.dist.name ?? ''); set('sortOrder', String(found?.dist.sortOrder ?? 0));
+      set('code', found?.dist.code ?? ''); set('displayCode', found?.dist.displayCode && found.dist.displayCode !== found.dist.code ? found.dist.displayCode : ''); set('name', found?.dist.name ?? ''); set('sortOrder', String(found?.dist.sortOrder ?? 0));
       set('isActive', found?.dist.isActive ?? true); set('badgeEligible', found?.dist.badgeEligible ?? false);
     }
     ($('pd-cat-dialog') as HTMLDialogElement).showModal();
@@ -327,6 +331,8 @@ import '../../../../../styles/distinctions-admin.css';
       isActive: (form.elements.namedItem('isActive') as HTMLInputElement).checked,
     };
     if (catTarget.kind === 'distinction') {
+      const dc = String(fd.get('displayCode') ?? '').trim();
+      if (dc) body.displayCode = dc;
       body.badgeEligible = (form.elements.namedItem('badgeEligible') as HTMLInputElement).checked;
       if (catTarget.id === null) body.institutionId = Number(fd.get('institutionId'));
     }

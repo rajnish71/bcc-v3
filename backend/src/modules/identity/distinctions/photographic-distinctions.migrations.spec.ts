@@ -147,3 +147,93 @@ describe('0117 RBAC grants', () => {
     expect(sql).not.toMatch(/INSERT[\s\S]*INTO roles/i);
   });
 });
+
+describe('0127 display_code + catalogue seed', () => {
+  const sql = read('0127_distinction_display_code_and_catalogue_seed.sql');
+  const rows = [...sql.matchAll(/(?:SELECT|UNION ALL SELECT)\s+'([A-Z]+)'(?:\s+AS institution_code)?,\s*'([A-Z0-9_]+)'(?:\s+AS code)?,\s*'([^']+)'(?:\s+AS display_code)?/g)]
+    .map((m) => ({ inst: m[1], code: m[2], display: m[3] }));
+  const displays = (inst: string) => rows.filter((r) => r.inst === inst).map((r) => r.display);
+
+  it('guards the column add and records itself once', () => {
+    expect(sql).toMatch(/information_schema\.columns/);
+    expect(sql).toMatch(/ADD COLUMN display_code VARCHAR\(50\) NULL/);
+    expect(sql).toMatch(/INSERT IGNORE INTO photographic_distinctions/);
+    expect(sql.match(/INSERT INTO schema_migrations/g)).toHaveLength(1);
+  });
+
+  it('has no duplicate (institution, code) or (institution, display) pairs', () => {
+    const keys = rows.map((r) => `${r.inst}/${r.code}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    const dkeys = rows.map((r) => `${r.inst}/${r.display}`);
+    expect(new Set(dkeys).size).toBe(dkeys.length);
+  });
+
+  it('every internal code is machine-safe and every display code is valid', () => {
+    for (const r of rows) {
+      expect(r.code).toMatch(/^[A-Z0-9_]{2,50}$/);
+      expect(r.display).toMatch(/^[A-Za-z0-9][A-Za-z0-9 \/().-]{0,49}$/);
+    }
+  });
+
+  it('FIP: Genius levels, Nature variants and honorary entries (official notation)', () => {
+    for (const d of ['GFIP', 'GFIP/pt', 'GFIP/ut', 'GFIP/st', 'EFIP/g', 'EFIP/p', 'EFIP/g (Nature)', 'EFIP/p (Nature)', 'MFIP', 'MFIP (Nature)', 'ESFIP', 'Hon. FIP', 'Hon. MFIP (Nature)'])
+      expect(displays('FIP')).toContain(d);
+    expect(sql).not.toMatch(/ESFIPC/);
+  });
+
+  it('FIAP: categories A-E, portfolio /b /s /g, audio-visual, service and honours', () => {
+    const all = [
+      'NFIAP', 'EFIAP', 'EFIAP/b', 'EFIAP/s', 'EFIAP/g', 'EFIAP/p',
+      ...[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `EFIAP/d${n}`),
+      'MFIAP', 'GMFIAP', 'PFIAP', 'PFIAP/b', 'PFIAP/s', 'PFIAP/g', 'MPFIAP',
+      'AV-AFIAP', 'AV-EFIAP', 'AV-EFIAP/b', 'AV-EFIAP/s', 'AV-EFIAP/g', 'AV-EFIAP/p', 'AV-MFIAP',
+      'ESFIAP', 'HonEFIAP', 'LAAFIAP', 'HMFIAP',
+    ];
+    for (const d of all) expect(displays('FIAP')).toContain(d);
+    expect(displays('FIAP').filter((d) => d === 'GMFIAP')).toHaveLength(1);
+    expect(displays('FIAP').some((d) => /bronze|silver|gold/i.test(d))).toBe(false);
+    expect(sql).not.toMatch(/CAFIAP|CEFIAP/);
+  });
+
+  it('PSA: ROPA, GMPSA levels, portfolio and honours', () => {
+    for (const d of ['QPSA', 'EPSA', 'MPSA', 'MPSA2', 'GMPSA', 'GMPSA/B', 'GMPSA/S', 'GMPSA/G', 'GMPSA/P', 'BPSA', 'SPSA', 'GPSA', 'APSA', 'FPSA', 'HonPSA', 'HonFPSA'])
+      expect(displays('PSA')).toContain(d);
+  });
+
+  it('GPU Crown/VIP 1-5 are covered once, without re-seeding the 0116/0118 rows', () => {
+    const gpuCodes = rows.filter((r) => r.inst === 'GPU').map((r) => r.code);
+    expect(gpuCodes).not.toContain('CROWN3');
+    expect(gpuCodes).not.toContain('VIP3');
+    const covered = [...displays('GPU'), 'GPU Crown 3', 'GPU VIP 3'];
+    for (const n of [1, 2, 3, 4, 5]) { expect(covered).toContain(`GPU Crown ${n}`); expect(covered).toContain(`GPU VIP ${n}`); }
+    expect(sql).not.toMatch(/GPU-CR3|GPU VIP-3/);
+  });
+
+  it('GPU Titles and Grand Master are seeded; GPU total is 14 including the 0118 rows', () => {
+    for (const [code, display] of [['APHRODITE', 'Aphrodite'], ['HERMES', 'Hermes'], ['ZEUS', 'Zeus'], ['GRAND_MASTER', 'GPU Grand Master']])
+      expect(rows).toContainEqual({ inst: 'GPU', code, display });
+    expect(rows.filter((r) => r.inst === 'GPU')).toHaveLength(12);
+    expect(rows.filter((r) => r.inst === 'GPU').length + 2).toBe(14);
+  });
+
+  it('seeds the catalogue totals per institution (new rows)', () => {
+    const n = (i: string) => rows.filter((r) => r.inst === i).length;
+    expect({ FIP: n('FIP'), FIAP: n('FIAP'), PSA: n('PSA'), GPU: n('GPU'), RPS: n('RPS') })
+      .toEqual({ FIP: 13, FIAP: 32, PSA: 16, GPU: 12, RPS: 3 });
+  });
+
+  it('RPS: LRPS/ARPS/FRPS only (no research-route duplicates)', () => {
+    expect(displays('RPS')).toEqual(['LRPS', 'ARPS', 'FRPS']);
+    expect(sql).not.toMatch(/RESEARCH/i);
+  });
+
+  it('does not re-seed rows owned by 0116/0118', () => {
+    for (const [inst, code] of [['FIP', 'AFIP'], ['FIP', 'EFIP'], ['FIAP', 'AFIAP'], ['PSA', 'PPSA']])
+      expect(rows.some((r) => r.inst === inst && r.code === code)).toBe(false);
+  });
+
+  it('seeds new rows non-badge-eligible and never rewrites existing rows or legacy data', () => {
+    expect(sql).toMatch(/SELECT i\.id, s\.code, s\.display_code, s\.name, 0, 1, s\.sort_order/);
+    expect(sql).not.toMatch(/\bUPDATE\b|\bDELETE\b|user_photographic_distinctions|user_photo_titles/i);
+  });
+});

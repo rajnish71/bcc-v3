@@ -187,6 +187,9 @@ const jsonLd = displayName
         <span class="ph-founding-badge" id="ph-founding-badge" hidden>★ FOUNDING MEMBER</span>
         <span class="ph-recognition-badge" id="ph-recognition-badge" hidden></span>
       </div>
+      <!-- Photographic Distinction post-nominals (same canonical data as the
+           directory card). Runtime-filled; hidden when none. -->
+      <div class="ph-postnominals" id="ph-postnominals" hidden></div>
     </div>
 
     <!-- Stats -->
@@ -517,6 +520,16 @@ const jsonLd = displayName
   border-radius: 50%;
   background: var(--ink-200);
 }
+.ph-postnominals {
+  margin-top: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  color: var(--ink-600);
+  word-break: break-word;
+}
 .ph-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ph-class-badge {
   display: inline-flex;
@@ -540,6 +553,10 @@ const jsonLd = displayName
   background: var(--gold-light);
 }
 .ph-class-badge--basic { display: none; }
+/* display:inline-flex above would otherwise override the [hidden] attribute and
+   render an empty pill when there is no value. */
+.ph-class-badge[hidden],
+.ph-recognition-badge[hidden] { display: none; }
 .ph-founding-badge {
   font-size: 10px;
   font-weight: 700;
@@ -1601,6 +1618,11 @@ async function loadProfile() {
   const pds: Array<{ institutionCode: string; institutionName: string; code: string; name: string }> =
     Array.isArray(profile.photographicDistinctions) ? profile.photographicDistinctions : [];
   if (pds.length) {
+    const pn = document.getElementById('ph-postnominals');
+    if (pn) {
+      pn.textContent = pds.map(d => d.code).filter(Boolean).join(' · ');
+      pn.hidden = false;
+    }
     const card = document.getElementById('about-pd-card');
     const el = document.getElementById('about-pd');
     if (card) card.hidden = false;

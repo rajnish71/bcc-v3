@@ -25,7 +25,7 @@ import { flag } from './photographic-distinction-badge';
 export interface PublicPhotographicDistinction {
   institutionCode: string;
   institutionName: string;
-  /** Catalogue code, used as the post-nominal exactly as stored (H3). */
+  /** Canonical display code (display_code, else code): the post-nominal (H3). */
   code: string;
   name: string;
 }
@@ -53,6 +53,7 @@ export async function getPublicDistinctions(
       'i.sort_order as institution_sort',
       'd.sort_order as distinction_sort',
       'd.code as code',
+      'd.display_code as display_code',
       'd.name as name',
     ])
     .where('upd.user_id', 'in', ids)
@@ -81,7 +82,7 @@ export async function getPublicDistinctions(
     list.push({
       institutionCode: r.institution_code,
       institutionName: r.institution_name,
-      code: r.code,
+      code: r.display_code ?? r.code,
       name: r.name,
     });
   }

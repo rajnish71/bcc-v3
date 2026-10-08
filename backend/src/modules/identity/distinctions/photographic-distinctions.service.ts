@@ -37,7 +37,10 @@ const REASON_MAX = 500;
 // too so no caller can bypass them). There is never a generic OTHER
 // institution.
 const INSTITUTION_CODE = /^[A-Z]{2,20}$/;
-const DISTINCTION_CODE = /^[A-Z0-9]{2,50}$/;
+const DISTINCTION_CODE = /^[A-Z0-9_]{2,50}$/;
+// Canonical display form, e.g. EFIAP/d1, MFIP (Nature), GPU VIP 3. Official
+// punctuation is legal here; the internal code stays machine-safe.
+const DISPLAY_CODE = /^[A-Za-z0-9][A-Za-z0-9 \/().-]{0,49}$/;
 
 function institutionCode(raw: string): string {
   const code = raw.trim().toUpperCase();
@@ -48,7 +51,15 @@ function institutionCode(raw: string): string {
 
 function distinctionCode(raw: string): string {
   const code = raw.trim();
-  if (!DISTINCTION_CODE.test(code)) throw new BadRequestException('Distinction code must be 2-50 uppercase letters or digits.');
+  if (!DISTINCTION_CODE.test(code)) throw new BadRequestException('Distinction code must be 2-50 uppercase letters, digits or underscores.');
+  return code;
+}
+
+function displayCode(raw: string | null): string | null {
+  if (raw === null) return null;
+  const code = raw.trim();
+  if (code === '') return null;
+  if (!DISPLAY_CODE.test(code)) throw new BadRequestException('Display code may contain letters, digits, spaces and / ( ) . - only.');
   return code;
 }
 
@@ -74,6 +85,7 @@ export interface InstitutionInput {
 export interface DistinctionInput {
   institutionId: number;
   code: string;
+  displayCode?: string | null;
   name: string;
   badgeEligible: boolean;
   sortOrder?: number;
@@ -262,6 +274,7 @@ export class PhotographicDistinctionsService {
     const values = {
       institution_id: input.institutionId,
       code: distinctionCode(input.code),
+      display_code: displayCode(input.displayCode ?? null),
       name: input.name.trim(),
       badge_eligible: input.badgeEligible,
       is_active: input.isActive ?? true,
@@ -287,6 +300,7 @@ export class PhotographicDistinctionsService {
   async updateDistinction(actorId: number, id: number, patch: Partial<Omit<DistinctionInput, 'institutionId'>>) {
     const set: Record<string, unknown> = {};
     if (patch.code !== undefined) set.code = distinctionCode(patch.code);
+    if (patch.displayCode !== undefined) set.display_code = displayCode(patch.displayCode);
     if (patch.name !== undefined) set.name = patch.name.trim();
     if (set.name === '') throw new BadRequestException('Distinction name is required.');
     if (patch.badgeEligible !== undefined) set.badge_eligible = patch.badgeEligible;
@@ -295,7 +309,7 @@ export class PhotographicDistinctionsService {
     return this.catalogueWrite('This institution already has a distinction with that code.', async (trx) => {
       const before = await trx
         .selectFrom('photographic_distinctions')
-        .select(['id', 'code', 'name', 'badge_eligible', 'is_active', 'sort_order'])
+        .select(['id', 'code', 'display_code', 'name', 'badge_eligible', 'is_active', 'sort_order'])
         .where('id', '=', id)
         .forUpdate()
         .executeTakeFirst();
@@ -369,7 +383,7 @@ export class PhotographicDistinctionsService {
       .orderBy('code', 'asc');
     let dq = db
       .selectFrom('photographic_distinctions')
-      .select(['id', 'institution_id', 'code', 'name', 'badge_eligible', 'is_active', 'sort_order'])
+      .select(['id', 'institution_id', 'code', 'display_code', 'name', 'badge_eligible', 'is_active', 'sort_order'])
       .orderBy('sort_order', 'asc')
       .orderBy('code', 'asc');
     if (!opts.includeInactive) {
@@ -388,6 +402,7 @@ export class PhotographicDistinctionsService {
         .map((d) => ({
           id: Number(d.id),
           code: d.code,
+          displayCode: d.display_code ?? d.code,
           name: d.name,
           badgeEligible: flag(d.badge_eligible),
           isActive: flag(d.is_active),
@@ -421,6 +436,7 @@ export class PhotographicDistinctionsService {
         'u.username as username',
         'upd.distinction_id as distinction_id',
         'd.code as code',
+        'd.display_code as display_code',
         'd.name as name',
         'i.code as institution_code',
         'upd.state as state',
@@ -447,7 +463,7 @@ export class PhotographicDistinctionsService {
       username: r.username ?? null,
       distinctionId: Number(r.distinction_id),
       institutionCode: r.institution_code,
-      code: r.code,
+      code: r.display_code ?? r.code,
       name: r.name,
       state: r.state,
       preRemovalState: r.pre_removal_state,
@@ -464,6 +480,7 @@ export class PhotographicDistinctionsService {
       .select([
         'upd.distinction_id as distinction_id',
         'd.code as code',
+        'd.display_code as display_code',
         'd.name as name',
         'd.is_active as distinction_is_active',
         'i.code as institution_code',
@@ -481,7 +498,7 @@ export class PhotographicDistinctionsService {
       distinctionId: Number(r.distinction_id),
       institutionCode: r.institution_code,
       institutionName: r.institution_name,
-      code: r.code,
+      code: r.display_code ?? r.code,
       name: r.name,
       state: r.state,
       // false once the catalogue entry or its institution is deactivated:

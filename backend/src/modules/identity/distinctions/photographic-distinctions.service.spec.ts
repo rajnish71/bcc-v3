@@ -180,6 +180,19 @@ describe('PhotographicDistinctionsService', () => {
       expect(audits()).toEqual([expect.objectContaining({ target_user_id: null, action_type: 'PHOTOGRAPHIC_DISTINCTION_CATALOGUE_CREATED' })]);
     });
 
+    it('createDistinction stores an official-punctuation display code beside a machine-safe code', async () => {
+      script({ institution: { id: 1 } });
+      await svc.createDistinction(ADMIN, { institutionId: 1, code: 'EFIP_G_NATURE', displayCode: ' EFIP/g (Nature) ', name: 'EFIP Gold (Nature)', badgeEligible: false });
+      expect(fake.writes('photographic_distinctions', 'insert')[0].values).toMatchObject({ code: 'EFIP_G_NATURE', display_code: 'EFIP/g (Nature)', badge_eligible: false });
+    });
+
+    it('createDistinction rejects unsafe display codes and punctuation in the internal code', async () => {
+      script({ institution: { id: 1 } });
+      await expect(svc.createDistinction(ADMIN, { institutionId: 1, code: 'EFIAP/d1', name: 'X', badgeEligible: false })).rejects.toThrow();
+      await expect(svc.createDistinction(ADMIN, { institutionId: 1, code: 'X1', displayCode: '<script>', name: 'X', badgeEligible: false })).rejects.toThrow();
+      expect(fake.writes('photographic_distinctions', 'insert')).toHaveLength(0);
+    });
+
     it('createDistinction under an unknown institution -> 404', async () => {
       script({});
       await expect(svc.createDistinction(ADMIN, { institutionId: 99, code: 'XX', name: 'X', badgeEligible: false })).rejects.toBeInstanceOf(NotFoundException);

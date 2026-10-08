@@ -5,8 +5,9 @@
 //
 // Catalogue codes are structured identifiers, not free text:
 //   institution  ^[A-Z]{2,20}$     (OTHER is rejected in the service)
-//   distinction  ^[A-Z0-9]{2,50}$  (e.g. AFIP, PPSA, CROWN3, VIP3 -- legacy
-//                                   strings such as "GPU-CR3" do not fit)
+//   distinction  ^[A-Z0-9_]{2,50}$ machine-safe internal code (AFIP, EFIAP_D1);
+//                official punctuation lives in the optional displayCode
+//                (EFIAP/d1, MFIP (Nature)). Legacy "GPU-CR3" is not a code.
 
 import { Type } from 'class-transformer';
 import {
@@ -23,7 +24,8 @@ import {
 } from 'class-validator';
 
 export const INSTITUTION_CODE_PATTERN = /^[A-Z]{2,20}$/;
-export const DISTINCTION_CODE_PATTERN = /^[A-Z0-9]{2,50}$/;
+export const DISTINCTION_CODE_PATTERN = /^[A-Z0-9_]{2,50}$/;
+export const DISPLAY_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 \/().-]{0,49}$/;
 
 export class DistinctionReasonDto {
   @IsString()
@@ -64,8 +66,11 @@ export class CreateDistinctionDto {
   @IsInt() @Min(1)
   institutionId!: number;
 
-  @Matches(DISTINCTION_CODE_PATTERN, { message: 'code must be 2-50 uppercase letters or digits' })
+  @Matches(DISTINCTION_CODE_PATTERN, { message: 'code must be 2-50 uppercase letters, digits or underscores' })
   code!: string;
+
+  @IsOptional() @Matches(DISPLAY_CODE_PATTERN, { message: 'displayCode may contain letters, digits, spaces and / ( ) . - only' })
+  displayCode?: string;
 
   @IsString() @MinLength(1) @MaxLength(255)
   name!: string;
@@ -81,8 +86,11 @@ export class CreateDistinctionDto {
 }
 
 export class UpdateDistinctionDto {
-  @IsOptional() @Matches(DISTINCTION_CODE_PATTERN, { message: 'code must be 2-50 uppercase letters or digits' })
+  @IsOptional() @Matches(DISTINCTION_CODE_PATTERN, { message: 'code must be 2-50 uppercase letters, digits or underscores' })
   code?: string;
+
+  @IsOptional() @Matches(DISPLAY_CODE_PATTERN, { message: 'displayCode may contain letters, digits, spaces and / ( ) . - only' })
+  displayCode?: string;
 
   @IsOptional() @IsString() @MinLength(1) @MaxLength(255)
   name?: string;

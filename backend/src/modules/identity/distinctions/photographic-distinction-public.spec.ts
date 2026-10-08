@@ -94,6 +94,27 @@ describe('getPublicDistinctions()', () => {
     expect((await getPublicDistinctions([10])).get(10)![0]).toMatchObject({ code: 'CROWN3', name: 'GPU Crown 3' });
   });
 
+  it('returns display_code as the canonical code, falling back to the internal code', async () => {
+    rows = [
+      row(10, FIAP, 'EFIAP_D1', 'Excellence FIAP Diamond 1', 70, { display_code: 'EFIAP/d1' }),
+      row(10, FIP, 'EFIP_G_NATURE', 'EFIP Gold (Nature)', 50, { display_code: 'EFIP/g (Nature)' }),
+      row(10, FIP, 'HON_FIP', 'Honorary FIP', 100, { display_code: 'Hon. FIP' }),
+      row(10, FIP, 'AFIP', 'AFIP', 10, { display_code: null }),
+    ];
+    const out = (await getPublicDistinctions([10])).get(10)!;
+    expect(out.map((d) => d.code)).toEqual(['AFIP', 'EFIP/g (Nature)', 'Hon. FIP', 'EFIAP/d1']);
+    expect(JSON.stringify(out)).not.toMatch(/EFIAP_D1|HON_FIP|display_code/);
+  });
+
+  it('shows GPU Titles and Grand Master by display code, after Crown/VIP order', async () => {
+    rows = [
+      row(10, GPU, 'GRAND_MASTER', 'GPU Grand Master', 40, { display_code: 'GPU Grand Master' }),
+      row(10, GPU, 'APHRODITE', 'Aphrodite (GPU Title)', 30, { display_code: 'Aphrodite' }),
+      row(10, GPU, 'CROWN3', 'GPU Crown 3', 10, { display_code: null }),
+    ];
+    expect((await getPublicDistinctions([10])).get(10)!.map((d) => d.code)).toEqual(['CROWN3', 'Aphrodite', 'GPU Grand Master']);
+  });
+
   it('is set-based: many users -> ONE query', async () => {
     rows = [row(1, FIP, 'AFIP', 'AFIP', 10), row(2, PSA, 'PPSA', 'PPSA', 10), row(3, FIAP, 'AFIAP', 'AFIAP', 10)];
     const map = await getPublicDistinctions([1, 2, 3, 4, 2]);

@@ -23,7 +23,7 @@ const PREFIX: Record<CatalogueKind, string> = {
   DISTINCTION: 'PHOTOGRAPHIC_DISTINCTION_CATALOGUE',
 };
 
-const PLAIN_FIELDS = ['code', 'name', 'sort_order'] as const;
+const PLAIN_FIELDS = ['code', 'display_code', 'name', 'sort_order'] as const;
 
 export function catalogueCreatedEvent(
   kind: CatalogueKind,

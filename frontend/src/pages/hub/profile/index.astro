@@ -67,10 +67,11 @@ const maxYear = new Date().getFullYear() + 1;
 
     <!-- Column 3: Status & Actions -->
     <div class="ob-right">
-      <span class="ob-status" id="ph-status">All changes saved</span>
+      <span class="ob-status ob-status--saving" id="ph-status">Loading profile…</span>
+      <button class="ob-retry-btn" id="ph-retry" type="button" hidden>Retry</button>
       <span class="ob-divider-dot">•</span>
       <a class="ob-view-link" id="ph-public-link" href="#" target="_blank" rel="noopener">Public Profile ↗</a>
-      <button class="ob-save-btn" id="save-btn" type="button">Save Changes</button>
+      <button class="ob-save-btn" id="save-btn" type="button" disabled>Save Changes</button>
     </div>
 
   </div>
@@ -84,7 +85,7 @@ const maxYear = new Date().getFullYear() + 1;
 
 <!-- ── MOBILE SAVE BAR ─────────────────────────────────────────────────── -->
 <div class="mobile-save-bar" id="mobile-save-bar">
-  <button class="mobile-save-btn" id="mobile-save-btn" type="button">Save Changes</button>
+  <button class="mobile-save-btn" id="mobile-save-btn" type="button" disabled>Save Changes</button>
 </div>
 
 <!-- ── WORKSPACE GRID ─────────────────────────────────────────────────── -->
@@ -1019,6 +1020,21 @@ const maxYear = new Date().getFullYear() + 1;
   opacity: 0.6;
   cursor: not-allowed;
 }
+.ob-retry-btn {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-900);
+  background: none;
+  border: 1px solid var(--ink-200);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color var(--m-fast), color var(--m-fast);
+}
+.ob-retry-btn:hover {
+  border-color: var(--gold-light);
+  color: var(--gold-600);
+}
 
 /* Workspace layout columns */
 .editor-workspace-body {
@@ -1110,6 +1126,7 @@ const maxYear = new Date().getFullYear() + 1;
   background:var(--gold-gradient);
   border:none; cursor:pointer; font-family:var(--font-body);
 }
+.mobile-save-btn:disabled { opacity:0.6; cursor:not-allowed; }
 
 /* ── SECTIONS ────────────────────────────────────────────────────────────── */
 .ps { display:none; padding-bottom:8px; }
@@ -1462,6 +1479,9 @@ const maxYear = new Date().getFullYear() + 1;
 </style>
 
 <script>
+import { whenHubAuthenticated } from '../../../lib/distinctions-admin';
+import { createProfileLoadGate, requireProfileBody, type ProfileLoadState } from '../../../lib/profile-load-gate';
+
 const API = '/api/v1/hub/profile';
 function tok(): string { return localStorage.getItem('bcc_token') ?? ''; }
 async function apiFetch(url: string, opts: RequestInit = {}): Promise<Response> {
@@ -1475,7 +1495,7 @@ async function apiFetch(url: string, opts: RequestInit = {}): Promise<Response> 
 const dirty = new Set<string>();
 function markDirty(section: string) {
   dirty.add(section);
-  setStatus('');
+  if (profileGate.canSave()) setStatus('');
 }
 
 // ── Status ──────────────────────────────────────────────────────────────────
@@ -1485,6 +1505,31 @@ function setStatus(msg: string, cls = '') {
   el.textContent = msg || 'All changes saved';
   el.className = cls ? `ob-status ${cls}` : 'ob-status';
 }
+
+// ── Profile load gate ──────────────────────────────────────────────────────
+// Save replaces social links, equipment and title rows and writes every main
+// field, so it is only allowed once the profile GET has succeeded and the form
+// has been hydrated. The first load waits for HubLayout to finish
+// authentication (it may be refreshing an expired token); a failed load is
+// shown as such, with a manual Retry, and never as an empty profile.
+function applyProfileLoadState(state: ProfileLoadState) {
+  const saveEnabled = state === 'loaded';
+  for (const id of ['save-btn', 'mobile-save-btn']) {
+    const btn = document.getElementById(id) as HTMLButtonElement | null;
+    if (btn) btn.disabled = !saveEnabled;
+  }
+  const retry = document.getElementById('ph-retry');
+  if (retry) retry.hidden = state !== 'failed';
+  if (state === 'loading') setStatus('Loading profile…', 'ob-status--saving');
+  else if (state === 'failed') setStatus('Could not load your profile. Saving is disabled until it loads.', 'ob-status--error');
+  else setStatus('');
+}
+
+const profileGate = createProfileLoadGate({
+  waitForHub: () => whenHubAuthenticated(),
+  load: () => loadProfile(),
+  onStateChange: applyProfileLoadState,
+});
 
 // ── Genre list ──────────────────────────────────────────────────────────────
 const GENRES = [
@@ -1585,9 +1630,9 @@ async function loadCompletion() {
 }
 
 async function loadProfile() {
-  const res = await apiFetch(API);
-  if (!res.ok) return;
-  const p = await res.json() as Record<string, any>;
+  // Throws on any failure (401, other non-2xx, non-object body); the gate
+  // marks the profile as failed rather than hydrating it as empty.
+  const p = await requireProfileBody(await apiFetch(API)) as Record<string, any>;
 
   // Header
   const initials = (p.fullName ?? '').trim().split(/\s+/).map((w: string) => w[0] ?? '').join('').slice(0,2).toUpperCase();
@@ -1716,6 +1761,12 @@ function reRenderAllChips(containerIds: string[]) {
 
 // ── Save ──────────────────────────────────────────────────────────────────
 async function saveAll() {
+  // Never send the replace-style PUTs for a profile that did not load: a
+  // blank form would delete social links, equipment and title rows.
+  if (!profileGate.canSave()) {
+    setStatus('Your profile has not loaded, so saving is disabled. Use Retry to load it.', 'ob-status--error');
+    return;
+  }
   const btn = document.getElementById('save-btn') as HTMLButtonElement | null;
   const mBtn = document.getElementById('mobile-save-btn') as HTMLButtonElement | null;
   if (btn) btn.disabled = true;
@@ -1807,8 +1858,8 @@ async function saveAll() {
   } catch {
     setStatus('Network error — try again', 'ob-status--error');
   } finally {
-    if (btn) btn.disabled = false;
-    if (mBtn) mBtn.disabled = false;
+    if (btn) btn.disabled = !profileGate.canSave();
+    if (mBtn) mBtn.disabled = !profileGate.canSave();
   }
 }
 
@@ -2047,8 +2098,9 @@ document.getElementById('cover-file-input')?.addEventListener('change', e => {
   if (file) uploadMedia(file, 'cover');
 });
 
-// Load data
-loadProfile().catch(() => {});
+// Load data (through the gate: waits for HubLayout, enables Save on success)
+document.getElementById('ph-retry')?.addEventListener('click', () => { void profileGate.start(); });
+void profileGate.start();
 loadCompletion().catch(() => {});
 </script>
 

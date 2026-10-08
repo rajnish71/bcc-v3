@@ -11,6 +11,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { db } from '../../../database/db';
 import type { FakeDb, FakeOp } from '../../../test-support/fake-db';
+import { resolveBoundary } from '../tenure/service-period-resolution';
 import { calculateRecognizedService } from '../tenure/tenure-calculator';
 import {
   EVIDENCE_SOURCES,
@@ -20,6 +21,7 @@ import {
   buildLeadsFromMemberships,
   classifyEvidence,
   insertHistoricalPeriod,
+  isHaYearBoundaryRecord,
   reconcileHistoricalEvidence,
   storedBoundaryDate,
   type HistoricalEvidenceRecord,
@@ -60,6 +62,22 @@ const ev = (over: Partial<HistoricalEvidenceRecord> = {}): HistoricalEvidenceRec
   verifiedAt: '2026-10-09 10:00:00',
   ...over,
 });
+
+// Human Authority certified joining year: a non-counting YEAR boundary.
+const NOTE = 'test-note: HA certified from personal knowledge, corroborated by BCC participation records';
+const haYear = (over: Partial<HistoricalEvidenceRecord> = {}): HistoricalEvidenceRecord =>
+  ev({
+    evidenceId: 'HA16',
+    source: 'GOVERNANCE_ATTESTATION',
+    basis: 'GOVERNANCE_ATTESTATION',
+    evidenceKind: 'BOUNDARY',
+    continuityEstablished: false,
+    start: { precision: 'YEAR', value: '2016', attestation: 'BOUNDARY' },
+    end: null,
+    evidenceReference: 'TEST-HA-CERT#user16',
+    evidenceNote: NOTE,
+    ...over,
+  });
 
 const input = (over: Partial<ReconciliationInput> = {}): ReconciliationInput => ({
   memberships,
@@ -368,6 +386,159 @@ describe('idempotent insertion', () => {
       expect(touched.has(t)).toBe(false);
     }
     expect(fake.committed.every((o) => o.kind === 'insert' && ['recognized_service_periods', 'membership_audit_log'].includes(o.table))).toBe(true);
+  });
+
+  describe('HA year boundary writer', () => {
+    it('writes the HA YEAR boundary exactly as certified (non-counting, no end, note passed through)', async () => {
+      const out = await run((trx) => insertHistoricalPeriod(trx, haYear(), 1));
+      expect(out).toMatchObject({ inserted: true });
+      const v = fake.writes('recognized_service_periods', 'insert')[0].values!;
+      expect(v).toMatchObject({
+        basis: 'GOVERNANCE_ATTESTATION',
+        evidence_kind: 'BOUNDARY',
+        continuity_established: 0,
+        start_precision: 'YEAR',
+        start_attestation: 'BOUNDARY',
+        start_date: '2016-01-01', // 0119 YEAR encoding, not a claimed joining day
+        end_date: null,
+        end_precision: null,
+        end_attestation: null,
+        verification_status: 'VERIFIED',
+        verified_by_user_id: 1,
+        evidence_reference: 'TEST-HA-CERT#user16',
+        evidence_note: NOTE,
+        native_source_type: null,
+        supersedes_period_id: null,
+        established_by_type: 'ADMIN',
+      });
+      expect(v.verified_at).toBe('2026-10-09 10:00:00');
+    });
+
+    it('PERIOD evidence is written exactly as before (PERIOD, continuity 1)', async () => {
+      await run((trx) => insertHistoricalPeriod(trx, ev(), 1));
+      expect(fake.writes('recognized_service_periods', 'insert')[0].values).toMatchObject({ evidence_kind: 'PERIOD', continuity_established: 1, start_precision: 'EXACT' });
+    });
+
+    it('rejects invalid combinations at write time and writes nothing', async () => {
+      const bad: Array<[string, HistoricalEvidenceRecord]> = [
+        ['POINT + continuity true', haYear({ evidenceKind: 'POINT', continuityEstablished: true })],
+        ['BOUNDARY + continuity true', haYear({ continuityEstablished: true })],
+        ['missing evidence reference', haYear({ evidenceReference: ' ' })],
+        ['missing verifier', haYear({ verifierUserId: null })],
+        ['missing verification timestamp', haYear({ verifiedAt: null })],
+        ['unsupported evidence source', haYear({ source: 'USERS_YEAR_JOINED_BCC' })],
+        ['invalid membership link', haYear({ membershipId: 999 })],
+        ['HA shape on HISTORICAL_RECONCILIATION basis', haYear({ basis: 'HISTORICAL_RECONCILIATION' })],
+        ['MONTH start', haYear({ start: { precision: 'MONTH', value: '2016-03', attestation: 'BOUNDARY' } })],
+        ['YEAR start with PERIOD attestation', haYear({ start: { precision: 'YEAR', value: '2016', attestation: 'PERIOD' } })],
+        ['with an end', haYear({ end: { precision: 'YEAR', value: '2018', attestation: 'BOUNDARY' } })],
+        ['PERIOD kind without continuity', ev({ continuityEstablished: false })],
+      ];
+      for (const [, rec] of bad) {
+        await expect(run((trx) => insertHistoricalPeriod(trx, rec, 1))).rejects.toBeInstanceOf(HistoricalInsertRejected);
+      }
+      expect(fake.writes('recognized_service_periods', 'insert')).toHaveLength(0);
+      expect(fake.writes('membership_audit_log', 'insert')).toHaveLength(0);
+    });
+
+    it('is idempotent: the same HA boundary twice yields one row, never an update', async () => {
+      const a = await run((trx) => insertHistoricalPeriod(trx, haYear(), 1));
+      const b = await run((trx) => insertHistoricalPeriod(trx, haYear(), 1));
+      expect(a).toMatchObject({ inserted: true });
+      expect(b).toEqual({ inserted: false, evidenceId: 'HA16', reason: 'ALREADY_PRESENT' });
+      expect(ledgerRows).toHaveLength(1);
+      expect(fake.writes('recognized_service_periods', 'insert')).toHaveLength(1);
+    });
+
+    it('PERIOD and BOUNDARY records with the same reference and start do not collide', async () => {
+      await run((trx) => insertHistoricalPeriod(trx, haYear(), 1));
+      const period = ev({ evidenceReference: 'TEST-HA-CERT#user16', start: { precision: 'YEAR', value: '2016', attestation: 'PERIOD' }, end: { precision: 'YEAR', value: '2016', attestation: 'PERIOD' } });
+      const out = await run((trx) => insertHistoricalPeriod(trx, period, 1));
+      expect(out).toMatchObject({ inserted: true });
+      expect(ledgerRows).toHaveLength(2);
+    });
+
+    it('is append-only: no update or delete of any ledger row', async () => {
+      await run((trx) => applyHistoricalPlan(trx, reconcileHistoricalEvidence(input({ evidence: [haYear()] })), 1));
+      expect(fake.writes('recognized_service_periods', 'update')).toHaveLength(0);
+      expect(fake.writes('recognized_service_periods', 'delete')).toHaveLength(0);
+    });
+
+    it('founding users: identical validation, ledger+audit inserts only, nothing else written', async () => {
+      users.push({ id: 5 });
+      memberRows.push({ id: 8, user_id: 5, owner_type: 'INDIVIDUAL', parent_membership_id: null, membership_number: 'BCC20191100005', lifecycle_state: 'ACTIVE' });
+      const founder = haYear({ evidenceId: 'HA5', userId: 5, membershipId: 8, start: { precision: 'YEAR', value: '2019', attestation: 'BOUNDARY' }, evidenceReference: 'TEST-HA-CERT#user5' });
+      await expect(run((trx) => insertHistoricalPeriod(trx, { ...founder, verifierUserId: null }, 1))).rejects.toBeInstanceOf(HistoricalInsertRejected);
+      await expect(run((trx) => insertHistoricalPeriod(trx, { ...founder, membershipId: 11 }, 1))).rejects.toBeInstanceOf(HistoricalInsertRejected);
+      expect(fake.committed).toHaveLength(0);
+      await run((trx) => insertHistoricalPeriod(trx, founder, 1));
+      const writes = new Set(fake.committed.map((o) => `${o.kind}:${o.table}`));
+      expect([...writes].sort()).toEqual(['insert:membership_audit_log', 'insert:recognized_service_periods']);
+      const touched = new Set([...fake.committed, ...fake.selects].map((o) => o.table));
+      for (const t of ['member_recognitions', 'senior_status_overlays', 'senior_status_transitions']) expect(touched.has(t)).toBe(false);
+    });
+  });
+});
+
+describe('HA year boundary: classification, reconciliation and WP1 behaviour', () => {
+  it('the HA shape is accepted; any deviation is judged by the unchanged rules', () => {
+    expect(isHaYearBoundaryRecord(haYear())).toBe(true);
+    expect(classifyEvidence(haYear(), mById)).toEqual({ accepted: true });
+    const dev = classifyEvidence(haYear({ basis: 'HISTORICAL_RECONCILIATION' }), mById);
+    expect(dev.accepted).toBe(false);
+    if (!dev.accepted) expect(dev.reasons).toEqual(expect.arrayContaining(['EVIDENCE_KIND_NOT_PERIOD', 'CONTINUITY_NOT_ESTABLISHED']));
+    const point = classifyEvidence(haYear({ evidenceKind: 'POINT', continuityEstablished: true }), mById);
+    expect(point.accepted).toBe(false);
+    if (!point.accepted) expect(point.reasons).toContain('POINT_EVIDENCE');
+  });
+
+  it('PERIOD behaviour is unchanged', () => {
+    expect(classifyEvidence(ev(), mById)).toEqual({ accepted: true });
+    const c = classifyEvidence(ev({ continuityEstablished: false }), mById);
+    expect(c.accepted).toBe(false);
+    if (!c.accepted) expect(c.reasons).toEqual(['CONTINUITY_NOT_ESTABLISHED']);
+    const b = classifyEvidence(ev({ evidenceKind: 'BOUNDARY' }), mById);
+    expect(b.accepted).toBe(false);
+    if (!b.accepted) expect(b.reasons).toEqual(['EVIDENCE_KIND_NOT_PERIOD']);
+  });
+
+  it('a YEAR boundary resolves to the latest possible start and counts zero service', () => {
+    const rec = haYear();
+    expect(resolveBoundary(rec.start, 'START')).toBe('2016-12-31');
+    const r = reconcileHistoricalEvidence(input({ evidence: [rec] }));
+    expect(r.planned).toHaveLength(1);
+    expect(r.planned[0].counting).toBe(false);
+    expect(r.summary).toMatchObject({ verified_periods: 1, recognized_service_periods_to_insert: 1, non_counting_boundary_records: 1 });
+    const svc = r.validation.find((v) => v.userId === 16)!.service;
+    expect(svc.totalMonths).toBe(0);
+    expect(svc.countedIntervals).toEqual([]);
+    expect(svc.excluded).toEqual([{ periodId: 'HA16', reason: 'CONTINUITY_NOT_ESTABLISHED' }]);
+    expect(r.findings.filter((f) => f.type === 'OVERLAP' || f.type === 'GAP')).toEqual([]);
+    expect(r.unresolved.some((u) => u.userId === 16)).toBe(false);
+    expect(JSON.stringify(r)).not.toMatch(/senior/i);
+  });
+
+  it('a counted PERIOD alongside an HA boundary is unaffected by it', () => {
+    const r = reconcileHistoricalEvidence(input({ evidence: [ev({ evidenceId: 'E1' }), haYear({ evidenceId: 'HA16' })] }));
+    expect(r.planned.map((p) => [p.evidenceId, p.counting])).toEqual([['E1', true], ['HA16', false]]);
+    expect(r.validation[0].service.totalMonths).toBe(12);
+  });
+
+  it('is deterministic and idempotent against an already-recorded HA row', () => {
+    const a = reconcileHistoricalEvidence(input({ evidence: [haYear()] }));
+    expect(reconcileHistoricalEvidence(input({ evidence: [haYear()] })).reportHash).toBe(a.reportHash);
+    const ledger: LedgerPeriodContext[] = [
+      {
+        id: 7, userId: 16, membershipId: 11,
+        start: { precision: 'YEAR', value: '2016', attestation: 'BOUNDARY' }, end: null,
+        evidenceKind: 'BOUNDARY', continuityEstablished: false, basis: 'GOVERNANCE_ATTESTATION',
+        evidenceReference: 'TEST-HA-CERT#user16', verificationStatus: 'VERIFIED', verifiedByUserId: 1, correctionState: 'CURRENT',
+      },
+    ];
+    const b = reconcileHistoricalEvidence(input({ evidence: [haYear()], ledger }));
+    expect(b.planned).toEqual([]);
+    expect(b.findings.some((f) => f.type === 'ALREADY_IN_LEDGER')).toBe(true);
+    expect(b.unresolved.some((u) => u.userId === 16)).toBe(false);
   });
 });
 

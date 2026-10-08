@@ -19,8 +19,17 @@
 //     verification fields and can never be inserted. A candidate never
 //     silently becomes verified.
 //   * Only a supplied EvidenceRecord with a non-lead source, a non-blank
-//     evidence reference, a resolvable identity, established continuity (PERIOD
-//     evidence), a named human verifier and a verification time is ACCEPTED.
+//     evidence reference, a resolvable identity, a named human verifier and a
+//     verification time is ACCEPTED, and only in one of two shapes:
+//       - COUNTING: PERIOD evidence with established continuity;
+//       - NON-COUNTING HA YEAR BOUNDARY: basis GOVERNANCE_ATTESTATION,
+//         evidence_kind BOUNDARY, YEAR/BOUNDARY start, no end, continuity
+//         NOT established (a Human Authority certified joining year). It
+//         records the certified start boundary, stays YEAR precision (the
+//         stored YYYY-01-01 is the 0119 encoding, not a claimed joining
+//         day) and, because continuity is false, contributes zero service
+//         in the WP1 engine until continuity is separately attested by a
+//         superseding row.
 //     Everything else is UNRESOLVED with explicit reason codes. No period is
 //     ever invented to make the engine produce a result.
 //   * Group membership never transfers tenure (R2); membership links must
@@ -178,6 +187,9 @@ export interface PlannedPeriod {
   evidenceId: string;
   record: HistoricalEvidenceRecord;
   idempotencyKey: string;
+  // true = PERIOD evidence with continuity (counts in WP1); false = a
+  // non-counting HA year-boundary record.
+  counting: boolean;
 }
 
 export interface ReconciliationInput {
@@ -198,6 +210,7 @@ export interface ReconciliationReport {
     evidence_records_supplied: number;
     verified_periods: number;
     recognized_service_periods_to_insert: number;
+    non_counting_boundary_records: number;
     unresolved_candidates: number;
     contradictory_cases: number;
     findings: number;
@@ -254,6 +267,21 @@ function resolveInterval(r: { start: ServiceBoundaryInput; end: ServiceBoundaryI
 
 // ── Evidence classification (pure) ────────────────────────────────────────
 
+// The single non-PERIOD shape the framework accepts: a Human Authority
+// certified joining year. Deliberately narrow -- any deviation (other basis,
+// MONTH/EXACT start, PERIOD attestation, an end, continuity true, other
+// evidence kind) is NOT this shape and is judged by the unchanged rules.
+export function isHaYearBoundaryRecord(r: HistoricalEvidenceRecord): boolean {
+  return (
+    r.basis === 'GOVERNANCE_ATTESTATION' &&
+    r.evidenceKind === 'BOUNDARY' &&
+    r.continuityEstablished === false &&
+    r.start.precision === 'YEAR' &&
+    r.start.attestation === 'BOUNDARY' &&
+    r.end === null
+  );
+}
+
 export function classifyEvidence(
   r: HistoricalEvidenceRecord,
   membershipsById: ReadonlyMap<number, MembershipContext>,
@@ -268,9 +296,11 @@ export function classifyEvidence(
   if (r.verifierUserId == null) reasons.add('MISSING_VERIFIER');
   if (isBlank(r.verifiedAt)) reasons.add('MISSING_VERIFIED_AT');
 
-  if (r.evidenceKind === 'POINT') reasons.add('POINT_EVIDENCE');
-  else if (r.evidenceKind !== 'PERIOD') reasons.add('EVIDENCE_KIND_NOT_PERIOD'); // BOUNDARY evidence alone never establishes continuity (§5.5)
-  if (r.continuityEstablished !== true) reasons.add('CONTINUITY_NOT_ESTABLISHED');
+  if (!isHaYearBoundaryRecord(r)) {
+    if (r.evidenceKind === 'POINT') reasons.add('POINT_EVIDENCE');
+    else if (r.evidenceKind !== 'PERIOD') reasons.add('EVIDENCE_KIND_NOT_PERIOD'); // BOUNDARY evidence alone never establishes continuity (§5.5)
+    if (r.continuityEstablished !== true) reasons.add('CONTINUITY_NOT_ESTABLISHED');
+  }
 
   const interval = resolveInterval(r);
   if (interval === 'INVALID') reasons.add('INVALID_BOUNDARY');
@@ -374,14 +404,16 @@ export function reconcileHistoricalEvidence(input: ReconciliationInput): Reconci
       findings.push({ type: 'ALREADY_IN_LEDGER', userId: c.rec.userId, detail: `Evidence ${c.rec.evidenceId} already established in the ledger; not planned.`, refs: [c.rec.evidenceId] });
       continue;
     }
-    planned.push({ evidenceId: c.rec.evidenceId, record: c.rec, idempotencyKey: key });
+    planned.push({ evidenceId: c.rec.evidenceId, record: c.rec, idempotencyKey: key, counting: !isHaYearBoundaryRecord(c.rec) });
   }
 
   // 5. Lead-only candidates: every individual membership/user holding leads
   //    (or an individual membership) with no verified period remains unresolved.
   const verifiedUsers = new Set<number>([
     ...planned.map((p) => p.record.userId),
-    ...input.ledger.filter((l) => ledgerCounted(l) && l.basis !== 'NATIVE_LIFECYCLE').map((l) => l.userId),
+    ...input.ledger
+      .filter((l) => l.correctionState === 'CURRENT' && l.verificationStatus === 'VERIFIED' && l.evidenceKind !== 'POINT' && l.basis !== 'NATIVE_LIFECYCLE')
+      .map((l) => l.userId),
   ]);
   const evidenceByUser = new Map<number, string[]>();
   for (const e of evidence) evidenceByUser.set(e.userId, [...(evidenceByUser.get(e.userId) ?? []), e.evidenceId]);
@@ -418,7 +450,7 @@ export function reconcileHistoricalEvidence(input: ReconciliationInput): Reconci
     ivByUser.set(userId, [...(ivByUser.get(userId) ?? []), { ref, ...iv }]);
   };
   for (const l of input.ledger) if (ledgerCounted(l)) push(l.userId, `L${l.id}`, l);
-  for (const p of planned) push(p.record.userId, p.evidenceId, p.record);
+  for (const p of planned) if (p.counting) push(p.record.userId, p.evidenceId, p.record);
   const OPEN = '9999-12-31';
   for (const userId of [...ivByUser.keys()].sort((a, b) => a - b)) {
     const ivs = ivByUser.get(userId)!.sort((a, b) => compareCivilDates(a.start, b.start) || cmp(a.ref, b.ref));
@@ -459,6 +491,7 @@ export function reconcileHistoricalEvidence(input: ReconciliationInput): Reconci
       evidence_records_supplied: input.evidence.length,
       verified_periods: planned.length,
       recognized_service_periods_to_insert: planned.length,
+      non_counting_boundary_records: planned.filter((p) => !p.counting).length,
       unresolved_candidates: unresolved.length,
       contradictory_cases: contradictory,
       findings: findings.length,
@@ -558,6 +591,7 @@ export async function insertHistoricalPeriod(
     .where('evidence_reference', '=', record.evidenceReference.trim())
     .where('start_date', '=', new Date(`${storedBoundaryDate(record.start)}T00:00:00Z`))
     .where('start_precision', '=', record.start.precision)
+    .where('evidence_kind', '=', record.evidenceKind)
     .where('correction_state', '=', 'CURRENT')
     .execute();
   const endDate = record.end === null ? null : storedBoundaryDate(record.end);
@@ -576,8 +610,8 @@ export async function insertHistoricalPeriod(
       end_date: endDate,
       end_precision: record.end === null ? null : record.end.precision,
       end_attestation: record.end === null || record.end.precision === 'EXACT' ? null : record.end.attestation,
-      evidence_kind: 'PERIOD',
-      continuity_established: 1,
+      evidence_kind: record.evidenceKind,
+      continuity_established: record.continuityEstablished ? 1 : 0,
       basis: record.basis,
       native_source_type: null,
       native_source_id: null,
@@ -606,6 +640,8 @@ export async function insertHistoricalPeriod(
         basis: record.basis,
         start: record.start,
         end: record.end,
+        evidenceKind: record.evidenceKind,
+        continuityEstablished: record.continuityEstablished,
         evidenceReference: record.evidenceReference.trim(),
         verifierUserId: record.verifierUserId,
         evidenceId: record.evidenceId,

@@ -1,7 +1,8 @@
-// Behavioural tests for the F-034 universal session block (Option A):
-// a force_password_reset account receives no session through ANY
-// authentication path until the flag is cleared by the existing reset /
-// change-password flows. AuthService and RegistrationService run for real
+// Behavioural tests for the F-034 session block on NON-password paths:
+// a force_password_reset account receives no session through social / magic
+// link / OTP-style paths until the flag is cleared by the existing reset /
+// change-password flows. (Password login() and refresh() instead issue a
+// restricted `fpr` session -- see auth.force-password-reset.restricted-session.spec.ts.) AuthService and RegistrationService run for real
 // against the recording fake of db.ts (see test-support/fake-db.ts), the
 // same harness as auth.session-id.spec.ts.
 
@@ -23,7 +24,6 @@ jest.mock('../../shared/communication/email.service', () => ({
 
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
 import { db } from '../../../database/db';
 import type { FakeDb, FakeOp } from '../../../test-support/fake-db';
 import { AuthService } from './auth.service';
@@ -112,18 +112,6 @@ describe('issueSessionForUser() (F-034 universal session block)', () => {
     expect(pair.accessToken).toBeTruthy();
     expect(inserted('refresh_tokens')).toHaveLength(1);
     expect(inserted('login_history')[0].values).toMatchObject({ status: 'SUCCESS' });
-  });
-});
-
-// ── Password login (pre-existing gate, now via the shared helper) ─────────
-
-describe('password login', () => {
-  it('flagged → 403, FAILED login_history, no session (existing behaviour preserved)', async () => {
-    const passwordHash = await argon2.hash('pw-123456');
-    script({ users: { email: [userRow(42, { password_hash: passwordHash, force_password_reset: true })] } });
-    await expectResetRequired(service.login('user42@example.com', 'pw-123456', DEVICE));
-    expectNoSession();
-    expect(inserted('login_history')[0].values).toMatchObject({ status: 'FAILED' });
   });
 });
 
@@ -271,13 +259,6 @@ describe('refresh()', () => {
     expect(updates.find((op) => op.set && 'last_used_at' in op.set)).toBeDefined();
     expect(updates.find((op) => op.set && 'replaced_by_token_id' in op.set)).toBeDefined();
     expect(inserted('refresh_tokens')).toHaveLength(1);
-  });
-
-  it('flagged user → existing 403, no rotation, last_used_at untouched', async () => {
-    script({ refresh_tokens: { token_hash: [tokenRow()] }, users: { id: [flagged(42)] } });
-    await expectResetRequired(service.refresh('raw', DEVICE));
-    expect(inserted('refresh_tokens')).toHaveLength(0);
-    expect(fake.writes('refresh_tokens', 'update')).toHaveLength(0);
   });
 
   it('unknown token → 401', async () => {

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { AccountSettingsService } from './account-settings.service';
 import { AccessTokenGuard } from '../auth/access-token.guard';
+import { AllowForcedPasswordReset } from '../auth/allow-forced-password-reset.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AccessTokenPayload } from '../auth/token.util';
 import { UpdateNameDto } from './dto/update-name.dto';
@@ -52,6 +53,7 @@ export class AccountSettingsController {
   }
 
   @Put('password')
+  @AllowForcedPasswordReset()
   @UseGuards(AccessTokenGuard)
   updatePassword(
     @CurrentUser() user: AccessTokenPayload,

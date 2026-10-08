@@ -246,8 +246,17 @@ const activeRoute = Astro.url.pathname;
         fullName?: string;
         username?: string;
         identityStatus?: string;
+        forcePasswordReset?: boolean;
         ui?: { portalState: string; financialRead?: boolean };
       };
+
+      // force_password_reset: mandatory password change before any Hub access
+      // (the API also refuses forced-reset sessions on every other route).
+      if (user.forcePasswordReset === true) {
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.replace(`/auth/change-password/?next=${next}`);
+        return;
+      }
 
       identityStatus = user.identityStatus ?? 'IDENTITY_COMPLETE';
       portalState = user.ui?.portalState;

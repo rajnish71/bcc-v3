@@ -30,4 +30,8 @@ export interface AccessTokenPayload {
   // authority and is never looked up by AccessTokenGuard. Optional because
   // access tokens issued before this change (<=15 min lifetime) lack it.
   sid?: string;
+  // Mandatory-action state: set when users.force_password_reset was TRUE at
+  // issuance. AccessTokenGuard then confines the session to routes marked
+  // @AllowForcedPasswordReset(). Re-evaluated on every refresh().
+  fpr?: boolean;
 }

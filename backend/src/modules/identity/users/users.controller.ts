@@ -8,6 +8,7 @@ import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Put, Q
 import { sql } from 'kysely';
 import { db } from '../../../database/db';
 import { AccessTokenGuard } from '../auth/access-token.guard';
+import { AllowForcedPasswordReset } from '../auth/allow-forced-password-reset.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AccessTokenPayload } from '../auth/token.util';
 import { RbacGuard } from '../rbac/rbac.guard';
@@ -20,6 +21,7 @@ export class UsersController {
   constructor(private readonly rbac: RbacService) {}
 
   @Get('me')
+  @AllowForcedPasswordReset()
   @UseGuards(AccessTokenGuard)
   async me(@CurrentUser() user: AccessTokenPayload) {
     const row = await db

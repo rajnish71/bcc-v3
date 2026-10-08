@@ -164,20 +164,19 @@ export class AuthService {
       throw new ForbiddenException(`Account is ${user.status.toLowerCase()}`);
     }
 
-    // F-034: a flagged account must not receive a session -- the only way
-    // out is the forgot-password flow, which is unauthenticated and clears
-    // the flag in resetPassword() below.
-    if (user.force_password_reset) {
-      await this.recordLoginAttempt(user.id, identifier, device, 'FAILED');
-    }
-    this.assertPasswordResetNotRequired(user);
-
+    // force_password_reset is a post-authentication mandatory-action state,
+    // not an authentication failure: the password is valid, so a session is
+    // issued, but its access token carries `fpr` and AccessTokenGuard confines
+    // it to the password-change route until the flag is cleared.
     // Success -- clear any failed-attempt counter, record history, issue tokens.
     const sessionId = resolveSessionId();
     await this.clearFailedAttempts(user.id);
     await this.recordLoginAttempt(user.id, identifier, device, 'SUCCESS', sessionId);
 
-    return this.issueTokenPair(user.id, user.uuid, user.status, device, sessionId);
+    return this.issueTokenPair(
+      user.id, user.uuid, user.status, device, sessionId,
+      undefined, db, !!user.force_password_reset,
+    );
   }
 
   // -- Password reset ---------------------------------------------------
@@ -378,12 +377,12 @@ export class AuthService {
   }
 
   /**
-   * F-034: the single force_password_reset rule shared by login(), refresh()
-   * and issueSessionForUser(). Public only so RegistrationService can apply
-   * it before linking a social identity to an existing account (that link is
-   * a mutation and must not happen for an authentication that will be
-   * refused). The way out is resetPassword() or the in-app password change,
-   * both of which clear the flag.
+   * F-034: the force_password_reset rule for NON-password authentication
+   * (issueSessionForUser() and the social-link check in RegistrationService,
+   * which must not mutate an account for an authentication that will be
+   * refused). Password login() and refresh() do not use it: they issue a
+   * restricted (`fpr`) session instead. The way out is resetPassword() or the
+   * in-app password change, both of which clear the flag.
    */
   assertPasswordResetNotRequired(user: { force_password_reset: boolean }): void {
     if (user.force_password_reset) {
@@ -401,8 +400,10 @@ export class AuthService {
     sessionId: string,
     replacesTokenId?: number,
     executor: Kysely<DB> = db,
+    forcePasswordReset = false,
   ): Promise<TokenPair> {
     const payload: AccessTokenPayload = { sub: userId, uuid, status, sid: sessionId };
+    if (forcePasswordReset) payload.fpr = true;
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
@@ -486,10 +487,9 @@ export class AuthService {
       throw new ForbiddenException('Account is not active');
     }
 
-    // F-034: same gate as login() -- a flagged account does not get a new
-    // token pair on refresh either.
-    this.assertPasswordResetNotRequired(user);
-
+    // A flagged account keeps a restricted session: the refreshed token pair
+    // carries `fpr` until the flag is cleared (the flag is re-read here, so a
+    // completed password change yields an unrestricted token).
     await db
       .updateTable('refresh_tokens')
       .set({ last_used_at: toMysqlDatetime(new Date()) })
@@ -505,6 +505,8 @@ export class AuthService {
         : { ...device, deviceLabel: existing.device_label },
       resolveSessionId(existing.session_id),
       existing.id,
+      db,
+      !!user.force_password_reset,
     );
   }
 

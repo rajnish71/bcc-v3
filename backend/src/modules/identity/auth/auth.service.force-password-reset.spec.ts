@@ -1,7 +1,10 @@
 // backend/src/modules/identity/auth/auth.service.force-password-reset.spec.ts
 //
-// F-034 — force_password_reset is now enforced at token issuance and
-// cleared at the two reachable password-change completion points.
+// F-034 — force_password_reset is a post-authentication mandatory-action
+// state: password login()/refresh() issue a RESTRICTED session (access token
+// claim `fpr`, enforced by AccessTokenGuard), the flag still blocks the
+// non-password session paths, and it is cleared at the two reachable
+// password-change completion points.
 //
 // AuthService/AccountSettingsService are NOT instantiated here: both import
 // db.ts (Kysely ESM -- incompatible with this project's CommonJS Jest
@@ -43,39 +46,28 @@ function methodBody(src: string, startMarker: string, endMarker: string): string
 
 // ── A. login() enforcement (real source inspection) ────────────────────────
 
-describe('AuthService.login() force_password_reset gate (F-034, real source inspection)', () => {
+describe('AuthService.login() force_password_reset handling (real source inspection)', () => {
   const loginBody = methodBody(
     AUTH_SERVICE_SRC,
     'async login(',
     '// -- Password reset ---------------------------------------------------',
   );
 
-  it('checks force_password_reset before issuing tokens', () => {
-    expect(loginBody).toContain('if (user.force_password_reset)');
-    expect(loginBody.indexOf('if (user.force_password_reset)')).toBeLessThan(
+  it('no longer rejects an authenticated flagged user (flag is not an authentication failure)', () => {
+    expect(loginBody).not.toContain('assertPasswordResetNotRequired');
+    expect(loginBody).not.toContain('if (user.force_password_reset)');
+  });
+
+  it('passes the flag into the issued access token (restricted session)', () => {
+    expect(loginBody).toContain('!!user.force_password_reset');
+    expect(loginBody).toContain('return this.issueTokenPair(');
+  });
+
+  it('the existing inactive-account throw is unchanged and still precedes issuance', () => {
+    expect(loginBody).toContain('throw new ForbiddenException(`Account is ${user.status.toLowerCase()}`);');
+    expect(loginBody.indexOf("if (user.status !== 'ACTIVE')")).toBeLessThan(
       loginBody.indexOf('return this.issueTokenPair('),
     );
-  });
-
-  it('the force_password_reset check runs after the existing status check (preserves inactive-account handling)', () => {
-    const statusCheckIndex = loginBody.indexOf("if (user.status !== 'ACTIVE')");
-    const flagCheckIndex = loginBody.indexOf('if (user.force_password_reset)');
-    expect(statusCheckIndex).toBeGreaterThan(-1);
-    expect(flagCheckIndex).toBeGreaterThan(statusCheckIndex);
-  });
-
-  it('the existing inactive-account throw is unchanged', () => {
-    expect(loginBody).toContain('throw new ForbiddenException(`Account is ${user.status.toLowerCase()}`);');
-  });
-
-  it('throws before clearFailedAttempts/recordLoginAttempt(SUCCESS) -- no session side effects on a flagged account', () => {
-    const flagCheckIndex = loginBody.indexOf('if (user.force_password_reset)');
-    const successIndex = loginBody.indexOf("recordLoginAttempt(user.id, identifier, device, 'SUCCESS', sessionId)");
-    const sessionMintIndex = loginBody.indexOf('resolveSessionId()');
-    expect(successIndex).toBeGreaterThan(-1);
-    expect(flagCheckIndex).toBeLessThan(successIndex);
-    // OBS-03: no session id is minted for a flagged account either.
-    expect(flagCheckIndex).toBeLessThan(sessionMintIndex);
   });
 });
 
@@ -135,31 +127,20 @@ describe('AuthService.login() bcrypt->Argon2 migration audit (F-011, real source
 
 // ── B. refresh() enforcement (real source inspection) ──────────────────────
 
-describe('AuthService.refresh() force_password_reset gate (F-034, real source inspection)', () => {
+describe('AuthService.refresh() force_password_reset handling (real source inspection)', () => {
   const refreshBody = methodBody(
     AUTH_SERVICE_SRC,
     'async refresh(',
     '// -- Logout / session management ------------------------------------',
   );
 
-  it('checks force_password_reset (shared F-034 helper) before issuing a new token pair', () => {
-    expect(refreshBody).toContain('this.assertPasswordResetNotRequired(user);');
-    expect(refreshBody.indexOf('this.assertPasswordResetNotRequired(user);')).toBeLessThan(
-      refreshBody.indexOf('return this.issueTokenPair('),
-    );
+  it('no longer refuses a flagged account; re-reads the flag into the new token pair', () => {
+    expect(refreshBody).not.toContain('assertPasswordResetNotRequired');
+    expect(refreshBody).toContain('!!user.force_password_reset');
   });
 
-  it('the force_password_reset check runs after the existing active-account check', () => {
-    const statusCheckIndex = refreshBody.indexOf("if (!user || user.status !== 'ACTIVE')");
-    const flagCheckIndex = refreshBody.indexOf('this.assertPasswordResetNotRequired(user);');
-    expect(statusCheckIndex).toBeGreaterThan(-1);
-    expect(flagCheckIndex).toBeGreaterThan(statusCheckIndex);
-  });
-
-  it('the force_password_reset check runs before last_used_at is touched (no rotation side effects)', () => {
-    expect(refreshBody.indexOf('this.assertPasswordResetNotRequired(user);')).toBeLessThan(
-      refreshBody.indexOf('last_used_at:'),
-    );
+  it('the existing active-account check is unchanged', () => {
+    expect(refreshBody).toContain("if (!user || user.status !== 'ACTIVE')");
   });
 });
 
@@ -176,11 +157,6 @@ describe('F-034 universal session block (real source inspection)', () => {
     'async issueSessionForUser(',
     'assertPasswordResetNotRequired(user: { force_password_reset: boolean }): void {',
   );
-  const loginBody = methodBody(
-    AUTH_SERVICE_SRC,
-    'async login(',
-    '// -- Password reset ---------------------------------------------------',
-  );
 
   it('the helper throws ForbiddenException with the existing F-034 message', () => {
     expect(helperBody).toContain('if (user.force_password_reset)');
@@ -195,13 +171,6 @@ describe('F-034 universal session block (real source inspection)', () => {
       'Password reset required. Please reset your password before signing in.',
     ).length - 1;
     expect(occurrences).toBe(1);
-  });
-
-  it('login() uses the shared helper, still before any session side effect', () => {
-    const helperCall = loginBody.indexOf('this.assertPasswordResetNotRequired(user);');
-    expect(helperCall).toBeGreaterThan(-1);
-    expect(helperCall).toBeLessThan(loginBody.indexOf('resolveSessionId()'));
-    expect(helperCall).toBeLessThan(loginBody.indexOf('this.clearFailedAttempts(user.id)'));
   });
 
   it('issueSessionForUser() reads the flag on the caller executor and enforces it before minting a session', () => {
@@ -403,59 +372,5 @@ describe('force_password_reset set paths still set true (F-034 regression guard)
       'return { user: await this.toPublicUser(id), temporaryPassword };',
     );
     expect(adminCreateBody).toContain('force_password_reset: true');
-  });
-});
-
-// ── F. Pure-function mirror of the login()/refresh() issuance decision ─────
-//
-// Mirrors the exact two-check sequence added to login()/refresh() above,
-// exercised the same way membership.controller.spec.ts mirrors RbacGuard's
-// decision -- without touching db.ts.
-
-type AuthUserState = {
-  status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
-  force_password_reset: boolean;
-};
-
-function canIssueTokens(user: AuthUserState): { allowed: boolean; reason?: string } {
-  if (user.status !== 'ACTIVE') {
-    return { allowed: false, reason: `Account is ${user.status.toLowerCase()}` };
-  }
-  if (user.force_password_reset) {
-    return {
-      allowed: false,
-      reason: 'Password reset required. Please reset your password before signing in.',
-    };
-  }
-  return { allowed: true };
-}
-
-describe('Token-issuance decision (F-034, mirrored)', () => {
-  it('normal login → unchanged (active, not flagged → allowed)', () => {
-    expect(canIssueTokens({ status: 'ACTIVE', force_password_reset: false })).toEqual({
-      allowed: true,
-    });
-  });
-
-  it('flagged user login → no token issued', () => {
-    const result = canIssueTokens({ status: 'ACTIVE', force_password_reset: true });
-    expect(result.allowed).toBe(false);
-    expect(result.reason).toBe(
-      'Password reset required. Please reset your password before signing in.',
-    );
-  });
-
-  it('normal refresh → unchanged (same decision function governs both)', () => {
-    expect(canIssueTokens({ status: 'ACTIVE', force_password_reset: false }).allowed).toBe(true);
-  });
-
-  it('flagged refresh → no new token', () => {
-    expect(canIssueTokens({ status: 'ACTIVE', force_password_reset: true }).allowed).toBe(false);
-  });
-
-  it('inactive account is still rejected regardless of the flag (status check takes precedence)', () => {
-    const result = canIssueTokens({ status: 'SUSPENDED', force_password_reset: true });
-    expect(result.allowed).toBe(false);
-    expect(result.reason).toBe('Account is suspended');
   });
 });

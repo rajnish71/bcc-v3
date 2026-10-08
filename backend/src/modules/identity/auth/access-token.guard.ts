@@ -10,15 +10,24 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { ALLOW_FORCED_PASSWORD_RESET } from './allow-forced-password-reset.decorator';
 import { AccessTokenPayload } from './token.util';
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    // Optional so the guard can still be constructed without DI; without a
+    // Reflector no route is exempt, i.e. a forced-reset session fails closed.
+    @Optional() private readonly reflector?: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -30,8 +39,9 @@ export class AccessTokenGuard implements CanActivate {
 
     const token = authHeader.slice('Bearer '.length);
 
+    let payload: AccessTokenPayload;
     try {
-      const payload = await this.jwtService.verifyAsync<AccessTokenPayload>(
+      payload = await this.jwtService.verifyAsync<AccessTokenPayload>(
         token,
         { secret: process.env.JWT_ACCESS_SECRET },
       );
@@ -40,10 +50,28 @@ export class AccessTokenGuard implements CanActivate {
         throw new UnauthorizedException('Account is not active');
       }
 
-      request.user = payload;
-      return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired access token');
     }
+
+    // force_password_reset: the session is valid but restricted to the routes
+    // that complete the mandatory password change (signature-only, no DB hit).
+    if (payload.fpr === true) {
+      const allowed = this.reflector?.getAllAndOverride<boolean>(
+        ALLOW_FORCED_PASSWORD_RESET,
+        [context.getHandler(), context.getClass()],
+      );
+      if (!allowed) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          error: 'Forbidden',
+          code: 'PASSWORD_CHANGE_REQUIRED',
+          message: 'You must change your password before continuing.',
+        });
+      }
+    }
+
+    request.user = payload;
+    return true;
   }
 }

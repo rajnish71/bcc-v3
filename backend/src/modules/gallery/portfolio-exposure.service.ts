@@ -33,7 +33,9 @@ import {
   mergeExposures,
   NO_EXPOSURE,
   setAllowsPhoto,
+  withRecognitionPortfolio,
 } from './portfolio-exposure.policy';
+import { RECOGNITION_CLASS_CODES, SeniorStatusReader } from '../membership/recognition/senior-status.reader';
 
 const EXPOSURE_KEYS = [PORTFOLIO_ENABLED_KEY, PUBLIC_GALLERY_ENABLED_KEY, PORTFOLIO_MAX_PHOTOS_KEY];
 
@@ -48,8 +50,9 @@ export function exposedPhotoPredicate(
 ) {
   const owners: any[] = [];
   if (set.uncappedOwnerIds.length > 0) owners.push(eb(cols.owner, 'in', set.uncappedOwnerIds));
-  if (set.cappedOwnerIds.length > 0) {
-    owners.push(eb.and([eb(cols.owner, 'in', set.cappedOwnerIds), eb(cols.selected, '=', 1)]));
+  const selectedOnly = [...set.cappedOwnerIds, ...set.selectionRequiredOwnerIds];
+  if (selectedOnly.length > 0) {
+    owners.push(eb.and([eb(cols.owner, 'in', selectedOnly), eb(cols.selected, '=', 1)]));
   }
   if (owners.length === 0) return sql<boolean>`1 = 0`;
   return eb.or(owners);
@@ -85,7 +88,76 @@ export class PortfolioExposureService {
       perUser.set(uid, list);
     }
     for (const [uid, list] of perUser) result.set(uid, mergeExposures(list));
+
+    await this.applyRecognitionPortfolio(result, memberships, ownerUserIds);
     return result;
+  }
+
+  /**
+   * MEM-008 Amendment 002: Senior Member and the four Recognition Classes carry
+   * an Unlimited Public Photographer Portfolio that needs no ACTIVE underlying
+   * Membership and cannot be reduced by an Individual Override / restriction.
+   * Applied after (and independent of) the entitlement layers, so no override
+   * can lower it. Grants the portfolio only -- never public gallery, never
+   * directory eligibility, never an automatic portfolio_selected.
+   */
+  private async applyRecognitionPortfolio(
+    result: Map<number, OwnerExposure>,
+    activeMemberships: Array<{ id: unknown; user_id: unknown }>,
+    ownerUserIds?: number[],
+  ): Promise<void> {
+    const holders = await this.getRecognitionHolderIds(ownerUserIds);
+    if (holders.size === 0) return;
+
+    // Same memberships, resolved WITHOUT recognition modifiers: tells a
+    // class/override-level uncapped member (selection irrelevant, as today)
+    // from one who is uncapped only by recognition (selection still explicit).
+    const holderMemberships = activeMemberships.filter((m) => holders.has(Number(m.user_id)));
+    const resolvedBase = await this.entitlements.resolveMany(
+      holderMemberships.map((m) => Number(m.id)),
+      EXPOSURE_KEYS,
+      { excludeRecognition: true },
+    );
+    const basePerUser = new Map<number, OwnerExposure[]>();
+    for (const m of holderMemberships) {
+      const uid = Number(m.user_id);
+      const list = basePerUser.get(uid) ?? [];
+      list.push(exposureFromResolved(resolvedBase.get(Number(m.id)) ?? {}));
+      basePerUser.set(uid, list);
+    }
+
+    for (const uid of holders) {
+      const base = basePerUser.get(uid);
+      result.set(uid, withRecognitionPortfolio(result.get(uid), base ? mergeExposures(base) : undefined));
+    }
+  }
+
+  /**
+   * Users holding Senior Member status (overlay or legacy manual recognition,
+   * via SeniorStatusReader) or an ACTIVE Honorary Member / Mentor /
+   * Grandmaster / Honorary Senior recognition. The recognition's own membership
+   * row may be in any lifecycle state: Recognition is not Membership.
+   */
+  private async getRecognitionHolderIds(ownerUserIds?: number[]): Promise<Set<number>> {
+    const holders = new Set<number>();
+    if (ownerUserIds && ownerUserIds.length === 0) return holders;
+
+    let q = db
+      .selectFrom('member_recognitions as mr')
+      .innerJoin('memberships as m', 'm.id', 'mr.membership_id')
+      .select('m.user_id')
+      .distinct()
+      .where('mr.status', '=', 'ACTIVE')
+      .where('mr.recognition_code', 'in', [...RECOGNITION_CLASS_CODES])
+      .where('m.user_id', 'is not', null);
+    if (ownerUserIds) q = q.where('m.user_id', 'in', ownerUserIds);
+    for (const r of await q.execute()) holders.add(Number(r.user_id));
+
+    const wanted = ownerUserIds ? new Set(ownerUserIds) : null;
+    for (const s of await new SeniorStatusReader().listActive()) {
+      if (!wanted || wanted.has(s.userId)) holders.add(s.userId);
+    }
+    return holders;
   }
 
   async getOwnerExposure(ownerUserId: number): Promise<OwnerExposure> {

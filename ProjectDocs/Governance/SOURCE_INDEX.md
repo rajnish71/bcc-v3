@@ -116,9 +116,14 @@ Membership/
 
 ├── MEM-006\\\_MEMBERSHIP\\\_CONSTITUTION\\\_AND\\\_ARCHITECTURE\\\_v1.0.md
 
-└── MEM-007\\\_MEMBERSHIP\\\_NUMBERING\\\_CONSTITUTION\\\_v1.0.md
+├── MEM-007\\\_MEMBERSHIP\\\_NUMBERING\\\_CONSTITUTION\\\_v1.0.md
+
+└── MEM-008\\\_MEMBERSHIP\\\_PLANS\\\_BENEFITS\\\_AND\\\_LIFECYCLE\\\_CONSTITUTION\\\_v1.md
 
 ```
+
+MEM-008 — Membership Plans, Benefits & Lifecycle Constitution
+Status: APPROVED / FROZEN / AUTHORITATIVE
 
 
 

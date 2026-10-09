@@ -147,7 +147,14 @@ export class EntitlementService {
   // 5 queries total instead of 3 per membership -- used by public-exposure
   // filtering, which must evaluate every photographer per request.
   // Returns flat resolved maps only (no provenance).
-  async resolveMany(membershipIds: number[], keys: string[]): Promise<Map<number, Record<string, string>>> {
+  // `excludeRecognition` drops layer 2 (used only by the MEM-008 Amendment 002
+  // portfolio path to tell a class/override-sourced entitlement apart from a
+  // recognition-sourced one).
+  async resolveMany(
+    membershipIds: number[],
+    keys: string[],
+    opts: { excludeRecognition?: boolean } = {},
+  ): Promise<Map<number, Record<string, string>>> {
     const out = new Map<number, Record<string, string>>();
     if (membershipIds.length === 0) return out;
 
@@ -201,7 +208,7 @@ export class EntitlementService {
         : classRows
             .filter((r) => r.membership_class_id === m.membership_class_id)
             .map((r) => ({ key: r.entitlement_key, value: r.entitlement_value }));
-      const mods = modifierRows
+      const mods = (opts.excludeRecognition ? [] : modifierRows)
         .filter((r) => Number(r.membership_id) === Number(m.id))
         .map((r) => ({ key: r.entitlement_key, value: r.modifier_value }));
       const overrides = overrideRows

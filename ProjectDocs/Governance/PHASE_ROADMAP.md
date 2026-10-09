@@ -522,6 +522,8 @@ Implementation:
 
 Status: Deployed to production on 2026-09-29 — migration 0103 applied (17:47 UTC) and commit `3d7d415` deployed via GitHub Actions (17:58 UTC). Verified in production (read-only, 2026-09-30): Basic cap 5 / Student cap 10 with no Public Gallery served by the public membership API and page; `photos.portfolio_selected` present; the 0103 individual overrides/restriction are in place. The Pranil Kishnani restriction remains pending its separate minor-policy decision.
 
+**MEM-008 Amendment 002 — Recognition-Based Unlimited Public Photographer Portfolio.** RATIFIED 2026-10-09 by Human Authority; now APPROVED / FROZEN / AUTHORITATIVE in MEM-008. Senior Member, Honorary Member, Honorary Mentor, Honorary Grandmaster and Honorary Senior Member receive an Unlimited Public Photographer Portfolio (no numeric maximum). The entitlement is recognition-based: it requires no active underlying Membership, and an Individual Override or administrative restriction cannot reduce, cap or remove it. Basic remains capped at 5 and Student at 10. Public Gallery and Photographer Directory eligibility remain separate and unchanged, and explicit `photos.portfolio_selected` selection remains required. Implementation is complete at the existing portfolio-exposure policy/service boundary (`portfolio-exposure.policy.ts`, `portfolio-exposure.service.ts`); no migration or seed change. Status: implemented and tested locally; not yet committed or deployed.
+
 ---
 
 ### PROFILE-ARCH-001 — Photographer Profile Completion & Directory Eligibility

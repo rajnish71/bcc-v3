@@ -30,6 +30,13 @@ export interface OwnerExposure {
   galleryEnabled: boolean;
   /** null = unlimited */
   maxPhotos: number | null;
+  /**
+   * Only meaningful when maxPhotos is null. true = unlimited but the member
+   * must still explicitly select photographs (photos.portfolio_selected = 1)
+   * -- the MEM-008 Amendment 002 recognition-based entitlement. Absent/false =
+   * class-level uncapped: selection is irrelevant (Individual, Legacy ...).
+   */
+  selectionRequired?: boolean;
 }
 
 export const NO_EXPOSURE: OwnerExposure = {
@@ -73,9 +80,43 @@ export function mergeExposures(list: OwnerExposure[]): OwnerExposure {
   return { portfolioEnabled, galleryEnabled, maxPhotos: portfolioEnabled ? maxPhotos : 0 };
 }
 
+/**
+ * MEM-008 Amendment 002 -- recognition-based Unlimited Public Photographer
+ * Portfolio (Senior, Honorary Member / Mentor / Grandmaster, Honorary Senior).
+ *
+ *   - No numeric maximum, and no active underlying Membership required.
+ *   - Resolved OUTSIDE the class/override layers, so an Individual Override or
+ *     administrative restriction cannot cap, reduce or remove it.
+ *   - It grants the PORTFOLIO only: public gallery is taken solely from the
+ *     ordinary entitlement resolution (`entitled`), never from recognition.
+ *   - Selection stays explicit: unless a non-recognition source (class or
+ *     override) already makes the member class-level uncapped, only
+ *     portfolio_selected photographs are exposed. Nothing is auto-selected.
+ *
+ * @param entitled        exposure from the full three-layer resolution (undefined = no ACTIVE membership)
+ * @param nonRecognition  exposure resolved WITHOUT recognition modifiers (undefined = no ACTIVE membership)
+ */
+export function withRecognitionPortfolio(
+  entitled: OwnerExposure | undefined,
+  nonRecognition: OwnerExposure | undefined,
+): OwnerExposure {
+  const classUncapped = !!nonRecognition && nonRecognition.portfolioEnabled && nonRecognition.maxPhotos === null;
+  return {
+    portfolioEnabled: true,
+    galleryEnabled: entitled?.galleryEnabled ?? false,
+    maxPhotos: null,
+    selectionRequired: !classUncapped,
+  };
+}
+
 /** Set of owners whose PUBLIC photographs are exposed on a given surface. */
 export interface ExposureSet {
   uncappedOwnerIds: number[];
+  /**
+   * Unlimited owners (recognition-based) whose exposure still requires the
+   * photograph to be explicitly selected. No cap, so never "over cap".
+   */
+  selectionRequiredOwnerIds: number[];
   cappedOwnerIds: number[];
   /**
    * Capped owners whose stored selection EXCEEDS the current cap (e.g. after a
@@ -92,13 +133,15 @@ export function buildExposureSet(
   selectedByOwner: Map<number, number[]>,
 ): ExposureSet {
   const uncappedOwnerIds: number[] = [];
+  const selectionRequiredOwnerIds: number[] = [];
   const cappedOwnerIds: number[] = [];
   const overCapOwnerIds: number[] = [];
   for (const [ownerId, e] of owners) {
     const allowed = scope === 'GALLERY' ? e.galleryEnabled : e.portfolioEnabled;
     if (!allowed) continue;
     if (e.maxPhotos === null) {
-      uncappedOwnerIds.push(ownerId);
+      if (e.selectionRequired) selectionRequiredOwnerIds.push(ownerId);
+      else uncappedOwnerIds.push(ownerId);
     } else {
       // Fail closed when over cap: no arbitrary subset is chosen for the member.
       if ((selectedByOwner.get(ownerId) ?? []).length > e.maxPhotos) {
@@ -108,7 +151,7 @@ export function buildExposureSet(
       cappedOwnerIds.push(ownerId);
     }
   }
-  return { uncappedOwnerIds, cappedOwnerIds, overCapOwnerIds };
+  return { uncappedOwnerIds, selectionRequiredOwnerIds, cappedOwnerIds, overCapOwnerIds };
 }
 
 /** Row-level check mirroring the SQL predicate built in PortfolioExposureService. */
@@ -117,7 +160,10 @@ export function setAllowsPhoto(
   photo: { ownerId: number; id: number; selected: boolean },
 ): boolean {
   if (set.uncappedOwnerIds.includes(photo.ownerId)) return true;
-  return set.cappedOwnerIds.includes(photo.ownerId) && photo.selected;
+  return (
+    (set.cappedOwnerIds.includes(photo.ownerId) || set.selectionRequiredOwnerIds.includes(photo.ownerId)) &&
+    photo.selected
+  );
 }
 
 export type SelectionDecision = 'OK' | 'NOT_ENABLED' | 'CAP_REACHED';

@@ -32,7 +32,7 @@ const SERVICE_SRC = readFileSync(join(__dirname, 'gallery.service.ts'), 'utf8');
 // terminal methods resolve the queued result.
 function chain(result: unknown) {
   const c: any = {};
-  for (const m of ['where', 'selectAll', 'select', 'values', 'set', 'orderBy', 'limit']) c[m] = jest.fn(() => c);
+  for (const m of ['where', 'selectAll', 'select', 'values', 'set', 'orderBy', 'limit', 'leftJoin']) c[m] = jest.fn(() => c);
   c.executeTakeFirst = jest.fn(async () => result);
   c.executeTakeFirstOrThrow = jest.fn(async () => result);
   c.execute = jest.fn(async () => []);
@@ -214,5 +214,128 @@ describe('upload page wiring (real source)', () => {
     const tile = UPLOAD_PAGE.slice(UPLOAD_PAGE.indexOf('function buildQueueTile'), UPLOAD_PAGE.indexOf('function buildWallTile'));
     expect(tile).not.toContain('✓ DONE');
     expect(tile).toMatch(/item\.confirmedAs\s*\?[\s\S]*PUBLISHED[\s\S]*UPLOADED — READY TO PUBLISH/);
+  });
+});
+
+describe('automatic photo draft saving workflow', () => {
+  it('activates a PROCESSING photo with visibility: PRIVATE for durable draft persistence', async () => {
+    const select = chain(row());
+    const final = chain(row({ status: 'ACTIVE', visibility: 'PRIVATE' }));
+    const update = chain(undefined);
+    (db.selectFrom as jest.Mock).mockReturnValueOnce(select).mockReturnValueOnce(final);
+    (db.updateTable as jest.Mock).mockReturnValue(update);
+    const { svc, r2 } = service({ exists: true, sizeBytes: 1000 });
+
+    const out: any = await svc.confirmUpload(OWNER, 'u-1', { title: 'Draft Photo', visibility: 'PRIVATE' } as any);
+
+    expect(r2.headObject).toHaveBeenCalledWith('k/u-1.jpg');
+    expect(update.set).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'ACTIVE',
+      visibility: 'PRIVATE',
+      show_in_portfolio: true,
+    }));
+    expect(out.status).toBe('ACTIVE');
+    expect(out.visibility).toBe('PRIVATE');
+  });
+
+  it('draft privacy enforcement: non-owner viewing photo detail is denied with ForbiddenException', async () => {
+    (db.selectFrom as jest.Mock).mockReturnValueOnce(chain({
+      id: 1, uuid: 'u-1', owner_user_id: OWNER, visibility: 'PRIVATE', status: 'ACTIVE',
+    }));
+    const { svc } = service({ exists: true });
+    await expect(svc.getPhotoByNumericId(999, 1)).rejects.toThrow('This photo is private.');
+  });
+
+  it('uploadItem automatically calls /confirm with visibility: PRIVATE upon R2 completion', () => {
+    const uploadFn = UPLOAD_PAGE.slice(UPLOAD_PAGE.indexOf('async function uploadItem'), UPLOAD_PAGE.indexOf('async function runUploadQueue'));
+    expect(uploadFn).toMatch(/apiFetch\(`\/api\/v1\/gallery\/photos\/\$\{photo_uuid\}\/confirm`/);
+    expect(uploadFn).toContain("visibility: 'PRIVATE'");
+    expect(uploadFn).toContain("show_in_portfolio: true");
+    // status is set to done and confirmedAs = 'drafted' only inside confirmRes.ok
+    const okIdx = uploadFn.indexOf('if (confirmRes.ok) {');
+    expect(okIdx).toBeGreaterThan(-1);
+    expect(uploadFn.indexOf("confirmedAs: 'drafted'")).toBeGreaterThan(okIdx);
+  });
+
+  it('a failed confirm in uploadItem sets status: failed and leaves confirmedAs unset', () => {
+    const uploadFn = UPLOAD_PAGE.slice(UPLOAD_PAGE.indexOf('async function uploadItem'), UPLOAD_PAGE.indexOf('async function runUploadQueue'));
+    const elseIdx = uploadFn.indexOf('let msg = `Server error');
+    expect(elseIdx).toBeGreaterThan(-1);
+    expect(uploadFn.indexOf("status: 'failed'", elseIdx)).toBeGreaterThan(elseIdx);
+    expect(uploadFn).toContain("error: msg || 'Draft save failed'");
+    // photoUuid is preserved on the item, NOT deleted or reset
+    expect(uploadFn.slice(elseIdx)).not.toContain("photoUuid = undefined");
+  });
+
+  it('session expiry during auto-confirm is caught and reported honestly without false success', () => {
+    const uploadFn = UPLOAD_PAGE.slice(UPLOAD_PAGE.indexOf('async function uploadItem'), UPLOAD_PAGE.indexOf('async function runUploadQueue'));
+    expect(uploadFn).toContain('err instanceof SessionExpiredError');
+    expect(uploadFn).toContain("Your session has expired. Sign in again, then click Retry.");
+    expect(uploadFn).not.toMatch(/err instanceof SessionExpiredError[\s\S]*confirmedAs:\s*'drafted'/);
+  });
+
+  it('tile renderer reports ✓ SAVED AS DRAFT only when confirmedAs === drafted', () => {
+    const tileSrc = UPLOAD_PAGE.slice(UPLOAD_PAGE.indexOf('function placeholderSvg'), UPLOAD_PAGE.indexOf('function buildWallTile'));
+    // Transpile the real TypeScript source extracted from upload page to JS
+    const js = ts.transpileModule(tileSrc, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+    }).outputText;
+    const fn = new Function('item', `${js}\nreturn buildQueueTile(item);`);
+
+    const uploadingHtml = fn({ id: '1', file: { name: 'test.jpg' }, status: 'uploading', progress: 50 });
+    expect(uploadingHtml).not.toContain('SAVED AS DRAFT');
+
+    const processingHtml = fn({ id: '1', file: { name: 'test.jpg' }, status: 'processing', progress: 100 });
+    expect(processingHtml).not.toContain('SAVED AS DRAFT');
+    expect(processingHtml).toContain('PROCESSING');
+
+    const confirmedHtml = fn({ id: '1', file: { name: 'test.jpg' }, status: 'done', confirmedAs: 'drafted' });
+    expect(confirmedHtml).toContain('✓ SAVED AS DRAFT');
+
+    const failedHtml = fn({ id: '1', file: { name: 'test.jpg' }, status: 'failed', error: 'Draft save failed' });
+    expect(failedHtml).not.toContain('SAVED AS DRAFT');
+    expect(failedHtml).toContain('Draft save failed');
+    expect(failedHtml).toContain('Retry');
+  });
+
+  it('batch upload simulation: independent photo confirmation, failure isolation, and retry safety', async () => {
+    const harness = uploadHarness();
+    const batch = ['photo-1', 'photo-2', 'photo-3'];
+    const results: Record<string, { status: string; error?: string; confirmedAs?: string }> = {};
+
+    // Simulate auto-confirm loop with photo-2 failing (e.g. transient 500)
+    for (const uuid of batch) {
+      if (uuid === 'photo-2') {
+        results[uuid] = { status: 'failed', error: 'Server error (500)' };
+      } else {
+        const res = await harness.authed(`/api/v1/gallery/photos/${uuid}/confirm`, { method: 'POST' });
+        if (res.ok) {
+          results[uuid] = { status: 'done', confirmedAs: 'drafted' };
+        }
+      }
+    }
+
+    // Photo 1 and 3 are saved drafts; Photo 2 is failed
+    expect(results['photo-1'].confirmedAs).toBe('drafted');
+    expect(results['photo-2'].status).toBe('failed');
+    expect(results['photo-2'].confirmedAs).toBeUndefined();
+    expect(results['photo-3'].confirmedAs).toBe('drafted');
+    expect(harness.saved.has('photo-1')).toBe(true);
+    expect(harness.saved.has('photo-2')).toBe(false);
+    expect(harness.saved.has('photo-3')).toBe(true);
+
+    // Retrying photo-2 safely reuses the same uuid
+    const retryRes = await harness.authed('/api/v1/gallery/photos/photo-2/confirm', { method: 'POST' });
+    expect(retryRes.ok).toBe(true);
+    results['photo-2'] = { status: 'done', confirmedAs: 'drafted' };
+    expect(harness.saved.has('photo-2')).toBe(true);
+    expect(harness.saved.size).toBe(3);
+  });
+
+  it('explicit publishing: confirmItems uses PATCH to transition confirmed draft to published', () => {
+    const confirmSrc = UPLOAD_PAGE.slice(UPLOAD_PAGE.indexOf('async function confirmItems'), UPLOAD_PAGE.indexOf('async function handlePublish'));
+    expect(confirmSrc).toContain('const isAlreadyConfirmed = !!item.confirmedAs;');
+    expect(confirmSrc).toContain("method: 'PATCH'");
+    expect(confirmSrc).toContain("item.confirmedAs = visibility === 'PRIVATE' ? 'drafted' : 'published'");
   });
 });

@@ -443,9 +443,12 @@ interface FileItem {
   duplicateInfo?: string;
   thumb?: string;
   photoUuid?: string;
+  presignUrl?: string;
+  r2Uploaded?: boolean;
   exif?: ExifData;
   selected: boolean;
   confirmedAs?: 'published' | 'drafted';
+  draftFinalized?: boolean;
 }
 
 /* ════════════════════════════════════════════════════════
@@ -548,7 +551,7 @@ function setPhase(p: Phase): void {
   if (p === 'empty') sub.textContent = 'Photographs are processed in the order added · nothing publishes until you finish in Metadata';
   if (p === 'uploading') updateUploadingSubtitle();
   if (p === 'metadata') {
-    const ready = items.filter(i => i.status === 'done' && !i.confirmedAs).length;
+    const ready = items.filter(i => i.status === 'done' && i.confirmedAs !== 'published' && !i.draftFinalized).length;
     sub.textContent = `${ready} ready to caption · select photographs to begin`;
     qid('metadata-count-text').textContent = `${ready} ready to caption`;
   }
@@ -768,9 +771,9 @@ function renderQueueGrid(): void {
 }
 
 function renderPhotoWall(): void {
-  const done = items.filter(i => i.status === 'done' && !i.confirmedAs);
-  qid('photo-wall').innerHTML = done.map(buildWallTile).join('');
-  qid('metadata-count-text').textContent = `${done.length} ready to caption`;
+  const wallItems = items.filter(i => i.status === 'done' && i.confirmedAs !== 'published' && !i.draftFinalized);
+  qid('photo-wall').innerHTML = wallItems.map(buildWallTile).join('');
+  qid('metadata-count-text').textContent = `${wallItems.length} ready to caption`;
   updateSelectionBar();
 }
 
@@ -936,53 +939,117 @@ async function uploadItem(item: FileItem): Promise<void> {
   try {
     updateItemState(item.id, { status: 'uploading', progress: 5 });
 
-    const presignRes = await apiFetch('/api/v1/gallery/photos/presign', {
+    let photo_uuid = item.photoUuid;
+    let presign_url = item.presignUrl;
+
+    // Presign only if not yet presigned
+    if (!photo_uuid || !presign_url) {
+      const presignRes = await apiFetch('/api/v1/gallery/photos/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mime_type: item.file.type || 'image/jpeg',
+          file_size_bytes: item.file.size,
+          filename: item.file.name,
+        }),
+        signal: ac.signal,
+      });
+
+      if (!presignRes.ok) throw new Error(`Presign failed (${presignRes.status})`);
+      const presignData = await presignRes.json() as { photo_uuid: string; presign_url: string };
+      photo_uuid = presignData.photo_uuid;
+      presign_url = presignData.presign_url;
+      updateItemState(item.id, { photoUuid: photo_uuid, presignUrl: presign_url });
+    }
+
+    // XHR PUT to R2 only if not yet uploaded
+    if (!item.r2Uploaded) {
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', presign_url!);
+        xhr.setRequestHeader('Content-Type', item.file.type || 'image/jpeg');
+        xhr.upload.addEventListener('progress', e => {
+          if (e.lengthComputable) {
+            updateItemState(item.id, { progress: Math.round((e.loaded / e.total) * 88) + 7 });
+          }
+        });
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            updateItemState(item.id, { r2Uploaded: true });
+            resolve();
+          } else {
+            reject(new Error(`Storage PUT failed (${xhr.status})`));
+          }
+        });
+        xhr.addEventListener('error', () => reject(new Error('Network error')));
+        ac.signal.addEventListener('abort', () => { xhr.abort(); reject(new Error('Cancelled')); });
+        xhr.send(item.file);
+      });
+    }
+
+    updateItemState(item.id, { status: 'processing', progress: 100 });
+
+    // Extract EXIF while "processing" (cache on item if already extracted)
+    const exif = item.exif ?? await extractExif(item.file);
+    updateItemState(item.id, { exif });
+
+    // Automatic draft confirmation:
+    // After R2 upload and EXIF extraction, automatically request server confirmation
+    // with visibility set to draft ('PRIVATE') so uploads are persisted immediately.
+    const confirmRes = await apiFetch(`/api/v1/gallery/photos/${photo_uuid}/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        mime_type: item.file.type || 'image/jpeg',
-        file_size_bytes: item.file.size,
-        filename: item.file.name,
+        title: item.file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(),
+        visibility: 'PRIVATE',
+        show_in_portfolio: true,
+        source_event_id: activeActivity,
+        exif: {
+          width_px:      exif?.widthPx,
+          height_px:     exif?.heightPx,
+          camera_make:   exif?.cameraMake,
+          camera_model:  exif?.cameraModel,
+          lens_model:    exif?.lensModel,
+          iso:           exif?.iso,
+          aperture:      exif?.aperture ? parseFloat(exif.aperture.replace('f/', '')) : undefined,
+          shutter_speed: exif?.shutterSpeed,
+          focal_length:  exif?.focalLengthMm,
+          taken_at: exif?.dateTaken
+            ? exif.dateTaken.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
+            : undefined,
+        },
       }),
       signal: ac.signal,
     });
 
-    if (!presignRes.ok) throw new Error(`Presign failed (${presignRes.status})`);
-    const { photo_uuid, presign_url } = await presignRes.json() as { photo_uuid: string; presign_url: string };
-    updateItemState(item.id, { photoUuid: photo_uuid });
+    if (confirmRes.ok) {
+      updateItemState(item.id, { status: 'done', confirmedAs: 'drafted' });
+    } else {
+      let msg = `Server error (${confirmRes.status})`;
+      try {
+        const errBody = await confirmRes.json() as { message?: string | string[] };
+        const raw = errBody.message;
+        msg = Array.isArray(raw) ? raw.join('; ') : (raw ?? msg);
+      } catch { /**/ }
 
-    // XHR PUT for progress events
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('PUT', presign_url);
-      xhr.setRequestHeader('Content-Type', item.file.type || 'image/jpeg');
-      xhr.upload.addEventListener('progress', e => {
-        if (e.lengthComputable) {
-          updateItemState(item.id, { progress: Math.round((e.loaded / e.total) * 88) + 7 });
-        }
-      });
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Storage PUT failed (${xhr.status})`));
-      });
-      xhr.addEventListener('error', () => reject(new Error('Network error')));
-      ac.signal.addEventListener('abort', () => { xhr.abort(); reject(new Error('Cancelled')); });
-      xhr.send(item.file);
-    });
-
-    updateItemState(item.id, { status: 'processing', progress: 100 });
-
-    // Extract EXIF while "processing"
-    const exif = await extractExif(item.file);
-    updateItemState(item.id, { exif });
-
-    await new Promise(r => setTimeout(r, 700));
-    updateItemState(item.id, { status: 'done' });
+      // Safe retry: preserve photoUuid so retrying can confirm the existing record
+      // without creating orphaned rows or duplicates.
+      if (isOversizeConfirmError(confirmRes.status, msg)) {
+        updateItemState(item.id, { status: 'failed', error: msg });
+      } else {
+        updateItemState(item.id, { status: 'failed', error: msg || 'Draft save failed' });
+      }
+    }
 
   } catch (err) {
     const msg = (err as Error).message;
     if (msg === 'Cancelled') {
       updateItemState(item.id, { status: 'failed', error: 'Cancelled' });
+    } else if (err instanceof SessionExpiredError) {
+      updateItemState(item.id, {
+        status: 'failed',
+        error: 'Your session has expired. Sign in again, then click Retry.',
+      });
     } else {
       updateItemState(item.id, { status: 'failed', error: msg || 'Upload failed' });
     }
@@ -1148,14 +1215,24 @@ async function confirmItems(
     try {
       // 401 is renewed once (shared, single-flight); confirm is idempotent
       // server-side, so a retry after an uncertain reply is safe.
-      const res = await apiFetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
+      // If photo was already confirmed as draft, use PATCH /photos/:uuid to update metadata/visibility.
+      // Otherwise use POST /photos/:uuid/confirm to activate the photo.
+      const isAlreadyConfirmed = !!item.confirmedAs;
+      const res = isAlreadyConfirmed
+        ? await apiFetch(`/api/v1/gallery/photos/${item.photoUuid}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+          })
+        : await apiFetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+          });
 
       if (res.ok) {
         item.confirmedAs = visibility === 'PRIVATE' ? 'drafted' : 'published';
+        if (visibility === 'PRIVATE') item.draftFinalized = true;
         item.selected = false;
         confirmed++;
         // Attach selected categories (item 71) — best-effort, never blocks upload.
@@ -1225,9 +1302,9 @@ async function handlePublish(asDraft: boolean): Promise<void> {
   qid('upload-inspector').setAttribute('aria-hidden', 'true');
   qid('hub-main').classList.remove('insp-open');
 
-  // Check if all done items are confirmed
-  const unconfirmed = items.filter(i => i.status === 'done' && !i.confirmedAs);
-  if (unconfirmed.length === 0) {
+  // Check if all done items on the wall are completed
+  const remainingWall = items.filter(i => i.status === 'done' && i.confirmedAs !== 'published' && !i.draftFinalized);
+  if (remainingWall.length === 0) {
     // Transition to complete
     const totalPublished = items.filter(i => i.confirmedAs === 'published').length;
     const totalDrafted   = items.filter(i => i.confirmedAs === 'drafted').length;

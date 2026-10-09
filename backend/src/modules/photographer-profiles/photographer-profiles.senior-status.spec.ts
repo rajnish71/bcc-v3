@@ -60,7 +60,7 @@ function script(opts: { classRows?: Row[]; overlays?: Row[]; legacy?: Row[]; led
 beforeEach(() => fake.reset());
 
 const legacySenior = { id: 8, start_date: new Date('2026-09-29T00:00:00Z') };
-const overlay = { id: 1, provenance: 'AUTO', achieved_date: new Date('2027-01-01T00:00:00Z') };
+const overlay = { id: 1, status: 'ACTIVE', provenance: 'AUTO', achieved_date: new Date('2027-01-01T00:00:00Z') };
 const classRow = (code: string) => ({ recognition_code: code, track: 'MANUAL' });
 
 describe('GET /photographers/:username -- recognition vs Senior Status', () => {

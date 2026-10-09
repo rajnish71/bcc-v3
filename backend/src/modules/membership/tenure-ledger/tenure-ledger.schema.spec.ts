@@ -153,12 +153,14 @@ describe('only the WP3 native capture and the WP4 historical reconciliation writ
     const WRITE = 'insertInto|updateTable|deleteFrom';
     // WP5: the single read-only SeniorStatusReader may SELECT the ledger and Senior tables.
     const WP5_READER = 'modules/membership/recognition/senior-status.reader.ts';
+    // WP6-A: the read-only carry-over dry run may SELECT the Senior tables (never the ledger).
+    const WP6A_DRY_RUN = 'modules/membership/recognition/senior-carry-over.dry-run.ts';
     // ledger: writes only by the WP3/WP4 writers; reads additionally by the WP5 reader
     expect(touching('recognized_service_periods', WRITE).sort()).toEqual([...LEDGER_WRITERS].sort());
     expect(touching('recognized_service_periods', `selectFrom|${WRITE}`).sort()).toEqual([...LEDGER_WRITERS, WP5_READER].sort());
-    // Senior overlay/transition tables: nothing writes them; only the WP5 reader reads them
+    // Senior overlay/transition tables: nothing writes them; only the WP5 reader and the WP6-A dry run read them
     expect(touching('senior_status_overlays|senior_status_transitions', WRITE)).toEqual([]);
-    expect(touching('senior_status_overlays|senior_status_transitions', 'selectFrom')).toEqual([WP5_READER]);
+    expect(touching('senior_status_overlays|senior_status_transitions', 'selectFrom').sort()).toEqual([WP5_READER, WP6A_DRY_RUN].sort());
   });
 
   it('only the audit helper writes membership_audit_log.subject_user_id', () => {

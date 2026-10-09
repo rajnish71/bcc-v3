@@ -7,11 +7,18 @@
 //   Honorary Senior Member = Recognition Class (RECOGNITION_CLASS_CODES)
 //
 // Resolution order:
-//   1. an ACTIVE senior_status_overlays row for the individual;
-//   2. otherwise the frozen legacy MANUAL SENIOR_MEMBER recognition row
-//      (temporary compatibility until carry-over is separately authorized --
-//      it does NOT make SENIOR_MEMBER a Recognition Class);
+//   1. a senior_status_overlays row for the individual, IN ANY STATUS, is
+//      authoritative: ACTIVE -> Senior Status; any other status (REMOVED) ->
+//      no Senior Status, and the legacy row is NOT consulted;
+//   2. only when NO overlay exists: the frozen legacy MANUAL SENIOR_MEMBER
+//      recognition row (temporary compatibility until carry-over -- it does
+//      NOT make SENIOR_MEMBER a Recognition Class);
 //   3. otherwise no Senior Status.
+//
+// Why (WP6-A, TENURE-ARCH-001 §12.2 inv. 3-4, §13, §14.1): legacy rows are
+// frozen by 0123 and can never be deactivated, so after a carry-over the
+// legacy row would resurrect a governance-REMOVED Senior if the legacy
+// fallback ran whenever the overlay is not ACTIVE.
 //
 // STRICTLY READ-ONLY. This module only SELECTs. It creates no overlay, no
 // transition and no recognition, awards nothing, evaluates nothing for
@@ -120,15 +127,18 @@ export class SeniorStatusReader {
   }
 
   private async resolveStatus(userId: number): Promise<SeniorStatus> {
+    // An overlay in ANY status is authoritative (uq_sso_user: at most one per user).
     const overlay = await this.executor
       .selectFrom('senior_status_overlays')
-      .select(['id', 'provenance', 'achieved_date'])
+      .select(['id', 'status', 'provenance', 'achieved_date'])
       .where('user_id', '=', userId)
-      .where('status', '=', 'ACTIVE')
       .orderBy('id', 'asc')
       .executeTakeFirst();
     if (overlay) {
-      return { source: 'OVERLAY', provenance: overlay.provenance, overlayId: Number(overlay.id), achievedDate: ymd(overlay.achieved_date) };
+      if (overlay.status === 'ACTIVE') {
+        return { source: 'OVERLAY', provenance: overlay.provenance, overlayId: Number(overlay.id), achievedDate: ymd(overlay.achieved_date) };
+      }
+      return { source: 'NONE' }; // REMOVED (or any non-ACTIVE): never fall back to the legacy row
     }
 
     const legacy = await this.executor
@@ -151,11 +161,11 @@ export class SeniorStatusReader {
   // Everyone currently holding Senior Status (overlay takes precedence over
   // the legacy row for the same individual). Read-only listing for admin.
   async listActive(): Promise<ActiveSeniorRow[]> {
+    // ALL overlays (any status): an overlay user is never listed from the legacy row.
     const overlays = await this.executor
       .selectFrom('senior_status_overlays as o')
       .innerJoin('users as u', 'u.id', 'o.user_id')
-      .select(['o.id as id', 'o.provenance as provenance', 'o.achieved_date as achieved_date', 'u.id as user_id', 'u.full_name as full_name', 'u.username as username'])
-      .where('o.status', '=', 'ACTIVE')
+      .select(['o.id as id', 'o.status as status', 'o.provenance as provenance', 'o.achieved_date as achieved_date', 'u.id as user_id', 'u.full_name as full_name', 'u.username as username'])
       .orderBy('o.id', 'asc')
       .execute();
     const legacy = await this.executor
@@ -173,7 +183,8 @@ export class SeniorStatusReader {
     const out: ActiveSeniorRow[] = [];
     const seen = new Set<number>();
     for (const o of overlays) {
-      seen.add(Number(o.user_id));
+      seen.add(Number(o.user_id)); // blocks the legacy fallback for this user, whatever the status
+      if (o.status !== 'ACTIVE') continue;
       out.push({
         userId: Number(o.user_id), membershipId: null, fullName: o.full_name, username: o.username, membershipNumber: null,
         senior: { source: 'OVERLAY', provenance: o.provenance, overlayId: Number(o.id), achievedDate: ymd(o.achieved_date) },

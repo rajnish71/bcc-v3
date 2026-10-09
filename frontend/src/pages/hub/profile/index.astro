@@ -69,6 +69,7 @@ const maxYear = new Date().getFullYear() + 1;
     <div class="ob-right">
       <span class="ob-status ob-status--saving" id="ph-status">Loading profile…</span>
       <button class="ob-retry-btn" id="ph-retry" type="button" hidden>Retry</button>
+      <a class="ob-retry-btn" id="ph-signin" href="/auth/signin/" target="_blank" rel="noopener" hidden>Sign in</a>
       <span class="ob-divider-dot">•</span>
       <a class="ob-view-link" id="ph-public-link" href="#" target="_blank" rel="noopener">Public Profile ↗</a>
       <button class="ob-save-btn" id="save-btn" type="button" disabled>Save Changes</button>
@@ -1010,6 +1011,7 @@ const maxYear = new Date().getFullYear() + 1;
   cursor: pointer;
   transition: border-color var(--m-fast), color var(--m-fast);
 }
+a.ob-retry-btn { text-decoration: none; }
 .ob-retry-btn:hover {
   border-color: var(--gold-light);
   color: var(--gold-600);
@@ -1461,15 +1463,30 @@ const maxYear = new Date().getFullYear() + 1;
 
 <script>
 import { whenHubAuthenticated } from '../../../lib/distinctions-admin';
+import { createAuthedFetch, SessionExpiredError } from '../../../lib/authed-fetch';
 import { createProfileLoadGate, requireProfileBody, type ProfileLoadState } from '../../../lib/profile-load-gate';
 
 const API = '/api/v1/hub/profile';
 function tok(): string { return localStorage.getItem('bcc_token') ?? ''; }
-async function apiFetch(url: string, opts: RequestInit = {}): Promise<Response> {
-  return fetch(url, {
-    ...opts,
-    headers: { Authorization: `Bearer ${tok()}`, ...(opts.headers ?? {}) },
-  });
+// HubLayout renews the token only at page load; this page can stay open past
+// the 15-minute access-token life, so requests renew it once on a 401.
+const apiFetch = createAuthedFetch({
+  fetch: (url, init) => fetch(url, init),
+  getToken: tok,
+  getRefreshToken: () => localStorage.getItem('bcc_refresh'),
+  storeTokens: (at, rt) => { localStorage.setItem('bcc_token', at); localStorage.setItem('bcc_refresh', rt); },
+  clearAuth: () => ['bcc_token', 'bcc_refresh', 'bcc_user'].forEach(k => localStorage.removeItem(k)),
+});
+
+// Session cannot be renewed: keep the form as-is and offer the sign-in flow in
+// a new tab (the form lives in this one). Saving works again once signed in.
+function showSessionExpired() {
+  const link = document.getElementById('ph-signin') as HTMLAnchorElement | null;
+  if (link) {
+    link.href = `/auth/signin/?next=${encodeURIComponent(window.location.pathname)}`;
+    link.hidden = false;
+  }
+  setStatus('Your session has expired. Your changes are still on this page — sign in again, then press Save.', 'ob-status--error');
 }
 
 // ── Dirty tracking ─────────────────────────────────────────────────────────
@@ -1840,10 +1857,20 @@ async function saveAll() {
   }));
 
   try {
-    const results = await Promise.all(promises);
+    const settled = await Promise.allSettled(promises);
+    // One dead session is one message, not one per section.
+    if (settled.some(s => s.status === 'rejected' && s.reason instanceof SessionExpiredError)) {
+      showSessionExpired();
+      return;
+    }
+    const rejected = settled.find(s => s.status === 'rejected') as PromiseRejectedResult | undefined;
+    if (rejected) throw rejected.reason;
+    const results = settled.map(s => (s as PromiseFulfilledResult<Response>).value);
     const allOk = results.every(r => r.ok);
     if (allOk) {
       dirty.clear();
+      const signin = document.getElementById('ph-signin');
+      if (signin) signin.hidden = true;
       setStatus('All changes saved');
       loadCompletion().catch(() => {});
     } else {

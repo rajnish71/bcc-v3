@@ -254,6 +254,12 @@ export class GalleryService {
     if (!photo) {
       throw new NotFoundException(`Photo ${photoUuid} not found.`);
     }
+    // Idempotent confirm: a retry after an uncertain response (timeout, lost
+    // reply, token renewal) finds the photo already ACTIVE. Return it as-is
+    // instead of a 409 that would make a saved photo look failed.
+    if (photo.status === 'ACTIVE') {
+      return formatPhoto(photo as Record<string, unknown>);
+    }
     if (photo.status !== 'PROCESSING') {
       throw new ConflictException(
         `Photo ${photoUuid} is not in PROCESSING state (current: ${photo.status}).`,

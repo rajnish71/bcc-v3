@@ -188,6 +188,8 @@ describe('saveAll()', () => {
       bioOverLimit: () => overLimit,
       apiFetch,
       setStatus,
+      showSessionExpired: jest.fn(),
+      SessionExpiredError: class SessionExpiredError extends Error {},
       API: '/api/v1/hub/profile',
       getInp: () => '',
       getSel: () => '',
@@ -317,10 +319,11 @@ describe('profile page wiring', () => {
     expect(fn).toContain("retry.hidden = state !== 'failed';");
   });
 
-  it('no new token refresh is introduced', () => {
+  it('refresh logic lives only in the shared authed-fetch helper, not in the page or the gate', () => {
     for (const src of [MAIN, read('lib/profile-load-gate.ts')]) {
       expect(src).not.toContain('/auth/refresh');
-      expect(src).not.toContain('bcc_refresh');
     }
+    expect(read('lib/profile-load-gate.ts')).not.toContain('bcc_refresh');
+    expect(read('lib/authed-fetch.ts')).toContain('/api/v1/auth/refresh');
   });
 });

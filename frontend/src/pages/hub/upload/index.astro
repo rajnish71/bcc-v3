@@ -273,6 +273,7 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 .tile-chip--pct{background:#FBF0E8;color:#8C6830}
 .tile-chip--processing{background:var(--surface-2);border:1px solid var(--ink-200);color:var(--ink-600)}
 .tile-chip--done{background:var(--status-active-bg);color:var(--forest-600)}
+.tile-chip--ready{background:var(--surface-2);border:1px solid var(--ink-200);color:var(--ink-600);flex-shrink:1;text-align:right}
 .tile-failed-reason{font-size:10px;color:#A3493B;margin-top:2px}
 .tile-failed-actions{display:flex;gap:6px;margin-top:8px}
 .tile-btn{font-size:10px;font-weight:600;color:var(--ink-900);border:1px solid var(--ink-200);padding:5px 10px;border-radius:2px;background:none;cursor:pointer;flex:1;text-align:center}
@@ -418,6 +419,8 @@ import HubLayout from '../../../layouts/HubLayout.astro';
 </style>
 
 <script>
+import { createAuthedFetch, SessionExpiredError } from '../../../lib/authed-fetch';
+
 /* ════════════════════════════════════════════════════════
    TYPES
 ════════════════════════════════════════════════════════ */
@@ -516,6 +519,17 @@ function uid(): string {
 function tok(): string {
   return localStorage.getItem('bcc_token') ?? '';
 }
+// HubLayout renews the 15-minute access token only at page load. A queue that
+// runs or waits in the inspector past that point must renew on a 401 (one
+// shared renewal for concurrent requests -- the server treats reuse of a
+// rotated refresh token as theft and revokes every session).
+const apiFetch = createAuthedFetch({
+  fetch: (url, init) => fetch(url, init),
+  getToken: tok,
+  getRefreshToken: () => localStorage.getItem('bcc_refresh'),
+  storeTokens: (at, rt) => { localStorage.setItem('bcc_token', at); localStorage.setItem('bcc_refresh', rt); },
+  clearAuth: () => ['bcc_token', 'bcc_refresh', 'bcc_user'].forEach(k => localStorage.removeItem(k)),
+});
 function qid(id: string): HTMLElement {
   return document.getElementById(id) as HTMLElement;
 }
@@ -689,7 +703,11 @@ function buildQueueTile(item: FileItem): string {
     thumbCls = 'tile-thumb tile-thumb--blur';
     foot = `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--processing">PROCESSING</span></div>`;
   } else if (item.status === 'done') {
-    foot = `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--done">✓ DONE</span></div>`;
+    // 'done' = the file reached storage only. It is published/saved only once the
+    // server confirms (confirmedAs), so say so.
+    foot = item.confirmedAs
+      ? `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--done">${item.confirmedAs === 'drafted' ? '✓ SAVED AS DRAFT' : '✓ PUBLISHED'}</span></div>`
+      : `<div class="tile-foot"><div class="tile-name">${name}</div><span class="tile-chip tile-chip--ready">UPLOADED — READY TO PUBLISH</span></div>`;
   } else if (item.status === 'failed') {
     thumbCls = 'tile-thumb tile-thumb--failed';
     const reason = item.error ?? 'Upload failed';
@@ -918,9 +936,9 @@ async function uploadItem(item: FileItem): Promise<void> {
   try {
     updateItemState(item.id, { status: 'uploading', progress: 5 });
 
-    const presignRes = await fetch('/api/v1/gallery/photos/presign', {
+    const presignRes = await apiFetch('/api/v1/gallery/photos/presign', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mime_type: item.file.type || 'image/jpeg',
         file_size_bytes: item.file.size,
@@ -1036,27 +1054,6 @@ function addFiles(files: FileList | File[]): void {
    PUBLISH
 ════════════════════════════════════════════════════════ */
 
-// Attempt silent token refresh; returns true if a new access token was stored.
-async function tryRefreshToken(): Promise<boolean> {
-  const refresh = localStorage.getItem('bcc_refresh');
-  if (!refresh) return false;
-  try {
-    const res = await fetch('/api/v1/auth/refresh', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: refresh }),
-    });
-    if (!res.ok) return false;
-    const data = await res.json() as { accessToken?: string; refreshToken?: string };
-    if (data.accessToken) {
-      localStorage.setItem('bcc_token', data.accessToken);
-      if (data.refreshToken) localStorage.setItem('bcc_refresh', data.refreshToken);
-      return true;
-    }
-    return false;
-  } catch { return false; }
-}
-
 function showPubError(msg: string): void {
   let banner = document.getElementById('pub-error-banner') as HTMLElement | null;
   if (!banner) {
@@ -1083,9 +1080,8 @@ async function assignCategories(photoUuid: string): Promise<void> {
     const tagId = categoryTagIds[key];
     if (!tagId) continue;
     try {
-      await fetch(`/api/v1/gallery/photos/${photoUuid}/tags/${tagId}`, {
+      await apiFetch(`/api/v1/gallery/photos/${photoUuid}/tags/${tagId}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${tok()}` },
       });
     } catch { /* best-effort */ }
   }
@@ -1150,23 +1146,13 @@ async function confirmItems(
     });
 
     try {
-      let res = await fetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
+      // 401 is renewed once (shared, single-flight); confirm is idempotent
+      // server-side, so a retry after an uncertain reply is safe.
+      const res = await apiFetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
+        headers: { 'Content-Type': 'application/json' },
         body,
       });
-
-      // Token expired — attempt silent refresh and retry once
-      if (res.status === 401) {
-        const refreshed = await tryRefreshToken();
-        if (refreshed) {
-          res = await fetch(`/api/v1/gallery/photos/${item.photoUuid}/confirm`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok()}` },
-            body,
-          });
-        }
-      }
 
       if (res.ok) {
         item.confirmedAs = visibility === 'PRIVATE' ? 'drafted' : 'published';
@@ -1195,7 +1181,9 @@ async function confirmItems(
         }
       }
     } catch (err) {
-      const msg = (err as Error).message || 'Network error';
+      const msg = err instanceof SessionExpiredError
+        ? 'Your session has expired. Your photographs are still on this page — sign in again in a new tab, then press Publish again.'
+        : ((err as Error).message || 'Network error');
       console.error(`[BCC Upload] confirm network error for "${item.file.name}":`, msg);
       errorMsg = msg;
     }
@@ -1256,6 +1244,12 @@ async function handlePublish(asDraft: boolean): Promise<void> {
     btnP.disabled = false; btnD.disabled = false;
   }
 }
+
+/* Uploaded-but-unpublished photographs exist only in this page until Publish /
+   Save as draft succeeds. Warn before the page is closed or reloaded. */
+window.addEventListener('beforeunload', e => {
+  if (items.some(i => i.status === 'done' && !i.confirmedAs)) { e.preventDefault(); e.returnValue = ''; }
+});
 
 /* ════════════════════════════════════════════════════════
    EVENT WIRING

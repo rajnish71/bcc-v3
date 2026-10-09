@@ -254,7 +254,7 @@ const { variant } = Astro.props;
         <h3 class="maf-step-title">Membership Terms &amp; Conditions</h3>
         <span class="maf-version-tag maf-mono">Terms v1.0 · July 2026</span>
       </div>
-      <p class="maf-step-desc">Read the complete terms below. Scroll to the end to enable the agreement checkbox.</p>
+      <p class="maf-step-desc">Read the complete terms below. Scroll inside the box to the end to enable the agreement checkbox.</p>
     </div>
 
     <!-- T&C scroll panel -->
@@ -295,7 +295,7 @@ const { variant } = Astro.props;
 
     <!-- Scroll status -->
     <div id="maf-tc-status" class="maf-tc-status maf-tc-status--unread">
-      <span id="maf-tc-status-text">↓ Scroll to the end to enable the agreement checkbox</span>
+      <span id="maf-tc-status-text">↓ Scroll inside the box to the end to enable the agreement checkbox</span>
     </div>
 
     <!-- Checkbox 1: T&C — scroll-gated (FLAG 1) -->
@@ -826,6 +826,7 @@ const { variant } = Astro.props;
       step2.style.display   = n === 2 ? '' : 'none';
       step3.style.display   = n === 3 ? '' : 'none';
       renderStepIndicator(n);
+      if (n === 2) checkTcScrolled(); // panel is now measurable; unlocks if terms fit without scrolling
       if (n === 3) populateReviewStep();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1264,6 +1265,9 @@ const { variant } = Astro.props;
       }
     }
     tcPanel.addEventListener('scroll', checkTcScrolled, { passive: true });
+    // Re-evaluate the real scroll position when a gesture settles (iOS can skip the final scroll event).
+    tcPanel.addEventListener('scrollend', checkTcScrolled, { passive: true });
+    tcPanel.addEventListener('touchend', checkTcScrolled, { passive: true });
 
     // ── Checkbox logic ────────────────────────────────────────────────────
     cb1Btn.addEventListener('click', () => {

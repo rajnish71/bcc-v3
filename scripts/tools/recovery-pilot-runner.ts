@@ -413,8 +413,12 @@ export async function main(): Promise<void> {
 }
 
 if (require.main === module) {
-  main().catch((e) => {
-    console.error('Fatal crash:', e);
-    process.exit(1);
-  });
+  main()
+    .then(() => {
+      process.exit(process.exitCode ?? 0);
+    })
+    .catch((e) => {
+      console.error('Fatal crash:', e);
+      process.exit(1);
+    });
 }

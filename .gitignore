@@ -72,3 +72,8 @@ docs/BCC_V3_PlayBook.md
 # Local credential artifacts
 # =========================
 ProjectDocs/Plans/rzp-test-key.csv
+
+# Runtime deployment artifacts
+/.deploy.lock
+/frontend/dist-old/
+/frontend/dist-staging/

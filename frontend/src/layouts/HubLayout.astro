@@ -289,6 +289,18 @@ const activeRoute = Astro.url.pathname;
     // Resolve role and write to hub-frame (HubSidebar observes this)
     const role = portalState ? portalState.toLowerCase() : getRoleFromToken(token);
     const frame = document.getElementById('hub-frame');
+
+    // Route-level authorization gate (HUB-ARCH-001 line 383: Token valid, role insufficient -> Redirect to /hub/)
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/hub/admin')) {
+      const isFin = currentPath.startsWith('/hub/admin/financial');
+      const isAuthorized = role === 'admin' || (isFin && financialRead);
+      if (!isAuthorized) {
+        window.location.replace('/hub/');
+        return;
+      }
+    }
+
     if (frame) frame.setAttribute('data-hub-role', role);
     // Track 4: Financial workspace group visibility (navigation only --
     // the financial admin API enforces financial.read server-side).
@@ -301,4 +313,63 @@ const activeRoute = Astro.url.pathname;
   }
 
   initHub();
+
+  /* ── Tab visibility revalidation ───────────────────────────── */
+  let isRevalidating = false;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || isRevalidating) return;
+    isRevalidating = true;
+    try {
+      const token = await getValidToken();
+      if (!token) {
+        clearAuth();
+        const frame = document.getElementById('hub-frame');
+        if (frame) frame.style.display = 'none';
+        const loading = document.getElementById('hub-loading');
+        if (loading) loading.hidden = false;
+        window.dispatchEvent(new CustomEvent('hub:session-invalidated', { detail: { reason: 'expired' } }));
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.replace(`/auth/signin/?next=${next}`);
+        return;
+      }
+
+      // Revalidate role and account standing on admin routes
+      const path = window.location.pathname;
+      if (path.startsWith('/hub/admin')) {
+        const res = await fetch(`${API}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          clearAuth();
+          const frame = document.getElementById('hub-frame');
+          if (frame) frame.style.display = 'none';
+          const loading = document.getElementById('hub-loading');
+          if (loading) loading.hidden = false;
+          window.dispatchEvent(new CustomEvent('hub:session-invalidated', { detail: { reason: 'expired' } }));
+          const next = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.replace(`/auth/signin/?next=${next}`);
+          return;
+        }
+        const user = await res.json() as {
+          ui?: { portalState: string; financialRead?: boolean };
+        };
+        const pState = user.ui?.portalState;
+        const r = pState ? pState.toLowerCase() : 'member';
+        const finRead = user.ui?.financialRead === true;
+        const isFin = path.startsWith('/hub/admin/financial');
+        const isAuth = r === 'admin' || (isFin && finRead);
+        if (!isAuth) {
+          const frame = document.getElementById('hub-frame');
+          if (frame) frame.style.display = 'none';
+          window.dispatchEvent(new CustomEvent('hub:session-invalidated', { detail: { reason: 'unauthorized' } }));
+          window.location.replace('/hub/');
+          return;
+        }
+      }
+    } catch {
+      /* Network issue during revalidation — do not invalidate active session */
+    } finally {
+      isRevalidating = false;
+    }
+  });
 </script>

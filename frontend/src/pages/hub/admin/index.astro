@@ -1023,17 +1023,31 @@ body.modal-open { overflow: hidden; }
 </style>
 
 <script>
+  import { whenHubAuthenticated } from '../../../lib/distinctions-admin';
+  import { createAuthedFetch, SessionExpiredError } from '../../../lib/authed-fetch';
+
   const API = '/api/v1';
 
-  /* ── Auth helper ───────────────────────────────────────────── */
-  function getToken(): string | null {
-    return localStorage.getItem('bcc_token');
+  /* ── Auth helpers & authedFetch ────────────────────────────── */
+  function getToken(): string {
+    return localStorage.getItem('bcc_token') ?? '';
   }
 
   function authHeaders(): Record<string, string> {
     const t = getToken();
     return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : {};
   }
+
+  const apiFetch = createAuthedFetch({
+    fetch: (url, init) => fetch(url, init),
+    getToken,
+    getRefreshToken: () => localStorage.getItem('bcc_refresh'),
+    storeTokens: (at, rt) => {
+      localStorage.setItem('bcc_token', at);
+      localStorage.setItem('bcc_refresh', rt);
+    },
+    clearAuth: () => ['bcc_token', 'bcc_refresh', 'bcc_user'].forEach(k => localStorage.removeItem(k)),
+  });
 
   /* ── Helpers ────────────────────────────────────────────────── */
   function show(el: HTMLElement | null) { if (el) el.hidden = false; }
@@ -1044,6 +1058,85 @@ body.modal-open { overflow: hidden; }
     try { return new Date(val).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
     catch { return val; }
   }
+
+  /* ── Session invalidation & Protected Data Clearing ──────── */
+  let isSessionInvalidated = false;
+
+  function clearProtectedAdminData(): void {
+    isSessionInvalidated = true;
+
+    // 1. Pending applications
+    const pendingList = document.getElementById('pending-list');
+    if (pendingList) { pendingList.innerHTML = ''; hide(pendingList); }
+    hide(document.getElementById('pending-loading'));
+    hide(document.getElementById('pending-empty'));
+    hide(document.getElementById('pending-error'));
+
+    // 2. Member search, password reset & identity panel
+    const searchResults = document.getElementById('search-results');
+    if (searchResults) { searchResults.innerHTML = ''; hide(searchResults); }
+    const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+    if (searchInput) { searchInput.value = ''; }
+    hide(document.getElementById('search-loading'));
+    hide(document.getElementById('search-empty'));
+    hide(document.getElementById('search-error'));
+
+    const resetPanel = document.getElementById('reset-panel');
+    if (resetPanel) hide(resetPanel);
+    const resetUserId = document.getElementById('reset-user-id') as HTMLInputElement | null;
+    if (resetUserId) resetUserId.value = '';
+    const resetTargetName = document.getElementById('reset-target-name');
+    if (resetTargetName) resetTargetName.textContent = '';
+    const resetPassword = document.getElementById('reset-password') as HTMLInputElement | null;
+    if (resetPassword) resetPassword.value = '';
+    const resetFeedback = document.getElementById('reset-feedback');
+    if (resetFeedback) { resetFeedback.textContent = ''; hide(resetFeedback); }
+
+    const identityPanel = document.getElementById('identity-panel');
+    if (identityPanel) hide(identityPanel);
+    const identityDetail = document.getElementById('identity-detail');
+    if (identityDetail) identityDetail.innerHTML = '';
+    const identityActions = document.getElementById('identity-actions');
+    if (identityActions) {
+      identityActions.hidden = true;
+      delete identityActions.dataset.uid;
+      delete identityActions.dataset.name;
+    }
+    const identityFeedback = document.getElementById('identity-feedback');
+    if (identityFeedback) { identityFeedback.textContent = ''; hide(identityFeedback); }
+
+    // 3. Hero manager
+    eligiblePhotos = [];
+    destinations = [];
+    pendingSaveDestinations = [];
+    pendingReplacements = [];
+    const heroList = document.getElementById('hero-photo-list');
+    if (heroList) { heroList.innerHTML = ''; hide(heroList); }
+    hide(document.getElementById('hero-manager-loading'));
+    hide(document.getElementById('hero-manager-empty'));
+    hide(document.getElementById('hero-manager-error'));
+    closeAssignModal();
+    closeReplaceModal();
+  }
+
+  function handleAuthFailure(status: 401 | 403 | 'expired'): void {
+    clearProtectedAdminData();
+    if (status === 403) {
+      window.location.replace('/hub/');
+    } else {
+      const next = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.replace(`/auth/signin/?next=${next}`);
+    }
+  }
+
+  window.addEventListener('hub:session-invalidated', (event: any) => {
+    const reason = event?.detail?.reason;
+    if (reason === 'unauthorized') {
+      handleAuthFailure(403);
+    } else {
+      handleAuthFailure(401);
+    }
+  });
 
   /* ════════════════════════════════════════════════════════════
      SECTION 1 — PENDING APPLICATIONS
@@ -1109,6 +1202,7 @@ body.modal-open { overflow: hidden; }
   }
 
   async function loadPending() {
+    if (isSessionInvalidated) return;
     const loading = document.getElementById('pending-loading');
     const empty   = document.getElementById('pending-empty');
     const errorEl = document.getElementById('pending-error');
@@ -1116,14 +1210,22 @@ body.modal-open { overflow: hidden; }
     if (!loading || !empty || !errorEl || !list) return;
 
     try {
-      const res = await fetch(`${API}/membership/admin/pending`, { headers: authHeaders() });
+      const res = await apiFetch(`${API}/membership/admin/pending`);
+      if (isSessionInvalidated) return;
       hide(loading);
+      if (res.status === 401) { handleAuthFailure(401); return; }
+      if (res.status === 403) {
+        errorEl.textContent = 'You do not have permission to view pending applications.';
+        show(errorEl);
+        return;
+      }
       if (!res.ok) {
         errorEl.textContent = `Error ${res.status}: unable to load pending applications.`;
         show(errorEl);
         return;
       }
       const rows: PendingRow[] = await res.json() as PendingRow[];
+      if (isSessionInvalidated) return;
       if (!rows.length) { show(empty); return; }
 
       list.innerHTML = rows.map(r => (r.owner_type === 'GROUP' ? `
@@ -1161,6 +1263,7 @@ body.modal-open { overflow: hidden; }
       // reach the approve/reject handler below). Every call goes to existing
       // backend routes; none carries an amount or a payment state.
       list.addEventListener('click', async (e) => {
+        if (isSessionInvalidated) return;
         const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-pay-action]');
         if (!btn) return;
         const payAction = btn.dataset.payAction;
@@ -1170,7 +1273,7 @@ body.modal-open { overflow: hidden; }
           return;
         }
         btn.disabled = true;
-        const post = (path: string) => fetch(`${API}${path}`, { method: 'POST', headers: authHeaders(), body: '{}' });
+        const post = (path: string) => apiFetch(`${API}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
         try {
           let res: Response;
           if (payAction === 'contribution') {
@@ -1179,10 +1282,24 @@ body.modal-open { overflow: hidden; }
             const cid = btn.dataset.cid;
             if (payAction === 'regenerate') {
               const retry = await post(`/financial/contributions/${cid}/settlement/retry`);
+              if (isSessionInvalidated) return;
+              if (retry.status === 401) { handleAuthFailure(401); return; }
+              if (retry.status === 403) {
+                btn.textContent = 'Permission denied';
+                btn.disabled = false;
+                return;
+              }
               if (!retry.ok) { res = retry; } else { res = await post(`/financial/contributions/${cid}/settlement/payment-link`); }
             } else {
               res = await post(`/financial/contributions/${cid}/settlement/payment-link`);
             }
+          }
+          if (isSessionInvalidated) return;
+          if (res.status === 401) { handleAuthFailure(401); return; }
+          if (res.status === 403) {
+            btn.textContent = 'Permission denied';
+            btn.disabled = false;
+            return;
           }
           if (!res.ok) {
             const err = await res.json().catch(() => ({})) as { message?: string };
@@ -1193,13 +1310,19 @@ body.modal-open { overflow: hidden; }
           // Re-render from the server's authoritative state. (A full reload,
           // not loadPending(): the list's click listeners are attached there.)
           window.location.reload();
-        } catch {
+        } catch (err) {
+          if (err instanceof SessionExpiredError) {
+            handleAuthFailure(401);
+            return;
+          }
+          if (isSessionInvalidated) return;
           btn.textContent = 'Network error';
           btn.disabled = false;
         }
       });
 
       list.addEventListener('click', async (e) => {
+        if (isSessionInvalidated) return;
         const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-action]');
         if (!btn) return;
         const action = btn.dataset.action as 'approve' | 'reject';
@@ -1219,11 +1342,22 @@ body.modal-open { overflow: hidden; }
 
         try {
           const body = action === 'reject' ? JSON.stringify({ reason: note }) : '{}';
-          const res = await fetch(`${API}/membership/${id}/${action}`, {
+          const res = await apiFetch(`${API}/membership/${id}/${action}`, {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body,
           });
+          if (isSessionInvalidated) return;
+          if (res.status === 401) { handleAuthFailure(401); return; }
+          if (res.status === 403) {
+            if (statusEl) {
+              statusEl.textContent = 'Permission denied.';
+              show(statusEl);
+            }
+            if (approveBtn) approveBtn.disabled = false;
+            if (rejectBtn)  rejectBtn.disabled  = false;
+            return;
+          }
           if (res.ok) {
             if (statusEl) { statusEl.textContent = action === 'approve' ? '✓ Approved' : '✗ Rejected'; show(statusEl); }
             if (card) card.style.opacity = '0.5';
@@ -1236,13 +1370,23 @@ body.modal-open { overflow: hidden; }
             if (approveBtn) approveBtn.disabled = false;
             if (rejectBtn)  rejectBtn.disabled  = false;
           }
-        } catch {
+        } catch (err) {
+          if (err instanceof SessionExpiredError) {
+            handleAuthFailure(401);
+            return;
+          }
+          if (isSessionInvalidated) return;
           if (statusEl) { statusEl.textContent = 'Network error'; show(statusEl); }
           if (approveBtn) approveBtn.disabled = false;
           if (rejectBtn)  rejectBtn.disabled  = false;
         }
       });
-    } catch {
+    } catch (err) {
+      if (err instanceof SessionExpiredError) {
+        handleAuthFailure(401);
+        return;
+      }
+      if (isSessionInvalidated) return;
       hide(loading);
       if (errorEl) { errorEl.textContent = 'Failed to load pending applications.'; show(errorEl); }
     }
@@ -1281,6 +1425,7 @@ body.modal-open { overflow: hidden; }
 
   searchForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (isSessionInvalidated) return;
     const q = searchInput?.value.trim() ?? '';
     if (q.length < 2) return;
 
@@ -1288,14 +1433,21 @@ body.modal-open { overflow: hidden; }
     show(searchLoading);
 
     try {
-      const res = await fetch(`${API}/users/admin/search?q=${encodeURIComponent(q)}`, { headers: authHeaders() });
+      const res = await apiFetch(`${API}/users/admin/search?q=${encodeURIComponent(q)}`);
+      if (isSessionInvalidated) return;
       hide(searchLoading);
 
+      if (res.status === 401) { handleAuthFailure(401); return; }
+      if (res.status === 403) {
+        if (searchError) { searchError.textContent = 'You do not have permission to search members.'; show(searchError); }
+        return;
+      }
       if (!res.ok) {
         if (searchError) { searchError.textContent = `Search failed (${res.status}).`; show(searchError); }
         return;
       }
       const members: MemberRow[] = await res.json() as MemberRow[];
+      if (isSessionInvalidated) return;
       if (!members.length) { show(searchEmpty); return; }
 
       if (searchResults) {
@@ -1319,6 +1471,7 @@ body.modal-open { overflow: hidden; }
         show(searchResults);
 
         searchResults.addEventListener('click', (ev) => {
+          if (isSessionInvalidated) return;
           const row = (ev.target as HTMLElement).closest<HTMLElement>('[data-uid]');
           if (!row) return;
           const uid        = row.dataset.uid!;
@@ -1365,7 +1518,12 @@ body.modal-open { overflow: hidden; }
           if (identityPanel) show(identityPanel);
         }, { once: true });
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof SessionExpiredError) {
+        handleAuthFailure(401);
+        return;
+      }
+      if (isSessionInvalidated) return;
       hide(searchLoading);
       if (searchError) { searchError.textContent = 'Network error during search.'; show(searchError); }
     }
@@ -1373,6 +1531,7 @@ body.modal-open { overflow: hidden; }
 
   resetForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (isSessionInvalidated) return;
     const uid = resetUserId?.value;
     const pwd = resetPassword?.value ?? '';
     if (!uid || pwd.length < 8) return;
@@ -1382,11 +1541,21 @@ body.modal-open { overflow: hidden; }
     if (resetFeedback) { resetFeedback.hidden = true; }
 
     try {
-      const res = await fetch(`${API}/membership/admin/users/${uid}/reset-password`, {
+      const res = await apiFetch(`${API}/membership/admin/users/${uid}/reset-password`, {
         method: 'POST',
-        headers: authHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newPassword: pwd }),
       });
+      if (isSessionInvalidated) return;
+      if (res.status === 401) { handleAuthFailure(401); return; }
+      if (res.status === 403) {
+        if (resetFeedback) {
+          resetFeedback.textContent = 'You do not have permission to reset member passwords.';
+          resetFeedback.className = 'reset-feedback error';
+          show(resetFeedback);
+        }
+        return;
+      }
       if (resetFeedback) {
         if (res.ok) {
           resetFeedback.textContent = 'Password reset. Member will be prompted to set a new one on next login.';
@@ -1398,15 +1567,22 @@ body.modal-open { overflow: hidden; }
         }
         show(resetFeedback);
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof SessionExpiredError) {
+        handleAuthFailure(401);
+        return;
+      }
+      if (isSessionInvalidated) return;
       if (resetFeedback) {
         resetFeedback.textContent = 'Network error. Please try again.';
         resetFeedback.className = 'reset-feedback error';
         show(resetFeedback);
       }
     } finally {
-      if (submitBtn) submitBtn.disabled = false;
-      if (resetPassword) resetPassword.value = '';
+      if (!isSessionInvalidated) {
+        if (submitBtn) submitBtn.disabled = false;
+        if (resetPassword) resetPassword.value = '';
+      }
     }
   });
 
@@ -1422,6 +1598,7 @@ body.modal-open { overflow: hidden; }
   let currentReplacementIndex = 0;
 
   async function loadHeroManagerData() {
+    if (isSessionInvalidated) return;
     const loadingEl = document.getElementById('hero-manager-loading');
     const emptyEl   = document.getElementById('hero-manager-empty');
     const errorEl   = document.getElementById('hero-manager-error');
@@ -1432,13 +1609,24 @@ body.modal-open { overflow: hidden; }
     try {
       if (destinations.length === 0) {
         const destRes = await fetch(`${API}/gallery/hero/destinations`);
+        if (isSessionInvalidated) return;
         if (destRes.ok) {
           destinations = await destRes.json();
         }
       }
+      if (isSessionInvalidated) return;
 
-      const res = await fetch(`${API}/gallery/hero/eligible`, { headers: authHeaders() });
+      const res = await apiFetch(`${API}/gallery/hero/eligible`);
+      if (isSessionInvalidated) return;
       hide(loadingEl);
+      if (res.status === 401) { handleAuthFailure(401); return; }
+      if (res.status === 403) {
+        if (errorEl) {
+          errorEl.textContent = 'You do not have permission to manage editorial hero images.';
+          show(errorEl);
+        }
+        return;
+      }
       if (!res.ok) {
         if (errorEl) {
           errorEl.textContent = `Error loading eligible photos: ${res.status}`;
@@ -1447,10 +1635,16 @@ body.modal-open { overflow: hidden; }
         return;
       }
       eligiblePhotos = await res.json();
+      if (isSessionInvalidated) return;
       
       renderEligiblePhotos();
       populateFilters();
     } catch (e) {
+      if (e instanceof SessionExpiredError) {
+        handleAuthFailure(401);
+        return;
+      }
+      if (isSessionInvalidated) return;
       hide(loadingEl);
       if (errorEl) {
         errorEl.textContent = 'Network error loading eligible photos.';
@@ -1744,6 +1938,7 @@ body.modal-open { overflow: hidden; }
   }
 
   async function commitAssignments() {
+    if (isSessionInvalidated) return;
     hide(document.getElementById('hero-assign-modal'));
     hide(document.getElementById('hero-replace-modal'));
     document.body.classList.remove('modal-open');
@@ -1766,13 +1961,13 @@ body.modal-open { overflow: hidden; }
     }
 
     try {
-      const promises = [];
+      const promises: Promise<Response>[] = [];
 
       toUnassign.forEach(u => {
         promises.push(
-          fetch(`${API}/gallery/hero/unassign`, {
+          apiFetch(`${API}/gallery/hero/unassign`, {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ photo_uuid: selectedPhotoUuid, location: u.location })
           })
         );
@@ -1780,21 +1975,37 @@ body.modal-open { overflow: hidden; }
 
       toAssign.forEach(a => {
         promises.push(
-          fetch(`${API}/gallery/hero/assign`, {
+          apiFetch(`${API}/gallery/hero/assign`, {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ photo_uuid: selectedPhotoUuid, location: a.location, mode: a.mode })
           })
         );
       });
 
-      await Promise.all(promises);
+      const responses = await Promise.all(promises);
+      if (isSessionInvalidated) return;
+      const unauth401 = responses.find(r => r.status === 401);
+      if (unauth401) {
+        handleAuthFailure(401);
+        return;
+      }
+      const forbidden403 = responses.find(r => r.status === 403);
+      if (forbidden403) {
+        alert('Permission denied: You do not have permission to modify hero assignments.');
+        return;
+      }
       await loadHeroManagerData();
     } catch (e) {
+      if (e instanceof SessionExpiredError) {
+        handleAuthFailure(401);
+        return;
+      }
+      if (isSessionInvalidated) return;
       console.error('Failed to save assignments', e);
       alert('An error occurred while saving assignments.');
     } finally {
-      if (saveBtn) {
+      if (!isSessionInvalidated && saveBtn) {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Assignments';
       }
@@ -1900,16 +2111,32 @@ body.modal-open { overflow: hidden; }
   }
 
   async function identityAction(endpoint: string, uid: string, successMsg: string = 'Email dispatched.'): Promise<void> {
-    const res = await fetch(`${API}/identity/${endpoint}/${uid}`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: '{}',
-    });
-    if (res.ok) {
-      identityFeedbackMsg(successMsg, 'ok');
-    } else {
-      const err = await res.json().catch(() => ({})) as { message?: string };
-      identityFeedbackMsg(`Error: ${err.message ?? res.status}`, 'error');
+    if (isSessionInvalidated) return;
+    try {
+      const res = await apiFetch(`${API}/identity/${endpoint}/${uid}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (isSessionInvalidated) return;
+      if (res.status === 401) { handleAuthFailure(401); return; }
+      if (res.status === 403) {
+        identityFeedbackMsg('You do not have permission for this identity action.', 'error');
+        return;
+      }
+      if (res.ok) {
+        identityFeedbackMsg(successMsg, 'ok');
+      } else {
+        const err = await res.json().catch(() => ({})) as { message?: string };
+        identityFeedbackMsg(`Error: ${err.message ?? res.status}`, 'error');
+      }
+    } catch (err) {
+      if (err instanceof SessionExpiredError) {
+        handleAuthFailure(401);
+        return;
+      }
+      if (isSessionInvalidated) return;
+      throw err;
     }
   }
 
@@ -1918,42 +2145,52 @@ body.modal-open { overflow: hidden; }
   }
 
   document.getElementById('btn-send-link')?.addEventListener('click', async () => {
+    if (isSessionInvalidated) return;
     const uid = getIdentityUid(); if (!uid) return;
     const btn = document.getElementById('btn-send-link') as HTMLButtonElement;
     btn.disabled = true;
     try { await identityAction('admin/send-completion-link', uid); }
     catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
-    finally { btn.disabled = false; }
+    finally { if (!isSessionInvalidated) btn.disabled = false; }
   });
 
   document.getElementById('btn-send-priority')?.addEventListener('click', async () => {
+    if (isSessionInvalidated) return;
     const uid = getIdentityUid(); if (!uid) return;
     const btn = document.getElementById('btn-send-priority') as HTMLButtonElement;
     btn.disabled = true;
     try { await identityAction('admin/send-priority-completion-link', uid); }
     catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
-    finally { btn.disabled = false; }
+    finally { if (!isSessionInvalidated) btn.disabled = false; }
   });
 
   document.getElementById('btn-resend-welcome')?.addEventListener('click', async () => {
+    if (isSessionInvalidated) return;
     const uid = getIdentityUid(); if (!uid) return;
     const btn = document.getElementById('btn-resend-welcome') as HTMLButtonElement;
     btn.disabled = true;
     try { await identityAction('admin/resend-welcome', uid); }
     catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
-    finally { btn.disabled = false; }
+    finally { if (!isSessionInvalidated) btn.disabled = false; }
   });
 
   document.getElementById('btn-send-invitation')?.addEventListener('click', async () => {
+    if (isSessionInvalidated) return;
     const uid = getIdentityUid(); if (!uid) return;
     const btn = document.getElementById('btn-send-invitation') as HTMLButtonElement;
     btn.disabled = true;
     try { await identityAction('admin/send-membership-invitation', uid, 'Membership invitation email sent successfully.'); }
     catch { identityFeedbackMsg('Network error. Please try again.', 'error'); }
-    finally { btn.disabled = false; }
+    finally { if (!isSessionInvalidated) btn.disabled = false; }
   });
 
   /* ── Init ────────────────────────────────────────────────── */
-  loadPending();
-  loadHeroManagerData();
+  async function initAdminConsole() {
+    await whenHubAuthenticated();
+    if (isSessionInvalidated) return;
+    loadPending();
+    loadHeroManagerData();
+  }
+
+  initAdminConsole();
 </script>

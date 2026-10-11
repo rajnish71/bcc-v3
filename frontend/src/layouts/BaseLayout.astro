@@ -135,9 +135,36 @@ const allSchemas = [organizationSchema, websiteSchema, ...(jsonLd ? (Array.isArr
   </style>
 
   <script>
+    import { isSessionValid, clearAuth, resolveValidToken } from '../lib/auth';
     try {
       if (localStorage.getItem('bcc_user')) {
-        document.body.classList.add('bcc-is-authenticated');
+        if (isSessionValid()) {
+          document.body.classList.add('bcc-is-authenticated');
+
+          // If access token is expired, verify or refresh in background
+          const token = localStorage.getItem('bcc_token');
+          let tokenValid = false;
+          if (token) {
+            try {
+              const parts = token.split('.');
+              if (parts.length === 3) {
+                const p = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                if (typeof p.exp === 'number' && p.exp * 1000 > Date.now()) {
+                  tokenValid = true;
+                }
+              }
+            } catch {}
+          }
+          if (!tokenValid) {
+            resolveValidToken().then((res) => {
+              if (res.status === 'rejected') {
+                document.body.classList.remove('bcc-is-authenticated');
+              }
+            }).catch(() => {});
+          }
+        } else {
+          clearAuth();
+        }
       }
     } catch (e) {}
   </script>

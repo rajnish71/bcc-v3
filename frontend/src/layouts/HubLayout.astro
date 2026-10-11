@@ -165,47 +165,9 @@ const activeRoute = Astro.url.pathname;
 </style>
 
 <script>
+  import { getValidToken, resolveValidToken, clearAuth } from '../lib/auth';
+
   const API = '/api/v1';
-
-  /* ── Token helpers ─────────────────────────────────────────── */
-  async function getValidToken(): Promise<string | null> {
-    const token = localStorage.getItem('bcc_token');
-    if (!token) return null;
-
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-      const expiresAt = (payload.exp as number) * 1000;
-
-      // Token still valid for > 60 seconds
-      if (Date.now() < expiresAt - 60_000) return token;
-
-      // Expired or about to — try silent refresh
-      const refresh = localStorage.getItem('bcc_refresh');
-      if (!refresh) { clearAuth(); return null; }
-
-      const res = await fetch(`${API}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: refresh }),
-      });
-      if (!res.ok) { clearAuth(); return null; }
-
-      const data = await res.json() as { accessToken: string; refreshToken: string };
-      localStorage.setItem('bcc_token', data.accessToken);
-      localStorage.setItem('bcc_refresh', data.refreshToken);
-      return data.accessToken;
-    } catch {
-      return null;
-    }
-  }
-
-  function clearAuth(): void {
-    localStorage.removeItem('bcc_token');
-    localStorage.removeItem('bcc_refresh');
-    localStorage.removeItem('bcc_user');
-  }
 
   /* ── Role extraction from JWT ──────────────────────────────── */
   function getRoleFromToken(token: string): string {
@@ -320,8 +282,12 @@ const activeRoute = Astro.url.pathname;
     if (document.visibilityState !== 'visible' || isRevalidating) return;
     isRevalidating = true;
     try {
-      const token = await getValidToken();
-      if (!token) {
+      const outcome = await resolveValidToken();
+      if (outcome.status === 'network_error') {
+        // Network issue — preserve credentials and current page state without redirecting
+        return;
+      }
+      if (outcome.status === 'rejected') {
         clearAuth();
         const frame = document.getElementById('hub-frame');
         if (frame) frame.style.display = 'none';
@@ -332,6 +298,8 @@ const activeRoute = Astro.url.pathname;
         window.location.replace(`/auth/signin/?next=${next}`);
         return;
       }
+
+      const token = outcome.token;
 
       // Revalidate role and account standing on admin routes
       const path = window.location.pathname;

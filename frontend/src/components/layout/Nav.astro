@@ -1146,7 +1146,7 @@ const NAV_LINKS = [
 
 
 <script>
-  import { logout } from '../../lib/auth';
+  import { logout, isSessionValid, clearAuth, resolveValidToken } from '../../lib/auth';
 
   /**
    * Nav scripts:
@@ -1198,7 +1198,31 @@ const NAV_LINKS = [
   /* 3. Auth state */
   try {
     const raw = localStorage.getItem('bcc_user');
-    if (raw) {
+    if (raw && isSessionValid()) {
+      // If access token is expired, verify or refresh in background
+      const token = localStorage.getItem('bcc_token');
+      let tokenValid = false;
+      if (token) {
+        try {
+          const parts = token.split('.');
+          if (parts.length === 3) {
+            const p = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            if (typeof p.exp === 'number' && p.exp * 1000 > Date.now()) {
+              tokenValid = true;
+            }
+          }
+        } catch {}
+      }
+
+      if (!tokenValid) {
+        // Access token expired: asynchronously validate via resolveValidToken
+        resolveValidToken().then((res) => {
+          if (res.status === 'rejected') {
+            showGuest();
+          }
+        }).catch(() => {});
+      }
+
       const user = JSON.parse(raw) as {
         displayName?: string;
         initials?: string;
@@ -1546,16 +1570,25 @@ const NAV_LINKS = [
           setInterval(mirrorBadge, 2000);
         }
       } else {
-        showMobileGuest();
+        showGuest();
       }
     } else {
-      showMobileGuest();
+      if (raw) clearAuth();
+      showGuest();
     }
   } catch {
-    showMobileGuest();
+    clearAuth();
+    showGuest();
   }
 
-  function showMobileGuest() {
+  function showGuest() {
+    // Desktop right rail
+    const guest = document.getElementById('nav-guest');
+    const member = document.getElementById('nav-member');
+    if (guest) guest.hidden = false;
+    if (member) member.hidden = true;
+
+    // Mobile header & chips
     const mobileJoin = document.getElementById('mobile-join-chip');
     const mobileAvatar = document.getElementById('nav-mobile-avatar');
     const mobileConsole = document.getElementById('mobile-console-chip');
@@ -1563,6 +1596,7 @@ const NAV_LINKS = [
     if (mobileAvatar) mobileAvatar.setAttribute('hidden', '');
     if (mobileConsole) mobileConsole.setAttribute('hidden', '');
 
+    // Mobile drawer
     const dg = document.getElementById('drawer-guest');
     const dm = document.getElementById('drawer-member');
     if (dg) dg.hidden = false;

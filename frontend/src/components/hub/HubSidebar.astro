@@ -35,7 +35,12 @@ type NavGroup = {
   items: NavItem[];
 };
 
+// The Draft Photographs item shares the Portfolio path; the query string is not
+// available at build time, so its active state is set client-side (script below).
+const DRAFTS_HREF = '/hub/portfolio/?status=drafts';
+
 function isActive(href: string): boolean {
+  if (href === DRAFTS_HREF) return false;
   if (href === '/hub/') return activeRoute === '/hub/' || activeRoute === '/hub';
   // Query-string items (CLUB activities) — match the base path
   if (href.includes('?')) return activeRoute === href.split('?')[0];
@@ -48,6 +53,7 @@ const groups: NavGroup[] = [
     items: [
       { name: 'Home',          href: '/hub/' },
       { name: 'Portfolio',     href: '/hub/portfolio/' },
+      { name: 'Draft Photographs', href: DRAFTS_HREF },
       { name: 'Upload Studio', href: '/hub/upload/' },
     ],
   },
@@ -80,6 +86,7 @@ const groups: NavGroup[] = [
 const primaryTabItems: NavItem[] = [
   { name: 'Home',               href: '/hub/' },
   { name: 'Portfolio',          href: '/hub/portfolio/' },
+  { name: 'Draft Photographs',  href: DRAFTS_HREF },
   { name: 'Upload Studio',      href: '/hub/upload/' },
   { name: 'Photography School', href: '/hub/academy/',  soon: true },
   { name: 'Contests',           href: '/hub/contests/', soon: true },
@@ -778,6 +785,22 @@ const mobileActive = {
 
 <script>
 import { logout } from '../../lib/auth';
+
+/* ── Draft Photographs active state (same path as Portfolio, ?status=drafts) ── */
+if (location.pathname.startsWith('/hub/portfolio') && new URLSearchParams(location.search).get('status') === 'drafts') {
+  const DRAFTS = '/hub/portfolio/?status=drafts';
+  const PORTFOLIO = '/hub/portfolio/';
+  document.querySelectorAll<HTMLAnchorElement>('.hub-rail__item, .hub-tab').forEach(a => {
+    const href = a.getAttribute('href');
+    const rail = a.classList.contains('hub-rail__item');
+    const on = href === DRAFTS;
+    if (href !== DRAFTS && href !== PORTFOLIO) return;
+    a.classList.toggle(rail ? 'hub-rail__item--active' : 'hub-tab--active', on);
+    if (rail) a.querySelector('.hub-rail__dot')?.classList.toggle('hub-rail__dot--active', on);
+    if (on) a.setAttribute(rail ? 'aria-current' : 'aria-selected', rail ? 'page' : 'true');
+    else a.removeAttribute('aria-current'), !rail && a.setAttribute('aria-selected', 'false');
+  });
+}
 
 /* ── Sign Out ──────────────────────────────────────────────── */
 document.getElementById('hub-signout')?.addEventListener('click', logout);

@@ -1970,6 +1970,12 @@ document.getElementById('addto-cancel-btn')?.addEventListener('click', () => { d
 document.getElementById('addto-cancel-x')?.addEventListener('click', () => { document.getElementById('addto-backdrop')!.hidden = true; });
 
 /* ── Init ────────────────────────────────────────────────────────────────── */
+// Deep link from the sidebar's "Draft Photographs": /hub/portfolio/?status=drafts
+{
+  const wanted = new URLSearchParams(location.search).get('status');
+  const sel = document.getElementById('status-filter') as HTMLSelectElement | null;
+  if (sel && wanted && ['published', 'drafts', 'archived'].includes(wanted)) sel.value = wanted;
+}
 loadPhotos().catch(() => {});
 loadProfileLink().catch(() => {});
 loadCollections().catch(() => {});

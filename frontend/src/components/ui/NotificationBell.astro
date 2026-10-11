@@ -68,7 +68,7 @@
 
     <!-- Footer -->
     <div class="bell__panel-foot">
-      <a href="/hub/#notifications" class="bell__view-all">View all notifications</a>
+      <a href="/hub/notifications/" class="bell__view-all">View all notifications</a>
     </div>
   </div>
 
@@ -327,9 +327,16 @@
 
   // ---- API helpers ----
   async function apiFetch(path: string, opts: RequestInit = {}): Promise<Response> {
+    const headers: Record<string, string> = {
+      ...authHeaders(),
+      ...(opts.headers as Record<string, string> ?? {}),
+    };
+    if (opts.body && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
     return fetch(path, {
       ...opts,
-      headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(opts.headers ?? {}) },
+      headers,
     });
   }
 
@@ -409,11 +416,25 @@
         const id = Number(el.dataset.id);
         const actionUrl = el.dataset.action ?? null;
 
-        // Mark read (fire-and-forget -- don't block navigation)
+        // Mark read
         if (!el.classList.contains('bell__item--read')) {
           el.classList.remove('bell__item--unread');
           el.classList.add('bell__item--read');
-          void apiFetch(`${API}/${id}/read`, { method: 'PATCH' }).then(fetchCount);
+          try {
+            const res = await apiFetch(`${API}/${id}/read`, {
+              method: 'PATCH',
+              keepalive: true,
+            });
+            if (!res.ok) {
+              el.classList.remove('bell__item--read');
+              el.classList.add('bell__item--unread');
+            } else {
+              void fetchCount();
+            }
+          } catch {
+            el.classList.remove('bell__item--read');
+            el.classList.add('bell__item--unread');
+          }
         }
 
         if (actionUrl) {
@@ -475,7 +496,10 @@
   // ---- Mark all read ----
   bellMarkAll.addEventListener('click', async () => {
     try {
-      await apiFetch(`${API}/mark-all-read`, { method: 'POST' });
+      const res = await apiFetch(`${API}/mark-all-read`, {
+        method: 'POST',
+      });
+      if (!res.ok) return;
       setBadge(0);
       // Re-render with all items toggled read
       bellBody!.querySelectorAll<HTMLElement>('.bell__item').forEach((el) => {
